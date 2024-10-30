@@ -5,7 +5,7 @@ import Constants exposing (httpRequestParamsById)
 import Dict
 import Generated.ApiRequest as ApiRequest exposing (ApiRequest, ApiResult)
 import Generated.ComBryzekAcumenView exposing (LineAllocationView, SimpleAllocation, getLineAllocationViews)
-import Global exposing (GlobalStateGroup)
+import Global exposing (GlobalState)
 import Html exposing (Html, div, table, tbody, td, th, thead, tr, span, p, text, button)
 import Html.Attributes as Attr exposing (class, colspan)
 import Html.Events exposing (onClick)

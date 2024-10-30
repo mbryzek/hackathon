@@ -1,13 +1,6 @@
-module Global exposing (GlobalState,  SessionState(..))
+module Global exposing (GlobalState)
 
 import Browser.Navigation as Nav
-import Generated.ComBryzekAcumenApi exposing (Session)
-
-type SessionState =
-  SessionLoggedIn Session
-  | SessionLoggedOut
-
 
 type alias GlobalState =
-    { session: SessionState
-    , navKey : Nav.Key }
+    { navKey : Nav.Key }

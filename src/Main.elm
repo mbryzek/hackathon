@@ -3,16 +3,13 @@ module Main exposing (..)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Constants exposing (httpRequestParamsById)
-import Generated.ApiRequest as ApiRequest exposing (ApiRequest, ApiResult)
-import Generated.ComBryzekAcumenApi exposing (getSessionsCurrent, Session)
 import Html exposing (Html)
 import Page.Index as PageIndex
 import Route
 import Url
 import Urls
 import Templates.CenteredPage exposing (renderCenteredPage, link, renderLoading)
-import Global exposing (GlobalState, GlobalStateLoggedIn, GlobalStateGroup)
-import Ports exposing (clearSession, saveSession)
+import Global exposing (GlobalState)
 
 type alias Flags =
     { sessionId : Maybe String }
@@ -36,60 +33,34 @@ subscriptions _ =
 
 type alias Model =
     { state : IntermediateState
-    , session : Maybe Session
     , url : Url.Url
     , page : Maybe Page
-    , sessionRequest : ApiRequest Session
     }
 
 type alias IntermediateState =
-    { sessionId: Maybe String
-    , navKey : Nav.Key }
+    { navKey : Nav.Key }
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd MainMsg )
-init flags url navKey =
+init _ url navKey =
     let
         state : IntermediateState
         state =
-            { sessionId = flags.sessionId
-            , navKey = navKey }
-
-
-        sessionRequest : ApiRequest Session
-        sessionRequest =
-            case flags.sessionId of
-                Nothing ->
-                    ApiRequest.NotAsked
-
-                Just _ ->
-                    ApiRequest.Loading
+            { navKey = navKey }
 
         initModel : Model
         initModel =
             { state = state
               , page = Nothing
-              , session = Nothing
-              , sessionRequest = sessionRequest
               , url = url
             }
     in
-    case flags.sessionId of
-        Nothing ->
-            renderPage initModel Nothing
-
-        Just sid ->
-            (initModel, Cmd.map InternalMsg (getSessionsCurrent SessionResponse (httpRequestParamsById sid)))
-    
-setSession : Model -> Maybe Session -> Model
-setSession model session =
-    { model | session = session, state = { sessionId = (Maybe.map .id session), navKey = model.state.navKey } }
+    renderPage initModel
 
 
-
-renderPage : Model -> Maybe Session -> (Model, Cmd MainMsg)
-renderPage model session =          
-    case parseUrl model.state session model.url of
+renderPage : Model -> (Model, Cmd MainMsg)
+renderPage model =          
+    case parseUrl model.state model.url of
         Just (p, c) ->
             ( { model | page = Just p }, c)
 
@@ -207,26 +178,14 @@ renderErrorPage params =
         htmlLink
     )
 
-
-parseUrl : IntermediateState -> Maybe Session -> Url.Url -> Maybe (Page, Cmd MainMsg)
-parseUrl state session url =
-    Maybe.map (toPage state session) (Route.parseUrl url)
-
-toGlobalState : IntermediateState -> Maybe Session -> GlobalState
-toGlobalState state session =
-    { session = case session of
-        Nothing ->
-            Global.SessionLoggedOut
-
-        Just s ->
-            Global.SessionLoggedIn s
-    , navKey = state.navKey
-    }
+type alias Session =
+    { id : String }
 
 
-toGlobalStateLoggedIn : IntermediateState -> Maybe Session -> Maybe GlobalStateLoggedIn
-toGlobalStateLoggedIn state session =
-    Maybe.map (\s -> { session = s, navKey = state.navKey }) session
+
+parseUrl : IntermediateState -> Url.Url -> Maybe (Page, Cmd MainMsg)
+parseUrl state url =
+    Maybe.map (toPage state Nothing) (Route.parseUrl url)
 
 -- CODEGEN START
 type Page
