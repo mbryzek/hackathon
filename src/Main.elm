@@ -7,7 +7,7 @@ import Page.Index as PageIndex
 import Route
 import Url
 import Urls
-import Templates.CenteredPage exposing (renderCenteredPage, link, renderLoading)
+import Templates.CenteredPage exposing (renderCenteredPage, link)
 import Global exposing (GlobalState, SessionState(..))
 
 type alias Flags = {}

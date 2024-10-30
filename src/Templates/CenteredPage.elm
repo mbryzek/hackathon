@@ -1,6 +1,6 @@
 module Templates.CenteredPage exposing (Params, emailInput, link, passwordInput, renderCenteredPage, renderLoading)
 
-import Constants exposing (logoSvg)
+import Constants exposing (logoImg)
 import Html exposing (Html, div, h2, p, text)
 import Html.Attributes as Attr
 import Templates.Buttons exposing (renderDefaultTextLink)
@@ -36,9 +36,9 @@ renderCenteredPage params contents =
             ]
             [ p
                 [ Attr.class "flex justify-center"
-                , Attr.alt "Acumen"
+                , Attr.alt "Bergen Tech Hackathon"
                 ]
-                [ logoSvg ]
+                [ logoImg ]
             , h2
                 [ Attr.class "mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900"
                 ]
