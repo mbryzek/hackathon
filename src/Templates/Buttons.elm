@@ -1,10 +1,8 @@
-module Templates.Buttons exposing (renderDefaultTextLink, renderButtonRequest, renderDefaultButton, renderTextLink, renderCancelLink, renderDefaultCancelLink, renderTextLinkRequest)
+module Templates.Buttons exposing (renderDefaultTextLink, renderDefaultButton, renderTextLink, renderCancelLink, renderDefaultCancelLink)
 
-import Html exposing (Html, div)
-import Html.Attributes as Attr exposing (class)
+import Html
+import Html.Attributes as Attr
 import Html.Events exposing (onClick)
-import Generated.ApiRequest as ApiRequest exposing (ApiRequest)
-import Templates.Messages exposing (viewNonFieldErrors)
 
 
 renderDefaultCancelLink : msg -> Html.Html msg
@@ -27,20 +25,6 @@ renderDefaultTextLink onClickMsg label =
 renderTextLink : List (Html.Attribute msg) -> msg -> String -> Html.Html msg
 renderTextLink additionalAttributes onClickMsg label =
     renderLink additionalAttributes onClickMsg [ Html.text label ]
-
-renderTextLinkRequest : List (Html.Attribute msg) -> ApiRequest a -> msg -> String -> Html.Html msg
-renderTextLinkRequest additionalAttributes request onClickMsg label =
-    let
-        loading : String
-        loading =
-            case request of
-                ApiRequest.Loading ->
-                    " (Loading...)"
-
-                _ ->
-                    ""
-    in
-    Html.div (List.append additionalAttributes (linkAttributes onClickMsg)) [(Html.text (label ++ loading))]
 
 
 linkAttributes : msg -> List (Html.Attribute msg)
@@ -68,43 +52,3 @@ renderButton additionalAttributes onClickMsg label =
         Attr.class buttonCss
         , onClick onClickMsg
     ]) [Html.text label]
-
-
-renderButtonRequest : List (Html.Attribute msg) -> ApiRequest a -> msg -> String -> Html msg
-renderButtonRequest additionalAttributes request msg label =
-    let
-        (disabled, finalLabel) =
-            case request of
-                ApiRequest.Loading ->
-                    (True, "Loading...")
-
-                _ ->
-                    (False, label)
-    in
-    Html.div []
-        (maybeAppendErrors request (Html.button
-            (List.append additionalAttributes [ Attr.type_ "submit"
-            , Attr.class buttonCss
-            , onClick msg
-            , Attr.disabled disabled
-            ])
-            [ Html.text finalLabel ]
-        ))
-
-maybeAppendErrors : ApiRequest a -> Html msg -> List (Html.Html msg)
-maybeAppendErrors request contents =
-    let
-        errors: List (Html.Html msg)
-        errors =
-            case request of
-                ApiRequest.Failure _ ->
-                    [ viewNonFieldErrors request ]
-                _ ->
-                    []
-    in
-    if List.isEmpty errors then
-        [contents]
-    else
-        [contents
-        , div [class "mt-4"] errors
-        ]

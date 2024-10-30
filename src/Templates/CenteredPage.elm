@@ -1,7 +1,6 @@
 module Templates.CenteredPage exposing (Params, button, emailInput, link, passwordInput, renderCenteredPage, renderLoading)
 
 import Constants exposing (logoSvg)
-import Generated.ApiRequest exposing (ApiRequest)
 import Html exposing (Html, div, h2, p, text)
 import Html.Attributes as Attr
 import Templates.Buttons exposing (renderButtonRequest, renderDefaultTextLink)
@@ -68,11 +67,6 @@ linkNoMargin msg label =
         ]
         [ renderDefaultTextLink msg label
         ]
-
-
-button : ApiRequest a -> msg -> String -> Html msg
-button request msg label =
-    renderButtonRequest [] request msg label
 
 
 emailInput : (String -> msg) -> Html msg

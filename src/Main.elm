@@ -2,14 +2,13 @@ module Main exposing (..)
 
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
-import Constants exposing (httpRequestParamsById)
 import Html exposing (Html)
 import Page.Index as PageIndex
 import Route
 import Url
 import Urls
 import Templates.CenteredPage exposing (renderCenteredPage, link, renderLoading)
-import Global exposing (GlobalState)
+import Global exposing (GlobalState(..))
 
 type alias Flags =
     { sessionId : Maybe String }
@@ -32,7 +31,8 @@ subscriptions _ =
 
 
 type alias Model =
-    { state : IntermediateState
+    { session : GlobalState
+    , state : IntermediateState
     , url : Url.Url
     , page : Maybe Page
     }
@@ -50,7 +50,8 @@ init _ url navKey =
 
         initModel : Model
         initModel =
-            { state = state
+            { session = GlobalStateLoggedOut
+              , state = state
               , page = Nothing
               , url = url
             }
@@ -70,7 +71,6 @@ renderPage model =
 type MainInternalMsg
     = LinkClicked UrlRequest
     | UrlChanged Url.Url
-    | SessionResponse (ApiResult Session)
     | RedirectTo String
 
 
