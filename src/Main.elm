@@ -50,7 +50,7 @@ init _ url navKey =
 
         initModel : Model
         initModel =
-            { session = SessionLoggedOut
+            { session =  { session = SessionLoggedOut, navKey = navKey }
               , state = state
               , page = Nothing
               , url = url
@@ -93,7 +93,7 @@ handleInternalMsg : MainInternalMsg -> Model -> ( Model, Cmd MainMsg )
 handleInternalMsg msg model =
     case msg of
         UrlChanged url ->
-            case parseUrl model.state model.session url of
+            case parseUrl model.state url of
                 Nothing ->
                     (model, Cmd.none)
 

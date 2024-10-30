@@ -142,9 +142,11 @@ def generate_handle_page_msg(files)
             content << map_model_cmd
         end
 
-        content << ""
-        content << "(#{f.module.alias}Msg _, _) ->"
-        content << "    (model, Cmd.none)"
+        if files.length > 1
+          content << ""
+          content << "(#{f.module.alias}Msg _, _) ->"
+          content << "    (model, Cmd.none)"
+        end
     }
 
     all = []
