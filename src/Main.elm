@@ -169,6 +169,12 @@ parseUrl : IntermediateState -> Url.Url -> Maybe (Page, Cmd MainMsg)
 parseUrl state url =
     Maybe.map (toPage state Nothing) (Route.parseUrl url)
 
+toGlobalState : IntermediateState -> Maybe Session -> GlobalState
+toGlobalState state _ =
+    { session = SessionLoggedOut
+    , navKey = state.navKey
+    }
+
 -- CODEGEN START
 type Page
     = PageIndex PageIndex.Model
