@@ -1,2 +1,5 @@
-# hackathon
-Public website for the Bergen Tech Hackathon
+# Acumen UI
+
+## Resources
+
+https://preline.co/docs/card.html

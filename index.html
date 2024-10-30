@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="h-full bg-white">
+
+<head>
+  <title>Example Elm Application</title>
+  <script src="/elm.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/style.css" type="text/css" />
+</head>
+
+<body class="h-full">
+  <div id="elm"></div>
+
+  <script>
+    var app = Elm.Main.init({
+        flags: {
+            sessionId: localStorage.getItem("acumen_session_id"),
+        },
+        node: document.getElementById("elm"),
+    });
+    app.ports.saveSession.subscribe(function (sessionId) {
+        localStorage.setItem("acumen_session_id", sessionId);
+    });
+    app.ports.clearSession.subscribe(function () {
+        localStorage.removeItem("acumen_session_id");
+    });
+  </script>
+
+</body>
+
+</html>
