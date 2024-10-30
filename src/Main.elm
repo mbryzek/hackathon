@@ -10,8 +10,7 @@ import Urls
 import Templates.CenteredPage exposing (renderCenteredPage, link, renderLoading)
 import Global exposing (GlobalState, SessionState(..))
 
-type alias Flags =
-    { sessionId : Maybe String }
+type alias Flags = {}
 
 main : Program Flags Model MainMsg
 main =
