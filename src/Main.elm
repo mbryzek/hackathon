@@ -213,6 +213,3 @@ handlePageMsg msg model =
                         (newModel, newCmd) = PageIndex.update pageMsg pageModel
                     in
                     ({ model | page = Just (PageIndex newModel) }, Cmd.map PageMsg (Cmd.map PageIndexMsg newCmd))
-
-                (PageIndexMsg _, _) ->
-                    (model, Cmd.none)
