@@ -114,19 +114,6 @@ handleInternalMsg msg model =
                     ( model
                     , Nav.load url
                     )
-        SessionResponse (Ok session) ->
-            let
-                newModel : Model
-                newModel = { model | sessionRequest = ApiRequest.Success session, session = Just session }
-            in
-            renderPage newModel (Just session)
-
-        SessionResponse (Err e) ->
-            let
-                newModel : Model
-                newModel = { model | sessionRequest = ApiRequest.Failure e, session = Nothing }
-            in
-            renderPage newModel Nothing
 
 
 view : Model -> Document MainMsg
@@ -135,12 +122,7 @@ view model =
     , body =
         [ case model.page of
             Nothing ->
-                case model.sessionRequest of
-                    ApiRequest.Loading ->
-                        renderLoading
-
-                    _ ->
-                        viewNotFound
+                viewNotFound
 
             Just p ->
                 pageView p

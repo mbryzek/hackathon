@@ -1,9 +1,9 @@
-module Templates.CenteredPage exposing (Params, button, emailInput, link, passwordInput, renderCenteredPage, renderLoading)
+module Templates.CenteredPage exposing (Params, emailInput, link, passwordInput, renderCenteredPage, renderLoading)
 
 import Constants exposing (logoSvg)
 import Html exposing (Html, div, h2, p, text)
 import Html.Attributes as Attr
-import Templates.Buttons exposing (renderButtonRequest, renderDefaultTextLink)
+import Templates.Buttons exposing (renderDefaultTextLink)
 import Templates.Forms exposing (input)
 
 

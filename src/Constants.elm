@@ -1,9 +1,7 @@
-module Constants exposing (logoSvg, defaultHttpRequestParams, httpRequestParams, httpRequestParamsById)
+module Constants exposing (logoSvg)
 
-import Generated.ComBryzekAcumenApi exposing (HttpRequestParams)
 import Html exposing (Html)
 import Global exposing (SessionState(..))
-import Http
 import Svg exposing (svg, rect, line)
 import Svg.Attributes exposing (..)
 
@@ -21,36 +19,3 @@ logoSvg =
         , rect [ x "35", y "50", width "10", height "30", fill "black" ] []
         , rect [ x "50", y "40", width "10", height "40", fill "black" ] []
         ]
-
-defaultHttpRequestParams : HttpRequestParams
-defaultHttpRequestParams =
-    httpRequestParams SessionLoggedOut
-
-httpRequestParams : SessionState -> HttpRequestParams
-httpRequestParams session =
-  case session of
-      SessionLoggedOut ->
-          httpRequestParamsByOptionalId Nothing
-
-      SessionLoggedIn s ->
-        httpRequestParamsById s.id
-
-httpRequestParamsById : String -> HttpRequestParams
-httpRequestParamsById sessionId =
-  httpRequestParamsByOptionalId (Just sessionId)
-
-httpRequestParamsByOptionalId : Maybe String -> HttpRequestParams
-httpRequestParamsByOptionalId sessionId =
-    let
-      headers : List Http.Header
-      headers =
-        case sessionId of
-          Nothing ->
-            []
-
-          Just sid ->
-            [ Http.header "acumen_session_id" sid ]
-    in
-     { apiHost = "http://localhost:9200"
-       , headers = headers
-     }
