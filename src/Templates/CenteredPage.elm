@@ -1,10 +1,9 @@
-module Templates.CenteredPage exposing (Params, emailInput, link, passwordInput, renderCenteredPage, renderLoading)
+module Templates.CenteredPage exposing (Params, link, renderCenteredPage)
 
 import Constants exposing (logoImg)
 import Html exposing (Html, div, h2, p, text)
 import Html.Attributes as Attr
 import Templates.Buttons exposing (renderDefaultTextLink)
-import Templates.Forms exposing (input)
 
 
 type alias Params =
@@ -57,48 +56,4 @@ link msg label =
         [ Attr.class "mt-5 text-center text-sm text-gray-500"
         ]
         [ renderDefaultTextLink msg label
-        ]
-
-
-linkNoMargin : msg -> String -> Html msg
-linkNoMargin msg label =
-    p
-        [ Attr.class "text-center text-sm text-gray-500"
-        ]
-        [ renderDefaultTextLink msg label
-        ]
-
-
-emailInput : (String -> msg) -> Html msg
-emailInput onInput =
-    input []
-        { id = "email"
-        , label = "Email address"
-        , type_ = "email"
-        , value = Nothing
-        , required = True
-        , autocomplete = Just "email"
-        , onInput = onInput
-        , rightLabel = Nothing
-        }
-
-
-passwordInput : Maybe msg -> (String -> msg) -> Html msg
-passwordInput onForgotPassword onInput =
-    input []
-        { id = "password"
-        , label = "Password"
-        , type_ = "password"
-        , value = Nothing
-        , required = True
-        , autocomplete = Just "current-password"
-        , onInput = onInput
-        , rightLabel = Maybe.map (\m -> linkNoMargin m "Forgot your password?") onForgotPassword
-        }
-
-
-renderLoading : Html msg
-renderLoading =
-    renderCenteredPage { title = "Acumen" }
-        [ Html.p [ Attr.class "italic" ] [ Html.text "Loading..." ]
         ]

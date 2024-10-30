@@ -3,8 +3,8 @@ module Page.Index exposing (Model, Msg, init, update, view)
 import Browser.Navigation as Nav
 import Global exposing (GlobalState)
 import Html exposing (Html, div)
-import Html.Attributes as Attr
 import Templates.CenteredPage exposing (renderCenteredPage)
+
 
 type alias Model =
     { global : GlobalState
@@ -30,6 +30,6 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    renderCenteredPage { title = "Bergen Tech Hackathon" } [
-        div [] [ Html.text "Welcome" ]
-    ]
+    renderCenteredPage { title = "Bergen Tech Hackathon" }
+        [ div [] [ Html.text "Welcome" ]
+        ]
