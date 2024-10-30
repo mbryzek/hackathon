@@ -33,5 +33,5 @@ view : Model -> Html Msg
 view _ =
     renderCenteredPage { title = "Bergen Tech Hackathon" }
         [ div [] [ Html.text "Welcome" ]
-        , renderDefaultTextLink (RedirectTo "/login")  "Login" 
+        , renderDefaultTextLink (RedirectTo "/2024/summary")  "2024 Summary" 
         ]
