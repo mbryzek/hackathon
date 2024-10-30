@@ -182,12 +182,7 @@ toPage : IntermediateState -> Maybe Session -> Route.Route -> (Page, Cmd MainMsg
 toPage state session route =
     case route of
         Route.PageIndex ->
-            loggedInWithGroupPage state session (\auth ->
-                let
-                    (model, msg) = PageIndex.init auth
-                in
-                (PageIndex model, Cmd.map PageMsg (Cmd.map PageIndexMsg msg))
-            )
+            (PageIndex (PageIndex.init (toGlobalState state session)), Cmd.none)
 
 
 pageView : Page -> Html MainMsg
