@@ -2,15 +2,18 @@ module Main exposing (..)
 
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
+import Global exposing (GlobalState, SessionState(..))
 import Html exposing (Html)
 import Page.Index as PageIndex
 import Route
+import Templates.CenteredPage exposing (link, renderCenteredPage)
 import Url
 import Urls
-import Templates.CenteredPage exposing (renderCenteredPage, link)
-import Global exposing (GlobalState, SessionState(..))
 
-type alias Flags = {}
+
+type alias Flags =
+    {}
+
 
 main : Program Flags Model MainMsg
 main =
@@ -36,6 +39,7 @@ type alias Model =
     , page : Maybe Page
     }
 
+
 type alias IntermediateState =
     { navKey : Nav.Key }
 
@@ -49,23 +53,24 @@ init _ url navKey =
 
         initModel : Model
         initModel =
-            { session =  { session = SessionLoggedOut, navKey = navKey }
-              , state = state
-              , page = Nothing
-              , url = url
+            { session = { session = SessionLoggedOut, navKey = navKey }
+            , state = state
+            , page = Nothing
+            , url = url
             }
     in
     renderPage initModel
 
 
-renderPage : Model -> (Model, Cmd MainMsg)
-renderPage model =          
+renderPage : Model -> ( Model, Cmd MainMsg )
+renderPage model =
     case parseUrl model.state model.url of
-        Just (p, c) ->
-            ( { model | page = Just p }, c)
+        Just ( p, c ) ->
+            ( { model | page = Just p }, c )
 
         Nothing ->
             ( { model | page = Nothing }, Cmd.none )
+
 
 type MainInternalMsg
     = LinkClicked UrlRequest
@@ -94,9 +99,9 @@ handleInternalMsg msg model =
         UrlChanged url ->
             case parseUrl model.state url of
                 Nothing ->
-                    (model, Cmd.none)
+                    ( model, Cmd.none )
 
-                Just (p, cmd) ->
+                Just ( p, cmd ) ->
                     ( { model | page = Just p }, cmd )
 
         RedirectTo u ->
@@ -128,19 +133,22 @@ view model =
         ]
     }
 
+
 viewNotFound : Html MainMsg
 viewNotFound =
-    renderErrorPage {
-        title = "Page not found"
+    renderErrorPage
+        { title = "Page not found"
         , body = "The page you are looking for does not exist."
         , link = Just (link (RedirectTo Urls.index) "Go to the home page")
-    }
+        }
+
 
 type alias ErrorPageParams =
     { title : String
-      , body : String
-      , link : Maybe (Html MainInternalMsg)
+    , body : String
+    , link : Maybe (Html MainInternalMsg)
     }
+
 
 renderErrorPage : ErrorPageParams -> Html MainMsg
 renderErrorPage params =
@@ -154,19 +162,21 @@ renderErrorPage params =
                 Just l ->
                     [ Html.map InternalMsg l ]
     in
-    renderCenteredPage { title = params.title } (List.append
-        [Html.p [] [ Html.text params.body ]]
-        htmlLink
-    )
+    renderCenteredPage { title = params.title }
+        (List.append
+            [ Html.p [] [ Html.text params.body ] ]
+            htmlLink
+        )
+
 
 type alias Session =
     { id : String }
 
 
-
-parseUrl : IntermediateState -> Url.Url -> Maybe (Page, Cmd MainMsg)
+parseUrl : IntermediateState -> Url.Url -> Maybe ( Page, Cmd MainMsg )
 parseUrl state url =
     Maybe.map (toPage state Nothing) (Route.parseUrl url)
+
 
 toGlobalState : IntermediateState -> Maybe Session -> GlobalState
 toGlobalState state _ =
@@ -174,7 +184,11 @@ toGlobalState state _ =
     , navKey = state.navKey
     }
 
+
+
 -- CODEGEN START
+
+
 type Page
     = PageIndex PageIndex.Model
 
@@ -183,11 +197,11 @@ type MainPageMsg
     = PageIndexMsg PageIndex.Msg
 
 
-toPage : IntermediateState -> Maybe Session -> Route.Route -> (Page, Cmd MainMsg)
+toPage : IntermediateState -> Maybe Session -> Route.Route -> ( Page, Cmd MainMsg )
 toPage state session route =
     case route of
         Route.PageIndex ->
-            (PageIndex (PageIndex.init (toGlobalState state session)), Cmd.none)
+            ( PageIndex (PageIndex.init (toGlobalState state session)), Cmd.none )
 
 
 pageView : Page -> Html MainMsg
@@ -203,12 +217,14 @@ handlePageMsg : MainPageMsg -> Model -> ( Model, Cmd MainMsg )
 handlePageMsg msg model =
     case model.page of
         Nothing ->
-            (model, Cmd.none)
+            ( model, Cmd.none )
 
         Just p ->
-            case ( msg, p ) of
-                (PageIndexMsg pageMsg, PageIndex pageModel) ->
-                    let
-                        (newModel, newCmd) = PageIndex.update pageMsg pageModel
-                    in
-                    ({ model | page = Just (PageIndex newModel) }, Cmd.map PageMsg (Cmd.map PageIndexMsg newCmd))
+            let
+                ( PageIndexMsg pageMsg, PageIndex pageModel ) =
+                    ( msg, p )
+
+                ( newModel, newCmd ) =
+                    PageIndex.update pageMsg pageModel
+            in
+            ( { model | page = Just (PageIndex newModel) }, Cmd.map PageMsg (Cmd.map PageIndexMsg newCmd) )
