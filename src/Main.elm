@@ -8,7 +8,7 @@ import Route
 import Url
 import Urls
 import Templates.CenteredPage exposing (renderCenteredPage, link, renderLoading)
-import Global exposing (GlobalState(..))
+import Global exposing (GlobalState, SessionState(..))
 
 type alias Flags =
     { sessionId : Maybe String }
@@ -50,7 +50,7 @@ init _ url navKey =
 
         initModel : Model
         initModel =
-            { session = GlobalStateLoggedOut
+            { session = SessionLoggedOut
               , state = state
               , page = Nothing
               , url = url
