@@ -3,6 +3,7 @@ module Page.Index exposing (Model, Msg, init, update, view)
 import Browser.Navigation as Nav
 import Global exposing (GlobalState)
 import Html exposing (Html, div)
+import Templates.Buttons exposing (renderDefaultTextLink)
 import Templates.CenteredPage exposing (renderCenteredPage)
 
 
@@ -29,7 +30,8 @@ update msg model =
 
 
 view : Model -> Html Msg
-view model =
+view _ =
     renderCenteredPage { title = "Bergen Tech Hackathon" }
         [ div [] [ Html.text "Welcome" ]
+        , renderDefaultTextLink (RedirectTo "/login")  "Login" 
         ]
