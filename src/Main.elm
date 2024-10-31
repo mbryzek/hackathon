@@ -123,7 +123,7 @@ handleInternalMsg msg model =
 
 view : Model -> Document MainMsg
 view model =
-    { title = "Acumen"
+    { title = "BT Hackathon"
     , body =
         [ case model.page of
             Nothing ->
