@@ -33,7 +33,7 @@ update msg model =
 
 view : Model -> Html Msg
 view _ =
-    renderShell { title = "2025 Bergen Tech Hackathon" } [ intro ]
+    renderShell { title = "2025 Bergen Tech Hackathon", url = Just Urls.index } [ intro ]
 
 
 intro : Html Msg

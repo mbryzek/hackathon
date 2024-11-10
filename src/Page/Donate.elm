@@ -5,6 +5,7 @@ import Html exposing (Html, div, h2, h3, li, ul)
 import Html.Attributes exposing (class)
 import Templates.Shell exposing (renderShell)
 import Ui.Elements exposing (callToAction, p, textDiv)
+import Urls
 
 
 type alias Model =
@@ -27,7 +28,7 @@ update msg _ =
 
 view : Model -> Html Never
 view _ =
-    renderShell { title = "Support the Hackathon" }
+    renderShell { title = "Support the Hackathon", url = Just Urls.donate }
         [ textDiv
             [ p "The Bergen Tech Hackathon is only possible thanks to the generosity of our sponsors and donors. If you would like to support our mission of empowering the next generation of tech leaders, please consider donating to our cause."
             , p "Thank you for your support!"
