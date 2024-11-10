@@ -48,7 +48,7 @@ href url label =
 callToAction : String -> String -> Html msg
 callToAction url label =
     div [ class "mt-8 text-center" ] 
-        [ a [ class "inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transform hover:scale-105 transition duration-200 ease-in-out", 
+        [ a [ class "inline-block px-6 py-3 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transform hover:scale-105 transition duration-200 ease-in-out", 
               Attr.href url 
             ] 
             [ text label ]
