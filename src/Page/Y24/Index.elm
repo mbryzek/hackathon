@@ -1,8 +1,8 @@
 module Page.Y24.Index exposing (Model, Msg, init, update, view)
 
 import Global exposing (GlobalState)
-import Html exposing (Html, div, h2, h3, li, ul, a)
-import Html.Attributes exposing (class, href)
+import Html exposing (Html, div, h2, h3, li, ul, a, img)
+import Html.Attributes exposing (class, href, src)
 import Templates.Shell exposing (renderShell)
 import Ui.Elements exposing (p, textDiv)
 
@@ -59,5 +59,13 @@ summary =
                 , li [ class "pl-2" ] [ p "~20 volunteers" ]
                 , li [ class "pl-2" ] [ p "5 industry speakers" ]
                 ]
+            , studentPhoto
             ]
         ]
+
+studentPhoto : Html Msg
+studentPhoto =
+    img [ 
+        class "mt-4"
+        , src "https://github.com/mbryzek/hackathon-photos/blob/main/2024/jumping.jpg?raw=true"
+    ] []
