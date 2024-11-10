@@ -1,17 +1,10 @@
 module Templates.PhotoGallery exposing (renderPhotoGallery)
 
-import Templates.Shell exposing (renderShell, ShellProps)
 import Html exposing (Html, div, img)
 import Html.Attributes exposing (class, src)
 
-renderPhotoGallery : ShellProps -> List String -> Html msg
-renderPhotoGallery props images =
-    renderShell props [tiles images]
-
-
-
-tiles : List String -> Html msg
-tiles images =
+renderPhotoGallery : List String -> Html msg
+renderPhotoGallery images =
     div
         [ class "bg-white"
         ]

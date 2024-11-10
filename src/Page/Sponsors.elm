@@ -3,6 +3,8 @@ module Page.Sponsors exposing (Model, Msg, init, update, view)
 import Global exposing (GlobalState)
 import Html exposing (Html)
 import Templates.PhotoGallery exposing (renderPhotoGallery)
+import Templates.Shell exposing (renderShell)
+import Ui.Elements exposing (p)
 
 type alias Model =
     { global : GlobalState }
@@ -28,18 +30,22 @@ toUrl filename =
 
 logos : List String
 logos = 
-    List.map toUrl [ "Bryzek Logo V2.1.jpg"
+    List.map toUrl [
+    "mek-review.png"
     , "CarbonSustainLogo.png"
     , "Catalano-LOGO new.jpg"
     , "Catalano-LOGO.jpg"
     , "Fran EP Logo.jpg"
-    , "MEK Review Logo.pdf"
     , "Sunrise Logo (2).png"
     , "WCCG_Logo_final.jpg"
     , "pan.jpg"
+    , "Bryzek Logo V2.1.jpg"
     ]
 
 
 view : Model -> Html Never
 view _ =
-    renderPhotoGallery { title = "2024 Sponsors" } logos
+    renderShell { title = "2024 Sponsors" } [
+        p "A huge thank you to our sponsors who made our 2024 Hackathon possible!"
+        , renderPhotoGallery logos
+    ]
