@@ -18,5 +18,5 @@ matchRoute : Parser (Route -> a) a
 matchRoute =
     oneOf
         [ map PageIndex top
-        , map PageY24Summary (s "2024" </> s "summary")
+        , map PageY24Summary (s "Y24")
         ]

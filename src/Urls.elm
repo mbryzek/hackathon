@@ -18,5 +18,5 @@ donate =
 
 events2024 : String
 events2024 =
-    "/y24/"
+    "/Y24/"
 

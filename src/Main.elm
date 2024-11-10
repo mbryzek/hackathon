@@ -5,7 +5,7 @@ import Browser.Navigation as Nav
 import Global exposing (GlobalState, SessionState(..))
 import Html exposing (Html)
 import Page.Index as PageIndex
-import Page.Y24.Summary as PageY24Summary
+import Page.Y24.Index as PageY24Index
 import Route
 import Templates.Shell exposing (link, renderShell)
 import Url
@@ -190,12 +190,12 @@ toGlobalState state _ =
 -- CODEGEN START
 type Page
     = PageIndex PageIndex.Model
-    | PageY24Summary PageY24Summary.Model
+    | PageY24Index PageY24Index.Model
 
 
 type MainPageMsg
     = PageIndexMsg PageIndex.Msg
-    | PageY24SummaryMsg PageY24Summary.Msg
+    | PageY24IndexMsg PageY24Index.Msg
 
 
 toPage : IntermediateState -> Maybe Session -> Route.Route -> (Page, Cmd MainMsg)
@@ -204,8 +204,8 @@ toPage state session route =
         Route.PageIndex ->
             (PageIndex (PageIndex.init (toGlobalState state session)), Cmd.none)
 
-        Route.PageY24Summary ->
-            (PageY24Summary (PageY24Summary.init (toGlobalState state session)), Cmd.none)
+        Route.PageY24Index ->
+            (PageY24Index (PageY24Index.init (toGlobalState state session)), Cmd.none)
 
 
 pageView : Page -> Html MainMsg
@@ -216,9 +216,9 @@ pageView page =
                 |> Html.map PageIndexMsg
                 |> Html.map PageMsg
 
-        PageY24Summary pageModel ->
-            PageY24Summary.view pageModel
-                |> Html.map PageY24SummaryMsg
+        PageY24Index pageModel ->
+            PageY24Index.view pageModel
+                |> Html.map PageY24IndexMsg
                 |> Html.map PageMsg
 
 
@@ -239,11 +239,11 @@ handlePageMsg msg model =
                 (PageIndexMsg _, _) ->
                     (model, Cmd.none)
 
-                (PageY24SummaryMsg pageMsg, PageY24Summary pageModel) ->
+                (PageY24IndexMsg pageMsg, PageY24Index pageModel) ->
                     let
-                        (newModel, newCmd) = PageY24Summary.update pageMsg pageModel
+                        (newModel, newCmd) = PageY24Index.update pageMsg pageModel
                     in
-                    ({ model | page = Just (PageY24Summary newModel) }, Cmd.map PageMsg (Cmd.map PageY24SummaryMsg newCmd))
+                    ({ model | page = Just (PageY24Index newModel) }, Cmd.map PageMsg (Cmd.map PageY24IndexMsg newCmd))
 
-                (PageY24SummaryMsg _, _) ->
+                (PageY24IndexMsg _, _) ->
                     (model, Cmd.none)
