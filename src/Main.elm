@@ -4,6 +4,7 @@ import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Global exposing (GlobalState, SessionState(..))
 import Html exposing (Html)
+import Page.Donate as PageDonate
 import Page.Index as PageIndex
 import Page.Y24.Index as PageY24Index
 import Page.Y24.Photos as PageY24Photos
@@ -190,13 +191,15 @@ toGlobalState state _ =
 
 -- CODEGEN START
 type Page
-    = PageIndex PageIndex.Model
+    = PageDonate PageDonate.Model
+    | PageIndex PageIndex.Model
     | PageY24Index PageY24Index.Model
     | PageY24Photos PageY24Photos.Model
 
 
 type MainPageMsg
-    = PageIndexMsg PageIndex.Msg
+    = PageDonateMsg PageDonate.Msg
+    | PageIndexMsg PageIndex.Msg
     | PageY24IndexMsg PageY24Index.Msg
     | PageY24PhotosMsg PageY24Photos.Msg
 
@@ -204,6 +207,9 @@ type MainPageMsg
 toPage : IntermediateState -> Maybe Session -> Route.Route -> (Page, Cmd MainMsg)
 toPage state session route =
     case route of
+        Route.PageDonate ->
+            (PageDonate (PageDonate.init (toGlobalState state session)), Cmd.none)
+
         Route.PageIndex ->
             (PageIndex (PageIndex.init (toGlobalState state session)), Cmd.none)
 
@@ -217,6 +223,11 @@ toPage state session route =
 pageView : Page -> Html MainMsg
 pageView page =
     case page of
+        PageDonate pageModel ->
+            PageDonate.view pageModel
+                |> Html.map PageDonateMsg
+                |> Html.map PageMsg
+
         PageIndex pageModel ->
             PageIndex.view pageModel
                 |> Html.map PageIndexMsg
@@ -241,6 +252,15 @@ handlePageMsg msg model =
 
         Just p ->
             case ( msg, p ) of
+                (PageDonateMsg pageMsg, PageDonate pageModel) ->
+                    let
+                        (newModel, newCmd) = PageDonate.update pageMsg pageModel
+                    in
+                    ({ model | page = Just (PageDonate newModel) }, Cmd.map PageMsg (Cmd.map PageDonateMsg newCmd))
+
+                (PageDonateMsg _, _) ->
+                    (model, Cmd.none)
+
                 (PageIndexMsg pageMsg, PageIndex pageModel) ->
                     let
                         (newModel, newCmd) = PageIndex.update pageMsg pageModel

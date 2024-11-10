@@ -1,7 +1,7 @@
 module Ui.Elements exposing (..)
 
-import Html exposing (Html, div, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, a, div, text)
+import Html.Attributes as Attr exposing (class)
 
 
 textColor : String
@@ -14,14 +14,15 @@ textDiv children =
     div [ class "max-w-3xl mx-auto px-4 py-8 space-y-6 text-lg leading-relaxed" ] children
 
 
-
 p : String -> Html msg
 p content =
-    Html.p [ class (textColor ++ " font-light")]
+    Html.p [ class (textColor ++ " font-light") ]
         [ text content ]
 
+
 type alias CalloutBoxProps msg =
-    { title: String, contents: Html msg }
+    { title : String, contents : Html msg }
+
 
 calloutBox : CalloutBoxProps msg -> Html msg
 calloutBox props =
@@ -32,9 +33,21 @@ calloutBox props =
             [ props.contents ]
         ]
 
+
 calloutBox2 : CalloutBoxProps msg -> CalloutBoxProps msg -> Html msg
 calloutBox2 props1 props2 =
-    div [class "flex gap-x-4"] [
-        calloutBox props1,
-        calloutBox props2
-    ]
+    div [ class "flex gap-x-4" ]
+        [ calloutBox props1
+        , calloutBox props2
+        ]
+
+
+callToAction : String -> String -> Html msg
+callToAction url label =
+    div [ class "mt-8 text-center" ]
+        [ a
+            [ class "inline-block px-6 py-3 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transform hover:scale-105 transition duration-200 ease-in-out"
+            , Attr.href url
+            ]
+            [ text label ]
+        ]

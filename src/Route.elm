@@ -8,7 +8,7 @@ type Route
     = PageIndex
     | PageY24Index
     | PageY24Photos
-
+    | PageDonate
 
 parseUrl : Url -> Maybe Route
 parseUrl url =
@@ -21,4 +21,5 @@ matchRoute =
         [ map PageIndex top
         , map PageY24Index (s "Y24")
         , map PageY24Photos (s "Y24" </> s "photos")
+        , map PageDonate (s "donate")
         ]
