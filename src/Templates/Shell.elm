@@ -6,6 +6,7 @@ import Svg exposing (svg, path)
 import Svg.Attributes as SvgAttr
 import Constants exposing (logoSrc)
 import Templates.Buttons exposing (renderDefaultTextLink)
+import Urls as Urls
 
 type alias ShellProps = 
     { title : String }
@@ -53,11 +54,11 @@ topNavSections =
             div
                 [ Attr.class "ml-10 flex items-baseline space-x-4"
                 ]
-                [ navLink "#" "Overview" True
-                , navLink "#" "Team" False
-                , navLink "#" "2024 Projects" False
-                , navLink "#" "Calendar" False
-                , navLink "#" "Reports" False
+                [ navLink Urls.index "Overview" True
+                , navLink Urls.photos "Photos" False
+                , navLink Urls.projects2024 "2024 Projects" False
+                , navLink Urls.sponsors "Sponsors" False
+                , navLink Urls.donate "Donate" False
                 ]
         ]
 
@@ -282,7 +283,7 @@ renderShell props contents =
                         [ Attr.href "#"
                         , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                         ]
-                        [ text "Team" ]
+                        [ text "Photos" ]
                     , a
                         [ Attr.href "#"
                         , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
@@ -292,12 +293,12 @@ renderShell props contents =
                         [ Attr.href "#"
                         , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                         ]
-                        [ text "Calendar" ]
+                        [ text "Sponsors" ]
                     , a
                         [ Attr.href "#"
                         , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                         ]
-                        [ text "Reports" ]
+                        [ text "Donate" ]
                     ]
                 , div
                     [ Attr.class "border-t border-gray-700 pb-3 pt-4"
