@@ -4,6 +4,7 @@ import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Global exposing (GlobalState, SessionState(..))
 import Html exposing (Html)
+import Page.Contact as PageContact
 import Page.Donate as PageDonate
 import Page.Index as PageIndex
 import Page.Sponsors as PageSponsors
@@ -192,7 +193,8 @@ toGlobalState state _ =
 
 -- CODEGEN START
 type Page
-    = PageDonate PageDonate.Model
+    = PageContact PageContact.Model
+    | PageDonate PageDonate.Model
     | PageIndex PageIndex.Model
     | PageSponsors PageSponsors.Model
     | PageY24Index PageY24Index.Model
@@ -200,7 +202,8 @@ type Page
 
 
 type MainPageMsg
-    = PageDonateMsg PageDonate.Msg
+    = PageContactMsg PageContact.Msg
+    | PageDonateMsg PageDonate.Msg
     | PageIndexMsg PageIndex.Msg
     | PageSponsorsMsg PageSponsors.Msg
     | PageY24IndexMsg PageY24Index.Msg
@@ -210,6 +213,9 @@ type MainPageMsg
 toPage : IntermediateState -> Maybe Session -> Route.Route -> (Page, Cmd MainMsg)
 toPage state session route =
     case route of
+        Route.PageContact ->
+            (PageContact (PageContact.init (toGlobalState state session)), Cmd.none)
+
         Route.PageDonate ->
             (PageDonate (PageDonate.init (toGlobalState state session)), Cmd.none)
 
@@ -229,6 +235,11 @@ toPage state session route =
 pageView : Page -> Html MainMsg
 pageView page =
     case page of
+        PageContact pageModel ->
+            PageContact.view pageModel
+                |> Html.map PageContactMsg
+                |> Html.map PageMsg
+
         PageDonate pageModel ->
             PageDonate.view pageModel
                 |> Html.map PageDonateMsg
@@ -263,6 +274,15 @@ handlePageMsg msg model =
 
         Just p ->
             case ( msg, p ) of
+                (PageContactMsg pageMsg, PageContact pageModel) ->
+                    let
+                        (newModel, newCmd) = PageContact.update pageMsg pageModel
+                    in
+                    ({ model | page = Just (PageContact newModel) }, Cmd.map PageMsg (Cmd.map PageContactMsg newCmd))
+
+                (PageContactMsg _, _) ->
+                    (model, Cmd.none)
+
                 (PageDonateMsg pageMsg, PageDonate pageModel) ->
                     let
                         (newModel, newCmd) = PageDonate.update pageMsg pageModel

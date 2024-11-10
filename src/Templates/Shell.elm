@@ -72,6 +72,7 @@ topNavSections =
             , navLink Urls.events2024 "2024 Event" False
             , navLink Urls.sponsors "Sponsors" False
             , navLink Urls.donate "Donate" False
+            , navLink Urls.contact "Contact" False
             ]
         ]
 
@@ -318,6 +319,11 @@ renderShell props contents =
                         , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                         ]
                         [ text "Donate" ]
+                    , a
+                        [ Attr.href "#"
+                        , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                        ]
+                        [ text "Contact" ]
                     ]
                 , div
                     [ Attr.class "border-t border-gray-700 pb-3 pt-4"

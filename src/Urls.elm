@@ -16,6 +16,10 @@ donate : String
 donate =
     "/donate"
 
+contact : String
+contact =
+    "/contact"
+
 events2024 : String
 events2024 =
     "/Y24/"

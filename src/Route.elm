@@ -10,7 +10,7 @@ type Route
     | PageY24Photos
     | PageSponsors
     | PageDonate
-
+    | PageContact
 parseUrl : Url -> Maybe Route
 parseUrl url =
     parse matchRoute url
@@ -24,4 +24,5 @@ matchRoute =
         , map PageY24Photos (s "Y24" </> s "photos")
         , map PageSponsors (s "sponsors")
         , map PageDonate (s "donate")
+        , map PageContact (s "contact")
         ]
