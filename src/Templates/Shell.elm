@@ -7,6 +7,7 @@ import Svg.Attributes as SvgAttr
 import Constants exposing (logoSrc)
 import Templates.Buttons exposing (renderDefaultTextLink)
 import Urls as Urls
+import Ui.Elements exposing (textColor)
 
 type alias ShellProps = 
     { title : String }
@@ -387,7 +388,7 @@ renderShell props contents =
                 [ Attr.class "mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8"
                 ]
                 [ h1
-                    [ Attr.class "text-lg/6 font-semibold text-gray-900"
+                    [ Attr.class (textColor ++ " text-lg/6 font-semibold")
                     ]
                     [ text props.title ]
                 ]
@@ -403,7 +404,7 @@ renderShell props contents =
 link : msg -> String -> Html msg
 link msg label =
     p
-        [ Attr.class "mt-5 text-center text-sm text-gray-500"
+        [ Attr.class (textColor ++ " mt-5 text-center text-sm hover:underline")
         ]
         [ renderDefaultTextLink msg label
         ]
