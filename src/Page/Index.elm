@@ -2,10 +2,10 @@ module Page.Index exposing (Model, Msg, init, update, view)
 
 import Browser.Navigation as Nav
 import Global exposing (GlobalState)
-import Html exposing (Html, div, text)
+import Html exposing (Html, text)
 import Html.Attributes exposing (class)
 import Templates.Shell exposing (renderShell, link)
-import Ui.Elements exposing (p, textColor, calloutBox)
+import Ui.Elements exposing (p, textColor, textDiv, calloutBox2)
 import Urls
 
 
@@ -33,21 +33,25 @@ update msg model =
 
 view : Model -> Html Msg
 view _ =
-    renderShell { title = "2025 Bergen Tech Hackathon" }
-        [ intro ]
+    renderShell { title = "2025 Bergen Tech Hackathon" } [ intro ]
 
 
 intro : Html Msg
 intro =
-    div [ class "max-w-3xl mx-auto px-4 py-8 space-y-6 text-lg leading-relaxed" ] [
-        calloutBox "Date & Time" "April 6, 2025 9am - 9pm"
-        , calloutBox "Location" "Bergen Tech High School, Teterboro NJ"
+    textDiv [
+        calloutBox2 {
+            title = "Date & Time"
+            , contents = "April 6, 20259am - 9pm"
+        } {
+            title = "Location"
+            , contents = "Bergen Tech High School, Teterboro NJ"
+        }
         , p " The Bergen Tech Computer Science Parents group is very pleased to announce the second annual Computer Science Hackathon in collaboration with the BT Code Club and Computer Science Major. This event is an amazing opportunity for our students to have fun, learn and build software together. "
         , p " We need your help! To make this event a huge success, we're seeking donations from individuals and companies interested in sponsoring the event. All donations are tax deductible and 100% of the funds raised directly support this event. "
         , p " Every contribution, big or small, makes a difference. Let's come together to inspire and nurture the next generation of tech wizards at Bergen Tech! "
         , link (RedirectTo Urls.donate) "Donate to or Sponsor this years event"
         , thankYouMessage
-        ]
+    ]
 
 
 thankYouMessage : Html Msg
