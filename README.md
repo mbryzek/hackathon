@@ -1,4 +1,4 @@
-# Acumen UI
+# BT Hackathon
 
 ## Resources
 

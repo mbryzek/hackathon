@@ -6,6 +6,7 @@ import Url.Parser exposing (..)
 
 type Route
     = PageIndex
+    | PageY24Index
 
 
 parseUrl : Url -> Maybe Route
@@ -17,4 +18,5 @@ matchRoute : Parser (Route -> a) a
 matchRoute =
     oneOf
         [ map PageIndex top
+        , map PageY24Index (s "Y24")
         ]

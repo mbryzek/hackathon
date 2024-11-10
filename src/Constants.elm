@@ -1,10 +1,6 @@
-module Constants exposing (logoImg)
+module Constants exposing (logoSrc)
 
-import Html exposing (Html, img)
-import Html.Attributes exposing (src, height)
 
-logoImg : Html msg
-logoImg =
-  img [ src "https://raw.githubusercontent.com/mbryzek/hackathon/refs/heads/main/assets/bt-cs-logo.png"
-        , height 150
-      ] []
+logoSrc : String
+logoSrc =
+    "https://raw.githubusercontent.com/mbryzek/hackathon/refs/heads/main/assets/bt-cs-logo.png"

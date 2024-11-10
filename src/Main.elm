@@ -5,8 +5,9 @@ import Browser.Navigation as Nav
 import Global exposing (GlobalState, SessionState(..))
 import Html exposing (Html)
 import Page.Index as PageIndex
+import Page.Y24.Index as PageY24Index
 import Route
-import Templates.CenteredPage exposing (link, renderCenteredPage)
+import Templates.Shell exposing (link, renderShell)
 import Url
 import Urls
 
@@ -122,7 +123,7 @@ handleInternalMsg msg model =
 
 view : Model -> Document MainMsg
 view model =
-    { title = "Acumen"
+    { title = "BT Hackathon"
     , body =
         [ case model.page of
             Nothing ->
@@ -162,7 +163,7 @@ renderErrorPage params =
                 Just l ->
                     [ Html.map InternalMsg l ]
     in
-    renderCenteredPage { title = params.title }
+    renderShell { title = params.title }
         (List.append
             [ Html.p [] [ Html.text params.body ] ]
             htmlLink
@@ -187,21 +188,24 @@ toGlobalState state _ =
 
 
 -- CODEGEN START
-
-
 type Page
     = PageIndex PageIndex.Model
+    | PageY24Index PageY24Index.Model
 
 
 type MainPageMsg
     = PageIndexMsg PageIndex.Msg
+    | PageY24IndexMsg PageY24Index.Msg
 
 
-toPage : IntermediateState -> Maybe Session -> Route.Route -> ( Page, Cmd MainMsg )
+toPage : IntermediateState -> Maybe Session -> Route.Route -> (Page, Cmd MainMsg)
 toPage state session route =
     case route of
         Route.PageIndex ->
-            ( PageIndex (PageIndex.init (toGlobalState state session)), Cmd.none )
+            (PageIndex (PageIndex.init (toGlobalState state session)), Cmd.none)
+
+        Route.PageY24Index ->
+            (PageY24Index (PageY24Index.init (toGlobalState state session)), Cmd.none)
 
 
 pageView : Page -> Html MainMsg
@@ -212,19 +216,34 @@ pageView page =
                 |> Html.map PageIndexMsg
                 |> Html.map PageMsg
 
+        PageY24Index pageModel ->
+            PageY24Index.view pageModel
+                |> Html.map PageY24IndexMsg
+                |> Html.map PageMsg
+
 
 handlePageMsg : MainPageMsg -> Model -> ( Model, Cmd MainMsg )
 handlePageMsg msg model =
     case model.page of
         Nothing ->
-            ( model, Cmd.none )
+            (model, Cmd.none)
 
         Just p ->
-            let
-                ( PageIndexMsg pageMsg, PageIndex pageModel ) =
-                    ( msg, p )
+            case ( msg, p ) of
+                (PageIndexMsg pageMsg, PageIndex pageModel) ->
+                    let
+                        (newModel, newCmd) = PageIndex.update pageMsg pageModel
+                    in
+                    ({ model | page = Just (PageIndex newModel) }, Cmd.map PageMsg (Cmd.map PageIndexMsg newCmd))
 
-                ( newModel, newCmd ) =
-                    PageIndex.update pageMsg pageModel
-            in
-            ( { model | page = Just (PageIndex newModel) }, Cmd.map PageMsg (Cmd.map PageIndexMsg newCmd) )
+                (PageIndexMsg _, _) ->
+                    (model, Cmd.none)
+
+                (PageY24IndexMsg pageMsg, PageY24Index pageModel) ->
+                    let
+                        (newModel, newCmd) = PageY24Index.update pageMsg pageModel
+                    in
+                    ({ model | page = Just (PageY24Index newModel) }, Cmd.map PageMsg (Cmd.map PageY24IndexMsg newCmd))
+
+                (PageY24IndexMsg _, _) ->
+                    (model, Cmd.none)
