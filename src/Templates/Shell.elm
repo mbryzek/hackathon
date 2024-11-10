@@ -37,6 +37,21 @@ logo =
             []
         ]
 
+topNavSections : Html msg
+topNavSections =
+    div
+        [ Attr.class "hidden md:block"] [
+            div
+                [ Attr.class "ml-10 flex items-baseline space-x-4"
+                ]
+                [ navLink "#" "Dashboard" True
+                , navLink "#" "Team" False
+                , navLink "#" "Projects" False
+                , navLink "#" "Calendar" False
+                , navLink "#" "Reports" False
+                ]
+        ]
+
 renderShell : ShellProps -> List (Html msg) -> Html msg
 renderShell props contents =
     div
@@ -55,19 +70,7 @@ renderShell props contents =
                         [ Attr.class "flex items-center"
                         ]
                         [ logo
-                        , div
-                            [ Attr.class "hidden md:block"
-                            ]
-                            [ div
-                                [ Attr.class "ml-10 flex items-baseline space-x-4"
-                                ]
-                                [ navLink "#" "Dashboard" True
-                                , navLink "#" "Team" False
-                                , navLink "#" "Projects" False
-                                , navLink "#" "Calendar" False
-                                , navLink "#" "Reports" False
-                                ]
-                            ]
+                        , topNavSections
                         ]
                     , div
                         [ Attr.class "hidden md:block"
