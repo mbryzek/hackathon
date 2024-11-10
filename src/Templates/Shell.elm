@@ -1,38 +1,49 @@
-module Templates.Shell exposing (ShellProps, renderShell, link)
+module Templates.Shell exposing (ShellProps, link, renderShell)
 
-import Html exposing (Html, div, nav, main_, header, h1, a, button, span, img, text, p)
-import Html.Attributes as Attr
-import Svg exposing (svg, path)
-import Svg.Attributes as SvgAttr
 import Constants exposing (logoSrc)
+import Html exposing (Html, a, button, div, h1, header, img, main_, nav, p, span, text)
+import Html.Attributes as Attr
+import Svg exposing (path, svg)
+import Svg.Attributes as SvgAttr
 import Templates.Buttons exposing (renderDefaultTextLink)
-import Urls as Urls
 import Ui.Elements exposing (textColor)
+import Urls
 
-type alias ShellProps = 
+
+type alias ShellProps =
     { title : String }
+
 
 enableNotifications : Bool
 enableNotifications =
     False
 
+
 enableProfileDropdown : Bool
 enableProfileDropdown =
     False
+
 
 navLink : String -> String -> Bool -> Html msg
 navLink href label isActive =
     a
         [ Attr.href href
-        , Attr.class <| 
-            "rounded-md px-3 py-2 text-sm font-medium " ++
-            if isActive then
-                "bg-gray-900 text-white"
-            else
-                "text-gray-300 hover:bg-gray-700 hover:text-white"
-        , if isActive then Attr.attribute "aria-current" "page" else Attr.class ""
+        , Attr.class <|
+            "rounded-md px-3 py-2 text-sm font-medium "
+                ++ (if isActive then
+                        "bg-gray-900 text-white"
+
+                    else
+                        "text-gray-300 hover:bg-gray-700 hover:text-white"
+                   )
+        , if isActive then
+            Attr.attribute "aria-current" "page"
+
+          else
+            Attr.class ""
         ]
         [ text label ]
+
 
 logo : Html msg
 logo =
@@ -48,19 +59,20 @@ logo =
             []
         ]
 
+
 topNavSections : Html msg
 topNavSections =
     div
-        [ Attr.class "hidden md:block"] [
-            div
-                [ Attr.class "ml-10 flex items-baseline space-x-4"
-                ]
-                [ navLink Urls.index "Overview" True
-                , navLink Urls.photos "Photos" False
-                , navLink Urls.events2024 "2024 Event" False
-                , navLink Urls.sponsors "Sponsors" False
-                , navLink Urls.donate "Donate" False
-                ]
+        [ Attr.class "hidden md:block" ]
+        [ div
+            [ Attr.class "ml-10 flex items-baseline space-x-4"
+            ]
+            [ navLink Urls.index "Overview" True
+            , navLink Urls.photos "Photos" False
+            , navLink Urls.events2024 "2024 Event" False
+            , navLink Urls.sponsors "Sponsors" False
+            , navLink Urls.donate "Donate" False
+            ]
         ]
 
 
@@ -71,14 +83,18 @@ notificationsAndProfile =
         gated enabled content =
             if enabled then
                 [ content ]
+
             else
                 []
     in
     div
-        [ Attr.class "ml-4 flex items-center md:ml-6" ] (List.concat [
-            (gated enableNotifications notifications)
-            , (gated enableProfileDropdown profileDropdown)
-        ])
+        [ Attr.class "ml-4 flex items-center md:ml-6" ]
+        (List.concat
+            [ gated enableNotifications notifications
+            , gated enableProfileDropdown profileDropdown
+            ]
+        )
+
 
 notifications : Html msg
 notifications =
@@ -112,11 +128,12 @@ notifications =
             ]
         ]
 
+
 profileDropdown : Html msg
 profileDropdown =
-    div [ Attr.class "relative ml-3" ] [
-        div [] [
-            button
+    div [ Attr.class "relative ml-3" ]
+        [ div []
+            [ button
                 [ Attr.type_ "button"
                 , Attr.class "relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                 , Attr.id "user-menu-button"
@@ -139,25 +156,25 @@ profileDropdown =
                     []
                 ]
             ]
-        ,                                 {-
-Dropdown menu, show/hide based on menu state.
+        , {-
+             Dropdown menu, show/hide based on menu state.
 
-Entering: "transition ease-out duration-100"
-From: "transform opacity-0 scale-95"
-To: "transform opacity-100 scale-100"
-Leaving: "transition ease-in duration-75"
-From: "transform opacity-100 scale-100"
-To: "transform opacity-0 scale-95"
--}
-        div
+             Entering: "transition ease-out duration-100"
+             From: "transform opacity-0 scale-95"
+             To: "transform opacity-100 scale-100"
+             Leaving: "transition ease-in duration-75"
+             From: "transform opacity-100 scale-100"
+             To: "transform opacity-0 scale-95"
+          -}
+          div
             [ Attr.class "absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
             , Attr.attribute "role" "menu"
             , Attr.attribute "aria-orientation" "vertical"
             , Attr.attribute "aria-labelledby" "user-menu-button"
             , Attr.tabindex -1
             ]
-            [                                     {- Active: "bg-gray-100 outline-none", Not Active: "" -}
-            a
+            [ {- Active: "bg-gray-100 outline-none", Not Active: "" -}
+              a
                 [ Attr.href "#"
                 , Attr.class "block px-4 py-2 text-sm text-gray-700"
                 , Attr.attribute "role" "menuitem"
@@ -183,6 +200,7 @@ To: "transform opacity-0 scale-95"
                 [ text "Sign out" ]
             ]
         ]
+
 
 renderShell : ShellProps -> List (Html msg) -> Html msg
 renderShell props contents =
@@ -212,8 +230,8 @@ renderShell props contents =
                     , div
                         [ Attr.class "-mr-2 flex md:hidden"
                         ]
-                        [                         {- Mobile menu button -}
-                        button
+                        [ {- Mobile menu button -}
+                          button
                             [ Attr.type_ "button"
                             , Attr.class "relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                             , Attr.attribute "aria-controls" "mobile-menu"
@@ -227,8 +245,8 @@ renderShell props contents =
                                 [ Attr.class "sr-only"
                                 ]
                                 [ text "Open main menu" ]
-                            ,                             {- Menu open: "hidden", Menu closed: "block" -}
-                            svg
+                            , {- Menu open: "hidden", Menu closed: "block" -}
+                              svg
                                 [ SvgAttr.class "block h-6 w-6"
                                 , SvgAttr.fill "none"
                                 , SvgAttr.viewBox "0 0 24 24"
@@ -244,8 +262,8 @@ renderShell props contents =
                                     ]
                                     []
                                 ]
-                            ,                             {- Menu open: "block", Menu closed: "hidden" -}
-                            svg
+                            , {- Menu open: "block", Menu closed: "hidden" -}
+                              svg
                                 [ SvgAttr.class "hidden h-6 w-6"
                                 , SvgAttr.fill "none"
                                 , SvgAttr.viewBox "0 0 24 24"
@@ -265,16 +283,16 @@ renderShell props contents =
                         ]
                     ]
                 ]
-            ,             {- Mobile menu, show/hide based on menu state. -}
-            div
+            , {- Mobile menu, show/hide based on menu state. -}
+              div
                 [ Attr.class "md:hidden"
                 , Attr.id "mobile-menu"
                 ]
                 [ div
                     [ Attr.class "space-y-1 px-2 pb-3 pt-2 sm:px-3"
                     ]
-                    [                     {- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -}
-                    a
+                    [ {- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -}
+                      a
                         [ Attr.href "#"
                         , Attr.class "block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white"
                         , Attr.attribute "aria-current" "page"
@@ -396,10 +414,11 @@ renderShell props contents =
         , main_ []
             [ div
                 [ Attr.class "mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
-                ] contents
+                ]
+                contents
             ]
         ]
-    
+
 
 link : msg -> String -> Html msg
 link msg label =
