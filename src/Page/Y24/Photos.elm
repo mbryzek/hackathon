@@ -1,9 +1,9 @@
 module Page.Y24.Photos exposing (Model, Msg, init, update, view)
 
 import Global exposing (GlobalState)
-import Html exposing (Html, div, img)
-import Html.Attributes exposing (class, src)
+import Html exposing (Html)
 import Templates.Shell exposing (renderShell)
+import Templates.PhotoGallery exposing (renderPhotoGallery)
 
 
 type alias Model =
@@ -25,7 +25,7 @@ update msg _ =
 
 view : Model -> Html Never
 view _ =
-    renderShell { title = "2024 Photos" } [ photosAsTiles ]
+    renderShell { title = "2024 Photos" } [ renderPhotoGallery allPhotoUrls ]
 
 toUrl : String -> String
 toUrl filename =
@@ -46,30 +46,3 @@ allPhotoUrls =
         , "IMG_0999.jpg"
     ]
 
-
-photosAsTiles : Html Never
-photosAsTiles =
-    div
-        [ class "bg-white"
-        ]
-        [ div
-                [ class "mt-6 grid grid-cols-1 gap-y-10 sm:grid-cols-3 sm:gap-x-6 sm:gap-y-8 lg:gap-x-8"
-                ]
-                (List.map photoTile allPhotoUrls)
-        ]
-    
-
-photoTile : String -> Html Never
-photoTile url =
-    div
-        [ class "group relative gap-y-4" ] [
-            div
-                [ class "h-96 w-full overflow-hidden rounded-lg sm:aspect-h-3 sm:aspect-w-2 group-hover:opacity-75 sm:h-auto"
-                ]
-                [ img
-                    [ src url
-                    , class "h-full w-full object-cover object-center"
-                    ]
-                    []
-                ]
-            ]
