@@ -26,7 +26,7 @@ update msg _ =
 
 view : Model -> Html Never
 view _ =
-    renderShell { title = "2024 Hackathon Event Summary" } [ summary ]
+    renderShell { title = "Support the Hackathon" } [ summary ]
 
 
 summary : Html Never
