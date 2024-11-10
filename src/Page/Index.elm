@@ -31,7 +31,7 @@ update msg model =
 
 view : Model -> Html Msg
 view _ =
-    renderShell { title = "Bergen Tech Hackathon" }
+    renderShell { title = "2025 Bergen Tech Hackathon" }
         [ div [] [ Html.text "Welcome" ]
         , renderDefaultTextLink (RedirectTo "/2024/summary")  "2024 Summary" 
         ]

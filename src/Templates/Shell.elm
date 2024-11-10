@@ -39,7 +39,7 @@ logo =
         [ img
             [ Attr.class "h-12 w-36"
             , Attr.src logoSrc
-            , Attr.alt "Bergen Tech Hackathon"
+            , Attr.alt "2025 Bergen Tech Hackathon"
             , Attr.href "/"
             ]
             []
@@ -52,9 +52,9 @@ topNavSections =
             div
                 [ Attr.class "ml-10 flex items-baseline space-x-4"
                 ]
-                [ navLink "#" "Dashboard" True
+                [ navLink "#" "Overview" True
                 , navLink "#" "Team" False
-                , navLink "#" "Projects" False
+                , navLink "#" "2024 Projects" False
                 , navLink "#" "Calendar" False
                 , navLink "#" "Reports" False
                 ]
@@ -276,7 +276,7 @@ renderShell props contents =
                         , Attr.class "block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white"
                         , Attr.attribute "aria-current" "page"
                         ]
-                        [ text "Dashboard" ]
+                        [ text "Overview" ]
                     , a
                         [ Attr.href "#"
                         , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
@@ -286,7 +286,7 @@ renderShell props contents =
                         [ Attr.href "#"
                         , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                         ]
-                        [ text "Projects" ]
+                        [ text "2024 Projects" ]
                     , a
                         [ Attr.href "#"
                         , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
