@@ -9,6 +9,32 @@ import Constants exposing (logoSrc)
 type alias ShellProps = 
     { title : String }
 
+navLink : String -> String -> Bool -> Html msg
+navLink href label isActive =
+    a
+        [ Attr.href href
+        , Attr.class <| 
+            "rounded-md px-3 py-2 text-sm font-medium " ++
+            if isActive then
+                "bg-gray-900 text-white"
+            else
+                "text-gray-300 hover:bg-gray-700 hover:text-white"
+        , if isActive then Attr.attribute "aria-current" "page" else Attr.class ""
+        ]
+        [ text label ]
+
+mobileNavLink : String -> String -> Bool -> Html msg
+mobileNavLink href label isActive =
+    a
+        [ Attr.href href
+        , Attr.class <|
+            "block rounded-md px-3 py-2 text-base font-medium " ++
+            if isActive then
+                "bg-gray-900 text-white"
+            else
+                "text-gray-300 hover:bg-gray-700 hover:text-white"
+        ]
+        [ text label ]
 
 renderShell : ShellProps -> List (Html msg) -> Html msg
 renderShell props contents =
@@ -44,33 +70,11 @@ renderShell props contents =
                             [ div
                                 [ Attr.class "ml-10 flex items-baseline space-x-4"
                                 ]
-                                [                                 {- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -}
-                                a
-                                    [ Attr.href "#"
-                                    , Attr.class "rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white"
-                                    , Attr.attribute "aria-current" "page"
-                                    ]
-                                    [ text "Dashboard" ]
-                                , a
-                                    [ Attr.href "#"
-                                    , Attr.class "rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                    ]
-                                    [ text "Team" ]
-                                , a
-                                    [ Attr.href "#"
-                                    , Attr.class "rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                    ]
-                                    [ text "Projects" ]
-                                , a
-                                    [ Attr.href "#"
-                                    , Attr.class "rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                    ]
-                                    [ text "Calendar" ]
-                                , a
-                                    [ Attr.href "#"
-                                    , Attr.class "rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                    ]
-                                    [ text "Reports" ]
+                                [ navLink "#" "Dashboard" True
+                                , navLink "#" "Team" False
+                                , navLink "#" "Projects" False
+                                , navLink "#" "Calendar" False
+                                , navLink "#" "Reports" False
                                 ]
                             ]
                         ]
