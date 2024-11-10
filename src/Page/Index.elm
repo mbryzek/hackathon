@@ -4,7 +4,7 @@ import Browser.Navigation as Nav
 import Global exposing (GlobalState)
 import Html exposing (Html, div)
 import Templates.Buttons exposing (renderDefaultTextLink)
-import Templates.CenteredPage exposing (renderCenteredPage)
+import Templates.Shell exposing (renderShell)
 
 
 type alias Model =
