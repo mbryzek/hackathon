@@ -11,8 +11,7 @@ type alias Model =
     { global : GlobalState }
 
 
-type Msg
-    = NoOp
+type alias Msg = Never
 
 
 init : GlobalState -> Model
@@ -21,16 +20,16 @@ init global =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update _ model =
-    ( model, Cmd.none )
+update msg _ =
+    never msg
 
 
-view : Model -> Html Msg
+view : Model -> Html Never
 view _ =
     renderShell { title = "2024 Hackathon Event Summary" } [ summary ]
 
 
-summary : Html msg
+summary : Html Never
 summary =
     textDiv
         [ p "The inaugural 2024 Bergen Tech Hackathon was a huge success! We wanted to deeply thank you for your support and share a few highlights from the day - we could not have put this event together without you!"
