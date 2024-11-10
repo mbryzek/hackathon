@@ -7,7 +7,7 @@ import Html exposing (Html)
 import Page.Index as PageIndex
 import Page.Y24.Summary as PageY24Summary
 import Route
-import Templates.CenteredPage exposing (link, renderCenteredPage)
+import Templates.Shell exposing (link, renderShell)
 import Url
 import Urls
 
@@ -163,7 +163,7 @@ renderErrorPage params =
                 Just l ->
                     [ Html.map InternalMsg l ]
     in
-    renderCenteredPage { title = params.title }
+    renderShell { title = params.title }
         (List.append
             [ Html.p [] [ Html.text params.body ] ]
             htmlLink

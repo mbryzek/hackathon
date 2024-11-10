@@ -1,10 +1,11 @@
-module Templates.Shell exposing (ShellProps, renderShell)
+module Templates.Shell exposing (ShellProps, renderShell, link)
 
-import Html exposing (Html, div, nav, main_, header, h1, a, button, span, img, text)
+import Html exposing (Html, div, nav, main_, header, h1, a, button, span, img, text, p)
 import Html.Attributes as Attr
 import Svg exposing (svg, path)
 import Svg.Attributes as SvgAttr
 import Constants exposing (logoSrc)
+import Templates.Buttons exposing (renderDefaultTextLink)
 
 type alias ShellProps = 
     { title : String }
@@ -397,3 +398,11 @@ renderShell props contents =
             ]
         ]
     
+
+link : msg -> String -> Html msg
+link msg label =
+    p
+        [ Attr.class "mt-5 text-center text-sm text-gray-500"
+        ]
+        [ renderDefaultTextLink msg label
+        ]
