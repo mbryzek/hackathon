@@ -1,8 +1,9 @@
 module Templates.Shell exposing (ShellProps, renderShell)
 
 import Html exposing (..)
-import Html.Attributes as Attr
-import Svg exposing (path)
+import Constants exposing (logoImg)
+import Html.Attributes as Attr exposing (class, href, id, attribute, type_, alt, src)
+import Svg exposing (svg, path)
 import Svg.Attributes as SvgAttr
 
 type alias NavLink =
@@ -34,43 +35,43 @@ renderNavLink isMobile link =
                 "rounded-md px-3 py-2 text-sm font-medium"
     in
     a
-        [ Attr.href link.href
-        , Attr.class baseClasses
+        [ href link.href
+        , class baseClasses
         ]
         [ text link.text ]
 
-renderShell : ShellProps -> Html msg
-renderShell =
+renderShell : ShellProps -> List (Html msg) -> Html msg
+renderShell props contents =
     div
-    [ Attr.class "min-h-full"
+    [ class "min-h-full"
     ]
     [ nav
-        [ Attr.class "bg-gray-800"
+        [ class "bg-gray-800"
         ]
         [ div
-            [ Attr.class "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+            [ class "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
             ]
             [ div
-                [ Attr.class "flex h-16 items-center justify-between"
+                [ class "flex h-16 items-center justify-between"
                 ]
                 [ div
-                    [ Attr.class "flex items-center"
+                    [ class "flex items-center"
                     ]
                     [ div
-                        [ Attr.class "shrink-0"
+                        [ class "shrink-0"
                         ]
                         [ img
-                            [ Attr.class "h-8 w-8"
-                            , Attr.src "https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=500"
-                            , Attr.alt "Your Company"
+                            [ class "h-8 w-8"
+                            , src "https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=500"
+                            , alt "Your Company"
                             ]
                             []
                         ]
                     , div
-                        [ Attr.class "hidden md:block"
+                        [ class "hidden md:block"
                         ]
                         [ div
-                            [ Attr.class "ml-10 flex items-baseline space-x-4"
+                            [ class "ml-10 flex items-baseline space-x-4"
                             ]
                             [                                 {- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -}
                             renderNavLink False { text = "Dashboard", href = "#", isCurrent = True }
@@ -82,21 +83,21 @@ renderShell =
                         ]
                     ]
                 , div
-                    [ Attr.class "hidden md:block"
+                    [ class "hidden md:block"
                     ]
                     [ div
-                        [ Attr.class "ml-4 flex items-center md:ml-6"
+                        [ class "ml-4 flex items-center md:ml-6"
                         ]
                         [ button
-                            [ Attr.type_ "button"
-                            , Attr.class "relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                            [ type_ "button"
+                            , class "relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                             ]
                             [ span
-                                [ Attr.class "absolute -inset-1.5"
+                                [ class "absolute -inset-1.5"
                                 ]
                                 []
                             , span
-                                [ Attr.class "sr-only"
+                                [ class "sr-only"
                                 ]
                                 [ text "View notifications" ]
                             , svg
@@ -105,8 +106,8 @@ renderShell =
                                 , SvgAttr.viewBox "0 0 24 24"
                                 , SvgAttr.strokeWidth "1.5"
                                 , SvgAttr.stroke "currentColor"
-                                , Attr.attribute "aria-hidden" "true"
-                                , Attr.attribute "data-slot" "icon"
+                                , attribute "aria-hidden" "true"
+                                , attribute "data-slot" "icon"
                                 ]
                                 [ path
                                     [ SvgAttr.strokeLinecap "round"
@@ -118,28 +119,28 @@ renderShell =
                             ]
                         ,                             {- Profile dropdown -}
                         div
-                            [ Attr.class "relative ml-3"
+                            [ class "relative ml-3"
                             ]
                             [ div []
                                 [ button
-                                    [ Attr.type_ "button"
-                                    , Attr.class "relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                                    , Attr.id "user-menu-button"
-                                    , Attr.attribute "aria-expanded" "false"
-                                    , Attr.attribute "aria-haspopup" "true"
+                                    [ type_ "button"
+                                    , class "relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                                    , id "user-menu-button"
+                                    , attribute "aria-expanded" "false"
+                                    , attribute "aria-haspopup" "true"
                                     ]
                                     [ span
-                                        [ Attr.class "absolute -inset-1.5"
+                                        [ class "absolute -inset-1.5"
                                         ]
                                         []
                                     , span
-                                        [ Attr.class "sr-only"
+                                        [ class "sr-only"
                                         ]
                                         [ text "Open user menu" ]
                                     , img
-                                        [ Attr.class "h-8 w-8 rounded-full"
-                                        , Attr.src "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                        , Attr.alt ""
+                                        [ class "h-8 w-8 rounded-full"
+                                        , src "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                                        , alt ""
                                         ]
                                         []
                                     ]
@@ -155,35 +156,35 @@ renderShell =
                 To: "transform opacity-0 scale-95"
             -}
                             div
-                                [ Attr.class "absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                , Attr.attribute "role" "menu"
-                                , Attr.attribute "aria-orientation" "vertical"
-                                , Attr.attribute "aria-labelledby" "user-menu-button"
+                                [ class "absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                , attribute "role" "menu"
+                                , attribute "aria-orientation" "vertical"
+                                , attribute "aria-labelledby" "user-menu-button"
                                 , Attr.tabindex -1
                                 ]
                                 [                                     {- Active: "bg-gray-100 outline-none", Not Active: "" -}
                                 a
-                                    [ Attr.href "#"
-                                    , Attr.class "block px-4 py-2 text-sm text-gray-700"
-                                    , Attr.attribute "role" "menuitem"
+                                    [ href "#"
+                                    , class "block px-4 py-2 text-sm text-gray-700"
+                                    , attribute "role" "menuitem"
                                     , Attr.tabindex -1
-                                    , Attr.id "user-menu-item-0"
+                                    , id "user-menu-item-0"
                                     ]
                                     [ text "Your Profile" ]
                                 , a
-                                    [ Attr.href "#"
-                                    , Attr.class "block px-4 py-2 text-sm text-gray-700"
-                                    , Attr.attribute "role" "menuitem"
+                                    [ href "#"
+                                    , class "block px-4 py-2 text-sm text-gray-700"
+                                    , attribute "role" "menuitem"
                                     , Attr.tabindex -1
-                                    , Attr.id "user-menu-item-1"
+                                    , id "user-menu-item-1"
                                     ]
                                     [ text "Settings" ]
                                 , a
-                                    [ Attr.href "#"
-                                    , Attr.class "block px-4 py-2 text-sm text-gray-700"
-                                    , Attr.attribute "role" "menuitem"
+                                    [ href "#"
+                                    , class "block px-4 py-2 text-sm text-gray-700"
+                                    , attribute "role" "menuitem"
                                     , Attr.tabindex -1
-                                    , Attr.id "user-menu-item-2"
+                                    , id "user-menu-item-2"
                                     ]
                                     [ text "Sign out" ]
                                 ]
@@ -191,21 +192,21 @@ renderShell =
                         ]
                     ]
                 , div
-                    [ Attr.class "-mr-2 flex md:hidden"
+                    [ class "-mr-2 flex md:hidden"
                     ]
                     [                         {- Mobile menu button -}
                     button
-                        [ Attr.type_ "button"
-                        , Attr.class "relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                        , Attr.attribute "aria-controls" "mobile-menu"
-                        , Attr.attribute "aria-expanded" "false"
+                        [ type_ "button"
+                        , class "relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                        , attribute "aria-controls" "mobile-menu"
+                        , attribute "aria-expanded" "false"
                         ]
                         [ span
-                            [ Attr.class "absolute -inset-0.5"
+                            [ class "absolute -inset-0.5"
                             ]
                             []
                         , span
-                            [ Attr.class "sr-only"
+                            [ class "sr-only"
                             ]
                             [ text "Open main menu" ]
                         ,                             {- Menu open: "hidden", Menu closed: "block" -}
@@ -215,8 +216,8 @@ renderShell =
                             , SvgAttr.viewBox "0 0 24 24"
                             , SvgAttr.strokeWidth "1.5"
                             , SvgAttr.stroke "currentColor"
-                            , Attr.attribute "aria-hidden" "true"
-                            , Attr.attribute "data-slot" "icon"
+                            , attribute "aria-hidden" "true"
+                            , attribute "data-slot" "icon"
                             ]
                             [ path
                                 [ SvgAttr.strokeLinecap "round"
@@ -232,8 +233,8 @@ renderShell =
                             , SvgAttr.viewBox "0 0 24 24"
                             , SvgAttr.strokeWidth "1.5"
                             , SvgAttr.stroke "currentColor"
-                            , Attr.attribute "aria-hidden" "true"
-                            , Attr.attribute "data-slot" "icon"
+                            , attribute "aria-hidden" "true"
+                            , attribute "data-slot" "icon"
                             ]
                             [ path
                                 [ SvgAttr.strokeLinecap "round"
@@ -248,11 +249,11 @@ renderShell =
             ]
         ,             {- Mobile menu, show/hide based on menu state. -}
         div
-            [ Attr.class "md:hidden"
-            , Attr.id "mobile-menu"
+            [ class "md:hidden"
+            , id "mobile-menu"
             ]
             [ div
-                [ Attr.class "space-y-1 px-2 pb-3 pt-2 sm:px-3"
+                [ class "space-y-1 px-2 pb-3 pt-2 sm:px-3"
                 ]
                 [                     {- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -}
                 renderNavLink True { text = "Dashboard", href = "#", isCurrent = True }
@@ -262,43 +263,43 @@ renderShell =
                 , renderNavLink True { text = "Reports", href = "#", isCurrent = False }
                 ]
             , div
-                [ Attr.class "border-t border-gray-700 pb-3 pt-4"
+                [ class "border-t border-gray-700 pb-3 pt-4"
                 ]
                 [ div
-                    [ Attr.class "flex items-center px-5"
+                    [ class "flex items-center px-5"
                     ]
                     [ div
-                        [ Attr.class "shrink-0"
+                        [ class "shrink-0"
                         ]
                         [ img
-                            [ Attr.class "h-10 w-10 rounded-full"
-                            , Attr.src "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                            , Attr.alt ""
+                            [ class "h-10 w-10 rounded-full"
+                            , src "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                            , alt ""
                             ]
                             []
                         ]
                     , div
-                        [ Attr.class "ml-3"
+                        [ class "ml-3"
                         ]
                         [ div
-                            [ Attr.class "text-base font-medium text-white"
+                            [ class "text-base font-medium text-white"
                             ]
                             [ text "Tom Cook" ]
                         , div
-                            [ Attr.class "text-sm font-medium text-gray-400"
+                            [ class "text-sm font-medium text-gray-400"
                             ]
                             [ text "tom@example.com" ]
                         ]
                     , button
-                        [ Attr.type_ "button"
-                        , Attr.class "relative ml-auto shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                        [ type_ "button"
+                        , class "relative ml-auto shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                         ]
                         [ span
-                            [ Attr.class "absolute -inset-1.5"
+                            [ class "absolute -inset-1.5"
                             ]
                             []
                         , span
-                            [ Attr.class "sr-only"
+                            [ class "sr-only"
                             ]
                             [ text "View notifications" ]
                         , svg
@@ -307,8 +308,8 @@ renderShell =
                             , SvgAttr.viewBox "0 0 24 24"
                             , SvgAttr.strokeWidth "1.5"
                             , SvgAttr.stroke "currentColor"
-                            , Attr.attribute "aria-hidden" "true"
-                            , Attr.attribute "data-slot" "icon"
+                            , attribute "aria-hidden" "true"
+                            , attribute "data-slot" "icon"
                             ]
                             [ path
                                 [ SvgAttr.strokeLinecap "round"
@@ -320,21 +321,21 @@ renderShell =
                         ]
                     ]
                 , div
-                    [ Attr.class "mt-3 space-y-1 px-2"
+                    [ class "mt-3 space-y-1 px-2"
                     ]
                     [ a
-                        [ Attr.href "#"
-                        , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                        [ href "#"
+                        , class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
                         ]
                         [ text "Your Profile" ]
                     , a
-                        [ Attr.href "#"
-                        , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                        [ href "#"
+                        , class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
                         ]
                         [ text "Settings" ]
                     , a
-                        [ Attr.href "#"
-                        , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                        [ href "#"
+                        , class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
                         ]
                         [ text "Sign out" ]
                     ]
@@ -342,22 +343,20 @@ renderShell =
             ]
         ]
     , header
-        [ Attr.class "bg-white shadow-sm"
+        [ class "bg-white shadow-sm"
         ]
         [ div
-            [ Attr.class "mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8"
+            [ class "mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8"
             ]
             [ h1
-                [ Attr.class "text-lg/6 font-semibold text-gray-900"
+                [ class "text-lg/6 font-semibold text-gray-900"
                 ]
                 [ text "Dashboard" ]
             ]
         ]
     , main_ []
         [ div
-            [ Attr.class "mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
-            ]
-            [                 {- Your content -}
-            ]
+            [ class "mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
+            ] contents
         ]
     ]
