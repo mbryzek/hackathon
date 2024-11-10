@@ -16,7 +16,7 @@ donate : String
 donate =
     "/donate"
 
-projects2024 : String
-projects2024 =
-    "/2024/projects"
+events2024 : String
+events2024 =
+    "/2024/"
 

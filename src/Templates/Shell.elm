@@ -56,7 +56,7 @@ topNavSections =
                 ]
                 [ navLink Urls.index "Overview" True
                 , navLink Urls.photos "Photos" False
-                , navLink Urls.projects2024 "2024 Projects" False
+                , navLink Urls.events2024 "2024 Event" False
                 , navLink Urls.sponsors "Sponsors" False
                 , navLink Urls.donate "Donate" False
                 ]
