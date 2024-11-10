@@ -404,7 +404,7 @@ renderShell props contents =
 link : msg -> String -> Html msg
 link msg label =
     p
-        [ Attr.class (textColor ++ " mt-5 text-center text-sm hover:underline")
+        [ Attr.class (textColor ++ " mt-4 text-center text-sm hover:underline")
         ]
         [ renderDefaultTextLink msg label
         ]
