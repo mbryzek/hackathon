@@ -23,6 +23,7 @@ enableProfileDropdown : Bool
 enableProfileDropdown =
     False
 
+
 topNavSections : (String -> String -> Bool -> Html msg) -> Html msg
 topNavSections fmt =
     div
@@ -40,35 +41,12 @@ topNavSections fmt =
         ]
 
 
-
 navLink : String -> String -> Bool -> Html msg
 navLink href label isActive =
     a
         [ Attr.href href
         , Attr.class <|
             "rounded-md px-3 py-2 text-sm font-medium "
-                ++ (if isActive then
-                        "bg-gray-900 text-white"
-
-                    else
-                        "text-gray-300 hover:bg-gray-700 hover:text-white"
-                   )
-        , if isActive then
-            Attr.attribute "aria-current" "page"
-
-          else
-            Attr.class ""
-        ]
-        [ text label ]
-
-
-
-mobileNavLink : String -> String -> Bool -> Html msg
-mobileNavLink href label isActive =
-    a
-        [ Attr.href href
-        , Attr.class <|
-            "block rounded-md px-3 py-2 text-base font-medium "
                 ++ (if isActive then
                         "bg-gray-900 text-white"
 
@@ -313,7 +291,8 @@ renderShell props contents =
                 ]
                 [ div
                     [ Attr.class "space-y-1 px-2 pb-3 pt-2 sm:px-3"
-                    ] [topNavSections navLink]
+                    ]
+                    [ topNavSections navLink ]
                 , div
                     [ Attr.class "border-t border-gray-700 pb-3 pt-4"
                     ]
