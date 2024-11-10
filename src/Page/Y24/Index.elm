@@ -1,17 +1,19 @@
 module Page.Y24.Index exposing (Model, Msg, init, update, view)
 
 import Global exposing (GlobalState)
-import Html exposing (Html, div, h2, h3, li, ul, a, img)
+import Html exposing (Html, a, div, h2, h3, img, li, ul)
 import Html.Attributes exposing (class, href, src)
 import Templates.Shell exposing (renderShell)
 import Ui.Elements exposing (p, textDiv)
-import Urls as Urls
+import Urls
+
 
 type alias Model =
     { global : GlobalState }
 
 
-type alias Msg = Never
+type alias Msg =
+    Never
 
 
 init : GlobalState -> Model
@@ -33,7 +35,7 @@ summary : Html Never
 summary =
     textDiv
         [ p "The inaugural 2024 Bergen Tech Hackathon was a huge success! We wanted to deeply thank you for your support and share a few highlights from the day - we could not have put this event together without you!"
-        , div [class "mt-4"] [a [class "hover:underline", href "https://drive.google.com/file/d/1wOa76kLDIPP24XWYF1qtEaPvSoOZp7R3/view?usp=sharing"] [p "Download our 2024 event summary here"]]
+        , div [ class "mt-4" ] [ a [ class "hover:underline", href "https://drive.google.com/file/d/1wOa76kLDIPP24XWYF1qtEaPvSoOZp7R3/view?usp=sharing" ] [ p "Download our 2024 event summary here" ] ]
         , p "52 students from grades 9-12 competed in a 12-hour coding event. From idea generation to building their apps and projects to final presentations, the students impressed everyone involved."
         , div [ class "mt-4 pl-4" ]
             [ h3 [ class "text-xl font-semibold mb-2" ] [ p "Projects" ]
@@ -63,9 +65,11 @@ summary =
             ]
         ]
 
+
 studentPhoto : Html Msg
 studentPhoto =
-    img [ 
-        class "mt-4"
+    img
+        [ class "mt-4"
         , src "https://github.com/mbryzek/hackathon-photos/blob/main/2024/jumping.jpg?raw=true"
-    ] []
+        ]
+        []

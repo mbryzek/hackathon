@@ -5,7 +5,8 @@ import Html exposing (Html, div, h2, h3, li, ul)
 import Html.Attributes exposing (class)
 import Templates.Shell exposing (renderShell)
 import Ui.Elements exposing (callToAction, p, textDiv)
-import Urls as Urls
+import Urls
+
 
 type alias Model =
     { global : GlobalState }

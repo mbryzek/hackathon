@@ -24,25 +24,30 @@ enableProfileDropdown =
     False
 
 
-topNavSections : (String -> String -> Bool -> Html msg) -> Html msg
-topNavSections fmt =
+topNavSections : Maybe String -> (Maybe String -> String -> String  -> Html msg) -> Html msg
+topNavSections currentUrl fmt =
     div
         [ Attr.class "hidden md:block" ]
         [ div
             [ Attr.class "ml-10 flex items-baseline space-x-4"
             ]
-            [ fmt Urls.index "Overview" True
-            , fmt Urls.photos "Photos" False
-            , fmt Urls.events2024 "2024 Event" False
-            , fmt Urls.sponsors "Sponsors" False
-            , fmt Urls.donate "Donate" False
-            , fmt Urls.contact "Contact" False
+            [ fmt currentUrl Urls.index "Overview"
+            , fmt currentUrl Urls.photos "Photos"
+            , fmt currentUrl Urls.events2024 "2024 Event"
+            , fmt currentUrl Urls.sponsors "Sponsors"
+            , fmt currentUrl Urls.donate "Donate"
+            , fmt currentUrl Urls.contact "Contact"
             ]
         ]
 
 
-navLink : String -> String -> Bool -> Html msg
-navLink href label isActive =
+navLink : Maybe String -> String -> String -> Html msg
+navLink currentUrl href label =
+    let
+        isActive : Bool
+        isActive =
+            currentUrl == Just href
+    in
     a
         [ Attr.href href
         , Attr.class <|
@@ -221,7 +226,7 @@ renderShell props contents =
                         [ Attr.class "flex items-center"
                         ]
                         [ logo
-                        , topNavSections navLink
+                        , topNavSections props.url navLink
                         ]
                     , div
                         [ Attr.class "hidden md:block"
@@ -292,7 +297,7 @@ renderShell props contents =
                 [ div
                     [ Attr.class "space-y-1 px-2 pb-3 pt-2 sm:px-3"
                     ]
-                    [ topNavSections navLink ]
+                    [ topNavSections props.url navLink ]
                 , div
                     [ Attr.class "border-t border-gray-700 pb-3 pt-4"
                     ]
