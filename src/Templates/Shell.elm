@@ -23,18 +23,19 @@ navLink href label isActive =
         ]
         [ text label ]
 
-mobileNavLink : String -> String -> Bool -> Html msg
-mobileNavLink href label isActive =
-    a
-        [ Attr.href href
-        , Attr.class <|
-            "block rounded-md px-3 py-2 text-base font-medium " ++
-            if isActive then
-                "bg-gray-900 text-white"
-            else
-                "text-gray-300 hover:bg-gray-700 hover:text-white"
+logo : Html msg
+logo =
+    div
+        [ Attr.class "shrink-0"
         ]
-        [ text label ]
+        [ img
+            [ Attr.class "h-12 w-36"
+            , Attr.src logoSrc
+            , Attr.alt "Bergen Tech Hackathon"
+            , Attr.href "/"
+            ]
+            []
+        ]
 
 renderShell : ShellProps -> List (Html msg) -> Html msg
 renderShell props contents =
@@ -53,17 +54,7 @@ renderShell props contents =
                     [ div
                         [ Attr.class "flex items-center"
                         ]
-                        [ div
-                            [ Attr.class "shrink-0"
-                            ]
-                            [ img
-                                [ Attr.class "h-12 w-36"
-                                , Attr.src logoSrc
-                                , Attr.alt "Bergen Tech Hackathon"
-                                , Attr.href "/"
-                                ]
-                                []
-                            ]
+                        [ logo
                         , div
                             [ Attr.class "hidden md:block"
                             ]
