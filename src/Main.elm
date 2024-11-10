@@ -6,6 +6,7 @@ import Global exposing (GlobalState, SessionState(..))
 import Html exposing (Html)
 import Page.Donate as PageDonate
 import Page.Index as PageIndex
+import Page.Sponsors as PageSponsors
 import Page.Y24.Index as PageY24Index
 import Page.Y24.Photos as PageY24Photos
 import Route
@@ -193,6 +194,7 @@ toGlobalState state _ =
 type Page
     = PageDonate PageDonate.Model
     | PageIndex PageIndex.Model
+    | PageSponsors PageSponsors.Model
     | PageY24Index PageY24Index.Model
     | PageY24Photos PageY24Photos.Model
 
@@ -200,6 +202,7 @@ type Page
 type MainPageMsg
     = PageDonateMsg PageDonate.Msg
     | PageIndexMsg PageIndex.Msg
+    | PageSponsorsMsg PageSponsors.Msg
     | PageY24IndexMsg PageY24Index.Msg
     | PageY24PhotosMsg PageY24Photos.Msg
 
@@ -212,6 +215,9 @@ toPage state session route =
 
         Route.PageIndex ->
             (PageIndex (PageIndex.init (toGlobalState state session)), Cmd.none)
+
+        Route.PageSponsors ->
+            (PageSponsors (PageSponsors.init (toGlobalState state session)), Cmd.none)
 
         Route.PageY24Index ->
             (PageY24Index (PageY24Index.init (toGlobalState state session)), Cmd.none)
@@ -231,6 +237,11 @@ pageView page =
         PageIndex pageModel ->
             PageIndex.view pageModel
                 |> Html.map PageIndexMsg
+                |> Html.map PageMsg
+
+        PageSponsors pageModel ->
+            PageSponsors.view pageModel
+                |> Html.map PageSponsorsMsg
                 |> Html.map PageMsg
 
         PageY24Index pageModel ->
@@ -268,6 +279,15 @@ handlePageMsg msg model =
                     ({ model | page = Just (PageIndex newModel) }, Cmd.map PageMsg (Cmd.map PageIndexMsg newCmd))
 
                 (PageIndexMsg _, _) ->
+                    (model, Cmd.none)
+
+                (PageSponsorsMsg pageMsg, PageSponsors pageModel) ->
+                    let
+                        (newModel, newCmd) = PageSponsors.update pageMsg pageModel
+                    in
+                    ({ model | page = Just (PageSponsors newModel) }, Cmd.map PageMsg (Cmd.map PageSponsorsMsg newCmd))
+
+                (PageSponsorsMsg _, _) ->
                     (model, Cmd.none)
 
                 (PageY24IndexMsg pageMsg, PageY24Index pageModel) ->
