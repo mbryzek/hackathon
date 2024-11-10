@@ -1545,6 +1545,10 @@ select {
     row-gap: 0px;
   }
 
+  .sm\:gap-y-8 {
+    row-gap: 2rem;
+  }
+
   .sm\:px-3 {
     padding-left: 0.75rem;
     padding-right: 0.75rem;

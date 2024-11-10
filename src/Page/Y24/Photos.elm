@@ -25,7 +25,7 @@ update msg _ =
 
 view : Model -> Html Never
 view _ =
-    renderShell { title = "2024 Hackathon Event Summary" } [ photosAsTiles ]
+    renderShell { title = "2024 Photos" } [ photosAsTiles ]
 
 toUrl : String -> String
 toUrl filename =
@@ -53,7 +53,7 @@ photosAsTiles =
         [ class "bg-white"
         ]
         [ div
-                [ class "mt-6 grid grid-cols-1 gap-y-10 sm:grid-cols-3 sm:gap-x-6 sm:gap-y-0 lg:gap-x-8"
+                [ class "mt-6 grid grid-cols-1 gap-y-10 sm:grid-cols-3 sm:gap-x-6 sm:gap-y-8 lg:gap-x-8"
                 ]
                 (List.map photoTile allPhotoUrls)
         ]
