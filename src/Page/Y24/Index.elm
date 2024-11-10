@@ -24,6 +24,7 @@ view : Model -> Html Msg
 view _ =
     renderShell { title = "2024 Hackathon Event Summary" } [ summary ]
 
+
 summary : Html msg
 summary =
     textDiv [

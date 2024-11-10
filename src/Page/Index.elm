@@ -2,8 +2,8 @@ module Page.Index exposing (Model, Msg, init, update, view)
 
 import Browser.Navigation as Nav
 import Global exposing (GlobalState)
-import Html exposing (Html, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, text, img)
+import Html.Attributes exposing (class, src)
 import Templates.Shell exposing (renderShell, link)
 import Ui.Elements exposing (p, textColor, textDiv, calloutBox2)
 import Urls
@@ -57,6 +57,7 @@ intro =
         , p " Every contribution, big or small, makes a difference. Let's come together to inspire and nurture the next generation of tech wizards at Bergen Tech! "
         , link (RedirectTo Urls.donate) "Donate to or Sponsor this years event"
         , thankYouMessage
+        , studentPhoto
     ]
 
 
@@ -65,3 +66,7 @@ thankYouMessage =
     Html.p [ class (textColor ++ " font-semibold text-center italic mt-8") ]
         [ text " Thank you for being a part of our community's growth and innovation! ❤️ " ]
 
+
+studentPhoto : Html Msg
+studentPhoto =
+    img [ src "https://github.com/mbryzek/hackathon-photos/blob/main/2024/all-students.jpg?raw=true" ] []
