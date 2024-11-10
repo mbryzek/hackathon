@@ -1,10 +1,9 @@
 module Page.Y24.Photos exposing (Model, Msg, init, update, view)
 
 import Global exposing (GlobalState)
-import Html exposing (Html, div, h2, h3, li, ul)
-import Html.Attributes exposing (class)
+import Html exposing (Html, div, img)
+import Html.Attributes exposing (class, src)
 import Templates.Shell exposing (renderShell)
-import Ui.Elements exposing (p, textDiv)
 
 
 type alias Model =
@@ -50,26 +49,27 @@ allPhotoUrls =
 
 photosAsTiles : Html Never
 photosAsTiles =
-    div [ class "photos-wrapper" ]
-        [ div [ class "photo-grid" ]
-            (List.map photoTile allPhotoUrls)
+    div
+        [ class "bg-white"
         ]
-
+        [ div
+                [ class "mt-6 grid grid-cols-1 gap-y-10 sm:grid-cols-3 sm:gap-x-6 sm:gap-y-0 lg:gap-x-8"
+                ]
+                (List.map photoTile allPhotoUrls)
+        ]
+    
 
 photoTile : String -> Html Never
 photoTile url =
-    div [ class "grid-item" ]
-        [ Html.a 
-            [ Html.Attributes.href url
-            , Html.Attributes.target "_blank"
-            , class "photo-link"
-            ]
-            [ Html.img
-                [ Html.Attributes.src url
-                , Html.Attributes.alt "Hackathon photo"
-                , class "grid-image"
+    div
+        [ class "group relative gap-y-4" ] [
+            div
+                [ class "h-96 w-full overflow-hidden rounded-lg sm:aspect-h-3 sm:aspect-w-2 group-hover:opacity-75 sm:h-auto"
                 ]
-                []
+                [ img
+                    [ src url
+                    , class "h-full w-full object-cover object-center"
+                    ]
+                    []
+                ]
             ]
-        ]
-
