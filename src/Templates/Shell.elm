@@ -9,6 +9,14 @@ import Constants exposing (logoSrc)
 type alias ShellProps = 
     { title : String }
 
+enableNotifications : Bool
+enableNotifications =
+    False
+
+enableProfileDropdown : Bool
+enableProfileDropdown =
+    False
+
 navLink : String -> String -> Bool -> Html msg
 navLink href label isActive =
     a
@@ -55,9 +63,19 @@ topNavSections =
 
 notificationsAndProfile : Html msg
 notificationsAndProfile =
+    let
+        gated : Bool -> Html msg -> List (Html msg)
+        gated enabled content =
+            if enabled then
+                [ content ]
+            else
+                []
+    in
     div
-        [ Attr.class "ml-4 flex items-center md:ml-6" ] [
-            notifications , profileDropdown ]
+        [ Attr.class "ml-4 flex items-center md:ml-6" ] (List.concat [
+            (gated enableNotifications notifications)
+            , (gated enableProfileDropdown profileDropdown)
+        ])
 
 notifications : Html msg
 notifications =
