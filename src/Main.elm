@@ -6,6 +6,7 @@ import Global exposing (GlobalState, SessionState(..))
 import Html exposing (Html)
 import Page.Index as PageIndex
 import Page.Y24.Index as PageY24Index
+import Page.Y24.Photos as PageY24Photos
 import Route
 import Templates.Shell exposing (link, renderShell)
 import Url
@@ -191,11 +192,13 @@ toGlobalState state _ =
 type Page
     = PageIndex PageIndex.Model
     | PageY24Index PageY24Index.Model
+    | PageY24Photos PageY24Photos.Model
 
 
 type MainPageMsg
     = PageIndexMsg PageIndex.Msg
     | PageY24IndexMsg PageY24Index.Msg
+    | PageY24PhotosMsg PageY24Photos.Msg
 
 
 toPage : IntermediateState -> Maybe Session -> Route.Route -> (Page, Cmd MainMsg)
@@ -206,6 +209,9 @@ toPage state session route =
 
         Route.PageY24Index ->
             (PageY24Index (PageY24Index.init (toGlobalState state session)), Cmd.none)
+
+        Route.PageY24Photos ->
+            (PageY24Photos (PageY24Photos.init (toGlobalState state session)), Cmd.none)
 
 
 pageView : Page -> Html MainMsg
@@ -219,6 +225,11 @@ pageView page =
         PageY24Index pageModel ->
             PageY24Index.view pageModel
                 |> Html.map PageY24IndexMsg
+                |> Html.map PageMsg
+
+        PageY24Photos pageModel ->
+            PageY24Photos.view pageModel
+                |> Html.map PageY24PhotosMsg
                 |> Html.map PageMsg
 
 
@@ -246,4 +257,13 @@ handlePageMsg msg model =
                     ({ model | page = Just (PageY24Index newModel) }, Cmd.map PageMsg (Cmd.map PageY24IndexMsg newCmd))
 
                 (PageY24IndexMsg _, _) ->
+                    (model, Cmd.none)
+
+                (PageY24PhotosMsg pageMsg, PageY24Photos pageModel) ->
+                    let
+                        (newModel, newCmd) = PageY24Photos.update pageMsg pageModel
+                    in
+                    ({ model | page = Just (PageY24Photos newModel) }, Cmd.map PageMsg (Cmd.map PageY24PhotosMsg newCmd))
+
+                (PageY24PhotosMsg _, _) ->
                     (model, Cmd.none)

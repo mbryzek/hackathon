@@ -6,7 +6,7 @@ index =
 
 photos : String
 photos =
-    "/photos"
+    "/Y24/photos"
 
 sponsors : String
 sponsors =
