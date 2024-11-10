@@ -23,6 +23,23 @@ enableProfileDropdown : Bool
 enableProfileDropdown =
     False
 
+topNavSections : (String -> String -> Bool -> Html msg) -> Html msg
+topNavSections fmt =
+    div
+        [ Attr.class "hidden md:block" ]
+        [ div
+            [ Attr.class "ml-10 flex items-baseline space-x-4"
+            ]
+            [ fmt Urls.index "Overview" True
+            , fmt Urls.photos "Photos" False
+            , fmt Urls.events2024 "2024 Event" False
+            , fmt Urls.sponsors "Sponsors" False
+            , fmt Urls.donate "Donate" False
+            , fmt Urls.contact "Contact" False
+            ]
+        ]
+
+
 
 navLink : String -> String -> Bool -> Html msg
 navLink href label isActive =
@@ -30,6 +47,28 @@ navLink href label isActive =
         [ Attr.href href
         , Attr.class <|
             "rounded-md px-3 py-2 text-sm font-medium "
+                ++ (if isActive then
+                        "bg-gray-900 text-white"
+
+                    else
+                        "text-gray-300 hover:bg-gray-700 hover:text-white"
+                   )
+        , if isActive then
+            Attr.attribute "aria-current" "page"
+
+          else
+            Attr.class ""
+        ]
+        [ text label ]
+
+
+
+mobileNavLink : String -> String -> Bool -> Html msg
+mobileNavLink href label isActive =
+    a
+        [ Attr.href href
+        , Attr.class <|
+            "block rounded-md px-3 py-2 text-base font-medium "
                 ++ (if isActive then
                         "bg-gray-900 text-white"
 
@@ -57,23 +96,6 @@ logo =
             , Attr.href "/"
             ]
             []
-        ]
-
-
-topNavSections : Html msg
-topNavSections =
-    div
-        [ Attr.class "hidden md:block" ]
-        [ div
-            [ Attr.class "ml-10 flex items-baseline space-x-4"
-            ]
-            [ navLink Urls.index "Overview" True
-            , navLink Urls.photos "Photos" False
-            , navLink Urls.events2024 "2024 Event" False
-            , navLink Urls.sponsors "Sponsors" False
-            , navLink Urls.donate "Donate" False
-            , navLink Urls.contact "Contact" False
-            ]
         ]
 
 
@@ -221,7 +243,7 @@ renderShell props contents =
                         [ Attr.class "flex items-center"
                         ]
                         [ logo
-                        , topNavSections
+                        , topNavSections navLink
                         ]
                     , div
                         [ Attr.class "hidden md:block"
@@ -291,40 +313,7 @@ renderShell props contents =
                 ]
                 [ div
                     [ Attr.class "space-y-1 px-2 pb-3 pt-2 sm:px-3"
-                    ]
-                    [ {- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -}
-                      a
-                        [ Attr.href "#"
-                        , Attr.class "block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white"
-                        , Attr.attribute "aria-current" "page"
-                        ]
-                        [ text "Overview" ]
-                    , a
-                        [ Attr.href "#"
-                        , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                        ]
-                        [ text "Photos" ]
-                    , a
-                        [ Attr.href "#"
-                        , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                        ]
-                        [ text "2024 Projects" ]
-                    , a
-                        [ Attr.href "#"
-                        , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                        ]
-                        [ text "Sponsors" ]
-                    , a
-                        [ Attr.href "#"
-                        , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                        ]
-                        [ text "Donate" ]
-                    , a
-                        [ Attr.href "#"
-                        , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                        ]
-                        [ text "Contact" ]
-                    ]
+                    ] [topNavSections navLink]
                 , div
                     [ Attr.class "border-t border-gray-700 pb-3 pt-4"
                     ]
