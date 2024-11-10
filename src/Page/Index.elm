@@ -41,10 +41,16 @@ intro =
     textDiv [
         calloutBox2 {
             title = "Date & Time"
-            , contents = "April 6, 20259am - 9pm"
+            , contents = Html.div [class "flex flex-col gap-y-2"] [
+                Html.div [] [Html.text "April 6, 2025"]
+                , Html.div [] [Html.text "9am - 9pm"]
+            ]
         } {
             title = "Location"
-            , contents = "Bergen Tech High School, Teterboro NJ"
+            , contents = Html.div [class "flex flex-col gap-y-2"] [
+                Html.div [] [Html.text "Bergen Tech High School"]
+                , Html.div [] [Html.text "Teterboro NJ"]
+            ]
         }
         , p " The Bergen Tech Computer Science Parents group is very pleased to announce the second annual Computer Science Hackathon in collaboration with the BT Code Club and Computer Science Major. This event is an amazing opportunity for our students to have fun, learn and build software together. "
         , p " We need your help! To make this event a huge success, we're seeking donations from individuals and companies interested in sponsoring the event. All donations are tax deductible and 100% of the funds raised directly support this event. "

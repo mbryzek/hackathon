@@ -20,19 +20,19 @@ p content =
     Html.p [ class (textColor ++ " font-light")]
         [ text content ]
 
-type alias CalloutBoxProps =
-    { title: String, contents: String }
+type alias CalloutBoxProps msg =
+    { title: String, contents: Html msg }
 
-calloutBox : CalloutBoxProps -> Html msg
+calloutBox : CalloutBoxProps msg -> Html msg
 calloutBox props =
     div [ class "bg-slate-700 rounded-lg p-6 mt-4 border-l-4 border-yellow-500 shadow-lg" ]
-        [ div [ class "text-white text-sm uppercase tracking-wide font-bold mb-1" ]
+        [ div [ class "text-yellow-500 text-sm uppercase tracking-wide font-bold mb-1" ]
             [ text props.title ]
         , div [ class "text-2xl font-bold text-white" ]
-            [ text props.contents ]
+            [ props.contents ]
         ]
 
-calloutBox2 : CalloutBoxProps -> CalloutBoxProps -> Html msg
+calloutBox2 : CalloutBoxProps msg -> CalloutBoxProps msg -> Html msg
 calloutBox2 props1 props2 =
     div [class "flex gap-x-4"] [
         calloutBox props1,

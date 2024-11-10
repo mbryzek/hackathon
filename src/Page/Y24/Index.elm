@@ -28,7 +28,7 @@ summary : Html msg
 summary =
     textDiv [
         p "The inaugural 2024 Bergen Tech Hackathon was a huge success! We wanted to deeply thank you for your support and share a few highlights from the day - we could not have put this event together without you!" 
-        , calloutBox2 { title = "Students", contents = "52 students" } { title = "Prizes", contents = "$5,730 in prizes" }
+        , calloutBox2 { title = "Students", contents = Html.text "52 students" } { title = "Prizes", contents = Html.text "$5,730 in prizes" }
         , p "52 students from grades 9-12 competed in a 12-hour coding event. From idea generation to building their apps and projects to final presentations, the students impressed everyone involved."
         , div [ class "mt-4 pl-4" ]
             [ h3 [ class "text-xl font-semibold mb-2" ] [ p "Projects" ]
