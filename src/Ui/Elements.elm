@@ -1,7 +1,7 @@
 module Ui.Elements exposing (..)
 
-import Html exposing (Html, div, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, div, text, a)
+import Html.Attributes as Attr exposing (class)
 
 
 textColor : String
@@ -38,3 +38,10 @@ calloutBox2 props1 props2 =
         calloutBox props1,
         calloutBox props2
     ]
+
+href : String -> String -> Html msg
+href url label =
+    div [ class "mt-4" ] 
+        [ a [ class "hover:no-underline underline", Attr.href url ] 
+                [ p label ]
+            ]
