@@ -167,7 +167,7 @@ renderErrorPage params =
                 Just l ->
                     [ Html.map InternalMsg l ]
     in
-    renderShell { title = params.title }
+    renderShell { title = params.title, url = Nothing }
         (List.append
             [ Html.p [] [ Html.text params.body ] ]
             htmlLink

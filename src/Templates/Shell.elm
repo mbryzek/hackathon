@@ -11,7 +11,7 @@ import Urls
 
 
 type alias ShellProps =
-    { title : String }
+    { title : String, url : Maybe String }
 
 
 enableNotifications : Bool

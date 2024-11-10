@@ -5,7 +5,7 @@ import Html exposing (Html, div, h2, h3, li, ul, a, img)
 import Html.Attributes exposing (class, href, src)
 import Templates.Shell exposing (renderShell)
 import Ui.Elements exposing (p, textDiv)
-
+import Urls as Urls
 
 type alias Model =
     { global : GlobalState }
@@ -26,7 +26,7 @@ update msg _ =
 
 view : Model -> Html Never
 view _ =
-    renderShell { title = "2024 Hackathon Event Summary" } [ summary ]
+    renderShell { title = "2024 Hackathon Event Summary", url = Just Urls.events2024 } [ summary ]
 
 
 summary : Html Never

@@ -4,7 +4,7 @@ import Global exposing (GlobalState)
 import Html exposing (Html)
 import Templates.Shell exposing (renderShell)
 import Templates.PhotoGallery exposing (renderPhotoGallery)
-
+import Urls as Urls
 
 type alias Model =
     { global : GlobalState }
@@ -25,7 +25,7 @@ update msg _ =
 
 view : Model -> Html Never
 view _ =
-    renderShell { title = "2024 Photos" } [ renderPhotoGallery allPhotoUrls ]
+    renderShell { title = "2024 Photos", url = Just Urls.photos } [ renderPhotoGallery allPhotoUrls ]
 
 toUrl : String -> String
 toUrl filename =
