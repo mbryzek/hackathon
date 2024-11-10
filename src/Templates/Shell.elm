@@ -1,12 +1,45 @@
-module Page.Shell exposing (renderShell)
+module Templates.Shell exposing (ShellProps, renderShell)
 
 import Html exposing (..)
 import Html.Attributes as Attr
 import Svg exposing (path)
 import Svg.Attributes as SvgAttr
 
+type alias NavLink =
+    { text : String
+    , href : String
+    , isCurrent : Bool
+    }
 
-renderShell : Html msg
+type alias ShellProps = 
+    { title : String }
+
+-- Helper functions for common patterns
+navLinks : List NavLink
+navLinks =
+    [ { text = "Dashboard", href = "#", isCurrent = True }
+    , { text = "Team", href = "#", isCurrent = False }
+    , { text = "Projects", href = "#", isCurrent = False }
+    , { text = "Calendar", href = "#", isCurrent = False }
+    , { text = "Reports", href = "#", isCurrent = False }
+    ]
+
+renderNavLink : Bool -> NavLink -> Html msg
+renderNavLink isMobile link =
+    let
+        baseClasses = 
+            if isMobile then
+                "block rounded-md px-3 py-2 text-base font-medium"
+            else
+                "rounded-md px-3 py-2 text-sm font-medium"
+    in
+    a
+        [ Attr.href link.href
+        , Attr.class baseClasses
+        ]
+        [ text link.text ]
+
+renderShell : ShellProps -> Html msg
 renderShell =
     div
     [ Attr.class "min-h-full"
@@ -40,32 +73,11 @@ renderShell =
                             [ Attr.class "ml-10 flex items-baseline space-x-4"
                             ]
                             [                                 {- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -}
-                            a
-                                [ Attr.href "#"
-                                , Attr.class "rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white"
-                                , Attr.attribute "aria-current" "page"
-                                ]
-                                [ text "Dashboard" ]
-                            , a
-                                [ Attr.href "#"
-                                , Attr.class "rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                ]
-                                [ text "Team" ]
-                            , a
-                                [ Attr.href "#"
-                                , Attr.class "rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                ]
-                                [ text "Projects" ]
-                            , a
-                                [ Attr.href "#"
-                                , Attr.class "rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                ]
-                                [ text "Calendar" ]
-                            , a
-                                [ Attr.href "#"
-                                , Attr.class "rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                ]
-                                [ text "Reports" ]
+                            renderNavLink False { text = "Dashboard", href = "#", isCurrent = True }
+                            , renderNavLink False { text = "Team", href = "#", isCurrent = False }
+                            , renderNavLink False { text = "Projects", href = "#", isCurrent = False }
+                            , renderNavLink False { text = "Calendar", href = "#", isCurrent = False }
+                            , renderNavLink False { text = "Reports", href = "#", isCurrent = False }
                             ]
                         ]
                     ]
@@ -243,32 +255,11 @@ renderShell =
                 [ Attr.class "space-y-1 px-2 pb-3 pt-2 sm:px-3"
                 ]
                 [                     {- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -}
-                a
-                    [ Attr.href "#"
-                    , Attr.class "block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white"
-                    , Attr.attribute "aria-current" "page"
-                    ]
-                    [ text "Dashboard" ]
-                , a
-                    [ Attr.href "#"
-                    , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    ]
-                    [ text "Team" ]
-                , a
-                    [ Attr.href "#"
-                    , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    ]
-                    [ text "Projects" ]
-                , a
-                    [ Attr.href "#"
-                    , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    ]
-                    [ text "Calendar" ]
-                , a
-                    [ Attr.href "#"
-                    , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    ]
-                    [ text "Reports" ]
+                renderNavLink True { text = "Dashboard", href = "#", isCurrent = True }
+                , renderNavLink True { text = "Team", href = "#", isCurrent = False }
+                , renderNavLink True { text = "Projects", href = "#", isCurrent = False }
+                , renderNavLink True { text = "Calendar", href = "#", isCurrent = False }
+                , renderNavLink True { text = "Reports", href = "#", isCurrent = False }
                 ]
             , div
                 [ Attr.class "border-t border-gray-700 pb-3 pt-4"
