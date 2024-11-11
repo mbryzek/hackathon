@@ -1,8 +1,9 @@
-module Templates.Shell exposing (ShellProps, link, renderShell)
+module Templates.Shell exposing (ShellProps, link, renderShell, init, update, Msg, Model)
 
 import Constants exposing (logoSrc)
 import Html exposing (Html, a, button, div, h1, header, img, main_, nav, p, span, text)
 import Html.Attributes as Attr
+import Html.Events exposing (onClick)
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
 import Templates.Buttons exposing (renderDefaultTextLink)
@@ -14,6 +15,34 @@ type alias ShellProps =
     { title : String, url : Maybe String }
 
 
+type alias Model =
+    { mobileMenuState : MobileMenuState }
+
+type MobileMenuState
+    = Open
+    | Closed
+
+type Msg
+    = ToggleMenu
+
+
+init : (Model, Cmd Msg)
+init =
+    ( { mobileMenuState = Closed }, Cmd.none )
+
+
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+    case msg of
+        ToggleMenu ->
+            ( { model | mobileMenuState = toggleMenuState model.mobileMenuState }, Cmd.none )
+
+toggleMenuState : MobileMenuState -> MobileMenuState
+toggleMenuState state =
+    case state of
+        Open -> Closed
+        Closed -> Open
+
 enableNotifications : Bool
 enableNotifications =
     False
@@ -24,7 +53,7 @@ enableProfileDropdown =
     False
 
 
-topNavSections : Maybe String -> (Maybe String -> String -> String  -> Html msg) -> Html msg
+topNavSections : Maybe String -> (Maybe String -> String -> String  -> Html Msg) -> Html Msg
 topNavSections currentUrl fmt =
     div
         [ Attr.class "hidden md:block" ]
@@ -41,7 +70,7 @@ topNavSections currentUrl fmt =
         ]
 
 
-navLink : Maybe String -> String -> String -> Html msg
+navLink : Maybe String -> String -> String -> Html Msg
 navLink currentUrl href label =
     let
         isActive : Bool
@@ -67,7 +96,7 @@ navLink currentUrl href label =
         [ text label ]
 
 
-logo : Html msg
+logo : Html Msg
 logo =
     div
         [ Attr.class "shrink-0"
@@ -82,7 +111,7 @@ logo =
         ]
 
 
-gated : Bool -> Html msg -> List (Html msg)
+gated : Bool -> Html Msg -> List (Html Msg)
 gated enabled content =
     if enabled then
         [ content ]
@@ -90,10 +119,10 @@ gated enabled content =
     else
         []
 
-notificationsAndProfile : Html msg
+notificationsAndProfile : Html Msg
 notificationsAndProfile =
     let
-        contents : List (Html msg)
+        contents : List (Html Msg)
         contents =
             List.concat
                 [ gated enableNotifications notifications
@@ -106,7 +135,7 @@ notificationsAndProfile =
         div [ Attr.class "ml-4 flex items-center md:ml-6" ] contents
 
 
-notifications : Html msg
+notifications : Html Msg
 notifications =
     button
         [ Attr.type_ "button"
@@ -139,7 +168,7 @@ notifications =
         ]
 
 
-profileDropdown : Html msg
+profileDropdown : Html Msg
 profileDropdown =
     div [ Attr.class "relative ml-3" ]
         [ div []
@@ -212,7 +241,7 @@ profileDropdown =
         ]
 
 
-renderShell : ShellProps -> List (Html msg) -> Html msg
+renderShell : ShellProps -> List (Html Msg) -> Html Msg
 renderShell props contents =
     div
         [ Attr.class "min-h-full"
@@ -254,7 +283,7 @@ renderShell props contents =
                             , span
                                 [ Attr.class "sr-only"
                                 ]
-                                [ text "Open main menu" ]
+                                [ button [onClick ToggleMenu] [text "Open main menu" ]]
                             , {- Menu open: "hidden", Menu closed: "block" -}
                               svg
                                 [ SvgAttr.class "block h-6 w-6"
@@ -335,10 +364,10 @@ link msg label =
         ]
 
 
-mobileNotificationsAndProfile : Html msg
+mobileNotificationsAndProfile : Html Msg
 mobileNotificationsAndProfile =
     let
-        contents : List (Html msg)
+        contents : List (Html Msg)
         contents =
             List.concat
                 [ gated enableNotifications mobileNotifications
@@ -351,7 +380,7 @@ mobileNotificationsAndProfile =
         div [ Attr.class "border-t border-gray-700 pb-3 pt-4" ] contents
 
 
-mobileNotifications : Html msg
+mobileNotifications : Html Msg
 mobileNotifications =
     div
         [ Attr.class "flex items-center px-5"
@@ -410,7 +439,7 @@ mobileNotifications =
         ]
 
 
-mobileProfileDropdown : Html msg
+mobileProfileDropdown : Html Msg
 mobileProfileDropdown =
     div
             [ Attr.class "mt-3 space-y-1 px-2"
