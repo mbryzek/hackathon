@@ -53,31 +53,32 @@ corporateSponsors : Html Never
 corporateSponsors =
     div []
         [ h2 [ class "text-2xl font-bold mt-8 mb-4" ] [ Html.text "Corporate Sponsorship Levels" ]
-
-        -- , callToAction "https://drive.google.com/file/d/1Q9Z0fE09yK7i4zAJSBIvqBHdphG9WUmM/view" "Download Sponsorship Package"
-        , ul [ class "space-y-6" ]
-            [ sponsorshipTier "Headline Sponsor"
-                "$5,000"
-                [ "All Platinum tier benefits plus"
-                , "Exclusive: Only 1 headline sponsor for the entire event"
-                , "Offical \"sponsored by\" on all event branding"
-                , "Option to speak at the event"
-                ]
-            , sponsorshipTier "Platinum Sponsor"
-                "$2,000"
-                [ "All Gold tier benefits plus"
-                , "Option to join the judging panel"
-                , "Large logo placement on event T-shirts"
-                , "Large banner in event space"
-                ]
-            , sponsorshipTier "Gold Sponsor"
-                "$1,000"
-                [ "All Silver tier benefits plus"
-                , "Placement of merchandise/content in Goodie Bag"
-                ]
-            , sponsorshipTier "Silver Sponsor"
-                "$500"
-                [ "Logo placement on event T-Shirt"
+        , callToAction "https://drive.google.com/file/d/1LqjB9SEQnjghTK6R6V3aDBjtxbnZNjeb/view?usp=sharing" "Download Sponsorship Package"
+        , div [class "mt-4"] [
+            ul [ class "space-y-6" ]
+                [ sponsorshipTier "Headline Sponsor"
+                    "$5,000"
+                    [ "All Platinum tier benefits plus"
+                    , "Exclusive: Only 1 headline sponsor for the entire event"
+                    , "Offical \"sponsored by\" on all event branding"
+                    , "Option to speak at the event"
+                    ]
+                , sponsorshipTier "Platinum Sponsor"
+                    "$2,000"
+                    [ "All Gold tier benefits plus"
+                    , "Option to join the judging panel"
+                    , "Large logo placement on event T-shirts"
+                    , "Large banner in event space"
+                    ]
+                , sponsorshipTier "Gold Sponsor"
+                    "$1,000"
+                    [ "All Silver tier benefits plus"
+                    , "Placement of merchandise/content in Goodie Bag"
+                    ]
+                , sponsorshipTier "Silver Sponsor"
+                    "$500"
+                    [ "Logo placement on event T-Shirt"
+                    ]
                 ]
             ]
         , callToAction "https://donorbox.org/events/680776" "Become a sponsor here"
