@@ -1,4 +1,4 @@
-module Templates.Shell exposing (ShellProps, renderShell, init, update, Msg, Model)
+module Templates.Shell exposing (ShellProps, renderShell, init, update, ShellMsg, Model)
 
 import Constants exposing (logoSrc)
 import Html exposing (Html, a, button, div, h1, header, img, main_, nav, p, span, text)
@@ -21,16 +21,16 @@ type MobileMenuState
     = Open
     | Closed
 
-type Msg
+type ShellMsg
     = ToggleMenu
 
 
-init : (Model, Cmd Msg)
+init : (Model, Cmd ShellMsg)
 init =
     ( { mobileMenuState = Closed }, Cmd.none )
 
 
-update : Msg -> Model -> (Model, Cmd Msg)
+update : ShellMsg -> Model -> (Model, Cmd ShellMsg)
 update msg model =
     case msg of
         ToggleMenu ->
@@ -52,7 +52,7 @@ enableProfileDropdown =
     False
 
 
-topNavSections : Maybe String -> (Maybe String -> String -> String  -> Html Msg) -> Html Msg
+topNavSections : Maybe String -> (Maybe String -> String -> String  -> Html ShellMsg) -> Html ShellMsg
 topNavSections currentUrl fmt =
     div
         [ Attr.class "hidden md:block" ]
@@ -69,7 +69,7 @@ topNavSections currentUrl fmt =
         ]
 
 
-navLink : Maybe String -> String -> String -> Html Msg
+navLink : Maybe String -> String -> String -> Html ShellMsg
 navLink currentUrl href label =
     let
         isActive : Bool
@@ -95,7 +95,7 @@ navLink currentUrl href label =
         [ text label ]
 
 
-logo : Html Msg
+logo : Html ShellMsg
 logo =
     div
         [ Attr.class "shrink-0"
@@ -110,7 +110,7 @@ logo =
         ]
 
 
-gated : Bool -> Html Msg -> List (Html Msg)
+gated : Bool -> Html ShellMsg -> List (Html ShellMsg)
 gated enabled content =
     if enabled then
         [ content ]
@@ -118,10 +118,10 @@ gated enabled content =
     else
         []
 
-notificationsAndProfile : Html Msg
+notificationsAndProfile : Html ShellMsg
 notificationsAndProfile =
     let
-        contents : List (Html Msg)
+        contents : List (Html ShellMsg)
         contents =
             List.concat
                 [ gated enableNotifications notifications
@@ -134,7 +134,7 @@ notificationsAndProfile =
         div [ Attr.class "ml-4 flex items-center md:ml-6" ] contents
 
 
-notifications : Html Msg
+notifications : Html ShellMsg
 notifications =
     button
         [ Attr.type_ "button"
@@ -167,7 +167,7 @@ notifications =
         ]
 
 
-profileDropdown : Html Msg
+profileDropdown : Html ShellMsg
 profileDropdown =
     div [ Attr.class "relative ml-3" ]
         [ div []
@@ -240,7 +240,7 @@ profileDropdown =
         ]
 
 
-renderShell : ShellProps -> List (Html Msg) -> Html Msg
+renderShell : ShellProps -> List (Html ShellMsg) -> Html ShellMsg
 renderShell props contents =
     div
         [ Attr.class "min-h-full"
@@ -354,10 +354,10 @@ renderShell props contents =
         ]
 
 
-mobileNotificationsAndProfile : Html Msg
+mobileNotificationsAndProfile : Html ShellMsg
 mobileNotificationsAndProfile =
     let
-        contents : List (Html Msg)
+        contents : List (Html ShellMsg)
         contents =
             List.concat
                 [ gated enableNotifications mobileNotifications
@@ -370,7 +370,7 @@ mobileNotificationsAndProfile =
         div [ Attr.class "border-t border-gray-700 pb-3 pt-4" ] contents
 
 
-mobileNotifications : Html Msg
+mobileNotifications : Html ShellMsg
 mobileNotifications =
     div
         [ Attr.class "flex items-center px-5"
@@ -429,7 +429,7 @@ mobileNotifications =
         ]
 
 
-mobileProfileDropdown : Html Msg
+mobileProfileDropdown : Html ShellMsg
 mobileProfileDropdown =
     div
             [ Attr.class "mt-3 space-y-1 px-2"
