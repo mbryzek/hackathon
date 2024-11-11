@@ -82,24 +82,28 @@ logo =
         ]
 
 
+gated : Bool -> Html msg -> List (Html msg)
+gated enabled content =
+    if enabled then
+        [ content ]
+
+    else
+        []
+
 notificationsAndProfile : Html msg
 notificationsAndProfile =
     let
-        gated : Bool -> Html msg -> List (Html msg)
-        gated enabled content =
-            if enabled then
-                [ content ]
-
-            else
-                []
+        contents : List (Html msg)
+        contents =
+            List.concat
+                [ gated enableNotifications notifications
+                , gated enableProfileDropdown profileDropdown
+                ]
     in
-    div
-        [ Attr.class "ml-4 flex items-center md:ml-6" ]
-        (List.concat
-            [ gated enableNotifications notifications
-            , gated enableProfileDropdown profileDropdown
-            ]
-        )
+    if List.isEmpty contents then
+        text ""
+    else
+        div [ Attr.class "ml-4 flex items-center md:ml-6" ] contents
 
 
 notifications : Html msg
@@ -333,65 +337,82 @@ link msg label =
 
 mobileNotificationsAndProfile : Html msg
 mobileNotificationsAndProfile =
+    let
+        contents : List (Html msg)
+        contents =
+            List.concat
+                [ gated enableNotifications mobileNotifications
+                , gated enableProfileDropdown mobileProfileDropdown
+                ]
+    in
+    if List.isEmpty contents then
+        text ""
+    else
+        div [ Attr.class "border-t border-gray-700 pb-3 pt-4" ] contents
+
+
+mobileNotifications : Html msg
+mobileNotifications =
     div
-        [ Attr.class "border-t border-gray-700 pb-3 pt-4"
+        [ Attr.class "flex items-center px-5"
         ]
         [ div
-            [ Attr.class "flex items-center px-5"
+            [ Attr.class "shrink-0"
             ]
-            [ div
-                [ Attr.class "shrink-0"
+            [ img
+                [ Attr.class "h-10 w-10 rounded-full"
+                , Attr.src "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                , Attr.alt ""
                 ]
-                [ img
-                    [ Attr.class "h-10 w-10 rounded-full"
-                    , Attr.src "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    , Attr.alt ""
-                    ]
-                    []
-                ]
-            , div
-                [ Attr.class "ml-3"
-                ]
-                [ div
-                    [ Attr.class "text-base font-medium text-white"
-                    ]
-                    [ text "Tom Cook" ]
-                , div
-                    [ Attr.class "text-sm font-medium text-gray-400"
-                    ]
-                    [ text "tom@example.com" ]
-                ]
-            , button
-                [ Attr.type_ "button"
-                , Attr.class "relative ml-auto shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                ]
-                [ span
-                    [ Attr.class "absolute -inset-1.5"
-                    ]
-                    []
-                , span
-                    [ Attr.class "sr-only"
-                    ]
-                    [ text "View notifications" ]
-                , svg
-                    [ SvgAttr.class "h-6 w-6"
-                    , SvgAttr.fill "none"
-                    , SvgAttr.viewBox "0 0 24 24"
-                    , SvgAttr.strokeWidth "1.5"
-                    , SvgAttr.stroke "currentColor"
-                    , Attr.attribute "aria-hidden" "true"
-                    , Attr.attribute "data-slot" "icon"
-                    ]
-                    [ path
-                        [ SvgAttr.strokeLinecap "round"
-                        , SvgAttr.strokeLinejoin "round"
-                        , SvgAttr.d "M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
-                        ]
-                        []
-                    ]
-                ]
+                []
             ]
         , div
+            [ Attr.class "ml-3"
+            ]
+            [ div
+                [ Attr.class "text-base font-medium text-white"
+                ]
+                [ text "Tom Cook" ]
+            , div
+                [ Attr.class "text-sm font-medium text-gray-400"
+                ]
+                [ text "tom@example.com" ]
+            ]
+        , button
+            [ Attr.type_ "button"
+            , Attr.class "relative ml-auto shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+            ]
+            [ span
+                [ Attr.class "absolute -inset-1.5"
+                ]
+                []
+            , span
+                [ Attr.class "sr-only"
+                ]
+                [ text "View notifications" ]
+            , svg
+                [ SvgAttr.class "h-6 w-6"
+                , SvgAttr.fill "none"
+                , SvgAttr.viewBox "0 0 24 24"
+                , SvgAttr.strokeWidth "1.5"
+                , SvgAttr.stroke "currentColor"
+                , Attr.attribute "aria-hidden" "true"
+                , Attr.attribute "data-slot" "icon"
+                ]
+                [ path
+                    [ SvgAttr.strokeLinecap "round"
+                    , SvgAttr.strokeLinejoin "round"
+                    , SvgAttr.d "M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+                    ]
+                    []
+                ]
+            ]
+        ]
+
+
+mobileProfileDropdown : Html msg
+mobileProfileDropdown =
+    div
             [ Attr.class "mt-3 space-y-1 px-2"
             ]
             [ a
@@ -410,4 +431,3 @@ mobileNotificationsAndProfile =
                 ]
                 [ text "Sign out" ]
             ]
-        ]
