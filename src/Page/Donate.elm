@@ -55,7 +55,7 @@ view _ =
         |> Html.map ShellTemplateMsg
 
 
-individualDonors : Html Msg
+individualDonors : Html Never
 individualDonors =
     div []
         [ h2 [ class "text-2xl font-bold mb-4" ] [ Html.text "Individual Donors" ]
@@ -65,7 +65,7 @@ individualDonors =
         ]
 
 
-corporateSponsors : Html Msg
+corporateSponsors : Html Never
 corporateSponsors =
     div []
         [ h2 [ class "text-2xl font-bold mt-8 mb-4" ] [ Html.text "Corporate Sponsorship Levels" ]
