@@ -3,30 +3,45 @@ module Page.Donate exposing (Model, Msg, init, update, view)
 import Global exposing (GlobalState)
 import Html exposing (Html, div, h2, h3, li, ul)
 import Html.Attributes exposing (class)
-import Templates.Shell exposing (renderShell)
+import Templates.Shell as ShellTemplate exposing (renderShell)
 import Ui.Elements exposing (callToAction, p, textDiv)
 import Urls
 
 
 type alias Model =
-    { global : GlobalState }
+    { global : GlobalState
+    , shell : ShellTemplate.Model }
 
 
-type alias Msg =
-    Never
+type Msg =
+    ShellTemplateMsg ShellTemplate.Msg
 
 
-init : GlobalState -> Model
+init : GlobalState -> ( Model, Cmd Msg )
 init global =
-    { global = global }
+    let
+        ( shell, shellCmd ) =
+            ShellTemplate.init
+    in
+    ( { global = global
+      , shell = shell
+      }
+    , Cmd.map ShellTemplateMsg shellCmd
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg _ =
-    never msg
+update msg model =
+    case msg of
+        ShellTemplateMsg subMsg ->
+            let
+                ( updatedShell, shellCmd ) =
+                    ShellTemplate.update subMsg model.shell
+            in
+            ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
 
 
-view : Model -> Html Never
+view : Model -> Html Msg
 view _ =
     renderShell { title = "Support the Hackathon", url = Just Urls.donate }
         [ textDiv
@@ -37,9 +52,10 @@ view _ =
             , p "Bergen Youth Enrichment is a registered 501(c)(3) public charity. All donations are tax deductible."
             ]
         ]
+        |> Html.map ShellTemplateMsg
 
 
-individualDonors : Html Never
+individualDonors : Html Msg
 individualDonors =
     div []
         [ h2 [ class "text-2xl font-bold mb-4" ] [ Html.text "Individual Donors" ]
@@ -49,7 +65,7 @@ individualDonors =
         ]
 
 
-corporateSponsors : Html Never
+corporateSponsors : Html Msg
 corporateSponsors =
     div []
         [ h2 [ class "text-2xl font-bold mt-8 mb-4" ] [ Html.text "Corporate Sponsorship Levels" ]
@@ -85,7 +101,7 @@ corporateSponsors =
         ]
 
 
-sponsorshipTier : String -> String -> List String -> Html Never
+sponsorshipTier : String -> String -> List String -> Html Msg
 sponsorshipTier name cost benefits =
     li [ class "border-l-4 border-yellow-500 pl-4" ]
         [ div [ class "flex gap-x-4" ]

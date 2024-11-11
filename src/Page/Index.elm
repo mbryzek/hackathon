@@ -4,36 +4,52 @@ import Browser.Navigation as Nav
 import Global exposing (GlobalState)
 import Html exposing (Html, text, img)
 import Html.Attributes exposing (class, src)
-import Templates.Shell exposing (renderShell, link)
+import Templates.Shell as ShellTemplate exposing (renderShell, link)
 import Ui.Elements exposing (p, textColor, textDiv, calloutBox2)
 import Urls
 
 
 type alias Model =
     { global : GlobalState
-    }
+    , shell : ShellTemplate.Model }
 
 
-type Msg
-    = RedirectTo String
+type Msg =
+    ShellTemplateMsg ShellTemplate.Msg
+    | RedirectTo String
 
 
-init : GlobalState -> Model
+init : GlobalState -> ( Model, Cmd Msg )
 init global =
-    { global = global
-    }
+    let
+        ( shell, shellCmd ) =
+            ShellTemplate.init
+    in
+    ( { global = global
+      , shell = shell
+      }
+    , Cmd.map ShellTemplateMsg shellCmd
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        RedirectTo u ->
-            ( model, Nav.pushUrl model.global.navKey u )
+        ShellTemplateMsg subMsg ->
+            let
+                ( updatedShell, shellCmd ) =
+                    ShellTemplate.update subMsg model.shell
+            in
+            ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
+
+        RedirectTo url ->
+            ( model, Nav.pushUrl model.global.navKey url )
 
 
 view : Model -> Html Msg
 view _ =
     renderShell { title = "2025 Bergen Tech Hackathon", url = Just Urls.index } [ intro ]
+        |> Html.map ShellTemplateMsg
 
 
 intro : Html Msg

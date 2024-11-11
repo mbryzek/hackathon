@@ -241,7 +241,7 @@ profileDropdown =
         ]
 
 
-renderShell : ShellProps -> List (Html Msg) -> Html Msg
+renderShell : ShellProps -> List (Html msg) -> Html Msg
 renderShell props contents =
     div
         [ Attr.class "min-h-full"
