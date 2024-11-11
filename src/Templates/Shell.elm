@@ -1,4 +1,4 @@
-module Templates.Shell exposing (ShellProps, link, renderShell, init, update, Msg, Model)
+module Templates.Shell exposing (ShellProps, renderShell, init, update, Msg, Model)
 
 import Constants exposing (logoSrc)
 import Html exposing (Html, a, button, div, h1, header, img, main_, nav, p, span, text)
@@ -6,7 +6,6 @@ import Html.Attributes as Attr
 import Html.Events exposing (onClick)
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
-import Templates.Buttons exposing (renderDefaultTextLink)
 import Ui.Elements exposing (textColor)
 import Urls
 
@@ -241,7 +240,7 @@ profileDropdown =
         ]
 
 
-renderShell : ShellProps -> List (Html msg) -> Html Msg
+renderShell : ShellProps -> List (Html Msg) -> Html Msg
 renderShell props contents =
     div
         [ Attr.class "min-h-full"
@@ -352,15 +351,6 @@ renderShell props contents =
                 ]
                 contents
             ]
-        ]
-
-
-link : msg -> String -> Html msg
-link msg label =
-    p
-        [ Attr.class (textColor ++ " mt-4 text-center text-sm underline hover:no-underline")
-        ]
-        [ renderDefaultTextLink msg label
         ]
 
 
