@@ -48,4 +48,5 @@ allPhotoUrls =
         , "IMG_6526.jpg"
         , "IMG_6532.jpg"
         , "IMG_0999.jpg"
+        , "IMG_6785.jpg"
         ]
