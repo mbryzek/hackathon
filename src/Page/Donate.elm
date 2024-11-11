@@ -14,7 +14,7 @@ type alias Model =
 
 
 type Msg =
-    ShellTemplateMsg ShellTemplate.Msg
+    ShellTemplateMsg ShellTemplate.ShellMsg
 
 
 init : GlobalState -> ( Model, Cmd Msg )
