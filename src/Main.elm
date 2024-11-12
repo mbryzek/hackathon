@@ -100,14 +100,13 @@ type MainMsg
 
 update : MainMsg -> Model -> ( Model, Cmd MainMsg )
 update msg model =
-    Debug.log "Main.update called"
-    (case msg of
+    case msg of
         InternalMsg m ->
             handleInternalMsg m model
 
         PageMsg m ->
             handlePageMsg m model
-    )
+
 
 handleInternalMsg : MainInternalMsg -> Model -> ( Model, Cmd MainMsg )
 handleInternalMsg msg model =
@@ -128,7 +127,6 @@ handleInternalMsg msg model =
                 ( updatedShell, shellCmd ) =
                     ShellTemplate.update subMsg model.shell
             in
-            Debug.log "ShellTemplateMsg"
             ( { model | shell = updatedShell }
             , Cmd.map (\m -> InternalMsg (ShellTemplateMsg m)) shellCmd
             )
@@ -160,7 +158,7 @@ view model =
     }
 
 
-viewNotFound : Model ->Html MainMsg
+viewNotFound : Model -> Html MainMsg
 viewNotFound model =
     renderErrorPage model
         { title = "Page not found"
@@ -188,12 +186,15 @@ renderErrorPage model params =
                 Just l ->
                     [ Html.map InternalMsg l ]
     in
-    renderShell model.shell (\m -> InternalMsg (ShellTemplateMsg m)) {
-        title = params.title, url = Nothing
-    } (List.append
-        [ Html.p [] [ Html.text params.body ] ]
-        htmlLink
-    )
+    renderShell model.shell
+        (\m -> InternalMsg (ShellTemplateMsg m))
+        { title = params.title
+        , url = Nothing
+        }
+        (List.append
+            [ Html.p [] [ Html.text params.body ] ]
+            htmlLink
+        )
 
 
 type alias Session =
@@ -214,6 +215,8 @@ toGlobalState state _ =
 
 
 -- CODEGEN START
+
+
 type Page
     = PageContact PageContact.Model
     | PageDonate PageDonate.Model
@@ -232,44 +235,50 @@ type MainPageMsg
     | PageY24PhotosMsg PageY24Photos.Msg
 
 
-toPage : IntermediateState -> Maybe Session -> Route.Route -> (Page, Cmd MainMsg)
+toPage : IntermediateState -> Maybe Session -> Route.Route -> ( Page, Cmd MainMsg )
 toPage state session route =
     case route of
         Route.PageContact ->
             let
-                (model, msg) = PageContact.init (toGlobalState state session)
+                ( model, msg ) =
+                    PageContact.init (toGlobalState state session)
             in
-            (PageContact model, Cmd.map PageMsg (Cmd.map PageContactMsg msg))
+            ( PageContact model, Cmd.map PageMsg (Cmd.map PageContactMsg msg) )
 
         Route.PageDonate ->
             let
-                (model, msg) = PageDonate.init (toGlobalState state session)
+                ( model, msg ) =
+                    PageDonate.init (toGlobalState state session)
             in
-            (PageDonate model, Cmd.map PageMsg (Cmd.map PageDonateMsg msg))
+            ( PageDonate model, Cmd.map PageMsg (Cmd.map PageDonateMsg msg) )
 
         Route.PageIndex ->
             let
-                (model, msg) = PageIndex.init (toGlobalState state session)
+                ( model, msg ) =
+                    PageIndex.init (toGlobalState state session)
             in
-            (PageIndex model, Cmd.map PageMsg (Cmd.map PageIndexMsg msg))
+            ( PageIndex model, Cmd.map PageMsg (Cmd.map PageIndexMsg msg) )
 
         Route.PageSponsors ->
             let
-                (model, msg) = PageSponsors.init (toGlobalState state session)
+                ( model, msg ) =
+                    PageSponsors.init (toGlobalState state session)
             in
-            (PageSponsors model, Cmd.map PageMsg (Cmd.map PageSponsorsMsg msg))
+            ( PageSponsors model, Cmd.map PageMsg (Cmd.map PageSponsorsMsg msg) )
 
         Route.PageY24Index ->
             let
-                (model, msg) = PageY24Index.init (toGlobalState state session)
+                ( model, msg ) =
+                    PageY24Index.init (toGlobalState state session)
             in
-            (PageY24Index model, Cmd.map PageMsg (Cmd.map PageY24IndexMsg msg))
+            ( PageY24Index model, Cmd.map PageMsg (Cmd.map PageY24IndexMsg msg) )
 
         Route.PageY24Photos ->
             let
-                (model, msg) = PageY24Photos.init (toGlobalState state session)
+                ( model, msg ) =
+                    PageY24Photos.init (toGlobalState state session)
             in
-            (PageY24Photos model, Cmd.map PageMsg (Cmd.map PageY24PhotosMsg msg))
+            ( PageY24Photos model, Cmd.map PageMsg (Cmd.map PageY24PhotosMsg msg) )
 
 
 pageView : Page -> Html MainMsg
@@ -310,60 +319,66 @@ handlePageMsg : MainPageMsg -> Model -> ( Model, Cmd MainMsg )
 handlePageMsg msg model =
     case model.page of
         Nothing ->
-            (model, Cmd.none)
+            ( model, Cmd.none )
 
         Just p ->
             case ( msg, p ) of
-                (PageContactMsg pageMsg, PageContact pageModel) ->
+                ( PageContactMsg pageMsg, PageContact pageModel ) ->
                     let
-                        (newModel, newCmd) = PageContact.update pageMsg pageModel
+                        ( newModel, newCmd ) =
+                            PageContact.update pageMsg pageModel
                     in
-                    ({ model | page = Just (PageContact newModel) }, Cmd.map PageMsg (Cmd.map PageContactMsg newCmd))
+                    ( { model | page = Just (PageContact newModel) }, Cmd.map PageMsg (Cmd.map PageContactMsg newCmd) )
 
-                (PageContactMsg _, _) ->
-                    (model, Cmd.none)
+                ( PageContactMsg _, _ ) ->
+                    ( model, Cmd.none )
 
-                (PageDonateMsg pageMsg, PageDonate pageModel) ->
+                ( PageDonateMsg pageMsg, PageDonate pageModel ) ->
                     let
-                        (newModel, newCmd) = PageDonate.update pageMsg pageModel
+                        ( newModel, newCmd ) =
+                            PageDonate.update pageMsg pageModel
                     in
-                    ({ model | page = Just (PageDonate newModel) }, Cmd.map PageMsg (Cmd.map PageDonateMsg newCmd))
+                    ( { model | page = Just (PageDonate newModel) }, Cmd.map PageMsg (Cmd.map PageDonateMsg newCmd) )
 
-                (PageDonateMsg _, _) ->
-                    (model, Cmd.none)
+                ( PageDonateMsg _, _ ) ->
+                    ( model, Cmd.none )
 
-                (PageIndexMsg pageMsg, PageIndex pageModel) ->
+                ( PageIndexMsg pageMsg, PageIndex pageModel ) ->
                     let
-                        (newModel, newCmd) = PageIndex.update pageMsg pageModel
+                        ( newModel, newCmd ) =
+                            PageIndex.update pageMsg pageModel
                     in
-                    ({ model | page = Just (PageIndex newModel) }, Cmd.map PageMsg (Cmd.map PageIndexMsg newCmd))
+                    ( { model | page = Just (PageIndex newModel) }, Cmd.map PageMsg (Cmd.map PageIndexMsg newCmd) )
 
-                (PageIndexMsg _, _) ->
-                    (model, Cmd.none)
+                ( PageIndexMsg _, _ ) ->
+                    ( model, Cmd.none )
 
-                (PageSponsorsMsg pageMsg, PageSponsors pageModel) ->
+                ( PageSponsorsMsg pageMsg, PageSponsors pageModel ) ->
                     let
-                        (newModel, newCmd) = PageSponsors.update pageMsg pageModel
+                        ( newModel, newCmd ) =
+                            PageSponsors.update pageMsg pageModel
                     in
-                    ({ model | page = Just (PageSponsors newModel) }, Cmd.map PageMsg (Cmd.map PageSponsorsMsg newCmd))
+                    ( { model | page = Just (PageSponsors newModel) }, Cmd.map PageMsg (Cmd.map PageSponsorsMsg newCmd) )
 
-                (PageSponsorsMsg _, _) ->
-                    (model, Cmd.none)
+                ( PageSponsorsMsg _, _ ) ->
+                    ( model, Cmd.none )
 
-                (PageY24IndexMsg pageMsg, PageY24Index pageModel) ->
+                ( PageY24IndexMsg pageMsg, PageY24Index pageModel ) ->
                     let
-                        (newModel, newCmd) = PageY24Index.update pageMsg pageModel
+                        ( newModel, newCmd ) =
+                            PageY24Index.update pageMsg pageModel
                     in
-                    ({ model | page = Just (PageY24Index newModel) }, Cmd.map PageMsg (Cmd.map PageY24IndexMsg newCmd))
+                    ( { model | page = Just (PageY24Index newModel) }, Cmd.map PageMsg (Cmd.map PageY24IndexMsg newCmd) )
 
-                (PageY24IndexMsg _, _) ->
-                    (model, Cmd.none)
+                ( PageY24IndexMsg _, _ ) ->
+                    ( model, Cmd.none )
 
-                (PageY24PhotosMsg pageMsg, PageY24Photos pageModel) ->
+                ( PageY24PhotosMsg pageMsg, PageY24Photos pageModel ) ->
                     let
-                        (newModel, newCmd) = PageY24Photos.update pageMsg pageModel
+                        ( newModel, newCmd ) =
+                            PageY24Photos.update pageMsg pageModel
                     in
-                    ({ model | page = Just (PageY24Photos newModel) }, Cmd.map PageMsg (Cmd.map PageY24PhotosMsg newCmd))
+                    ( { model | page = Just (PageY24Photos newModel) }, Cmd.map PageMsg (Cmd.map PageY24PhotosMsg newCmd) )
 
-                (PageY24PhotosMsg _, _) ->
-                    (model, Cmd.none)
+                ( PageY24PhotosMsg _, _ ) ->
+                    ( model, Cmd.none )

@@ -6,7 +6,6 @@ import Html.Attributes as Attr
 import Html.Events exposing (onClick)
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
-import Templates.Buttons exposing (renderDefaultTextLink)
 import Ui.Elements exposing (textColor)
 import Urls
 
@@ -37,17 +36,7 @@ update : ShellMsg -> Model -> ( Model, Cmd ShellMsg )
 update msg model =
     case msg of
         ToggleMenu ->
-            Debug.log
-                ("ToggleMenu. Current state: "
-                    ++ (case model.mobileMenuState of
-                            Open ->
-                                "Open"
-
-                            Closed ->
-                                "Closed"
-                       )
-                )
-                ( { model | mobileMenuState = toggleMenuState model.mobileMenuState }, Cmd.none )
+            ( { model | mobileMenuState = toggleMenuState model.mobileMenuState }, Cmd.none )
 
 
 toggleMenuState : MobileMenuState -> MobileMenuState
@@ -431,6 +420,7 @@ createSvg d =
             []
         ]
 
+
 hamburgerMenuIcon : Html ShellMsg
 hamburgerMenuIcon =
     createSvg "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
@@ -451,8 +441,7 @@ mobileMenuButton model htmlMap =
     div
         [ Attr.class "-mr-2 flex md:hidden"
         ]
-        [
-            button
+        [ button
             [ Attr.type_ "button"
             , Attr.class "relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
             , Attr.attribute "aria-controls" "mobile-menu"
@@ -463,20 +452,20 @@ mobileMenuButton model htmlMap =
                 [ Attr.class "absolute -inset-0.5"
                 ]
                 []
-            , srOnly (case model.mobileMenuState of
-                Open ->
-                    "Close menu"
+            , srOnly
+                (case model.mobileMenuState of
+                    Open ->
+                        "Close menu"
 
-                Closed ->
-                    "Open menu"
-            )
-            , (case model.mobileMenuState of
+                    Closed ->
+                        "Open menu"
+                )
+            , case model.mobileMenuState of
                 Open ->
                     closeIcon
 
                 Closed ->
                     hamburgerMenuIcon
-                )
             ]
         ]
         |> Html.map htmlMap

@@ -2,20 +2,21 @@ module Page.Index exposing (Model, Msg, init, update, view)
 
 import Browser.Navigation as Nav
 import Global exposing (GlobalState)
-import Html exposing (Html, text, img)
+import Html exposing (Html, img, text)
 import Html.Attributes exposing (class, src)
 import Templates.Shell as ShellTemplate exposing (renderShell)
-import Ui.Elements exposing (p, textColor, textDiv, calloutBox2, link)
+import Ui.Elements exposing (calloutBox2, link, p, textColor, textDiv)
 import Urls
 
 
 type alias Model =
     { global : GlobalState
-    , shell : ShellTemplate.Model }
+    , shell : ShellTemplate.Model
+    }
 
 
-type Msg =
-    ShellTemplateMsg ShellTemplate.ShellMsg
+type Msg
+    = ShellTemplateMsg ShellTemplate.ShellMsg
     | RedirectTo String
 
 
@@ -34,41 +35,41 @@ init global =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    Debug.log "Index.update called"
-    (case msg of
+    case msg of
         ShellTemplateMsg subMsg ->
             let
                 ( updatedShell, shellCmd ) =
                     ShellTemplate.update subMsg model.shell
             in
-            Debug.log ("ShellTemplateMsg received")
             ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
 
         RedirectTo url ->
-            ( model, Nav.pushUrl model.global.navKey url)
-    )
+            ( model, Nav.pushUrl model.global.navKey url )
 
 
 twoLines : String -> String -> Html msg
 twoLines first second =
-    Html.div [class "flex flex-col gap-y-2"] [
-        Html.div [] [Html.text first]
-        , Html.div [] [Html.text second]
-    ]
+    Html.div [ class "flex flex-col gap-y-2" ]
+        [ Html.div [] [ Html.text first ]
+        , Html.div [] [ Html.text second ]
+        ]
+
 
 view : Model -> Html Msg
 view model =
-    renderShell model.shell ShellTemplateMsg {
-        title = "2025 Bergen Tech Hackathon", url = Just Urls.index
-    } [
-        textDiv [
-            calloutBox2 {
-                title = "Date & Time"
+    renderShell model.shell
+        ShellTemplateMsg
+        { title = "2025 Bergen Tech Hackathon"
+        , url = Just Urls.index
+        }
+        [ textDiv
+            [ calloutBox2
+                { title = "Date & Time"
                 , contents = twoLines "April 6, 2025" "9am - 9pm"
-            } {
-                title = "Location"
+                }
+                { title = "Location"
                 , contents = twoLines "Bergen Tech High School" "Teterboro NJ"
-            }
+                }
             , p "The Bergen Tech Computer Science Parents group is very pleased to announce the second annual Computer Science Hackathon in collaboration with the BT Code Club and Computer Science Major. This event is an amazing opportunity for our students to have fun, learn and build software together. "
             , p "This hackathon is a great opportunity for students of all levels to learn and explore their passion for software. Students, in teams of 1-4, will have 12 hours to build a project of their choosing and have a change to compete in over 10 categories for awards of over $5,000!"
             , p "We need your help! To make this event a huge success, we're seeking donations from individuals and companies interested in sponsoring the event. All donations are tax deductible and 100% of the funds raised directly support this event. "
@@ -77,9 +78,8 @@ view model =
             , link (RedirectTo Urls.donate) "Donate or Become a Sponsor"
             , thankYouMessage
             , studentPhoto
+            ]
         ]
-    ]
-
 
 
 thankYouMessage : Html Msg
