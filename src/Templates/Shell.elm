@@ -1,5 +1,6 @@
 module Templates.Shell exposing (MobileMenuState, Model, ShellMsg, ShellProps, init, renderShell, update)
 
+import Browser.Navigation as Nav
 import Constants exposing (logoSrc)
 import Html exposing (Html, a, button, div, h1, header, img, main_, nav, span, text)
 import Html.Attributes as Attr
@@ -15,7 +16,9 @@ type alias ShellProps =
 
 
 type alias Model =
-    { mobileMenuState : MobileMenuState }
+    { navKey : Nav.Key
+    , mobileMenuState : MobileMenuState
+    }
 
 
 type MobileMenuState
@@ -25,11 +28,12 @@ type MobileMenuState
 
 type ShellMsg
     = ToggleMenu
+    | RedirectTo String
 
 
-init : ( Model, Cmd ShellMsg )
-init =
-    ( { mobileMenuState = Closed }, Cmd.none )
+init : Nav.Key -> ( Model, Cmd ShellMsg )
+init navKey =
+    ( { navKey = navKey, mobileMenuState = Closed }, Cmd.none )
 
 
 update : ShellMsg -> Model -> ( Model, Cmd ShellMsg )
@@ -37,6 +41,9 @@ update msg model =
     case msg of
         ToggleMenu ->
             ( { model | mobileMenuState = toggleMenuState model.mobileMenuState }, Cmd.none )
+
+        RedirectTo url ->
+            ( model, Nav.pushUrl model.navKey url )
 
 
 toggleMenuState : MobileMenuState -> MobileMenuState
