@@ -65,7 +65,7 @@ view model =
         [ textDiv
             [ calloutBox2
                 { title = "Date & Time"
-                , contents = twoLines "April 6, 2025" "9am - 9pm"
+                , contents = twoLines "April 5, 2025" "9am - 9pm"
                 }
                 { title = "Location"
                 , contents = twoLines "Bergen Tech High School" "Teterboro NJ"
