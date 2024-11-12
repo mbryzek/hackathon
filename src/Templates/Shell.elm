@@ -1,4 +1,4 @@
-module Templates.Shell exposing (ShellProps, renderShell, init, update, ShellMsg, Model)
+module Templates.Shell exposing (MobileMenuState, Model, ShellMsg, ShellProps, init, renderShell, update)
 
 import Constants exposing (logoSrc)
 import Html exposing (Html, a, button, div, h1, header, img, main_, nav, span, text)
@@ -17,35 +17,47 @@ type alias ShellProps =
 type alias Model =
     { mobileMenuState : MobileMenuState }
 
+
 type MobileMenuState
     = Open
     | Closed
+
 
 type ShellMsg
     = ToggleMenu
 
 
-init : (Model, Cmd ShellMsg)
+init : ( Model, Cmd ShellMsg )
 init =
     ( { mobileMenuState = Closed }, Cmd.none )
 
 
-update : ShellMsg -> Model -> (Model, Cmd ShellMsg)
+update : ShellMsg -> Model -> ( Model, Cmd ShellMsg )
 update msg model =
     case msg of
         ToggleMenu ->
-            Debug.log ("ToggleMenu. Current state: " ++ (
-                case model.mobileMenuState of
-                    Open -> "Open"
-                    Closed -> "Closed"
-            ))
-            ( { model | mobileMenuState = toggleMenuState model.mobileMenuState }, Cmd.none )
+            Debug.log
+                ("ToggleMenu. Current state: "
+                    ++ (case model.mobileMenuState of
+                            Open ->
+                                "Open"
+
+                            Closed ->
+                                "Closed"
+                       )
+                )
+                ( { model | mobileMenuState = toggleMenuState model.mobileMenuState }, Cmd.none )
+
 
 toggleMenuState : MobileMenuState -> MobileMenuState
 toggleMenuState state =
     case state of
-        Open -> Closed
-        Closed -> Open
+        Open ->
+            Closed
+
+        Closed ->
+            Open
+
 
 enableNotifications : Bool
 enableNotifications =
@@ -57,7 +69,7 @@ enableProfileDropdown =
     False
 
 
-topNavSections : Maybe String -> (Maybe String -> String -> String  -> Html msg) -> Html msg
+topNavSections : Maybe String -> (Maybe String -> String -> String -> Html msg) -> Html msg
 topNavSections currentUrl fmt =
     div
         [ Attr.class "hidden md:block" ]
@@ -123,6 +135,7 @@ gated enabled content =
     else
         []
 
+
 notificationsAndProfile : Html msg
 notificationsAndProfile =
     let
@@ -135,6 +148,7 @@ notificationsAndProfile =
     in
     if List.isEmpty contents then
         text ""
+
     else
         div [ Attr.class "ml-4 flex items-center md:ml-6" ] contents
 
@@ -281,19 +295,32 @@ renderShell model htmlMap props contents =
                             , span
                                 [ Attr.class "sr-only"
                                 ]
-                                [ button [onClick ToggleMenu] [text (
-                                    case model.mobileMenuState of
-                                        Open -> "Close menu"
-                                        Closed -> "Open menu"
-                                ) ]]
+                                [ button [ onClick ToggleMenu ]
+                                    [ text
+                                        (case model.mobileMenuState of
+                                            Open ->
+                                                "Close menu"
+
+                                            Closed ->
+                                                "Open menu"
+                                        )
+                                    ]
+                                ]
                                 |> Html.map htmlMap
-                            ,
-                                (case model.mobileMenuState of
-                                    Open -> button [onClick ToggleMenu] [text "MENU STATE: Open"]
-                                    Closed -> button [onClick ToggleMenu] [text "MENU STATE: Closed"]
-                                    ) |> Html.map htmlMap
-                            , svg1 htmlMap {- Menu open: "hidden", Menu closed: "block" -}
-                            , svg2 htmlMap {- Menu open: "block", Menu closed: "hidden" -}
+                            , (case model.mobileMenuState of
+                                Open ->
+                                    button [ onClick ToggleMenu ] [ text "MENU STATE: Open" ]
+
+                                Closed ->
+                                    button [ onClick ToggleMenu ] [ text "MENU STATE: Closed" ]
+                              )
+                                |> Html.map htmlMap
+                            , svg1 htmlMap
+
+                            {- Menu open: "hidden", Menu closed: "block" -}
+                            , svg2 htmlMap
+
+                            {- Menu open: "block", Menu closed: "hidden" -}
                             ]
                         ]
                     ]
@@ -343,6 +370,7 @@ mobileNotificationsAndProfile =
     in
     if List.isEmpty contents then
         text ""
+
     else
         div [ Attr.class "border-t border-gray-700 pb-3 pt-4" ] contents
 
@@ -409,24 +437,24 @@ mobileNotifications =
 mobileProfileDropdown : Html msg
 mobileProfileDropdown =
     div
-            [ Attr.class "mt-3 space-y-1 px-2"
+        [ Attr.class "mt-3 space-y-1 px-2"
+        ]
+        [ a
+            [ Attr.href "#"
+            , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
             ]
-            [ a
-                [ Attr.href "#"
-                , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                ]
-                [ text "Your Profile" ]
-            , a
-                [ Attr.href "#"
-                , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                ]
-                [ text "Settings" ]
-            , a
-                [ Attr.href "#"
-                , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                ]
-                [ text "Sign out" ]
+            [ text "Your Profile" ]
+        , a
+            [ Attr.href "#"
+            , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
             ]
+            [ text "Settings" ]
+        , a
+            [ Attr.href "#"
+            , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+            ]
+            [ text "Sign out" ]
+        ]
 
 
 svg1 : (ShellMsg -> msg) -> Html msg
@@ -448,7 +476,7 @@ svg1 htmlMap =
             ]
             []
         ]
-    |> Html.map htmlMap
+        |> Html.map htmlMap
 
 
 svg2 : (ShellMsg -> msg) -> Html msg
@@ -465,12 +493,12 @@ svg2 htmlMap =
         ]
         [ path
             [ SvgAttr.strokeLinecap "round"
-        , SvgAttr.strokeLinejoin "round"
-        , SvgAttr.d "M6 18 18 6M6 6l12 12"
+            , SvgAttr.strokeLinejoin "round"
+            , SvgAttr.d "M6 18 18 6M6 6l12 12"
             ]
             []
         ]
-    |> Html.map htmlMap
+        |> Html.map htmlMap
 
 
 srOnly : String -> Html msg
