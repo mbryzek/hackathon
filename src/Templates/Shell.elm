@@ -280,7 +280,7 @@ renderShell model htmlMap props contents =
                     [ Attr.class "space-y-1 px-2 pb-3 pt-2 sm:px-3"
                     ]
                     [ topNavSections props.url navLink ]
-                , mobileNotificationsAndProfile
+                , mobileNotificationsAndProfile model
                 ]
             ]
         , header
@@ -304,14 +304,23 @@ renderShell model htmlMap props contents =
         ]
 
 
-mobileNotificationsAndProfile : Html msg
-mobileNotificationsAndProfile =
+mobileNotificationsAndProfile : Model -> Html msg
+mobileNotificationsAndProfile model =
     let
+        showMobileMenu : Bool
+        showMobileMenu =
+            case model.mobileMenuState of
+                Open ->
+                    True
+
+                Closed ->
+                    False
+
         contents : List (Html msg)
         contents =
             List.concat
                 [ gated enableNotifications mobileNotifications
-                , gated enableProfileDropdown mobileProfileDropdown
+                , gated showMobileMenu mobileProfileDropdown
                 ]
     in
     if List.isEmpty contents then
