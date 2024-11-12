@@ -149,10 +149,7 @@ notifications =
             [ Attr.class "absolute -inset-1.5"
             ]
             []
-        , span
-            [ Attr.class "sr-only"
-            ]
-            [ text "View notifications" ]
+        , srOnly "View notifications"
         , svg
             [ SvgAttr.class "h-6 w-6"
             , SvgAttr.fill "none"
@@ -187,10 +184,7 @@ profileDropdown =
                     [ Attr.class "absolute -inset-1.5"
                     ]
                     []
-                , span
-                    [ Attr.class "sr-only"
-                    ]
-                    [ text "Open user menu" ]
+                , srOnly "Open user menu"
                 , img
                     [ Attr.class "h-8 w-8 rounded-full"
                     , Attr.src "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
@@ -298,40 +292,8 @@ renderShell model htmlMap props contents =
                                     Open -> "MENU STATE: Open"
                                     Closed -> "MENU STATE: Closed"
                             )
-                            , {- Menu open: "hidden", Menu closed: "block" -}
-                              svg
-                                [ SvgAttr.class "block h-6 w-6"
-                                , SvgAttr.fill "none"
-                                , SvgAttr.viewBox "0 0 24 24"
-                                , SvgAttr.strokeWidth "1.5"
-                                , SvgAttr.stroke "currentColor"
-                                , Attr.attribute "aria-hidden" "true"
-                                , Attr.attribute "data-slot" "icon"
-                                ]
-                                [ path
-                                    [ SvgAttr.strokeLinecap "round"
-                                    , SvgAttr.strokeLinejoin "round"
-                                    , SvgAttr.d "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                                    ]
-                                    []
-                                ]
-                            , {- Menu open: "block", Menu closed: "hidden" -}
-                              svg
-                                [ SvgAttr.class "hidden h-6 w-6"
-                                , SvgAttr.fill "none"
-                                , SvgAttr.viewBox "0 0 24 24"
-                                , SvgAttr.strokeWidth "1.5"
-                                , SvgAttr.stroke "currentColor"
-                                , Attr.attribute "aria-hidden" "true"
-                                , Attr.attribute "data-slot" "icon"
-                                ]
-                                [ path
-                                    [ SvgAttr.strokeLinecap "round"
-                                    , SvgAttr.strokeLinejoin "round"
-                                    , SvgAttr.d "M6 18 18 6M6 6l12 12"
-                                    ]
-                                    []
-                                ]
+                            , svg1 htmlMap {- Menu open: "hidden", Menu closed: "block" -}
+                            , svg2 htmlMap {- Menu open: "block", Menu closed: "hidden" -}
                             ]
                         ]
                     ]
@@ -465,3 +427,52 @@ mobileProfileDropdown =
                 ]
                 [ text "Sign out" ]
             ]
+
+
+svg1 : (ShellMsg -> msg) -> Html msg
+svg1 htmlMap =
+    svg
+        [ SvgAttr.class "block h-6 w-6"
+        , SvgAttr.fill "none"
+        , SvgAttr.viewBox "0 0 24 24"
+        , SvgAttr.strokeWidth "1.5"
+        , SvgAttr.stroke "currentColor"
+        , Attr.attribute "aria-hidden" "true"
+        , Attr.attribute "data-slot" "icon"
+        , onClick ToggleMenu
+        ]
+        [ path
+            [ SvgAttr.strokeLinecap "round"
+            , SvgAttr.strokeLinejoin "round"
+            , SvgAttr.d "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+            ]
+            []
+        ]
+    |> Html.map htmlMap
+
+
+svg2 : (ShellMsg -> msg) -> Html msg
+svg2 htmlMap =
+    svg
+        [ SvgAttr.class "hidden h-6 w-6"
+        , SvgAttr.fill "none"
+        , SvgAttr.viewBox "0 0 24 24"
+        , SvgAttr.strokeWidth "1.5"
+        , SvgAttr.stroke "currentColor"
+        , Attr.attribute "aria-hidden" "true"
+        , Attr.attribute "data-slot" "icon"
+        , onClick ToggleMenu
+        ]
+        [ path
+            [ SvgAttr.strokeLinecap "round"
+        , SvgAttr.strokeLinejoin "round"
+        , SvgAttr.d "M6 18 18 6M6 6l12 12"
+            ]
+            []
+        ]
+    |> Html.map htmlMap
+
+
+srOnly : String -> Html msg
+srOnly text =
+    span [ Attr.class "sr-only" ] [ Html.text text ]

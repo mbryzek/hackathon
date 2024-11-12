@@ -40,6 +40,7 @@ update msg model =
                 ( updatedShell, shellCmd ) =
                     ShellTemplate.update subMsg model.shell
             in
+            Debug.log ("ShellTemplateMsg received")
             ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
 
         RedirectTo url ->
