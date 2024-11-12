@@ -1,7 +1,7 @@
 module Templates.Shell exposing (ShellProps, renderShell, init, update, ShellMsg, Model)
 
 import Constants exposing (logoSrc)
-import Html exposing (Html, a, button, div, h1, header, img, main_, nav, p, span, text)
+import Html exposing (Html, a, button, div, h1, header, img, main_, nav, span, text)
 import Html.Attributes as Attr
 import Html.Events exposing (onClick)
 import Svg exposing (path, svg)

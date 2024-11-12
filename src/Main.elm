@@ -11,7 +11,8 @@ import Page.Sponsors as PageSponsors
 import Page.Y24.Index as PageY24Index
 import Page.Y24.Photos as PageY24Photos
 import Route
-import Templates.Shell exposing (link, renderShell)
+import Templates.Shell as ShellTemplate exposing (renderShell)
+import Ui.Elements exposing (link)
 import Url
 import Urls
 
@@ -40,6 +41,7 @@ subscriptions _ =
 type alias Model =
     { session : GlobalState
     , state : IntermediateState
+    , shell : ShellTemplate.Model
     , url : Url.Url
     , page : Maybe Page
     }
@@ -81,6 +83,7 @@ type MainInternalMsg
     = LinkClicked UrlRequest
     | UrlChanged Url.Url
     | RedirectTo String
+    | ShellTemplateMsg ShellTemplate.ShellMsg
 
 
 type MainMsg
@@ -167,7 +170,7 @@ renderErrorPage params =
                 Just l ->
                     [ Html.map InternalMsg l ]
     in
-    renderShell { title = params.title, url = Nothing }
+    renderShell (InternalMsg ShellTemplateMsg) { title = params.title, url = Nothing }
         (List.append
             [ Html.p [] [ Html.text params.body ] ]
             htmlLink

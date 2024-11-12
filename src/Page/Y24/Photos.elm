@@ -3,31 +3,47 @@ module Page.Y24.Photos exposing (Model, Msg, init, update, view)
 import Global exposing (GlobalState)
 import Html exposing (Html)
 import Templates.PhotoGallery exposing (renderPhotoGallery)
-import Templates.Shell exposing (renderShell)
+import Templates.Shell as ShellTemplate exposing (renderShell)
 import Urls
 
-
 type alias Model =
-    { global : GlobalState }
+    { global : GlobalState
+    , shell : ShellTemplate.Model }
 
 
-type alias Msg =
-    Never
+type Msg =
+    ShellTemplateMsg ShellTemplate.ShellMsg
 
 
-init : GlobalState -> Model
+init : GlobalState -> ( Model, Cmd Msg )
 init global =
-    { global = global }
+    let
+        ( shell, shellCmd ) =
+            ShellTemplate.init
+    in
+    ( { global = global
+      , shell = shell
+      }
+    , Cmd.map ShellTemplateMsg shellCmd
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg _ =
-    never msg
+update msg model =
+    case msg of
+        ShellTemplateMsg subMsg ->
+            let
+                ( updatedShell, shellCmd ) =
+                    ShellTemplate.update subMsg model.shell
+            in
+            ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
 
 
-view : Model -> Html Never
+view : Model -> Html Msg
 view _ =
-    renderShell { title = "2024 Photos", url = Just Urls.photos } [ renderPhotoGallery allPhotoUrls ]
+    renderShell ShellTemplateMsg { title = "2024 Photos", url = Just Urls.photos } [
+        renderPhotoGallery allPhotoUrls
+    ]
 
 
 toUrl : String -> String
