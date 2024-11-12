@@ -43,7 +43,7 @@ update msg model =
 
 view : Model -> Html Msg
 view _ =
-    renderShell { title = "Support the Hackathon", url = Just Urls.donate }
+    renderShell ShellTemplateMsg { title = "Support the Hackathon", url = Just Urls.donate }
         [ textDiv
             [ p "The Bergen Tech Hackathon is only possible thanks to the generosity of our sponsors and donors. If you would like to support our mission of empowering the next generation of tech leaders, please consider donating to our cause."
             , p "Thank you for your support!"
@@ -52,10 +52,9 @@ view _ =
             , p "Bergen Youth Enrichment is a registered 501(c)(3) public charity. All donations are tax deductible."
             ]
         ]
-        |> Html.map ShellTemplateMsg
 
 
-individualDonors : Html Never
+individualDonors : Html Msg
 individualDonors =
     div []
         [ h2 [ class "text-2xl font-bold mb-4" ] [ Html.text "Individual Donors" ]
@@ -65,7 +64,7 @@ individualDonors =
         ]
 
 
-corporateSponsors : Html Never
+corporateSponsors : Html Msg
 corporateSponsors =
     div []
         [ h2 [ class "text-2xl font-bold mt-8 mb-4" ] [ Html.text "Corporate Sponsorship Levels" ]

@@ -43,7 +43,7 @@ update msg model =
 
 view : Model -> Html Msg
 view _ =
-    renderShell { title = "Contact The Hackathon Organizers", url = Just Urls.contact }
+    renderShell ShellTemplateMsg { title = "Contact The Hackathon Organizers", url = Just Urls.contact }
         [ textDiv
             [ p "The Bergen Tech Hackathon is run by a group of volunteers. If you have any questions, please contact:"
             , div [ class "pl-4" ]
@@ -52,4 +52,3 @@ view _ =
                 ]
             ]
         ]
-    |> Html.map ShellTemplateMsg

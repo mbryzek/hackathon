@@ -52,7 +52,7 @@ enableProfileDropdown =
     False
 
 
-topNavSections : Maybe String -> (Maybe String -> String -> String  -> Html ShellMsg) -> Html ShellMsg
+topNavSections : Maybe String -> (Maybe String -> String -> String  -> Html msg) -> Html msg
 topNavSections currentUrl fmt =
     div
         [ Attr.class "hidden md:block" ]
@@ -69,7 +69,7 @@ topNavSections currentUrl fmt =
         ]
 
 
-navLink : Maybe String -> String -> String -> Html ShellMsg
+navLink : Maybe String -> String -> String -> Html msg
 navLink currentUrl href label =
     let
         isActive : Bool
@@ -95,7 +95,7 @@ navLink currentUrl href label =
         [ text label ]
 
 
-logo : Html ShellMsg
+logo : Html msg
 logo =
     div
         [ Attr.class "shrink-0"
@@ -110,7 +110,7 @@ logo =
         ]
 
 
-gated : Bool -> Html ShellMsg -> List (Html ShellMsg)
+gated : Bool -> Html msg -> List (Html msg)
 gated enabled content =
     if enabled then
         [ content ]
@@ -118,10 +118,10 @@ gated enabled content =
     else
         []
 
-notificationsAndProfile : Html ShellMsg
+notificationsAndProfile : Html msg
 notificationsAndProfile =
     let
-        contents : List (Html ShellMsg)
+        contents : List (Html msg)
         contents =
             List.concat
                 [ gated enableNotifications notifications
@@ -134,7 +134,7 @@ notificationsAndProfile =
         div [ Attr.class "ml-4 flex items-center md:ml-6" ] contents
 
 
-notifications : Html ShellMsg
+notifications : Html msg
 notifications =
     button
         [ Attr.type_ "button"
@@ -167,7 +167,7 @@ notifications =
         ]
 
 
-profileDropdown : Html ShellMsg
+profileDropdown : Html msg
 profileDropdown =
     div [ Attr.class "relative ml-3" ]
         [ div []
@@ -240,8 +240,8 @@ profileDropdown =
         ]
 
 
-renderShell : ShellProps -> List (Html ShellMsg) -> Html ShellMsg
-renderShell props contents =
+renderShell : (ShellMsg -> msg) -> ShellProps -> List (Html msg) -> Html msg
+renderShell htmlMap props contents =
     div
         [ Attr.class "min-h-full"
         ]
@@ -283,6 +283,7 @@ renderShell props contents =
                                 [ Attr.class "sr-only"
                                 ]
                                 [ button [onClick ToggleMenu] [text "Open main menu" ]]
+                                |> Html.map htmlMap
                             , {- Menu open: "hidden", Menu closed: "block" -}
                               svg
                                 [ SvgAttr.class "block h-6 w-6"
@@ -354,10 +355,10 @@ renderShell props contents =
         ]
 
 
-mobileNotificationsAndProfile : Html ShellMsg
+mobileNotificationsAndProfile : Html msg
 mobileNotificationsAndProfile =
     let
-        contents : List (Html ShellMsg)
+        contents : List (Html msg)
         contents =
             List.concat
                 [ gated enableNotifications mobileNotifications
@@ -370,7 +371,7 @@ mobileNotificationsAndProfile =
         div [ Attr.class "border-t border-gray-700 pb-3 pt-4" ] contents
 
 
-mobileNotifications : Html ShellMsg
+mobileNotifications : Html msg
 mobileNotifications =
     div
         [ Attr.class "flex items-center px-5"
@@ -429,7 +430,7 @@ mobileNotifications =
         ]
 
 
-mobileProfileDropdown : Html ShellMsg
+mobileProfileDropdown : Html msg
 mobileProfileDropdown =
     div
             [ Attr.class "mt-3 space-y-1 px-2"
