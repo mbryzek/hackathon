@@ -6,6 +6,7 @@ import Html.Attributes as Attr
 import Html.Events exposing (onClick)
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
+import Templates.Buttons exposing (renderDefaultTextLink)
 import Ui.Elements exposing (textColor)
 import Urls
 
@@ -309,10 +310,10 @@ renderShell model htmlMap props contents =
                                 |> Html.map htmlMap
                             , (case model.mobileMenuState of
                                 Open ->
-                                    button [ onClick ToggleMenu ] [ text "MENU STATE: Open" ]
+                                    renderDefaultTextLink ToggleMenu "MENU STATE: Open"
 
                                 Closed ->
-                                    button [ onClick ToggleMenu ] [ text "MENU STATE: Closed" ]
+                                    renderDefaultTextLink ToggleMenu "MENU STATE: Closed"
                               )
                                 |> Html.map htmlMap
                             , svg1 htmlMap
