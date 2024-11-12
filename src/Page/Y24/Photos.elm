@@ -19,7 +19,7 @@ init : GlobalState -> ( Model, Cmd Msg )
 init global =
     let
         ( shell, shellCmd ) =
-            ShellTemplate.init
+            ShellTemplate.init global.navKey
     in
     ( { global = global
       , shell = shell

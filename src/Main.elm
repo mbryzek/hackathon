@@ -59,7 +59,7 @@ init _ url navKey =
             { navKey = navKey }
 
         ( shell, shellCmd ) =
-            ShellTemplate.init
+            ShellTemplate.init navKey
 
         initModel : Model
         initModel =
