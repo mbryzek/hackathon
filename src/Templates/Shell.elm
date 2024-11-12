@@ -59,6 +59,22 @@ enableProfileDropdown =
     False
 
 
+type alias Section =
+    { url : String, name : String }
+
+
+allSections : List Section
+allSections =
+    [
+        { url = Urls.index, name = "Overview" }
+        , { url = Urls.photos, name = "Photos" }
+        , { url = Urls.events2024, name = "2024 Event" }
+        , { url = Urls.sponsors, name = "Sponsors" }
+        , { url = Urls.donate, name = "Donate" }
+        , { url = Urls.contact, name = "Contact" }
+    ]
+
+
 topNavSections : Maybe String -> (Maybe String -> String -> String -> Html msg) -> Html msg
 topNavSections currentUrl fmt =
     div
@@ -66,13 +82,7 @@ topNavSections currentUrl fmt =
         [ div
             [ Attr.class "ml-10 flex items-baseline space-x-4"
             ]
-            [ fmt currentUrl Urls.index "Overview"
-            , fmt currentUrl Urls.photos "Photos"
-            , fmt currentUrl Urls.events2024 "2024 Event"
-            , fmt currentUrl Urls.sponsors "Sponsors"
-            , fmt currentUrl Urls.donate "Donate"
-            , fmt currentUrl Urls.contact "Contact"
-            ]
+            (List.map (\s -> fmt currentUrl s.url s.name) allSections)
         ]
 
 
