@@ -40,8 +40,10 @@ update msg model =
 
 
 view : Model -> Html Msg
-view _ =
-    renderShell ShellTemplateMsg { title = "2024 Photos", url = Just Urls.photos } [
+view model =
+    renderShell model.shell ShellTemplateMsg {
+        title = "2024 Photos", url = Just Urls.photos
+    } [
         renderPhotoGallery allPhotoUrls
     ]
 

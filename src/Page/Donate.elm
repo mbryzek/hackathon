@@ -42,8 +42,10 @@ update msg model =
 
 
 view : Model -> Html Msg
-view _ =
-    renderShell ShellTemplateMsg { title = "Support the Hackathon", url = Just Urls.donate }
+view model =
+    renderShell model.shell ShellTemplateMsg {
+        title = "Support the Hackathon", url = Just Urls.donate
+    }
         [ textDiv
             [ p "The Bergen Tech Hackathon is only possible thanks to the generosity of our sponsors and donors. If you would like to support our mission of empowering the next generation of tech leaders, please consider donating to our cause."
             , p "Thank you for your support!"

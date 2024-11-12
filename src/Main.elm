@@ -150,7 +150,7 @@ view model =
     , body =
         [ case model.page of
             Nothing ->
-                viewNotFound
+                viewNotFound model
 
             Just p ->
                 pageView p
@@ -158,9 +158,9 @@ view model =
     }
 
 
-viewNotFound : Html MainMsg
-viewNotFound =
-    renderErrorPage
+viewNotFound : Model ->Html MainMsg
+viewNotFound model =
+    renderErrorPage model
         { title = "Page not found"
         , body = "The page you are looking for does not exist."
         , link = Just (link (RedirectTo Urls.index) "Go to the home page")
@@ -174,8 +174,8 @@ type alias ErrorPageParams =
     }
 
 
-renderErrorPage : ErrorPageParams -> Html MainMsg
-renderErrorPage params =
+renderErrorPage : Model -> ErrorPageParams -> Html MainMsg
+renderErrorPage model params =
     let
         htmlLink : List (Html MainMsg)
         htmlLink =
@@ -186,11 +186,12 @@ renderErrorPage params =
                 Just l ->
                     [ Html.map InternalMsg l ]
     in
-    renderShell (\m -> InternalMsg (ShellTemplateMsg m)) { title = params.title, url = Nothing }
-        (List.append
-            [ Html.p [] [ Html.text params.body ] ]
-            htmlLink
-        )
+    renderShell model.shell (\m -> InternalMsg (ShellTemplateMsg m)) {
+        title = params.title, url = Nothing
+    } (List.append
+        [ Html.p [] [ Html.text params.body ] ]
+        htmlLink
+    )
 
 
 type alias Session =

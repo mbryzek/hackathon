@@ -54,8 +54,10 @@ twoLines first second =
     ]
 
 view : Model -> Html Msg
-view _ =
-    renderShell ShellTemplateMsg { title = "2025 Bergen Tech Hackathon", url = Just Urls.index } [
+view model =
+    renderShell model.shell ShellTemplateMsg {
+        title = "2025 Bergen Tech Hackathon", url = Just Urls.index
+    } [
         textDiv [
             calloutBox2 {
                 title = "Date & Time"

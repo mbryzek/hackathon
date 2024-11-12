@@ -62,8 +62,10 @@ logos =
 
 
 view : Model -> Html Msg
-view _ =
-    renderShell ShellTemplateMsg { title = "2024 Sponsors", url = Just Urls.sponsors }
+view model =
+    renderShell model.shell ShellTemplateMsg {
+        title = "2024 Sponsors", url = Just Urls.sponsors
+    }
         [ p "A huge thank you to our sponsors who made our 2024 Hackathon possible!"
         , renderPhotoGallery logos
         ]

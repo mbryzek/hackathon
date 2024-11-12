@@ -42,8 +42,10 @@ update msg model =
 
 
 view : Model -> Html Msg
-view _ =
-    renderShell ShellTemplateMsg { title = "2024 Hackathon Event Summary", url = Just Urls.events2024 } [ summary ]
+view model =
+    renderShell model.shell ShellTemplateMsg {
+        title = "2024 Hackathon Event Summary", url = Just Urls.events2024
+    } [ summary ]
 
 
 summary : Html Msg

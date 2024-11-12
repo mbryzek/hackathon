@@ -240,8 +240,8 @@ profileDropdown =
         ]
 
 
-renderShell : (ShellMsg -> msg) -> ShellProps -> List (Html msg) -> Html msg
-renderShell htmlMap props contents =
+renderShell : Model -> (ShellMsg -> msg) -> ShellProps -> List (Html msg) -> Html msg
+renderShell model htmlMap props contents =
     div
         [ Attr.class "min-h-full"
         ]
@@ -282,7 +282,11 @@ renderShell htmlMap props contents =
                             , span
                                 [ Attr.class "sr-only"
                                 ]
-                                [ button [onClick ToggleMenu] [text "Open main menu" ]]
+                                [ button [onClick ToggleMenu] [text (
+                                    case model.mobileMenuState of
+                                        Open -> "Close menu"
+                                        Closed -> "Open menu"
+                                ) ]]
                                 |> Html.map htmlMap
                             , {- Menu open: "hidden", Menu closed: "block" -}
                               svg
