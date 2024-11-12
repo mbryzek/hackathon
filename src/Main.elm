@@ -217,22 +217,40 @@ toPage : IntermediateState -> Maybe Session -> Route.Route -> (Page, Cmd MainMsg
 toPage state session route =
     case route of
         Route.PageContact ->
-            (PageContact (PageContact.init (toGlobalState state session)), Cmd.none)
+            let
+                (model, msg) = PageContact.init (toGlobalState state session)
+            in
+            (PageContact model, Cmd.map PageMsg (Cmd.map PageContactMsg msg))
 
         Route.PageDonate ->
-            (PageDonate (PageDonate.init (toGlobalState state session)), Cmd.none)
+            let
+                (model, msg) = PageDonate.init (toGlobalState state session)
+            in
+            (PageDonate model, Cmd.map PageMsg (Cmd.map PageDonateMsg msg))
 
         Route.PageIndex ->
-            (PageIndex (PageIndex.init (toGlobalState state session)), Cmd.none)
+            let
+                (model, msg) = PageIndex.init (toGlobalState state session)
+            in
+            (PageIndex model, Cmd.map PageMsg (Cmd.map PageIndexMsg msg))
 
         Route.PageSponsors ->
-            (PageSponsors (PageSponsors.init (toGlobalState state session)), Cmd.none)
+            let
+                (model, msg) = PageSponsors.init (toGlobalState state session)
+            in
+            (PageSponsors model, Cmd.map PageMsg (Cmd.map PageSponsorsMsg msg))
 
         Route.PageY24Index ->
-            (PageY24Index (PageY24Index.init (toGlobalState state session)), Cmd.none)
+            let
+                (model, msg) = PageY24Index.init (toGlobalState state session)
+            in
+            (PageY24Index model, Cmd.map PageMsg (Cmd.map PageY24IndexMsg msg))
 
         Route.PageY24Photos ->
-            (PageY24Photos (PageY24Photos.init (toGlobalState state session)), Cmd.none)
+            let
+                (model, msg) = PageY24Photos.init (toGlobalState state session)
+            in
+            (PageY24Photos model, Cmd.map PageMsg (Cmd.map PageY24PhotosMsg msg))
 
 
 pageView : Page -> Html MainMsg
