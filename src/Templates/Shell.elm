@@ -286,7 +286,7 @@ renderShell model htmlMap props contents =
                 [ Attr.class "md:hidden"
                 , Attr.id "mobile-menu"
                 ]
-                [ mobileNotificationsAndMenu model ]
+                [ mobileNotificationsAndMenu model props.url ]
             ]
         , header
             [ Attr.class "bg-white shadow-sm"
@@ -309,8 +309,8 @@ renderShell model htmlMap props contents =
         ]
 
 
-mobileNotificationsAndMenu : Model -> Html msg
-mobileNotificationsAndMenu model =
+mobileNotificationsAndMenu : Model -> Maybe String -> Html msg
+mobileNotificationsAndMenu model currentUrl =
     let
         showMobileMenu : Bool
         showMobileMenu =
@@ -325,7 +325,7 @@ mobileNotificationsAndMenu model =
         contents =
             List.concat
                 [ gated enableNotifications mobileNotifications
-                , gated showMobileMenu mobileMenu
+                , gated showMobileMenu (mobileMenu currentUrl)
                 ]
     in
     if List.isEmpty contents then
@@ -391,20 +391,34 @@ mobileNotifications =
         ]
 
 
-mobileMenuLink : Section -> Html msg
-mobileMenuLink section =
+mobileMenuLink : Maybe String -> Section -> Html msg
+mobileMenuLink currentUrl section =
+    let
+        isActive : Bool
+        isActive =
+            currentUrl == Just section.href
+        
+        css : String
+        css =
+            if isActive then
+                "bg-gray-900 text-white"
+
+            else
+                "text-gray-400 hover:bg-gray-700 hover:text-white"
+    in
     a
         [ Attr.href section.href
-        , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+        , Attr.class ("block rounded-md px-3 py-2 text-base font-medium " ++ css)
         ]
         [ text section.name ]
 
-mobileMenu : Html msg
-mobileMenu =
+mobileMenu : Maybe String ->Html msg
+mobileMenu currentUrl =
     div
         [ Attr.class "mt-3 space-y-1 px-2"
         ]
-        (List.map mobileMenuLink allSections)
+        (List.map (mobileMenuLink currentUrl) allSections)
+
 
 createSvg : String -> Html ShellMsg
 createSvg d =
