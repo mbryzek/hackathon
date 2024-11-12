@@ -74,7 +74,7 @@ view model =
             , p "We need your help! To make this event a huge success, we're seeking donations from individuals and companies interested in sponsoring the event. All donations are tax deductible and 100% of the funds raised directly support this event. "
             , p "This even is open to students of Bergen Tech at the Teterboro and Paramus campuses."
             , p "Every contribution, big or small, makes a difference. Let's come together to inspire and nurture the next generation of tech wizards at Bergen Tech! "
-            , link (RedirectTo Urls.donate) "Donate to or Sponsor this years event"
+            , link (RedirectTo Urls.donate) "Donate or Become a Sponsor"
             , thankYouMessage
             , studentPhoto
         ]
