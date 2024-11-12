@@ -411,8 +411,8 @@ mobileProfileDropdown =
         ]
 
 
-svg1 : Html ShellMsg
-svg1 =
+createSvg : String -> Html ShellMsg
+createSvg d =
     svg
         [ SvgAttr.class "block h-6 w-6"
         , SvgAttr.fill "none"
@@ -426,31 +426,19 @@ svg1 =
         [ path
             [ SvgAttr.strokeLinecap "round"
             , SvgAttr.strokeLinejoin "round"
-            , SvgAttr.d "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+            , SvgAttr.d d
             ]
             []
         ]
 
+hamburgerMenuIcon : Html ShellMsg
+hamburgerMenuIcon =
+    createSvg "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
 
-svg2 : Html ShellMsg
-svg2 =
-    svg
-        [ SvgAttr.class "hidden h-6 w-6"
-        , SvgAttr.fill "none"
-        , SvgAttr.viewBox "0 0 24 24"
-        , SvgAttr.strokeWidth "1.5"
-        , SvgAttr.stroke "currentColor"
-        , Attr.attribute "aria-hidden" "true"
-        , Attr.attribute "data-slot" "icon"
-        , onClick ToggleMenu
-        ]
-        [ path
-            [ SvgAttr.strokeLinecap "round"
-            , SvgAttr.strokeLinejoin "round"
-            , SvgAttr.d "M6 18 18 6M6 6l12 12"
-            ]
-            []
-        ]
+
+closeIcon : Html ShellMsg
+closeIcon =
+    createSvg "M6 18 18 6M6 6l12 12"
 
 
 srOnly : String -> Html msg
@@ -463,7 +451,7 @@ mobileMenuButton model htmlMap =
     div
         [ Attr.class "-mr-2 flex md:hidden"
         ]
-        [ {- Mobile menu button -}
+        [
             button
             [ Attr.type_ "button"
             , Attr.class "relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
@@ -484,18 +472,11 @@ mobileMenuButton model htmlMap =
             )
             , (case model.mobileMenuState of
                 Open ->
-                    renderDefaultTextLink ToggleMenu "MENU STATE: Open"
+                    closeIcon
 
                 Closed ->
-                    renderDefaultTextLink ToggleMenu "MENU STATE: Closed"
+                    hamburgerMenuIcon
                 )
-
-            , svg1
-
-            {- Menu open: "hidden", Menu closed: "block" -}
-            , svg2
-
-            {- Menu open: "block", Menu closed: "hidden" -}
             ]
         ]
         |> Html.map htmlMap
