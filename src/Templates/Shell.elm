@@ -279,51 +279,7 @@ renderShell model htmlMap props contents =
                         ]
                         [ notificationsAndProfile
                         ]
-                    , div
-                        [ Attr.class "-mr-2 flex md:hidden"
-                        ]
-                        [ {- Mobile menu button -}
-                          button
-                            [ Attr.type_ "button"
-                            , Attr.class "relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                            , Attr.attribute "aria-controls" "mobile-menu"
-                            , Attr.attribute "aria-expanded" "false"
-                            ]
-                            [ span
-                                [ Attr.class "absolute -inset-0.5"
-                                ]
-                                []
-                            , span
-                                [ Attr.class "sr-only"
-                                ]
-                                [ button [ onClick ToggleMenu ]
-                                    [ text
-                                        (case model.mobileMenuState of
-                                            Open ->
-                                                "Close menu"
-
-                                            Closed ->
-                                                "Open menu"
-                                        )
-                                    ]
-                                ]
-                                |> Html.map htmlMap
-                            , (case model.mobileMenuState of
-                                Open ->
-                                    renderDefaultTextLink ToggleMenu "MENU STATE: Open"
-
-                                Closed ->
-                                    renderDefaultTextLink ToggleMenu "MENU STATE: Closed"
-                              )
-                                |> Html.map htmlMap
-                            , svg1 htmlMap
-
-                            {- Menu open: "hidden", Menu closed: "block" -}
-                            , svg2 htmlMap
-
-                            {- Menu open: "block", Menu closed: "hidden" -}
-                            ]
-                        ]
+                    , mobileMenuButton model htmlMap
                     ]
                 ]
             , {- Mobile menu, show/hide based on menu state. -}
@@ -458,8 +414,8 @@ mobileProfileDropdown =
         ]
 
 
-svg1 : (ShellMsg -> msg) -> Html msg
-svg1 htmlMap =
+svg1 : Html ShellMsg
+svg1 =
     svg
         [ SvgAttr.class "block h-6 w-6"
         , SvgAttr.fill "none"
@@ -477,11 +433,10 @@ svg1 htmlMap =
             ]
             []
         ]
-        |> Html.map htmlMap
 
 
-svg2 : (ShellMsg -> msg) -> Html msg
-svg2 htmlMap =
+svg2 : Html ShellMsg
+svg2 =
     svg
         [ SvgAttr.class "hidden h-6 w-6"
         , SvgAttr.fill "none"
@@ -499,9 +454,58 @@ svg2 htmlMap =
             ]
             []
         ]
-        |> Html.map htmlMap
 
 
 srOnly : String -> Html msg
 srOnly text =
     span [ Attr.class "sr-only" ] [ Html.text text ]
+
+
+mobileMenuButton : Model -> (ShellMsg -> msg) -> Html msg
+mobileMenuButton model htmlMap =
+    div
+        [ Attr.class "-mr-2 flex md:hidden"
+        ]
+        [ {- Mobile menu button -}
+            button
+            [ Attr.type_ "button"
+            , Attr.class "relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+            , Attr.attribute "aria-controls" "mobile-menu"
+            , Attr.attribute "aria-expanded" "false"
+            , onClick ToggleMenu
+            ]
+            [ span
+                [ Attr.class "absolute -inset-0.5"
+                ]
+                []
+            , span
+                [ Attr.class "sr-only"
+                ]
+                [ button [ onClick ToggleMenu ]
+                    [ text
+                        (case model.mobileMenuState of
+                            Open ->
+                                "Close menu"
+
+                            Closed ->
+                                "Open menu"
+                        )
+                    ]
+                ]
+            , (case model.mobileMenuState of
+                Open ->
+                    renderDefaultTextLink ToggleMenu "MENU STATE: Open"
+
+                Closed ->
+                    renderDefaultTextLink ToggleMenu "MENU STATE: Closed"
+                )
+
+            , svg1
+
+            {- Menu open: "hidden", Menu closed: "block" -}
+            , svg2
+
+            {- Menu open: "block", Menu closed: "hidden" -}
+            ]
+        ]
+        |> Html.map htmlMap
