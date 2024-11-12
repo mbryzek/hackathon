@@ -58,15 +58,22 @@ init _ url navKey =
         state =
             { navKey = navKey }
 
+        ( shell, shellCmd ) =
+            ShellTemplate.init
+
         initModel : Model
         initModel =
             { session = { session = SessionLoggedOut, navKey = navKey }
             , state = state
+            , shell = shell
             , page = Nothing
             , url = url
             }
+
+        ( pageModel, pageCmd ) =
+            renderPage initModel
     in
-    renderPage initModel
+    ( pageModel, Cmd.batch [ Cmd.map (\m -> InternalMsg (ShellTemplateMsg m)) shellCmd, pageCmd ] )
 
 
 renderPage : Model -> ( Model, Cmd MainMsg )
@@ -114,6 +121,15 @@ handleInternalMsg msg model =
 
         RedirectTo u ->
             ( model, Nav.pushUrl model.state.navKey u )
+
+        ShellTemplateMsg subMsg ->
+            let
+                ( updatedShell, shellCmd ) =
+                    ShellTemplate.update subMsg model.shell
+            in
+            ( { model | shell = updatedShell }
+            , Cmd.map (\m -> InternalMsg (ShellTemplateMsg m)) shellCmd
+            )
 
         LinkClicked urlRequest ->
             case urlRequest of
@@ -170,7 +186,7 @@ renderErrorPage params =
                 Just l ->
                     [ Html.map InternalMsg l ]
     in
-    renderShell (InternalMsg ShellTemplateMsg) { title = params.title, url = Nothing }
+    renderShell (\m -> InternalMsg (ShellTemplateMsg m)) { title = params.title, url = Nothing }
         (List.append
             [ Html.p [] [ Html.text params.body ] ]
             htmlLink
