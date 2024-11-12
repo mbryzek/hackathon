@@ -367,10 +367,7 @@ mobileNotifications =
                 [ Attr.class "absolute -inset-1.5"
                 ]
                 []
-            , span
-                [ Attr.class "sr-only"
-                ]
-                [ text "View notifications" ]
+            , srOnly "View notifications"
             , svg
                 [ SvgAttr.class "h-6 w-6"
                 , SvgAttr.fill "none"
@@ -478,20 +475,13 @@ mobileMenuButton model htmlMap =
                 [ Attr.class "absolute -inset-0.5"
                 ]
                 []
-            , span
-                [ Attr.class "sr-only"
-                ]
-                [ button [ onClick ToggleMenu ]
-                    [ text
-                        (case model.mobileMenuState of
-                            Open ->
-                                "Close menu"
+            , srOnly (case model.mobileMenuState of
+                Open ->
+                    "Close menu"
 
-                            Closed ->
-                                "Open menu"
-                        )
-                    ]
-                ]
+                Closed ->
+                    "Open menu"
+            )
             , (case model.mobileMenuState of
                 Open ->
                     renderDefaultTextLink ToggleMenu "MENU STATE: Open"
