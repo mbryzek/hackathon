@@ -286,7 +286,7 @@ renderShell model htmlMap props contents =
                 [ Attr.class "md:hidden"
                 , Attr.id "mobile-menu"
                 ]
-                [ mobileNotificationsAndProfile model ]
+                [ mobileNotificationsAndMenu model ]
             ]
         , header
             [ Attr.class "bg-white shadow-sm"
@@ -309,8 +309,8 @@ renderShell model htmlMap props contents =
         ]
 
 
-mobileNotificationsAndProfile : Model -> Html msg
-mobileNotificationsAndProfile model =
+mobileNotificationsAndMenu : Model -> Html msg
+mobileNotificationsAndMenu model =
     let
         showMobileMenu : Bool
         showMobileMenu =
@@ -325,7 +325,7 @@ mobileNotificationsAndProfile model =
         contents =
             List.concat
                 [ gated enableNotifications mobileNotifications
-                , gated showMobileMenu mobileProfileDropdown
+                , gated showMobileMenu mobileMenu
                 ]
     in
     if List.isEmpty contents then
@@ -391,20 +391,20 @@ mobileNotifications =
         ]
 
 
-mobileProfileDropdownLink : Section -> Html msg
-mobileProfileDropdownLink section =
+mobileMenuLink : Section -> Html msg
+mobileMenuLink section =
     a
         [ Attr.href section.href
         , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
         ]
         [ text section.name ]
 
-mobileProfileDropdown : Html msg
-mobileProfileDropdown =
+mobileMenu : Html msg
+mobileMenu =
     div
         [ Attr.class "mt-3 space-y-1 px-2"
         ]
-        (List.map mobileProfileDropdownLink allSections)
+        (List.map mobileMenuLink allSections)
 
 createSvg : String -> Html ShellMsg
 createSvg d =
