@@ -119,20 +119,21 @@ navLink currentUrl section =
         [ text section.name ]
 
 
-logo : Html msg
-logo =
+logo : (ShellMsg -> msg) -> Html msg
+logo htmlMap =
     div
         [ Attr.class "shrink-0"
+        
         ]
         [ img
             [ Attr.class "h-12 w-36"
             , Attr.src logoSrc
             , Attr.alt "2025 Bergen Tech Hackathon"
-            , Attr.href "/"
+            , onClick (RedirectTo Urls.index)
             ]
             []
         ]
-
+    |> Html.map htmlMap
 
 gated : Bool -> Html msg -> List (Html msg)
 gated enabled content =
@@ -277,7 +278,7 @@ renderShell model htmlMap props contents =
                     [ div
                         [ Attr.class "flex items-center"
                         ]
-                        [ logo
+                        [ logo htmlMap
                         , topNavSections props.url
                         ]
                     , div
