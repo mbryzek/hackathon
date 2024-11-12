@@ -60,41 +60,41 @@ enableProfileDropdown =
 
 
 type alias Section =
-    { url : String, name : String }
+    { href : String, name : String }
 
 
 allSections : List Section
 allSections =
     [
-        { url = Urls.index, name = "Overview" }
-        , { url = Urls.photos, name = "Photos" }
-        , { url = Urls.events2024, name = "2024 Event" }
-        , { url = Urls.sponsors, name = "Sponsors" }
-        , { url = Urls.donate, name = "Donate" }
-        , { url = Urls.contact, name = "Contact" }
+        { href = Urls.index, name = "Overview" }
+        , { href = Urls.photos, name = "Photos" }
+        , { href = Urls.events2024, name = "2024 Event" }
+        , { href = Urls.sponsors, name = "Sponsors" }
+        , { href = Urls.donate, name = "Donate" }
+        , { href = Urls.contact, name = "Contact" }
     ]
 
 
-topNavSections : Maybe String -> (Maybe String -> String -> String -> Html msg) -> Html msg
-topNavSections currentUrl fmt =
+topNavSections : Maybe String -> Html msg
+topNavSections currentUrl =
     div
         [ Attr.class "hidden md:block" ]
         [ div
             [ Attr.class "ml-10 flex items-baseline space-x-4"
             ]
-            (List.map (\s -> fmt currentUrl s.url s.name) allSections)
+            (List.map (navLink currentUrl) allSections)
         ]
 
 
-navLink : Maybe String -> String -> String -> Html msg
-navLink currentUrl href label =
+navLink : Maybe String -> Section -> Html msg
+navLink currentUrl section =
     let
         isActive : Bool
         isActive =
-            currentUrl == Just href
+            currentUrl == Just section.href
     in
     a
-        [ Attr.href href
+        [ Attr.href section.href
         , Attr.class <|
             "rounded-md px-3 py-2 text-sm font-medium "
                 ++ (if isActive then
@@ -109,7 +109,7 @@ navLink currentUrl href label =
           else
             Attr.class ""
         ]
-        [ text label ]
+        [ text section.name ]
 
 
 logo : Html msg
@@ -271,7 +271,7 @@ renderShell model htmlMap props contents =
                         [ Attr.class "flex items-center"
                         ]
                         [ logo
-                        , topNavSections props.url navLink
+                        , topNavSections props.url
                         ]
                     , div
                         [ Attr.class "hidden md:block"
@@ -286,12 +286,7 @@ renderShell model htmlMap props contents =
                 [ Attr.class "md:hidden"
                 , Attr.id "mobile-menu"
                 ]
-                [ div
-                    [ Attr.class "space-y-1 px-2 pb-3 pt-2 sm:px-3"
-                    ]
-                    [ topNavSections props.url navLink ]
-                , mobileNotificationsAndProfile model
-                ]
+                [ mobileNotificationsAndProfile model ]
             ]
         , header
             [ Attr.class "bg-white shadow-sm"
