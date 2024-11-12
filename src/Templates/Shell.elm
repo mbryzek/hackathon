@@ -34,6 +34,11 @@ update : ShellMsg -> Model -> (Model, Cmd ShellMsg)
 update msg model =
     case msg of
         ToggleMenu ->
+            Debug.log ("ToggleMenu. Current state: " ++ (
+                case model.mobileMenuState of
+                    Open -> "Open"
+                    Closed -> "Closed"
+            ))
             ( { model | mobileMenuState = toggleMenuState model.mobileMenuState }, Cmd.none )
 
 toggleMenuState : MobileMenuState -> MobileMenuState
@@ -288,6 +293,11 @@ renderShell model htmlMap props contents =
                                         Closed -> "Open menu"
                                 ) ]]
                                 |> Html.map htmlMap
+                            , text (
+                                case model.mobileMenuState of
+                                    Open -> "MENU STATE: Open"
+                                    Closed -> "MENU STATE: Closed"
+                            )
                             , {- Menu open: "hidden", Menu closed: "block" -}
                               svg
                                 [ SvgAttr.class "block h-6 w-6"
