@@ -3,33 +3,49 @@ module Page.Contact exposing (Model, Msg, init, update, view)
 import Global exposing (GlobalState)
 import Html exposing (Html, div)
 import Html.Attributes exposing (class)
-import Templates.Shell exposing (renderShell)
+import Templates.Shell as ShellTemplate exposing (renderShell)
 import Ui.Elements exposing (p, textDiv)
 import Urls
 
 
 type alias Model =
-    { global : GlobalState }
+    { global : GlobalState
+    , shell : ShellTemplate.Model }
 
 
-type alias Msg =
-    Never
+type Msg =
+    ShellTemplateMsg ShellTemplate.ShellMsg
 
 
-init : GlobalState -> Model
+init : GlobalState -> ( Model, Cmd Msg )
 init global =
-    { global = global }
+    let
+        ( shell, shellCmd ) =
+            ShellTemplate.init global.navKey
+    in
+    ( { global = global
+      , shell = shell
+      }
+    , Cmd.map ShellTemplateMsg shellCmd
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg _ =
-    never msg
+update msg model =
+    case msg of
+        ShellTemplateMsg subMsg ->
+            let
+                ( updatedShell, shellCmd ) =
+                    ShellTemplate.update subMsg model.shell
+            in
+            ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
 
 
-view : Model -> Html Never
-view _ =
-    renderShell { title = "Contact The Hackathon Organizers", url = Just Urls.contact }
-        [ textDiv
+view : Model -> Html Msg
+view model =
+    renderShell model.shell ShellTemplateMsg {
+        title = "Contact The Hackathon Organizers", url = Just Urls.contact
+    } [ textDiv
             [ p "The Bergen Tech Hackathon is run by a group of volunteers. If you have any questions, please contact:"
             , div [ class "pl-4" ]
                 [ p "Michael Bryzek"

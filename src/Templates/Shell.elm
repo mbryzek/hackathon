@@ -1,17 +1,59 @@
-module Templates.Shell exposing (ShellProps, link, renderShell)
+module Templates.Shell exposing (MobileMenuState, Model, ShellMsg, ShellProps, init, renderShell, update)
 
+import Browser.Navigation as Nav
 import Constants exposing (logoSrc)
-import Html exposing (Html, a, button, div, h1, header, img, main_, nav, p, span, text)
+import Html exposing (Html, a, button, div, h1, header, img, main_, nav, span, text)
 import Html.Attributes as Attr
+import Html.Events exposing (onClick)
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
-import Templates.Buttons exposing (renderDefaultTextLink)
 import Ui.Elements exposing (textColor)
 import Urls
 
 
 type alias ShellProps =
     { title : String, url : Maybe String }
+
+
+type alias Model =
+    { navKey : Nav.Key
+    , mobileMenuState : MobileMenuState
+    }
+
+
+type MobileMenuState
+    = Open
+    | Closed
+
+
+type ShellMsg
+    = ToggleMenu
+    | RedirectTo String
+
+
+init : Nav.Key -> ( Model, Cmd ShellMsg )
+init navKey =
+    ( { navKey = navKey, mobileMenuState = Closed }, Cmd.none )
+
+
+update : ShellMsg -> Model -> ( Model, Cmd ShellMsg )
+update msg model =
+    case msg of
+        ToggleMenu ->
+            ( { model | mobileMenuState = toggleMenuState model.mobileMenuState }, Cmd.none )
+
+        RedirectTo url ->
+            ( model, Nav.pushUrl model.navKey url )
+
+
+toggleMenuState : MobileMenuState -> MobileMenuState
+toggleMenuState state =
+    case state of
+        Open ->
+            Closed
+
+        Closed ->
+            Open
 
 
 enableNotifications : Bool
@@ -24,32 +66,42 @@ enableProfileDropdown =
     False
 
 
-topNavSections : Maybe String -> (Maybe String -> String -> String  -> Html msg) -> Html msg
-topNavSections currentUrl fmt =
+type alias Section =
+    { href : String, name : String }
+
+
+allSections : List Section
+allSections =
+    [
+        { href = Urls.index, name = "Overview" }
+        , { href = Urls.photos, name = "Photos" }
+        , { href = Urls.events2024, name = "2024 Event" }
+        , { href = Urls.sponsors, name = "Sponsors" }
+        , { href = Urls.donate, name = "Donate" }
+        , { href = Urls.contact, name = "Contact" }
+    ]
+
+
+topNavSections : Maybe String -> Html msg
+topNavSections currentUrl =
     div
         [ Attr.class "hidden md:block" ]
         [ div
             [ Attr.class "ml-10 flex items-baseline space-x-4"
             ]
-            [ fmt currentUrl Urls.index "Overview"
-            , fmt currentUrl Urls.photos "Photos"
-            , fmt currentUrl Urls.events2024 "2024 Event"
-            , fmt currentUrl Urls.sponsors "Sponsors"
-            , fmt currentUrl Urls.donate "Donate"
-            , fmt currentUrl Urls.contact "Contact"
-            ]
+            (List.map (navLink currentUrl) allSections)
         ]
 
 
-navLink : Maybe String -> String -> String -> Html msg
-navLink currentUrl href label =
+navLink : Maybe String -> Section -> Html msg
+navLink currentUrl section =
     let
         isActive : Bool
         isActive =
-            currentUrl == Just href
+            currentUrl == Just section.href
     in
     a
-        [ Attr.href href
+        [ Attr.href section.href
         , Attr.class <|
             "rounded-md px-3 py-2 text-sm font-medium "
                 ++ (if isActive then
@@ -64,23 +116,24 @@ navLink currentUrl href label =
           else
             Attr.class ""
         ]
-        [ text label ]
+        [ text section.name ]
 
 
-logo : Html msg
-logo =
+logo : (ShellMsg -> msg) -> Html msg
+logo htmlMap =
     div
         [ Attr.class "shrink-0"
+        
         ]
         [ img
             [ Attr.class "h-12 w-36"
             , Attr.src logoSrc
             , Attr.alt "2025 Bergen Tech Hackathon"
-            , Attr.href "/"
+            , onClick (RedirectTo Urls.index)
             ]
             []
         ]
-
+    |> Html.map htmlMap
 
 gated : Bool -> Html msg -> List (Html msg)
 gated enabled content =
@@ -89,6 +142,7 @@ gated enabled content =
 
     else
         []
+
 
 notificationsAndProfile : Html msg
 notificationsAndProfile =
@@ -102,6 +156,7 @@ notificationsAndProfile =
     in
     if List.isEmpty contents then
         text ""
+
     else
         div [ Attr.class "ml-4 flex items-center md:ml-6" ] contents
 
@@ -116,10 +171,7 @@ notifications =
             [ Attr.class "absolute -inset-1.5"
             ]
             []
-        , span
-            [ Attr.class "sr-only"
-            ]
-            [ text "View notifications" ]
+        , srOnly "View notifications"
         , svg
             [ SvgAttr.class "h-6 w-6"
             , SvgAttr.fill "none"
@@ -154,10 +206,7 @@ profileDropdown =
                     [ Attr.class "absolute -inset-1.5"
                     ]
                     []
-                , span
-                    [ Attr.class "sr-only"
-                    ]
-                    [ text "Open user menu" ]
+                , srOnly "Open user menu"
                 , img
                     [ Attr.class "h-8 w-8 rounded-full"
                     , Attr.src "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
@@ -212,8 +261,8 @@ profileDropdown =
         ]
 
 
-renderShell : ShellProps -> List (Html msg) -> Html msg
-renderShell props contents =
+renderShell : Model -> (ShellMsg -> msg) -> ShellProps -> List (Html msg) -> Html msg
+renderShell model htmlMap props contents =
     div
         [ Attr.class "min-h-full"
         ]
@@ -229,68 +278,15 @@ renderShell props contents =
                     [ div
                         [ Attr.class "flex items-center"
                         ]
-                        [ logo
-                        , topNavSections props.url navLink
+                        [ logo htmlMap
+                        , topNavSections props.url
                         ]
                     , div
                         [ Attr.class "hidden md:block"
                         ]
                         [ notificationsAndProfile
                         ]
-                    , div
-                        [ Attr.class "-mr-2 flex md:hidden"
-                        ]
-                        [ {- Mobile menu button -}
-                          button
-                            [ Attr.type_ "button"
-                            , Attr.class "relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                            , Attr.attribute "aria-controls" "mobile-menu"
-                            , Attr.attribute "aria-expanded" "false"
-                            ]
-                            [ span
-                                [ Attr.class "absolute -inset-0.5"
-                                ]
-                                []
-                            , span
-                                [ Attr.class "sr-only"
-                                ]
-                                [ text "Open main menu" ]
-                            , {- Menu open: "hidden", Menu closed: "block" -}
-                              svg
-                                [ SvgAttr.class "block h-6 w-6"
-                                , SvgAttr.fill "none"
-                                , SvgAttr.viewBox "0 0 24 24"
-                                , SvgAttr.strokeWidth "1.5"
-                                , SvgAttr.stroke "currentColor"
-                                , Attr.attribute "aria-hidden" "true"
-                                , Attr.attribute "data-slot" "icon"
-                                ]
-                                [ path
-                                    [ SvgAttr.strokeLinecap "round"
-                                    , SvgAttr.strokeLinejoin "round"
-                                    , SvgAttr.d "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                                    ]
-                                    []
-                                ]
-                            , {- Menu open: "block", Menu closed: "hidden" -}
-                              svg
-                                [ SvgAttr.class "hidden h-6 w-6"
-                                , SvgAttr.fill "none"
-                                , SvgAttr.viewBox "0 0 24 24"
-                                , SvgAttr.strokeWidth "1.5"
-                                , SvgAttr.stroke "currentColor"
-                                , Attr.attribute "aria-hidden" "true"
-                                , Attr.attribute "data-slot" "icon"
-                                ]
-                                [ path
-                                    [ SvgAttr.strokeLinecap "round"
-                                    , SvgAttr.strokeLinejoin "round"
-                                    , SvgAttr.d "M6 18 18 6M6 6l12 12"
-                                    ]
-                                    []
-                                ]
-                            ]
-                        ]
+                    , mobileMenuButton model htmlMap
                     ]
                 ]
             , {- Mobile menu, show/hide based on menu state. -}
@@ -298,12 +294,7 @@ renderShell props contents =
                 [ Attr.class "md:hidden"
                 , Attr.id "mobile-menu"
                 ]
-                [ div
-                    [ Attr.class "space-y-1 px-2 pb-3 pt-2 sm:px-3"
-                    ]
-                    [ topNavSections props.url navLink ]
-                , mobileNotificationsAndProfile
-                ]
+                [ mobileNotificationsAndMenu model props.url ]
             ]
         , header
             [ Attr.class "bg-white shadow-sm"
@@ -326,27 +317,28 @@ renderShell props contents =
         ]
 
 
-link : msg -> String -> Html msg
-link msg label =
-    p
-        [ Attr.class (textColor ++ " mt-4 text-center text-sm underline hover:no-underline")
-        ]
-        [ renderDefaultTextLink msg label
-        ]
-
-
-mobileNotificationsAndProfile : Html msg
-mobileNotificationsAndProfile =
+mobileNotificationsAndMenu : Model -> Maybe String -> Html msg
+mobileNotificationsAndMenu model currentUrl =
     let
+        showMobileMenu : Bool
+        showMobileMenu =
+            case model.mobileMenuState of
+                Open ->
+                    True
+
+                Closed ->
+                    False
+
         contents : List (Html msg)
         contents =
             List.concat
                 [ gated enableNotifications mobileNotifications
-                , gated enableProfileDropdown mobileProfileDropdown
+                , gated showMobileMenu (mobileMenu currentUrl)
                 ]
     in
     if List.isEmpty contents then
         text ""
+
     else
         div [ Attr.class "border-t border-gray-700 pb-3 pt-4" ] contents
 
@@ -386,10 +378,7 @@ mobileNotifications =
                 [ Attr.class "absolute -inset-1.5"
                 ]
                 []
-            , span
-                [ Attr.class "sr-only"
-                ]
-                [ text "View notifications" ]
+            , srOnly "View notifications"
             , svg
                 [ SvgAttr.class "h-6 w-6"
                 , SvgAttr.fill "none"
@@ -410,24 +399,101 @@ mobileNotifications =
         ]
 
 
-mobileProfileDropdown : Html msg
-mobileProfileDropdown =
+mobileMenuLink : Maybe String -> Section -> Html msg
+mobileMenuLink currentUrl section =
+    let
+        isActive : Bool
+        isActive =
+            currentUrl == Just section.href
+        
+        css : String
+        css =
+            if isActive then
+                "bg-gray-900 text-white"
+
+            else
+                "text-gray-400 hover:bg-gray-700 hover:text-white"
+    in
+    a
+        [ Attr.href section.href
+        , Attr.class ("block rounded-md px-3 py-2 text-base font-medium " ++ css)
+        ]
+        [ text section.name ]
+
+mobileMenu : Maybe String ->Html msg
+mobileMenu currentUrl =
     div
-            [ Attr.class "mt-3 space-y-1 px-2"
+        [ Attr.class "mt-3 space-y-1 px-2"
+        ]
+        (List.map (mobileMenuLink currentUrl) allSections)
+
+
+createSvg : String -> Html ShellMsg
+createSvg d =
+    svg
+        [ SvgAttr.class "block h-6 w-6"
+        , SvgAttr.fill "none"
+        , SvgAttr.viewBox "0 0 24 24"
+        , SvgAttr.strokeWidth "1.5"
+        , SvgAttr.stroke "currentColor"
+        , Attr.attribute "aria-hidden" "true"
+        , Attr.attribute "data-slot" "icon"
+        , onClick ToggleMenu
+        ]
+        [ path
+            [ SvgAttr.strokeLinecap "round"
+            , SvgAttr.strokeLinejoin "round"
+            , SvgAttr.d d
             ]
-            [ a
-                [ Attr.href "#"
-                , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                ]
-                [ text "Your Profile" ]
-            , a
-                [ Attr.href "#"
-                , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                ]
-                [ text "Settings" ]
-            , a
-                [ Attr.href "#"
-                , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                ]
-                [ text "Sign out" ]
+            []
+        ]
+
+
+hamburgerMenuIcon : Html ShellMsg
+hamburgerMenuIcon =
+    createSvg "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+
+
+closeIcon : Html ShellMsg
+closeIcon =
+    createSvg "M6 18 18 6M6 6l12 12"
+
+
+srOnly : String -> Html msg
+srOnly text =
+    span [ Attr.class "sr-only" ] [ Html.text text ]
+
+
+mobileMenuButton : Model -> (ShellMsg -> msg) -> Html msg
+mobileMenuButton model htmlMap =
+    div
+        [ Attr.class "-mr-2 flex md:hidden"
+        ]
+        [ button
+            [ Attr.type_ "button"
+            , Attr.class "relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+            , Attr.attribute "aria-controls" "mobile-menu"
+            , Attr.attribute "aria-expanded" "false"
+            , onClick ToggleMenu
             ]
+            [ span
+                [ Attr.class "absolute -inset-0.5"
+                ]
+                []
+            , srOnly
+                (case model.mobileMenuState of
+                    Open ->
+                        "Close menu"
+
+                    Closed ->
+                        "Open menu"
+                )
+            , case model.mobileMenuState of
+                Open ->
+                    closeIcon
+
+                Closed ->
+                    hamburgerMenuIcon
+            ]
+        ]
+        |> Html.map htmlMap

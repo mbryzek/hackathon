@@ -3,35 +3,52 @@ module Page.Y24.Index exposing (Model, Msg, init, update, view)
 import Global exposing (GlobalState)
 import Html exposing (Html, a, div, h2, h3, img, li, ul)
 import Html.Attributes exposing (class, href, src)
-import Templates.Shell exposing (renderShell)
+import Templates.Shell as ShellTemplate exposing (renderShell)
 import Ui.Elements exposing (p, textDiv)
 import Urls
 
 
 type alias Model =
-    { global : GlobalState }
+    { global : GlobalState
+    , shell : ShellTemplate.Model }
 
 
-type alias Msg =
-    Never
+type Msg =
+    ShellTemplateMsg ShellTemplate.ShellMsg
 
 
-init : GlobalState -> Model
+init : GlobalState -> ( Model, Cmd Msg )
 init global =
-    { global = global }
+    let
+        ( shell, shellCmd ) =
+            ShellTemplate.init global.navKey
+    in
+    ( { global = global
+      , shell = shell
+      }
+    , Cmd.map ShellTemplateMsg shellCmd
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg _ =
-    never msg
+update msg model =
+    case msg of
+        ShellTemplateMsg subMsg ->
+            let
+                ( updatedShell, shellCmd ) =
+                    ShellTemplate.update subMsg model.shell
+            in
+            ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
 
 
-view : Model -> Html Never
-view _ =
-    renderShell { title = "2024 Hackathon Event Summary", url = Just Urls.events2024 } [ summary ]
+view : Model -> Html Msg
+view model =
+    renderShell model.shell ShellTemplateMsg {
+        title = "2024 Hackathon Event Summary", url = Just Urls.events2024
+    } [ summary ]
 
 
-summary : Html Never
+summary : Html Msg
 summary =
     textDiv
         [ p "The inaugural 2024 Bergen Tech Hackathon was a huge success! We wanted to deeply thank you for your support and share a few highlights from the day - we could not have put this event together without you!"

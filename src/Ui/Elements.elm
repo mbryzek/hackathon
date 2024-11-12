@@ -2,6 +2,7 @@ module Ui.Elements exposing (..)
 
 import Html exposing (Html, a, div, text)
 import Html.Attributes as Attr exposing (class)
+import Templates.Buttons exposing (renderDefaultTextLink)
 
 
 textColor : String
@@ -51,3 +52,12 @@ callToAction url label =
             ]
             [ text label ]
         ]
+
+link : msg -> String -> Html msg
+link msg label =
+    Html.p
+        [ Attr.class (textColor ++ " mt-4 text-center text-sm underline hover:no-underline")
+        ]
+        [ renderDefaultTextLink msg label
+        ]
+
