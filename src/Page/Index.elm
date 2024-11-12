@@ -34,7 +34,8 @@ init global =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+    Debug.log "Index.update called"
+    (case msg of
         ShellTemplateMsg subMsg ->
             let
                 ( updatedShell, shellCmd ) =
@@ -44,7 +45,8 @@ update msg model =
             ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
 
         RedirectTo url ->
-            ( model, Nav.pushUrl model.global.navKey url )
+            ( model, Nav.pushUrl model.global.navKey url)
+    )
 
 
 twoLines : String -> String -> Html msg

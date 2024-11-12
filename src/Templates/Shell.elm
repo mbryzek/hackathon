@@ -287,11 +287,11 @@ renderShell model htmlMap props contents =
                                         Closed -> "Open menu"
                                 ) ]]
                                 |> Html.map htmlMap
-                            , text (
-                                case model.mobileMenuState of
-                                    Open -> "MENU STATE: Open"
-                                    Closed -> "MENU STATE: Closed"
-                            )
+                            ,
+                                (case model.mobileMenuState of
+                                    Open -> button [onClick ToggleMenu] [text "MENU STATE: Open"]
+                                    Closed -> button [onClick ToggleMenu] [text "MENU STATE: Closed"]
+                                    ) |> Html.map htmlMap
                             , svg1 htmlMap {- Menu open: "hidden", Menu closed: "block" -}
                             , svg2 htmlMap {- Menu open: "block", Menu closed: "hidden" -}
                             ]

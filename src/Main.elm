@@ -100,13 +100,14 @@ type MainMsg
 
 update : MainMsg -> Model -> ( Model, Cmd MainMsg )
 update msg model =
-    case msg of
+    Debug.log "Main.update called"
+    (case msg of
         InternalMsg m ->
             handleInternalMsg m model
 
         PageMsg m ->
             handlePageMsg m model
-
+    )
 
 handleInternalMsg : MainInternalMsg -> Model -> ( Model, Cmd MainMsg )
 handleInternalMsg msg model =
@@ -127,6 +128,7 @@ handleInternalMsg msg model =
                 ( updatedShell, shellCmd ) =
                     ShellTemplate.update subMsg model.shell
             in
+            Debug.log "ShellTemplateMsg"
             ( { model | shell = updatedShell }
             , Cmd.map (\m -> InternalMsg (ShellTemplateMsg m)) shellCmd
             )
