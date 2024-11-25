@@ -5,14 +5,19 @@ import Html exposing (Html)
 import Templates.PhotoGallery exposing (renderPhotoGallery)
 import Templates.Shell as ShellTemplate exposing (renderShell)
 import Urls
+import Random
+import Random.List
 
 type alias Model =
     { global : GlobalState
-    , shell : ShellTemplate.Model }
+    , shell : ShellTemplate.Model
+    , randomSeed : Random.Seed
+    }
 
 
 type Msg =
     ShellTemplateMsg ShellTemplate.ShellMsg
+    | GotRandomSeed Int
 
 
 init : GlobalState -> ( Model, Cmd Msg )
@@ -23,8 +28,12 @@ init global =
     in
     ( { global = global
       , shell = shell
+      , randomSeed = Random.initialSeed 0
       }
-    , Cmd.map ShellTemplateMsg shellCmd
+    , Cmd.batch 
+        [ Cmd.map ShellTemplateMsg shellCmd
+        , Random.generate GotRandomSeed (Random.int Random.minInt Random.maxInt)
+        ]
     )
 
 
@@ -37,6 +46,9 @@ update msg model =
                     ShellTemplate.update subMsg model.shell
             in
             ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
+            
+        GotRandomSeed seed ->
+            ( { model | randomSeed = Random.initialSeed seed }, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -44,7 +56,7 @@ view model =
     renderShell model.shell ShellTemplateMsg {
         title = "2024 Photos", url = Just Urls.photos
     } [
-        renderPhotoGallery allPhotoUrls
+        renderPhotoGallery (shuffledPhotoUrls model.randomSeed)
     ]
 
 
@@ -53,9 +65,10 @@ toUrl filename =
     "https://github.com/mbryzek/hackathon-photos/blob/main/2024/ambiance/" ++ filename ++ "?raw=true"
 
 
-allPhotoUrls : List String
-allPhotoUrls =
-    List.map toUrl allFilenames
+shuffledPhotoUrls : Random.Seed -> List String
+shuffledPhotoUrls seed =
+    Random.step (Random.List.shuffle (List.map toUrl allFilenames)) seed
+        |> Tuple.first
 
 
 allFilenames : List String
