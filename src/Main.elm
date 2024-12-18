@@ -33,11 +33,6 @@ main =
         }
 
 
-subscriptions : Model -> Sub MainMsg
-subscriptions _ =
-    Sub.none
-
-
 type alias Model =
     { session : GlobalState
     , state : IntermediateState
@@ -215,6 +210,11 @@ toGlobalState state _ =
 
 
 -- CODEGEN START
+subscriptions : Model -> Sub MainMsg
+subscriptions _ =
+    Sub.none
+
+
 type Page
     = PageContact PageContact.Model
     | PageDonate PageDonate.Model
