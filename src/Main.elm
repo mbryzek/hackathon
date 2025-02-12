@@ -109,12 +109,17 @@ update msg model =
                     Route.fromUrl url
                         |> getPageFromRoute readyModel.global
             in
-            ( Ready { readyModel | page = page }
+            ( Ready { readyModel | page = page, global = updateGlobalState readyModel.global url }
             , Cmd.map (ReadyMsg << ChangedPage) cmd
             )
 
         ( ReadyMsg readyMsg, Ready readyModel ) ->
             updateReady readyMsg readyModel |> Tuple.mapFirst (\m -> Ready m)
+
+
+updateGlobalState : GlobalState -> Url.Url -> GlobalState
+updateGlobalState global url =
+    { global | url = url }
 
 
 updateReady : ReadyMsg -> ReadyModel -> ( ReadyModel, Cmd Msg )
