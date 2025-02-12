@@ -191,57 +191,38 @@ pageSubscriptions =
 
 
 type Page
-    = PageContact PageContact.Model
-    | PageDonate PageDonate.Model
-    | PageIndex PageIndex.Model
-    | PageSponsors PageSponsors.Model
-    | PageY24Index PageY24Index.Model
+    = PageContact
+    | PageDonate
+    | PageIndex
+    | PageSponsors
+    | PageY24Index
     | PageY24Photos PageY24Photos.Model
     | PageNotFound
     | PageNotAuthorized
 
 
 type PageMsg
-    = PageContactMsg PageContact.Msg
-    | PageDonateMsg PageDonate.Msg
-    | PageIndexMsg PageIndex.Msg
-    | PageSponsorsMsg PageSponsors.Msg
-    | PageY24IndexMsg PageY24Index.Msg
+    = PageIndexMsg PageIndex.Msg
     | PageY24PhotosMsg PageY24Photos.Msg
 
 
 getPageFromRoute : GlobalState -> Maybe Route -> ( Page, Cmd PageMsg )
 getPageFromRoute global maybeRoute =
     case maybeRoute of
-        Just Route.RouteContact ->
-            PageContact.init global
-                |> Tuple.mapFirst PageContact
-                |> Tuple.mapSecond (Cmd.map PageContactMsg)
-
-        Just Route.RouteDonate ->
-            PageDonate.init global
-                |> Tuple.mapFirst PageDonate
-                |> Tuple.mapSecond (Cmd.map PageDonateMsg)
-
-        Just Route.RouteIndex ->
-            PageIndex.init global
-                |> Tuple.mapFirst PageIndex
-                |> Tuple.mapSecond (Cmd.map PageIndexMsg)
-
-        Just Route.RouteSponsors ->
-            PageSponsors.init global
-                |> Tuple.mapFirst PageSponsors
-                |> Tuple.mapSecond (Cmd.map PageSponsorsMsg)
-
-        Just Route.RouteY24Index ->
-            PageY24Index.init global
-                |> Tuple.mapFirst PageY24Index
-                |> Tuple.mapSecond (Cmd.map PageY24IndexMsg)
-
         Just Route.RouteY24Photos ->
-            PageY24Photos.init global
+            PageY24Photos.init
                 |> Tuple.mapFirst PageY24Photos
                 |> Tuple.mapSecond (Cmd.map PageY24PhotosMsg)
+        Just Route.RouteContact ->
+            ( PageContact, Cmd.none )
+        Just Route.RouteDonate ->
+            ( PageDonate, Cmd.none )
+        Just Route.RouteIndex ->
+            ( PageIndex, Cmd.none )
+        Just Route.RouteSponsors ->
+            ( PageSponsors, Cmd.none )
+        Just Route.RouteY24Index ->
+            ( PageY24Index, Cmd.none )
 
         Nothing ->
             ( PageNotFound, Cmd.none )
@@ -250,23 +231,23 @@ getPageFromRoute global maybeRoute =
 viewReady : ReadyModel -> Browser.Document Msg
 viewReady model =
     case model.page of
-        PageContact pageModel ->
-            PageContact.view pageModel |> mapDoc PageContactMsg
+        PageContact ->
+            PageContact.view (shellViewProps model)
 
-        PageDonate pageModel ->
-            PageDonate.view pageModel |> mapDoc PageDonateMsg
+        PageDonate ->
+            PageDonate.view (shellViewProps model)
 
-        PageIndex pageModel ->
-            PageIndex.view pageModel |> mapDoc PageIndexMsg
+        PageIndex ->
+            PageIndex.view (shellViewProps model)
 
-        PageSponsors pageModel ->
-            PageSponsors.view pageModel |> mapDoc PageSponsorsMsg
+        PageSponsors ->
+            PageSponsors.view (shellViewProps model)
 
-        PageY24Index pageModel ->
-            PageY24Index.view pageModel |> mapDoc PageY24IndexMsg
+        PageY24Index ->
+            PageY24Index.view (shellViewProps model)
 
         PageY24Photos pageModel ->
-            PageY24Photos.view pageModel |> mapDoc PageY24PhotosMsg
+            PageY24Photos.view (shellViewProps model) pageModel
 
         PageNotFound ->
             NotFound.view
@@ -278,30 +259,9 @@ viewReady model =
 updatePage : ReadyModel -> PageMsg -> ( Page, Cmd Msg )
 updatePage model msg =
     case ( model.page, msg ) of
-        ( PageContact pageModel, PageContactMsg pageMsg ) ->
-            PageContact.update pageMsg pageModel
-                |> Tuple.mapFirst PageContact
-                |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedPage << PageContactMsg))
-
-        ( PageDonate pageModel, PageDonateMsg pageMsg ) ->
-            PageDonate.update pageMsg pageModel
-                |> Tuple.mapFirst PageDonate
-                |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedPage << PageDonateMsg))
-
-        ( PageIndex pageModel, PageIndexMsg pageMsg ) ->
-            PageIndex.update pageMsg pageModel
-                |> Tuple.mapFirst PageIndex
-                |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedPage << PageIndexMsg))
-
-        ( PageSponsors pageModel, PageSponsorsMsg pageMsg ) ->
-            PageSponsors.update pageMsg pageModel
-                |> Tuple.mapFirst PageSponsors
-                |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedPage << PageSponsorsMsg))
-
-        ( PageY24Index pageModel, PageY24IndexMsg pageMsg ) ->
-            PageY24Index.update pageMsg pageModel
-                |> Tuple.mapFirst PageY24Index
-                |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedPage << PageY24IndexMsg))
+        ( PageIndex, PageIndexMsg pageMsg ) ->
+            PageIndex.update model.global pageMsg
+                |> \c -> (model.page, Cmd.map (ReadyMsg << ChangedPage << PageIndexMsg) c)
 
         ( PageY24Photos pageModel, PageY24PhotosMsg pageMsg ) ->
             PageY24Photos.update pageMsg pageModel
