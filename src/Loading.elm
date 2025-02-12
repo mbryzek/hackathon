@@ -6,7 +6,7 @@ import Templates.SimplePage as SimplePage
 
 view : Browser.Document msg
 view =
-    SimplePage.render "Loading..." [contents]
+    SimplePage.render "Loading..." contents
 
 
 contents : Html msg

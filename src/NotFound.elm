@@ -8,7 +8,7 @@ import Templates.SimplePage as SimplePage
 
 view : Browser.Document msg
 view =
-    SimplePage.render "Page not found" [contents]
+    SimplePage.render "Page not found" contents
 
 
 contents : Html msg

@@ -8,7 +8,7 @@ import Urls
 
 view : Browser.Document msg
 view =
-    SimplePage.render "Page not found" [contents]
+    SimplePage.render "Page not found" contents
 
 
 contents : Html msg
@@ -22,10 +22,5 @@ contents =
                 , class "text-indigo-600 underline hover:no-underline" 
                 ] 
                 [ text "Go to the home page" ]
-            , a 
-                [ href Urls.login
-                , class "text-indigo-600 underline hover:no-underline" 
-                ] 
-                [ text "Go to the login page" ]
             ]
         ]
