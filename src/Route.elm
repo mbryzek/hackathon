@@ -1,4 +1,4 @@
-module Route exposing (Route(..), parseUrl)
+module Route exposing (Route(..), fromUrl)
 
 import Url exposing (Url)
 import Url.Parser exposing (..)
@@ -11,8 +11,8 @@ type Route
     | PageSponsors
     | PageDonate
     | PageContact
-parseUrl : Url -> Maybe Route
-parseUrl url =
+fromUrl : Url -> Maybe Route
+fromUrl url =
     parse matchRoute url
 
 

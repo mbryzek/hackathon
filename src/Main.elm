@@ -2,9 +2,8 @@ module Main exposing (Flags, Model, Msg, main)
 
 import Browser
 import Browser.Navigation as Nav
-import Global exposing (GlobalState(..), GlobalStateAuthenticatedData, MainUpdatePropsWithSession, MainUpdatePropsWithLoggedIn, MainUpdatePropsWithLoggedOut, MainViewProps, Session, UpdateWithLoggedInProps, UpdateWithSessionProps)
+import Global exposing (GlobalState)
 import Html as H
-import Util.Task as Task
 import Loading
 import NotAuthorized
 import NotFound
@@ -54,16 +53,9 @@ type alias ReadyModel =
     }
 
 
-init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init flags url key =
-    case flags.sessionId of
-        Just sessionId ->
-            ( Init { sessionId = sessionId, url = url, key = key }
-            , Task.dispatch (InitMsg (SimluateCallToLogin sessionId))
-            )
-
-        Nothing ->
-            initWithGlobal (toGlobalState key Nothing) url
+init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init _ url key =
+    initWithGlobal { navKey = key, url = url }
 
 
 initWithGlobal : GlobalState -> Url.Url -> ( Model, Cmd Msg )
@@ -89,8 +81,7 @@ initWithGlobal global url =
 
 
 type Msg
-    = InitMsg InitMsg
-    | ReadyMsg ReadyMsg
+    = ReadyMsg ReadyMsg
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
 
@@ -100,16 +91,8 @@ type ReadyMsg
     | ChangedPage PageMsg
 
 
-type InitMsg
-    = SimluateCallToLogin String
-
-
 type InternalMsg
-    = ShellMsg Shell.Msg
-    | LoggedInMsg UpdateWithLoggedInProps
-    | LoggedOutMsg
-    | SessionUpdatedMsg UpdateWithSessionProps
-
+    = ShellMsg Shell.ShellMsg
 
 redirectTo : Model -> String -> Cmd Msg
 redirectTo model url =
@@ -124,31 +107,6 @@ redirectTo model url =
                     Global.getNavKey rm.global
     in
     Nav.pushUrl key url
-
-
-updateSession : ReadyModel -> Maybe Session -> ReadyModel
-updateSession model session =
-    updateShell { model | global = toGlobalState (Global.getNavKey model.global) session }
-
-
-toGlobalState : Nav.Key -> Maybe Session -> GlobalState
-toGlobalState key maybeSession =
-    case maybeSession of
-        Just u ->
-            GlobalStateAuthenticated { navKey = key, session = u }
-
-        Nothing ->
-            GlobalStateAnonymous { navKey = key }
-
-
-updateShell : ReadyModel -> ReadyModel
-updateShell model =
-    let
-        shellModel : Shell.Model
-        shellModel =
-            model.shellModel
-    in
-    { model | shellModel = { shellModel | global = model.global } }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -175,30 +133,11 @@ update msg model =
         ( UrlChanged url, Init data ) ->
             ( Init { data | url = url }, Cmd.none )
 
-        ( InitMsg initMsg, Init initModel ) ->
-            updateInit initMsg initModel
-
-        ( InitMsg _, Ready _ ) ->
-            ( model, Cmd.none )
-
         ( ReadyMsg readyMsg, Ready readyModel ) ->
             updateReady readyMsg readyModel |> Tuple.mapFirst (\m -> Ready m)
 
         ( ReadyMsg _, Init _ ) ->
             ( model, Cmd.none )
-
-
-updateInit : InitMsg -> InitModel -> ( Model, Cmd Msg )
-updateInit msg model =
-    case msg of
-        SimluateCallToLogin sessionId ->
-            let
-                newSession : Session
-                newSession =
-                    { id = sessionId, user = { name = "John Doe" } }
-            in
-            initWithGlobal (toGlobalState model.key (Just newSession)) model.url
-
 
 updateReady : ReadyMsg -> ReadyModel -> ( ReadyModel, Cmd Msg )
 updateReady msg model =
@@ -219,27 +158,6 @@ updateInternal msg model =
                 |> Tuple.mapFirst (\m -> { model | shellModel = m })
                 |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedInternal << ShellMsg))
 
-        LoggedInMsg { redirectUrl, session } ->
-            ( updateSession model (Just session), redirectTo (Ready model) redirectUrl )
-
-        SessionUpdatedMsg { redirectUrl, session } ->
-            let
-                redirectCmd : Cmd Msg
-                redirectCmd =
-                    case redirectUrl of
-                        Just url ->
-                            redirectTo (Ready model) url
-
-                        Nothing ->
-                            Cmd.none
-            in
-            Debug.log ("Updating session")
-            ( updateSession model (Just session), redirectCmd )
-
-        LoggedOutMsg ->
-            ( updateSession model Nothing, Cmd.none )
-
-
 view : Model -> Browser.Document Msg
 view model =
     case model of
@@ -250,44 +168,6 @@ view model =
         Ready readyModel ->
             Debug.log ("Main.view iwth ready model")
             viewReady readyModel
-
-
-updatePropsWithLoggedIn : (a -> PageMsg) -> MainUpdatePropsWithLoggedIn a Msg
-updatePropsWithLoggedIn pageMsg =
-    { onLoggedIn = ReadyMsg << ChangedInternal << LoggedInMsg
-    , msgMap = ReadyMsg << ChangedPage << pageMsg 
-    }
-
-updatePropsWithLoggedOut : (a -> PageMsg) -> MainUpdatePropsWithLoggedOut a Msg
-updatePropsWithLoggedOut pageMsg =
-    { onLoggedOut = ReadyMsg (ChangedInternal LoggedOutMsg), msgMap = ReadyMsg << ChangedPage << pageMsg }
-
-updatePropsWithSessionUpdate : (a -> PageMsg) -> MainUpdatePropsWithSession a Msg
-updatePropsWithSessionUpdate pageMsg =
-    { onSessionUpdate = ReadyMsg << ChangedInternal << SessionUpdatedMsg
-    , msgMap = ReadyMsg << ChangedPage << pageMsg 
-    }
-
-shellViewProps : ReadyModel -> Shell.ViewProps Msg
-shellViewProps model =
-    { shellModel = model.shellModel
-    , onShellMsg = ReadyMsg << ChangedInternal << ShellMsg
-    }
-
-
-mainViewProps : GlobalState -> (a -> PageMsg) -> MainViewProps a Msg
-mainViewProps global pageMsg =
-    { global = global, msgMap = ReadyMsg << ChangedPage << pageMsg }
-
-
-pageAuthenticatedData : GlobalState -> (GlobalStateAuthenticatedData -> ( Page, Cmd PageMsg )) -> ( Page, Cmd PageMsg )
-pageAuthenticatedData global f =
-    case global of
-        GlobalStateAuthenticated data ->
-            f data
-
-        _ ->
-            ( PageNotAuthorized, Nav.pushUrl (Global.getNavKey global) "/login" )
 
 
 mapDoc : (a -> PageMsg) -> Browser.Document a -> Browser.Document Msg
