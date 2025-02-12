@@ -1,4 +1,4 @@
-module Templates.Shell exposing (MobileMenuState, Model, ShellMsg, ShellProps, init, renderShell, update)
+module Templates.Shell exposing (MobileMenuState, Model, ShellMsg, init, renderShell, update)
 
 import Browser
 import Browser.Navigation as Nav
@@ -11,11 +11,13 @@ import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
 import Ui.Elements exposing (textColor)
 import Urls
+import Url
 
-
-type alias ShellProps =
-    { title : String, url : Maybe String }
-
+type alias ViewProps a =
+    { global : GlobalState
+    , shellModel : Model
+    , onShellMsg : ShellMsg -> a
+    }
 
 type alias Model =
     { mobileMenuState : MobileMenuState
@@ -83,7 +85,7 @@ allSections =
     ]
 
 
-topNavSections : Maybe String -> Html msg
+topNavSections : Url.Url -> Html msg
 topNavSections currentUrl =
     div
         [ Attr.class "hidden md:block" ]
@@ -93,13 +95,17 @@ topNavSections currentUrl =
             (List.map (navLink currentUrl) allSections)
         ]
 
+isSectionActive : Url.Url -> Section -> Bool
+isSectionActive currentUrl section =
+    currentUrl.path == section.href
 
-navLink : Maybe String -> Section -> Html msg
+
+navLink : Url.Url -> Section -> Html msg
 navLink currentUrl section =
     let
         isActive : Bool
         isActive =
-            currentUrl == Just section.href
+            isSectionActive currentUrl section
     in
     a
         [ Attr.href section.href
@@ -120,8 +126,8 @@ navLink currentUrl section =
         [ text section.name ]
 
 
-logo : (ShellMsg -> msg) -> Html msg
-logo htmlMap =
+logo : ViewProps msg -> Html msg
+logo props =
     div
         [ Attr.class "shrink-0"
         
@@ -134,7 +140,7 @@ logo htmlMap =
             ]
             []
         ]
-    |> Html.map htmlMap
+    |> Html.map props.onShellMsg
 
 gated : Bool -> Html msg -> List (Html msg)
 gated enabled content =
@@ -262,16 +268,16 @@ profileDropdown =
         ]
 
 
-renderShell : Model -> (ShellMsg -> msg) -> ShellProps -> List (Html msg) -> Browser.Document msg
-renderShell model htmlMap props contents =
+renderShell : Model -> ViewProps msg -> String -> List (Html msg) -> Browser.Document msg
+renderShell model props title contents =
     {
-        title = props.title
-        , body = [ renderBody model htmlMap props contents ]
+        title = title
+        , body = [ renderBody props.global model props title contents ]
     }
 
 
-renderBody : Model -> (ShellMsg -> msg) -> ShellProps -> List (Html msg) -> Html msg
-renderBody model htmlMap props contents =
+renderBody : GlobalState -> Model -> ViewProps msg -> String -> List (Html msg) -> Html msg
+renderBody global model props title contents =
     div
         [ Attr.class "min-h-full"
         ]
@@ -287,15 +293,15 @@ renderBody model htmlMap props contents =
                     [ div
                         [ Attr.class "flex items-center"
                         ]
-                        [ logo htmlMap
-                        , topNavSections props.url
+                        [ logo props
+                        , topNavSections global.url
                         ]
                     , div
                         [ Attr.class "hidden md:block"
                         ]
                         [ notificationsAndProfile
                         ]
-                    , mobileMenuButton model htmlMap
+                    , mobileMenuButton model props
                     ]
                 ]
             , {- Mobile menu, show/hide based on menu state. -}
@@ -303,7 +309,7 @@ renderBody model htmlMap props contents =
                 [ Attr.class "md:hidden"
                 , Attr.id "mobile-menu"
                 ]
-                [ mobileNotificationsAndMenu model props.url ]
+                [ mobileNotificationsAndMenu model global.url ]
             ]
         , header
             [ Attr.class "bg-white shadow-sm"
@@ -314,7 +320,7 @@ renderBody model htmlMap props contents =
                 [ h1
                     [ Attr.class (textColor ++ " text-lg/6 font-semibold")
                     ]
-                    [ text props.title ]
+                    [ text title ]
                 ]
             ]
         , main_ []
@@ -326,7 +332,7 @@ renderBody model htmlMap props contents =
         ]
 
 
-mobileNotificationsAndMenu : Model -> Maybe String -> Html msg
+mobileNotificationsAndMenu : Model -> Url.Url -> Html msg
 mobileNotificationsAndMenu model currentUrl =
     let
         showMobileMenu : Bool
@@ -408,12 +414,12 @@ mobileNotifications =
         ]
 
 
-mobileMenuLink : Maybe String -> Section -> Html msg
+mobileMenuLink : Url.Url -> Section -> Html msg
 mobileMenuLink currentUrl section =
     let
         isActive : Bool
         isActive =
-            currentUrl == Just section.href
+            isSectionActive currentUrl section
         
         css : String
         css =
@@ -429,7 +435,7 @@ mobileMenuLink currentUrl section =
         ]
         [ text section.name ]
 
-mobileMenu : Maybe String ->Html msg
+mobileMenu : Url.Url -> Html msg
 mobileMenu currentUrl =
     div
         [ Attr.class "mt-3 space-y-1 px-2"
@@ -473,8 +479,8 @@ srOnly text =
     span [ Attr.class "sr-only" ] [ Html.text text ]
 
 
-mobileMenuButton : Model -> (ShellMsg -> msg) -> Html msg
-mobileMenuButton model htmlMap =
+mobileMenuButton : Model -> ViewProps msg -> Html msg
+mobileMenuButton model props =
     div
         [ Attr.class "-mr-2 flex md:hidden"
         ]
@@ -505,4 +511,4 @@ mobileMenuButton model htmlMap =
                     hamburgerMenuIcon
             ]
         ]
-        |> Html.map htmlMap
+        |> Html.map props.onShellMsg
