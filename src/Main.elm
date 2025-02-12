@@ -13,6 +13,12 @@ import Page.Y24.Photos as PageY24Photos
 import Route exposing (Route)
 import Templates.Shell as Shell
 import Url
+import Page.Contact as PageContact
+import Page.Donate as PageDonate
+import Page.Index as PageIndex
+import Page.Sponsors as PageSponsors
+import Page.Y24.Index as PageY24Index
+import Page.Y24.Photos as PageY24Photos
 
 
 main : Program () Model Msg
@@ -51,7 +57,7 @@ initWithGlobal global =
 
         ( page, cmd ) =
             Route.fromUrl global.url
-                |> getPageFromRoute global
+                |> getPageFromRoute
     in
     ( Ready
         { global = global
@@ -107,7 +113,7 @@ update msg model =
             let
                 ( page, cmd ) =
                     Route.fromUrl url
-                        |> getPageFromRoute readyModel.global
+                        |> getPageFromRoute
             in
             ( Ready { readyModel | page = page, global = updateGlobalState readyModel.global url }
             , Cmd.map (ReadyMsg << ChangedPage) cmd
@@ -172,8 +178,6 @@ subscriptions _ =
 
 -- Organized so the below can be code generated
 -- CODEGEN START
-
-
 pageSubscriptions : Sub PageMsg
 pageSubscriptions =
     Sub.none
@@ -194,26 +198,21 @@ type PageMsg
     | PageY24PhotosMsg PageY24Photos.Msg
 
 
-getPageFromRoute : GlobalState -> Maybe Route -> ( Page, Cmd PageMsg )
-getPageFromRoute global maybeRoute =
+getPageFromRoute : Maybe Route -> ( Page, Cmd PageMsg )
+getPageFromRoute maybeRoute =
     case maybeRoute of
         Just Route.RouteY24Photos ->
             PageY24Photos.init
                 |> Tuple.mapFirst PageY24Photos
                 |> Tuple.mapSecond (Cmd.map PageY24PhotosMsg)
-
         Just Route.RouteContact ->
             ( PageContact, Cmd.none )
-
         Just Route.RouteDonate ->
             ( PageDonate, Cmd.none )
-
         Just Route.RouteIndex ->
             ( PageIndex, Cmd.none )
-
         Just Route.RouteSponsors ->
             ( PageSponsors, Cmd.none )
-
         Just Route.RouteY24Index ->
             ( PageY24Index, Cmd.none )
 
@@ -251,7 +250,7 @@ updatePage model msg =
     case ( model.page, msg ) of
         ( PageIndex, PageIndexMsg pageMsg ) ->
             PageIndex.update model.global pageMsg
-                |> (\c -> ( model.page, Cmd.map (ReadyMsg << ChangedPage << PageIndexMsg) c ))
+                |> \c -> (model.page, Cmd.map (ReadyMsg << ChangedPage << PageIndexMsg) c)
 
         ( PageY24Photos pageModel, PageY24PhotosMsg pageMsg ) ->
             PageY24Photos.update pageMsg pageModel
