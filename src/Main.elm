@@ -98,6 +98,8 @@ type MainMsg
     = InternalMsg MainInternalMsg
     | PageMsg MainPageMsg
 
+type MainPageMsg = 
+    Noop
 
 update : MainMsg -> Model -> ( Model, Cmd MainMsg )
 update msg model =
@@ -108,6 +110,11 @@ update msg model =
         PageMsg m ->
             handlePageMsg m model
 
+handlePageMsg : MainInternalMsg -> Model -> ( Model, Cmd MainMsg )
+handlePageMsg msg model =
+    case msg of 
+        Noop ->
+            ( model, Cmd.none )
 
 handleInternalMsg : MainInternalMsg -> Model -> ( Model, Cmd MainMsg )
 handleInternalMsg msg model =
@@ -213,6 +220,9 @@ toGlobalState state _ =
     , navKey = state.navKey
     }
 
+subscriptions : Sub PageMsg
+subscriptions =
+    pageSubscriptions
 
 
 -- CODEGEN START
