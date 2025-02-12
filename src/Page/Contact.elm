@@ -13,10 +13,6 @@ type alias Model =
     , shell : ShellTemplate.Model }
 
 
-type Msg =
-    ShellTemplateMsg ShellTemplate.ShellMsg
-
-
 init : GlobalState -> ( Model, Cmd Msg )
 init global =
     let

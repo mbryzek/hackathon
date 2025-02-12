@@ -54,14 +54,14 @@ init _ url key =
     initWithGlobal { navKey = key, url = url }
 
 
-initWithGlobal : GlobalState -> Url.Url -> ( Model, Cmd Msg )
-initWithGlobal global url =
+initWithGlobal : GlobalState -> ( Model, Cmd Msg )
+initWithGlobal global =
     let
         ( shellModel, shellCmd ) =
-            Shell.init global
+            Shell.init
 
         ( page, cmd ) =
-            Route.fromUrl url
+            Route.fromUrl global.url
                 |> getPageFromRoute global
     in
     ( Ready
@@ -150,7 +150,7 @@ updateInternal : InternalMsg -> ReadyModel -> ( ReadyModel, Cmd Msg )
 updateInternal msg model =
     case msg of
         ShellMsg shellMsg ->
-            Shell.update shellMsg model.shellModel
+            Shell.update model.global shellMsg model.shellModel
                 |> Tuple.mapFirst (\m -> { model | shellModel = m })
                 |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedInternal << ShellMsg))
 
