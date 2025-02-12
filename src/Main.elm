@@ -1,370 +1,255 @@
-module Main exposing (..)
+module Main exposing (Model, Msg, main)
 
-import Browser exposing (Document, UrlRequest)
+import Browser
 import Browser.Navigation as Nav
-import Global exposing (GlobalState, SessionState(..))
-import Html exposing (Html)
+import Global exposing (GlobalState, MainViewProps)
+import NotFound
+import Route exposing (Route)
+import Templates.Shell as Shell
+import Url
 import Page.Contact as PageContact
 import Page.Donate as PageDonate
 import Page.Index as PageIndex
 import Page.Sponsors as PageSponsors
 import Page.Y24.Index as PageY24Index
 import Page.Y24.Photos as PageY24Photos
-import Route
-import Templates.Shell as ShellTemplate exposing (renderShell)
-import Ui.Elements exposing (link)
-import Url
-import Urls
 
 
-type alias Flags =
-    {}
-
-
-main : Program Flags Model MainMsg
+main : Program () Model Msg
 main =
     Browser.application
         { init = init
-        , update = update
         , view = view
+        , update = update
         , subscriptions = subscriptions
-        , onUrlRequest = \v -> InternalMsg (LinkClicked v)
-        , onUrlChange = \v -> InternalMsg (UrlChanged v)
+        , onUrlChange = UrlChanged
+        , onUrlRequest = LinkClicked
         }
 
 
-type alias Model =
-    { session : GlobalState
-    , state : IntermediateState
-    , shell : ShellTemplate.Model
-    , url : Url.Url
-    , page : Maybe Page
+type Model
+    = Ready ReadyModel
+
+
+type alias ReadyModel =
+    { global : GlobalState
+    , shellModel : Shell.Model
+    , page : Page
     }
 
 
-type alias IntermediateState =
-    { navKey : Nav.Key }
+init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init _ url key =
+    initWithGlobal { navKey = key, url = url }
 
 
-init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd MainMsg )
-init _ url navKey =
+initWithGlobal : GlobalState -> ( Model, Cmd Msg )
+initWithGlobal global =
     let
-        state : IntermediateState
-        state =
-            { navKey = navKey }
+        ( shellModel, shellCmd ) =
+            Shell.init
 
-        ( shell, shellCmd ) =
-            ShellTemplate.init navKey
-
-        initModel : Model
-        initModel =
-            { session = { session = SessionLoggedOut, navKey = navKey }
-            , state = state
-            , shell = shell
-            , page = Nothing
-            , url = url
-            }
-
-        ( pageModel, pageCmd ) =
-            renderPage initModel
+        ( page, cmd ) =
+            Route.fromUrl global.url
+                |> getPageFromRoute
     in
-    ( pageModel, Cmd.batch [ Cmd.map (\m -> InternalMsg (ShellTemplateMsg m)) shellCmd, pageCmd ] )
+    ( Ready
+        { global = global
+        , shellModel = shellModel
+        , page = page
+        }
+    , Cmd.batch
+        [ Cmd.map (ReadyMsg << ChangedPage) cmd
+        , Cmd.map (ReadyMsg << ChangedInternal << ShellMsg) shellCmd
+        ]
+    )
 
 
-renderPage : Model -> ( Model, Cmd MainMsg )
-renderPage model =
-    case parseUrl model.state model.url of
-        Just ( p, c ) ->
-            ( { model | page = Just p }, c )
-
-        Nothing ->
-            ( { model | page = Nothing }, Cmd.none )
-
-
-type MainInternalMsg
-    = LinkClicked UrlRequest
+type Msg
+    = ReadyMsg ReadyMsg
+    | LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
-    | RedirectTo String
-    | ShellTemplateMsg ShellTemplate.ShellMsg
 
 
-type MainMsg
-    = InternalMsg MainInternalMsg
-    | PageMsg MainPageMsg
+type ReadyMsg
+    = ChangedInternal InternalMsg
+    | ChangedPage PageMsg
 
 
-update : MainMsg -> Model -> ( Model, Cmd MainMsg )
+type InternalMsg
+    = ShellMsg Shell.ShellMsg
+
+
+redirectTo : Model -> String -> Cmd Msg
+redirectTo model url =
+    let
+        key : Nav.Key
+        key =
+            case model of
+                Ready rm ->
+                    Global.getNavKey rm.global
+    in
+    Nav.pushUrl key url
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        InternalMsg m ->
-            handleInternalMsg m model
-
-        PageMsg m ->
-            handlePageMsg m model
-
-
-handleInternalMsg : MainInternalMsg -> Model -> ( Model, Cmd MainMsg )
-handleInternalMsg msg model =
-    case msg of
-        UrlChanged url ->
-            case parseUrl model.state url of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just ( p, cmd ) ->
-                    ( { model | page = Just p }, cmd )
-
-        RedirectTo u ->
-            ( model, Nav.pushUrl model.state.navKey u )
-
-        ShellTemplateMsg subMsg ->
-            let
-                ( updatedShell, shellCmd ) =
-                    ShellTemplate.update subMsg model.shell
-            in
-            ( { model | shell = updatedShell }
-            , Cmd.map (\m -> InternalMsg (ShellTemplateMsg m)) shellCmd
-            )
-
-        LinkClicked urlRequest ->
+    case ( msg, model ) of
+        ( LinkClicked urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( model
-                    , Nav.pushUrl model.state.navKey (Url.toString url)
-                    )
+                    ( model, redirectTo model (Url.toString url) )
 
-                Browser.External url ->
-                    ( model
-                    , Nav.load url
-                    )
+                Browser.External href ->
+                    ( model, Nav.load href )
+
+        ( UrlChanged url, Ready readyModel ) ->
+            let
+                ( page, cmd ) =
+                    Route.fromUrl url
+                        |> getPageFromRoute
+            in
+            ( Ready { readyModel | page = page, global = updateGlobalState readyModel.global url }
+            , Cmd.map (ReadyMsg << ChangedPage) cmd
+            )
+
+        ( ReadyMsg readyMsg, Ready readyModel ) ->
+            updateReady readyMsg readyModel |> Tuple.mapFirst (\m -> Ready m)
 
 
-view : Model -> Document MainMsg
+updateGlobalState : GlobalState -> Url.Url -> GlobalState
+updateGlobalState global url =
+    { global | url = url }
+
+
+updateReady : ReadyMsg -> ReadyModel -> ( ReadyModel, Cmd Msg )
+updateReady msg model =
+    case msg of
+        ChangedInternal internalMsg ->
+            updateInternal internalMsg model
+
+        ChangedPage pageMsg ->
+            updatePage model pageMsg
+                |> Tuple.mapFirst (\page -> { model | page = page })
+
+
+updateInternal : InternalMsg -> ReadyModel -> ( ReadyModel, Cmd Msg )
+updateInternal msg model =
+    case msg of
+        ShellMsg shellMsg ->
+            Shell.update model.global shellMsg model.shellModel
+                |> Tuple.mapFirst (\m -> { model | shellModel = m })
+                |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedInternal << ShellMsg))
+
+
+view : Model -> Browser.Document Msg
 view model =
-    { title = "BT Hackathon"
-    , body =
-        [ case model.page of
-            Nothing ->
-                viewNotFound model
+    case model of
+        Ready readyModel ->
+            viewReady readyModel
 
-            Just p ->
-                pageView p
-        ]
+
+shellViewProps : ReadyModel -> Shell.ViewProps Msg
+shellViewProps model =
+    { global = model.global
+    , shellModel = model.shellModel
+    , onShellMsg = ReadyMsg << ChangedInternal << ShellMsg
     }
 
 
-viewNotFound : Model -> Html MainMsg
-viewNotFound model =
-    renderErrorPage model
-        { title = "Page not found"
-        , body = "The page you are looking for does not exist."
-        , link = Just (link (RedirectTo Urls.index) "Go to the home page")
-        }
-
-
-type alias ErrorPageParams =
-    { title : String
-    , body : String
-    , link : Maybe (Html MainInternalMsg)
+mainViewProps : GlobalState -> (a -> PageMsg) -> MainViewProps a Msg
+mainViewProps global a =
+    { global = global
+    , msgMap = ReadyMsg << ChangedPage << a
     }
 
 
-renderErrorPage : Model -> ErrorPageParams -> Html MainMsg
-renderErrorPage model params =
-    let
-        htmlLink : List (Html MainMsg)
-        htmlLink =
-            case params.link of
-                Nothing ->
-                    []
-
-                Just l ->
-                    [ Html.map InternalMsg l ]
-    in
-    renderShell model.shell
-        (\m -> InternalMsg (ShellTemplateMsg m))
-        { title = params.title
-        , url = Nothing
-        }
-        (List.append
-            [ Html.p [] [ Html.text params.body ] ]
-            htmlLink
-        )
-
-
-type alias Session =
-    { id : String }
-
-
-parseUrl : IntermediateState -> Url.Url -> Maybe ( Page, Cmd MainMsg )
-parseUrl state url =
-    Maybe.map (toPage state Nothing) (Route.parseUrl url)
-
-
-toGlobalState : IntermediateState -> Maybe Session -> GlobalState
-toGlobalState state _ =
-    { session = SessionLoggedOut
-    , navKey = state.navKey
-    }
-
-
-
--- CODEGEN START
-subscriptions : Model -> Sub MainMsg
+subscriptions : Model -> Sub Msg
 subscriptions _ =
+    pageSubscriptions |> Sub.map (ReadyMsg << ChangedPage)
+
+
+
+-- Organized so the below can be code generated
+-- CODEGEN START
+pageSubscriptions : Sub PageMsg
+pageSubscriptions =
     Sub.none
 
 
 type Page
-    = PageContact PageContact.Model
-    | PageDonate PageDonate.Model
-    | PageIndex PageIndex.Model
-    | PageSponsors PageSponsors.Model
-    | PageY24Index PageY24Index.Model
+    = PageContact
+    | PageDonate
+    | PageIndex
+    | PageSponsors
+    | PageY24Index
     | PageY24Photos PageY24Photos.Model
+    | PageNotFound
 
 
-type MainPageMsg
-    = PageContactMsg PageContact.Msg
-    | PageDonateMsg PageDonate.Msg
-    | PageIndexMsg PageIndex.Msg
-    | PageSponsorsMsg PageSponsors.Msg
-    | PageY24IndexMsg PageY24Index.Msg
+type PageMsg
+    = PageIndexMsg PageIndex.Msg
     | PageY24PhotosMsg PageY24Photos.Msg
 
 
-toPage : IntermediateState -> Maybe Session -> Route.Route -> (Page, Cmd MainMsg)
-toPage state session route =
-    case route of
-        Route.PageContact ->
-            let
-                (model, msg) = PageContact.init (toGlobalState state session)
-            in
-            (PageContact model, Cmd.map PageMsg (Cmd.map PageContactMsg msg))
+getPageFromRoute : Maybe Route -> ( Page, Cmd PageMsg )
+getPageFromRoute maybeRoute =
+    case maybeRoute of
+        Just Route.RouteY24Photos ->
+            PageY24Photos.init
+                |> Tuple.mapFirst PageY24Photos
+                |> Tuple.mapSecond (Cmd.map PageY24PhotosMsg)
+        Just Route.RouteContact ->
+            ( PageContact, Cmd.none )
+        Just Route.RouteDonate ->
+            ( PageDonate, Cmd.none )
+        Just Route.RouteIndex ->
+            ( PageIndex, Cmd.none )
+        Just Route.RouteSponsors ->
+            ( PageSponsors, Cmd.none )
+        Just Route.RouteY24Index ->
+            ( PageY24Index, Cmd.none )
 
-        Route.PageDonate ->
-            let
-                (model, msg) = PageDonate.init (toGlobalState state session)
-            in
-            (PageDonate model, Cmd.map PageMsg (Cmd.map PageDonateMsg msg))
-
-        Route.PageIndex ->
-            let
-                (model, msg) = PageIndex.init (toGlobalState state session)
-            in
-            (PageIndex model, Cmd.map PageMsg (Cmd.map PageIndexMsg msg))
-
-        Route.PageSponsors ->
-            let
-                (model, msg) = PageSponsors.init (toGlobalState state session)
-            in
-            (PageSponsors model, Cmd.map PageMsg (Cmd.map PageSponsorsMsg msg))
-
-        Route.PageY24Index ->
-            let
-                (model, msg) = PageY24Index.init (toGlobalState state session)
-            in
-            (PageY24Index model, Cmd.map PageMsg (Cmd.map PageY24IndexMsg msg))
-
-        Route.PageY24Photos ->
-            let
-                (model, msg) = PageY24Photos.init (toGlobalState state session)
-            in
-            (PageY24Photos model, Cmd.map PageMsg (Cmd.map PageY24PhotosMsg msg))
+        Nothing ->
+            ( PageNotFound, Cmd.none )
 
 
-pageView : Page -> Html MainMsg
-pageView page =
-    case page of
-        PageContact pageModel ->
-            PageContact.view pageModel
-                |> Html.map PageContactMsg
-                |> Html.map PageMsg
+viewReady : ReadyModel -> Browser.Document Msg
+viewReady model =
+    case model.page of
+        PageContact ->
+            PageContact.view (shellViewProps model)
 
-        PageDonate pageModel ->
-            PageDonate.view pageModel
-                |> Html.map PageDonateMsg
-                |> Html.map PageMsg
+        PageDonate ->
+            PageDonate.view (shellViewProps model)
 
-        PageIndex pageModel ->
-            PageIndex.view pageModel
-                |> Html.map PageIndexMsg
-                |> Html.map PageMsg
+        PageIndex ->
+            PageIndex.view (mainViewProps model.global PageIndexMsg) (shellViewProps model)
 
-        PageSponsors pageModel ->
-            PageSponsors.view pageModel
-                |> Html.map PageSponsorsMsg
-                |> Html.map PageMsg
+        PageSponsors ->
+            PageSponsors.view (shellViewProps model)
 
-        PageY24Index pageModel ->
-            PageY24Index.view pageModel
-                |> Html.map PageY24IndexMsg
-                |> Html.map PageMsg
+        PageY24Index ->
+            PageY24Index.view (shellViewProps model)
 
         PageY24Photos pageModel ->
-            PageY24Photos.view pageModel
-                |> Html.map PageY24PhotosMsg
-                |> Html.map PageMsg
+            PageY24Photos.view (shellViewProps model) pageModel
+
+        PageNotFound ->
+            NotFound.view
 
 
-handlePageMsg : MainPageMsg -> Model -> ( Model, Cmd MainMsg )
-handlePageMsg msg model =
-    case model.page of
-        Nothing ->
-            (model, Cmd.none)
+updatePage : ReadyModel -> PageMsg -> ( Page, Cmd Msg )
+updatePage model msg =
+    case ( model.page, msg ) of
+        ( PageIndex, PageIndexMsg pageMsg ) ->
+            PageIndex.update model.global pageMsg
+                |> \c -> (model.page, Cmd.map (ReadyMsg << ChangedPage << PageIndexMsg) c)
 
-        Just p ->
-            case ( msg, p ) of
-                (PageContactMsg pageMsg, PageContact pageModel) ->
-                    let
-                        (newModel, newCmd) = PageContact.update pageMsg pageModel
-                    in
-                    ({ model | page = Just (PageContact newModel) }, Cmd.map PageMsg (Cmd.map PageContactMsg newCmd))
+        ( PageY24Photos pageModel, PageY24PhotosMsg pageMsg ) ->
+            PageY24Photos.update pageMsg pageModel
+                |> Tuple.mapFirst PageY24Photos
+                |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedPage << PageY24PhotosMsg))
 
-                (PageContactMsg _, _) ->
-                    (model, Cmd.none)
-
-                (PageDonateMsg pageMsg, PageDonate pageModel) ->
-                    let
-                        (newModel, newCmd) = PageDonate.update pageMsg pageModel
-                    in
-                    ({ model | page = Just (PageDonate newModel) }, Cmd.map PageMsg (Cmd.map PageDonateMsg newCmd))
-
-                (PageDonateMsg _, _) ->
-                    (model, Cmd.none)
-
-                (PageIndexMsg pageMsg, PageIndex pageModel) ->
-                    let
-                        (newModel, newCmd) = PageIndex.update pageMsg pageModel
-                    in
-                    ({ model | page = Just (PageIndex newModel) }, Cmd.map PageMsg (Cmd.map PageIndexMsg newCmd))
-
-                (PageIndexMsg _, _) ->
-                    (model, Cmd.none)
-
-                (PageSponsorsMsg pageMsg, PageSponsors pageModel) ->
-                    let
-                        (newModel, newCmd) = PageSponsors.update pageMsg pageModel
-                    in
-                    ({ model | page = Just (PageSponsors newModel) }, Cmd.map PageMsg (Cmd.map PageSponsorsMsg newCmd))
-
-                (PageSponsorsMsg _, _) ->
-                    (model, Cmd.none)
-
-                (PageY24IndexMsg pageMsg, PageY24Index pageModel) ->
-                    let
-                        (newModel, newCmd) = PageY24Index.update pageMsg pageModel
-                    in
-                    ({ model | page = Just (PageY24Index newModel) }, Cmd.map PageMsg (Cmd.map PageY24IndexMsg newCmd))
-
-                (PageY24IndexMsg _, _) ->
-                    (model, Cmd.none)
-
-                (PageY24PhotosMsg pageMsg, PageY24Photos pageModel) ->
-                    let
-                        (newModel, newCmd) = PageY24Photos.update pageMsg pageModel
-                    in
-                    ({ model | page = Just (PageY24Photos newModel) }, Cmd.map PageMsg (Cmd.map PageY24PhotosMsg newCmd))
-
-                (PageY24PhotosMsg _, _) ->
-                    (model, Cmd.none)
+        ( page, _ ) ->
+            ( page, Cmd.none )

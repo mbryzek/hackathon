@@ -1,11 +1,16 @@
-module Global exposing (GlobalState, SessionState(..))
+module Global exposing (..)
 
 import Browser.Navigation as Nav
+import Url
 
-type SessionState =
-  SessionLoggedOut
-
+type alias MainViewProps a b =
+    { global : GlobalState
+    , msgMap : a -> b
+    }
 
 type alias GlobalState =
-    { session: SessionState
-    , navKey : Nav.Key }
+    { navKey : Nav.Key, url: Url.Url }
+
+getNavKey : GlobalState -> Nav.Key
+getNavKey global =
+    global.navKey

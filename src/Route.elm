@@ -1,28 +1,28 @@
-module Route exposing (Route(..), parseUrl)
+module Route exposing (Route(..), fromUrl)
 
 import Url exposing (Url)
 import Url.Parser exposing (..)
 
 
 type Route
-    = PageIndex
-    | PageY24Index
-    | PageY24Photos
-    | PageSponsors
-    | PageDonate
-    | PageContact
-parseUrl : Url -> Maybe Route
-parseUrl url =
+    = RouteIndex
+    | RouteY24Index
+    | RouteY24Photos
+    | RouteSponsors
+    | RouteDonate
+    | RouteContact
+fromUrl : Url -> Maybe Route
+fromUrl url =
     parse matchRoute url
 
 
 matchRoute : Parser (Route -> a) a
 matchRoute =
     oneOf
-        [ map PageIndex top
-        , map PageY24Index (s "Y24")
-        , map PageY24Photos (s "Y24" </> s "photos")
-        , map PageSponsors (s "sponsors")
-        , map PageDonate (s "donate")
-        , map PageContact (s "contact")
+        [ map RouteIndex top
+        , map RouteY24Index (s "Y24")
+        , map RouteY24Photos (s "Y24" </> s "photos")
+        , map RouteSponsors (s "sponsors")
+        , map RouteDonate (s "donate")
+        , map RouteContact (s "contact")
         ]

@@ -1,62 +1,25 @@
-module Page.Donate exposing (Model, Msg, init, update, view)
+module Page.Donate exposing (view)
 
-import Global exposing (GlobalState)
+import Browser
 import Html exposing (Html, div, h2, h3, li, ul)
 import Html.Attributes exposing (class)
-import Templates.Shell as ShellTemplate exposing (renderShell)
+import Templates.Shell as Shell
 import Ui.Elements exposing (callToAction, p, textDiv)
-import Urls
 
 
-type alias Model =
-    { global : GlobalState
-    , shell : ShellTemplate.Model }
-
-
-type Msg =
-    ShellTemplateMsg ShellTemplate.ShellMsg
-
-
-init : GlobalState -> ( Model, Cmd Msg )
-init global =
-    let
-        ( shell, shellCmd ) =
-            ShellTemplate.init global.navKey
-    in
-    ( { global = global
-      , shell = shell
-      }
-    , Cmd.map ShellTemplateMsg shellCmd
-    )
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        ShellTemplateMsg subMsg ->
-            let
-                ( updatedShell, shellCmd ) =
-                    ShellTemplate.update subMsg model.shell
-            in
-            ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
-
-
-view : Model -> Html Msg
-view model =
-    renderShell model.shell ShellTemplateMsg {
-        title = "Support the Hackathon", url = Just Urls.donate
-    }
-        [ textDiv
-            [ p "The Bergen Tech Hackathon is only possible thanks to the generosity of our sponsors and donors. If you would like to support our mission of empowering the next generation of tech leaders, please consider donating to our cause."
-            , p "Thank you for your support!"
-            , individualDonors
-            , corporateSponsors
-            , p "Bergen Youth Enrichment is a registered 501(c)(3) public charity. All donations are tax deductible."
-            ]
+view : Shell.ViewProps msg -> Browser.Document msg
+view props =
+    Shell.render props "Support the Hackathon" [ textDiv
+        [ p "The Bergen Tech Hackathon is only possible thanks to the generosity of our sponsors and donors. If you would like to support our mission of empowering the next generation of tech leaders, please consider donating to our cause."
+        , p "Thank you for your support!"
+        , individualDonors
+        , corporateSponsors
+        , p "Bergen Youth Enrichment is a registered 501(c)(3) public charity. All donations are tax deductible."
         ]
+    ]
 
 
-individualDonors : Html Msg
+individualDonors : Html msg
 individualDonors =
     div []
         [ h2 [ class "text-2xl font-bold mb-4" ] [ Html.text "Individual Donors" ]
@@ -66,7 +29,7 @@ individualDonors =
         ]
 
 
-corporateSponsors : Html Msg
+corporateSponsors : Html msg
 corporateSponsors =
     div []
         [ h2 [ class "text-2xl font-bold mt-8 mb-4" ] [ Html.text "Corporate Sponsorship Levels" ]
@@ -102,7 +65,7 @@ corporateSponsors =
         ]
 
 
-sponsorshipTier : String -> String -> List String -> Html Msg
+sponsorshipTier : String -> String -> List String -> Html msg
 sponsorshipTier name cost benefits =
     li [ class "border-l-4 border-yellow-500 pl-4" ]
         [ div [ class "flex gap-x-4" ]
