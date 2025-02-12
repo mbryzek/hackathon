@@ -148,8 +148,7 @@ view model =
 
 shellViewProps : ReadyModel -> Shell.ViewProps Msg
 shellViewProps model =
-    { global = model.global
-    , shellModel = model.shellModel
+    { shellModel = model.shellModel
     , onShellMsg = ReadyMsg << ChangedInternal << ShellMsg
     }
 
