@@ -1,6 +1,8 @@
 module Templates.Shell exposing (MobileMenuState, Model, ShellMsg, ShellProps, init, renderShell, update)
 
+import Browser
 import Browser.Navigation as Nav
+import Global exposing (GlobalState)
 import Constants exposing (logoSrc)
 import Html exposing (Html, a, button, div, h1, header, img, main_, nav, span, text)
 import Html.Attributes as Attr
@@ -16,8 +18,7 @@ type alias ShellProps =
 
 
 type alias Model =
-    { navKey : Nav.Key
-    , mobileMenuState : MobileMenuState
+    { mobileMenuState : MobileMenuState
     }
 
 
@@ -31,19 +32,19 @@ type ShellMsg
     | RedirectTo String
 
 
-init : Nav.Key -> ( Model, Cmd ShellMsg )
-init navKey =
-    ( { navKey = navKey, mobileMenuState = Closed }, Cmd.none )
+init : ( Model, Cmd ShellMsg )
+init =
+    ( { mobileMenuState = Closed }, Cmd.none )
 
 
-update : ShellMsg -> Model -> ( Model, Cmd ShellMsg )
-update msg model =
+update : GlobalState -> ShellMsg -> Model -> ( Model, Cmd ShellMsg )
+update global msg model =
     case msg of
         ToggleMenu ->
             ( { model | mobileMenuState = toggleMenuState model.mobileMenuState }, Cmd.none )
 
         RedirectTo url ->
-            ( model, Nav.pushUrl model.navKey url )
+            ( model, Nav.pushUrl global.navKey url )
 
 
 toggleMenuState : MobileMenuState -> MobileMenuState
@@ -261,8 +262,16 @@ profileDropdown =
         ]
 
 
-renderShell : Model -> (ShellMsg -> msg) -> ShellProps -> List (Html msg) -> Html msg
+renderShell : Model -> (ShellMsg -> msg) -> ShellProps -> List (Html msg) -> Browser.Document msg
 renderShell model htmlMap props contents =
+    {
+        title = props.title
+        , body = [ renderBody model htmlMap props contents ]
+    }
+
+
+renderBody : Model -> (ShellMsg -> msg) -> ShellProps -> List (Html msg) -> Html msg
+renderBody model htmlMap props contents =
     div
         [ Attr.class "min-h-full"
         ]

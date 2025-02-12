@@ -5,12 +5,12 @@ import Url.Parser exposing (..)
 
 
 type Route
-    = PageIndex
-    | PageY24Index
-    | PageY24Photos
-    | PageSponsors
-    | PageDonate
-    | PageContact
+    = RouteIndex
+    | RouteY24Index
+    | RouteY24Photos
+    | RouteSponsors
+    | RouteDonate
+    | RouteContact
 fromUrl : Url -> Maybe Route
 fromUrl url =
     parse matchRoute url
@@ -19,10 +19,10 @@ fromUrl url =
 matchRoute : Parser (Route -> a) a
 matchRoute =
     oneOf
-        [ map PageIndex top
-        , map PageY24Index (s "Y24")
-        , map PageY24Photos (s "Y24" </> s "photos")
-        , map PageSponsors (s "sponsors")
-        , map PageDonate (s "donate")
-        , map PageContact (s "contact")
+        [ map RouteIndex top
+        , map RouteY24Index (s "Y24")
+        , map RouteY24Photos (s "Y24" </> s "photos")
+        , map RouteSponsors (s "sponsors")
+        , map RouteDonate (s "donate")
+        , map RouteContact (s "contact")
         ]

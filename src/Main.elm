@@ -18,11 +18,7 @@ import Page.Y24.Index as PageY24Index
 import Page.Y24.Photos as PageY24Photos
 
 
-type alias Flags =
-    { sessionId : Maybe String }
-
-
-main : Program Flags Model Msg
+main : Program () Model Msg
 main =
     Browser.application
         { init = init
