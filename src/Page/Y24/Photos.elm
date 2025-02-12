@@ -1,61 +1,38 @@
-module Page.Y24.Photos exposing (view)
+module Page.Y24.Photos exposing (Model, Msg, init, update, view)
 
-import Global exposing (GlobalState)
-import Html exposing (Html)
+import Browser
 import Templates.PhotoGallery exposing (renderPhotoGallery)
-import Templates.Shell as ShellTemplate exposing (renderShell)
-import Urls
+import Templates.Shell as Shell
 import Random
 import Random.List
 
 type alias Model =
-    { global : GlobalState
-    , shell : ShellTemplate.Model
-    , randomSeed : Random.Seed
+    { randomSeed : Random.Seed
     }
 
 
-type msg =
-    ShellTemplatemsg ShellTemplate.Shellmsg
-    | GotRandomSeed Int
+type Msg =
+    GotRandomSeed Int
 
 
-init : ( Model, Cmd msg )
-init global =
-    let
-        ( shell, shellCmd ) =
-            
-    in
-    ( { global = global
-      , shell = shell
-      , randomSeed = Random.initialSeed 0
+init : ( Model, Cmd Msg )
+init =
+    ( { randomSeed = Random.initialSeed 0
       }
-    , Cmd.batch 
-        [ Cmd.map ShellTemplatemsg shellCmd
-        , Random.generate GotRandomSeed (Random.int Random.minInt Random.maxInt)
-        ]
+    , Random.generate GotRandomSeed (Random.int Random.minInt Random.maxInt)
     )
 
 
-update : msg -> Model -> ( Model, Cmd msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ShellTemplatemsg submsg ->
-            let
-                ( updatedShell, shellCmd ) =
-                    ShellTemplate.update submsg model.shell
-            in
-            ( { model | shell = updatedShell }, Cmd.map ShellTemplatemsg shellCmd )
-            
         GotRandomSeed seed ->
             ( { model | randomSeed = Random.initialSeed seed }, Cmd.none )
 
 
-view : GlobalState -> Html msg
-view global =
-    renderShell model.shell ShellTemplatemsg {
-        title = "2024 Photos", url = Just Urls.photos
-    } [
+view : Shell.ViewProps msg -> Model -> Browser.Document msg
+view props model =
+    Shell.render props "2024 Photos" [
         renderPhotoGallery (shuffledPhotoUrls model.randomSeed)
     ]
 
