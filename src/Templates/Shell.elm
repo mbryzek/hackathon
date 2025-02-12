@@ -1,17 +1,18 @@
-module Templates.Shell exposing (ViewProps, MobileMenuState, Model, ShellMsg, init, render, update)
+module Templates.Shell exposing (MobileMenuState, Model, ShellMsg, ViewProps, init, render, update)
 
 import Browser
 import Browser.Navigation as Nav
-import Global exposing (GlobalState)
 import Constants exposing (logoSrc)
+import Global exposing (GlobalState)
 import Html exposing (Html, a, button, div, h1, header, img, main_, nav, span, text)
 import Html.Attributes as Attr
 import Html.Events exposing (onClick)
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
 import Ui.Elements exposing (textColor)
-import Urls
 import Url
+import Urls
+
 
 type alias ViewProps a =
     { global : GlobalState
@@ -19,9 +20,11 @@ type alias ViewProps a =
     , onShellMsg : ShellMsg -> a
     }
 
+
 type alias Model =
     { mobileMenuState : MobileMenuState
     }
+
 
 type MobileMenuState
     = Open
@@ -64,13 +67,12 @@ type alias Section =
 
 allSections : List Section
 allSections =
-    [
-        { href = Urls.index, name = "Overview" }
-        , { href = Urls.photos, name = "Photos" }
-        , { href = Urls.events2024, name = "2024 Event" }
-        , { href = Urls.sponsors, name = "Sponsors" }
-        , { href = Urls.donate, name = "Donate" }
-        , { href = Urls.contact, name = "Contact" }
+    [ { href = Urls.index, name = "Overview" }
+    , { href = Urls.photos, name = "Photos" }
+    , { href = Urls.events2024, name = "2024 Event" }
+    , { href = Urls.sponsors, name = "Sponsors" }
+    , { href = Urls.donate, name = "Donate" }
+    , { href = Urls.contact, name = "Contact" }
     ]
 
 
@@ -83,6 +85,7 @@ topNavSections currentUrl =
             ]
             (List.map (navLink currentUrl) allSections)
         ]
+
 
 isSectionActive : Url.Url -> Section -> Bool
 isSectionActive currentUrl section =
@@ -118,7 +121,8 @@ navLink currentUrl section =
 logo : ViewProps msg -> Html msg
 logo props =
     div
-        [ Attr.class "shrink-0" ] [ img
+        [ Attr.class "shrink-0" ]
+        [ img
             [ Attr.class "h-12 w-36"
             , Attr.src logoSrc
             , Attr.alt "2025 Bergen Tech Hackathon"
@@ -126,14 +130,13 @@ logo props =
             ]
             []
         ]
-    |> Html.map props.onShellMsg
+        |> Html.map props.onShellMsg
 
 
 render : ViewProps msg -> String -> List (Html msg) -> Browser.Document msg
 render props title contents =
-    {
-        title = title
-        , body = [ renderBody props title contents ]
+    { title = title
+    , body = [ renderBody props title contents ]
     }
 
 
@@ -180,35 +183,6 @@ renderBody props title contents =
                 contents
             ]
         ]
-
-
-mobileMenuLink : Url.Url -> Section -> Html msg
-mobileMenuLink currentUrl section =
-    let
-        isActive : Bool
-        isActive =
-            isSectionActive currentUrl section
-        
-        css : String
-        css =
-            if isActive then
-                "bg-gray-900 text-white"
-
-            else
-                "text-gray-400 hover:bg-gray-700 hover:text-white"
-    in
-    a
-        [ Attr.href section.href
-        , Attr.class ("block rounded-md px-3 py-2 text-base font-medium " ++ css)
-        ]
-        [ text section.name ]
-
-mobileMenu : Url.Url -> Html msg
-mobileMenu currentUrl =
-    div
-        [ Attr.class "mt-3 space-y-1 px-2"
-        ]
-        (List.map (mobileMenuLink currentUrl) allSections)
 
 
 createSvg : String -> Html ShellMsg
