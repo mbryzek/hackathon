@@ -308,7 +308,7 @@ renderBody props title contents =
                 [ Attr.class "md:hidden"
                 , Attr.id "mobile-menu"
                 ]
-                [ mobileNotificationsAndMenu model global.url ]
+                [ mobileNotificationsAndMenu props.shellModel props.global.url ]
             ]
         , header
             [ Attr.class "bg-white shadow-sm"

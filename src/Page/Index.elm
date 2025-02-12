@@ -2,7 +2,7 @@ module Page.Index exposing (Msg, update, view)
 
 import Browser
 import Browser.Navigation as Nav
-import Global exposing (GlobalState)
+import Global exposing (GlobalState, MainViewProps)
 import Html exposing (Html, img, text)
 import Html.Attributes exposing (class, src)
 import Templates.Shell as Shell
@@ -21,9 +21,13 @@ update global msg =
             Nav.pushUrl global.navKey url
 
 
-view : Shell.ViewProps msg -> Browser.Document msg
-view props =
-    Shell.render props "2025 Bergen Tech Hackathon" [
+view : MainViewProps Msg mainMsg -> Shell.ViewProps mainMsg -> Browser.Document mainMsg
+view { msgMap } shellProps =
+    Shell.render shellProps "2025 Bergen Tech Hackathon" [ contents |> Html.map msgMap ]
+
+contents : Html Msg
+contents =
+    Html.div [] [
         calloutBox2
             { title = "Date & Time"
             , contents = twoLines "April 5, 2025" "9am - 9pm"

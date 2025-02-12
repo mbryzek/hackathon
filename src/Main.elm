@@ -238,7 +238,7 @@ viewReady model =
             PageDonate.view (shellViewProps model)
 
         PageIndex ->
-            PageIndex.view (shellViewProps model)
+            PageIndex.view (mainViewProps model.global PageIndexMsg) (shellViewProps model)
 
         PageSponsors ->
             PageSponsors.view (shellViewProps model)
