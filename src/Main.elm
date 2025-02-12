@@ -2,8 +2,7 @@ module Main exposing (Model, Msg, main)
 
 import Browser
 import Browser.Navigation as Nav
-import Global exposing (GlobalState)
-import Html as H
+import Global exposing (GlobalState, MainViewProps)
 import Loading
 import NotAuthorized
 import NotFound
@@ -172,10 +171,10 @@ shellViewProps model =
     , onShellMsg = ReadyMsg << ChangedInternal << ShellMsg
     }
 
-mapDoc : (a -> PageMsg) -> Browser.Document a -> Browser.Document Msg
-mapDoc pageMsg doc =
-    { title = doc.title
-    , body = List.map (H.map (ReadyMsg << ChangedPage << pageMsg)) doc.body
+mainViewProps : GlobalState -> (a -> PageMsg) -> MainViewProps a Msg
+mainViewProps global a =
+    { global = global
+    , msgMap = ReadyMsg << ChangedPage << a
     }
 
 subscriptions : Model -> Sub Msg
