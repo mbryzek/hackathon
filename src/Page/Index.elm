@@ -1,4 +1,4 @@
-module Page.Index exposing (Model, Msg, init, update, view)
+module Page.Index exposing (Model, init, update, view)
 
 import Browser.Navigation as Nav
 import Global exposing (GlobalState)
@@ -15,33 +15,33 @@ type alias Model =
     }
 
 
-type Msg
-    = ShellTemplateMsg ShellTemplate.ShellMsg
+type msg
+    = ShellTemplatemsg ShellTemplate.Shellmsg
     | RedirectTo String
 
 
-init : GlobalState -> ( Model, Cmd Msg )
+init : ( Model, Cmd msg )
 init global =
     let
         ( shell, shellCmd ) =
-            ShellTemplate.init global.navKey
+            
     in
     ( { global = global
       , shell = shell
       }
-    , Cmd.map ShellTemplateMsg shellCmd
+    , Cmd.map ShellTemplatemsg shellCmd
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        ShellTemplateMsg subMsg ->
+        ShellTemplatemsg submsg ->
             let
                 ( updatedShell, shellCmd ) =
-                    ShellTemplate.update subMsg model.shell
+                    ShellTemplate.update submsg model.shell
             in
-            ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
+            ( { model | shell = updatedShell }, Cmd.map ShellTemplatemsg shellCmd )
 
         RedirectTo url ->
             ( model, Nav.pushUrl model.global.navKey url )
@@ -55,10 +55,10 @@ twoLines first second =
         ]
 
 
-view : Model -> Html Msg
-view model =
+view : GlobalState -> Html msg
+view global =
     renderShell model.shell
-        ShellTemplateMsg
+        ShellTemplatemsg
         { title = "2025 Bergen Tech Hackathon"
         , url = Just Urls.index
         }
@@ -82,12 +82,12 @@ view model =
         ]
 
 
-thankYouMessage : Html Msg
+thankYouMessage : Html msg
 thankYouMessage =
     Html.p [ class (textColor ++ " font-semibold text-center italic mt-8") ]
         [ text " Thank you for being a part of our community's growth and innovation! ❤️ " ]
 
 
-studentPhoto : Html Msg
+studentPhoto : Html msg
 studentPhoto =
     img [ src "https://github.com/mbryzek/hackathon-photos/blob/main/2024/all-students.jpg?raw=true" ] []

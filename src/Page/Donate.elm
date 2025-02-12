@@ -1,4 +1,4 @@
-module Page.Donate exposing (Model, Msg, init, update, view)
+module Page.Donate exposing (Model, init, update, view)
 
 import Global exposing (GlobalState)
 import Html exposing (Html, div, h2, h3, li, ul)
@@ -13,37 +13,37 @@ type alias Model =
     , shell : ShellTemplate.Model }
 
 
-type Msg =
-    ShellTemplateMsg ShellTemplate.ShellMsg
+type msg =
+    ShellTemplatemsg ShellTemplate.Shellmsg
 
 
-init : GlobalState -> ( Model, Cmd Msg )
+init : ( Model, Cmd msg )
 init global =
     let
         ( shell, shellCmd ) =
-            ShellTemplate.init global.navKey
+            
     in
     ( { global = global
       , shell = shell
       }
-    , Cmd.map ShellTemplateMsg shellCmd
+    , Cmd.map ShellTemplatemsg shellCmd
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        ShellTemplateMsg subMsg ->
+        ShellTemplatemsg submsg ->
             let
                 ( updatedShell, shellCmd ) =
-                    ShellTemplate.update subMsg model.shell
+                    ShellTemplate.update submsg model.shell
             in
-            ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
+            ( { model | shell = updatedShell }, Cmd.map ShellTemplatemsg shellCmd )
 
 
-view : Model -> Html Msg
-view model =
-    renderShell model.shell ShellTemplateMsg {
+view : GlobalState -> Html msg
+view global =
+    renderShell model.shell ShellTemplatemsg {
         title = "Support the Hackathon", url = Just Urls.donate
     }
         [ textDiv
@@ -56,7 +56,7 @@ view model =
         ]
 
 
-individualDonors : Html Msg
+individualDonors : Html msg
 individualDonors =
     div []
         [ h2 [ class "text-2xl font-bold mb-4" ] [ Html.text "Individual Donors" ]
@@ -66,7 +66,7 @@ individualDonors =
         ]
 
 
-corporateSponsors : Html Msg
+corporateSponsors : Html msg
 corporateSponsors =
     div []
         [ h2 [ class "text-2xl font-bold mt-8 mb-4" ] [ Html.text "Corporate Sponsorship Levels" ]
@@ -102,7 +102,7 @@ corporateSponsors =
         ]
 
 
-sponsorshipTier : String -> String -> List String -> Html Msg
+sponsorshipTier : String -> String -> List String -> Html msg
 sponsorshipTier name cost benefits =
     li [ class "border-l-4 border-yellow-500 pl-4" ]
         [ div [ class "flex gap-x-4" ]

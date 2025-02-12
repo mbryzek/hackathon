@@ -1,4 +1,4 @@
-module Page.Sponsors exposing (Model, Msg, init, update, view)
+module Page.Sponsors exposing (Model, init, update, view)
 
 import Global exposing (GlobalState)
 import Html exposing (Html)
@@ -13,32 +13,32 @@ type alias Model =
     , shell : ShellTemplate.Model }
 
 
-type Msg =
-    ShellTemplateMsg ShellTemplate.ShellMsg
+type msg =
+    ShellTemplatemsg ShellTemplate.Shellmsg
 
 
-init : GlobalState -> ( Model, Cmd Msg )
+init : ( Model, Cmd msg )
 init global =
     let
         ( shell, shellCmd ) =
-            ShellTemplate.init global.navKey
+            
     in
     ( { global = global
       , shell = shell
       }
-    , Cmd.map ShellTemplateMsg shellCmd
+    , Cmd.map ShellTemplatemsg shellCmd
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        ShellTemplateMsg subMsg ->
+        ShellTemplatemsg submsg ->
             let
                 ( updatedShell, shellCmd ) =
-                    ShellTemplate.update subMsg model.shell
+                    ShellTemplate.update submsg model.shell
             in
-            ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
+            ( { model | shell = updatedShell }, Cmd.map ShellTemplatemsg shellCmd )
 
 
 toUrl : String -> String
@@ -61,9 +61,9 @@ logos =
         ]
 
 
-view : Model -> Html Msg
-view model =
-    renderShell model.shell ShellTemplateMsg {
+view : GlobalState -> Html msg
+view global =
+    renderShell model.shell ShellTemplatemsg {
         title = "2024 Sponsors", url = Just Urls.sponsors
     }
         [ p "A huge thank you to our sponsors who made our 2024 Hackathon possible!"

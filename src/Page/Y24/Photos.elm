@@ -1,4 +1,4 @@
-module Page.Y24.Photos exposing (Model, Msg, init, update, view)
+module Page.Y24.Photos exposing (Model, init, update, view)
 
 import Global exposing (GlobalState)
 import Html exposing (Html)
@@ -15,45 +15,45 @@ type alias Model =
     }
 
 
-type Msg =
-    ShellTemplateMsg ShellTemplate.ShellMsg
+type msg =
+    ShellTemplatemsg ShellTemplate.Shellmsg
     | GotRandomSeed Int
 
 
-init : GlobalState -> ( Model, Cmd Msg )
+init : ( Model, Cmd msg )
 init global =
     let
         ( shell, shellCmd ) =
-            ShellTemplate.init global.navKey
+            
     in
     ( { global = global
       , shell = shell
       , randomSeed = Random.initialSeed 0
       }
     , Cmd.batch 
-        [ Cmd.map ShellTemplateMsg shellCmd
+        [ Cmd.map ShellTemplatemsg shellCmd
         , Random.generate GotRandomSeed (Random.int Random.minInt Random.maxInt)
         ]
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        ShellTemplateMsg subMsg ->
+        ShellTemplatemsg submsg ->
             let
                 ( updatedShell, shellCmd ) =
-                    ShellTemplate.update subMsg model.shell
+                    ShellTemplate.update submsg model.shell
             in
-            ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
+            ( { model | shell = updatedShell }, Cmd.map ShellTemplatemsg shellCmd )
             
         GotRandomSeed seed ->
             ( { model | randomSeed = Random.initialSeed seed }, Cmd.none )
 
 
-view : Model -> Html Msg
-view model =
-    renderShell model.shell ShellTemplateMsg {
+view : GlobalState -> Html msg
+view global =
+    renderShell model.shell ShellTemplatemsg {
         title = "2024 Photos", url = Just Urls.photos
     } [
         renderPhotoGallery (shuffledPhotoUrls model.randomSeed)

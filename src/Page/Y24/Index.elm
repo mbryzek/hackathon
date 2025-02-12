@@ -1,4 +1,4 @@
-module Page.Y24.Index exposing (Model, Msg, init, update, view)
+module Page.Y24.Index exposing (Model, init, update, view)
 
 import Global exposing (GlobalState)
 import Html exposing (Html, a, div, h2, h3, img, li, ul)
@@ -13,42 +13,42 @@ type alias Model =
     , shell : ShellTemplate.Model }
 
 
-type Msg =
-    ShellTemplateMsg ShellTemplate.ShellMsg
+type msg =
+    ShellTemplatemsg ShellTemplate.Shellmsg
 
 
-init : GlobalState -> ( Model, Cmd Msg )
+init : ( Model, Cmd msg )
 init global =
     let
         ( shell, shellCmd ) =
-            ShellTemplate.init global.navKey
+            
     in
     ( { global = global
       , shell = shell
       }
-    , Cmd.map ShellTemplateMsg shellCmd
+    , Cmd.map ShellTemplatemsg shellCmd
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        ShellTemplateMsg subMsg ->
+        ShellTemplatemsg submsg ->
             let
                 ( updatedShell, shellCmd ) =
-                    ShellTemplate.update subMsg model.shell
+                    ShellTemplate.update submsg model.shell
             in
-            ( { model | shell = updatedShell }, Cmd.map ShellTemplateMsg shellCmd )
+            ( { model | shell = updatedShell }, Cmd.map ShellTemplatemsg shellCmd )
 
 
-view : Model -> Html Msg
-view model =
-    renderShell model.shell ShellTemplateMsg {
+view : GlobalState -> Html msg
+view global =
+    renderShell model.shell ShellTemplatemsg {
         title = "2024 Hackathon Event Summary", url = Just Urls.events2024
     } [ summary ]
 
 
-summary : Html Msg
+summary : Html msg
 summary =
     textDiv
         [ p "The inaugural 2024 Bergen Tech Hackathon was a huge success! We wanted to deeply thank you for your support and share a few highlights from the day - we could not have put this event together without you!"
@@ -83,7 +83,7 @@ summary =
         ]
 
 
-studentPhoto : Html Msg
+studentPhoto : Html msg
 studentPhoto =
     img
         [ class "mt-4"
