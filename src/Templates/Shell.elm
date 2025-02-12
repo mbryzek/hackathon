@@ -14,7 +14,8 @@ import Urls
 import Url
 
 type alias ViewProps a =
-    { shellModel : Model
+    { global : GlobalState
+    , shellModel : Model
     , onShellMsg : ShellMsg -> a
     }
 
@@ -266,16 +267,16 @@ profileDropdown =
         ]
 
 
-render : GlobalState -> ViewProps msg -> String -> List (Html msg) -> Browser.Document msg
-render global props title contents =
+render : ViewProps msg -> String -> List (Html msg) -> Browser.Document msg
+render props title contents =
     {
         title = title
-        , body = [ renderBody global props title contents ]
+        , body = [ renderBody props title contents ]
     }
 
 
-renderBody : GlobalState -> ViewProps msg -> String -> List (Html msg) -> Html msg
-renderBody global props title contents =
+renderBody : ViewProps msg -> String -> List (Html msg) -> Html msg
+renderBody props title contents =
     div
         [ Attr.class "min-h-full"
         ]
@@ -292,7 +293,7 @@ renderBody global props title contents =
                         [ Attr.class "flex items-center"
                         ]
                         [ logo props
-                        , topNavSections global.url
+                        , topNavSections props.global.url
                         ]
                     , div
                         [ Attr.class "hidden md:block"
@@ -307,7 +308,7 @@ renderBody global props title contents =
                 [ Attr.class "md:hidden"
                 , Attr.id "mobile-menu"
                 ]
-                [ mobileNotificationsAndMenu props.shellModel global.url ]
+                [ mobileNotificationsAndMenu props.shellModel props.global.url ]
             ]
         , header
             [ Attr.class "bg-white shadow-sm"
