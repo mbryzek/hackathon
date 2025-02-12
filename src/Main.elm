@@ -146,9 +146,7 @@ view : Model -> Browser.Document Msg
 view model =
     case model of
         Ready readyModel ->
-            Debug.log "Main.view iwth ready model"
-                viewReady
-                readyModel
+            viewReady readyModel
 
 
 shellViewProps : ReadyModel -> Shell.ViewProps Msg
