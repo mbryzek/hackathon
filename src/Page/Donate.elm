@@ -1,59 +1,22 @@
 module Page.Donate exposing (view)
 
-import Global exposing (GlobalState)
+import Browser
 import Html exposing (Html, div, h2, h3, li, ul)
 import Html.Attributes exposing (class)
-import Templates.Shell as ShellTemplate exposing (renderShell)
+import Templates.Shell as Shell
 import Ui.Elements exposing (callToAction, p, textDiv)
-import Urls
 
 
-type alias Model =
-    { global : GlobalState
-    , shell : ShellTemplate.Model }
-
-
-type msg =
-    ShellTemplatemsg ShellTemplate.Shellmsg
-
-
-init : ( Model, Cmd msg )
-init global =
-    let
-        ( shell, shellCmd ) =
-            
-    in
-    ( { global = global
-      , shell = shell
-      }
-    , Cmd.map ShellTemplatemsg shellCmd
-    )
-
-
-update : msg -> Model -> ( Model, Cmd msg )
-update msg model =
-    case msg of
-        ShellTemplatemsg submsg ->
-            let
-                ( updatedShell, shellCmd ) =
-                    ShellTemplate.update submsg model.shell
-            in
-            ( { model | shell = updatedShell }, Cmd.map ShellTemplatemsg shellCmd )
-
-
-view : GlobalState -> Html msg
-view global =
-    renderShell model.shell ShellTemplatemsg {
-        title = "Support the Hackathon", url = Just Urls.donate
-    }
-        [ textDiv
-            [ p "The Bergen Tech Hackathon is only possible thanks to the generosity of our sponsors and donors. If you would like to support our mission of empowering the next generation of tech leaders, please consider donating to our cause."
-            , p "Thank you for your support!"
-            , individualDonors
-            , corporateSponsors
-            , p "Bergen Youth Enrichment is a registered 501(c)(3) public charity. All donations are tax deductible."
-            ]
+view : Shell.ViewProps msg -> Browser.Document msg
+view props =
+    Shell.render props "Support the Hackathon" [ textDiv
+        [ p "The Bergen Tech Hackathon is only possible thanks to the generosity of our sponsors and donors. If you would like to support our mission of empowering the next generation of tech leaders, please consider donating to our cause."
+        , p "Thank you for your support!"
+        , individualDonors
+        , corporateSponsors
+        , p "Bergen Youth Enrichment is a registered 501(c)(3) public charity. All donations are tax deductible."
         ]
+    ]
 
 
 individualDonors : Html msg
