@@ -1,4 +1,4 @@
-module Templates.Shell exposing (MobileMenuState, Model, ShellMsg, init, renderShell, update)
+module Templates.Shell exposing (ViewProps, MobileMenuState, Model, ShellMsg, init, render, update)
 
 import Browser
 import Browser.Navigation as Nav
@@ -22,7 +22,6 @@ type alias ViewProps a =
 type alias Model =
     { mobileMenuState : MobileMenuState
     }
-
 
 type MobileMenuState
     = Open
@@ -268,16 +267,16 @@ profileDropdown =
         ]
 
 
-renderShell : Model -> ViewProps msg -> String -> List (Html msg) -> Browser.Document msg
-renderShell model props title contents =
+render : ViewProps msg -> String -> List (Html msg) -> Browser.Document msg
+render props title contents =
     {
         title = title
-        , body = [ renderBody props.global model props title contents ]
+        , body = [ renderBody props title contents ]
     }
 
 
-renderBody : GlobalState -> Model -> ViewProps msg -> String -> List (Html msg) -> Html msg
-renderBody global model props title contents =
+renderBody : ViewProps msg -> String -> List (Html msg) -> Html msg
+renderBody props title contents =
     div
         [ Attr.class "min-h-full"
         ]
@@ -294,14 +293,14 @@ renderBody global model props title contents =
                         [ Attr.class "flex items-center"
                         ]
                         [ logo props
-                        , topNavSections global.url
+                        , topNavSections props.global.url
                         ]
                     , div
                         [ Attr.class "hidden md:block"
                         ]
                         [ notificationsAndProfile
                         ]
-                    , mobileMenuButton model props
+                    , mobileMenuButton props.shellModel props
                     ]
                 ]
             , {- Mobile menu, show/hide based on menu state. -}
@@ -309,7 +308,7 @@ renderBody global model props title contents =
                 [ Attr.class "md:hidden"
                 , Attr.id "mobile-menu"
                 ]
-                [ mobileNotificationsAndMenu model global.url ]
+                [ mobileNotificationsAndMenu props.shellModel props.global.url ]
             ]
         , header
             [ Attr.class "bg-white shadow-sm"

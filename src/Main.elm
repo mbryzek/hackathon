@@ -1,4 +1,4 @@
-module Main exposing (Flags, Model, Msg, main)
+module Main exposing (Model, Msg, main)
 
 import Browser
 import Browser.Navigation as Nav
@@ -165,6 +165,12 @@ view model =
             Debug.log ("Main.view iwth ready model")
             viewReady readyModel
 
+shellViewProps : ReadyModel -> Shell.ViewProps Msg
+shellViewProps model =
+    { global = model.global
+    , shellModel = model.shellModel
+    , onShellMsg = ReadyMsg << ChangedInternal << ShellMsg
+    }
 
 mapDoc : (a -> PageMsg) -> Browser.Document a -> Browser.Document Msg
 mapDoc pageMsg doc =
