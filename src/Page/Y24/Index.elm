@@ -1,4 +1,4 @@
-module Page.Y24.Index exposing (Model, init, update, view)
+module Page.Y24.Index exposing (view)
 
 import Global exposing (GlobalState)
 import Html exposing (Html, a, div, h2, h3, img, li, ul)

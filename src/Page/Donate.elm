@@ -1,4 +1,4 @@
-module Page.Donate exposing (Model, init, update, view)
+module Page.Donate exposing (view)
 
 import Global exposing (GlobalState)
 import Html exposing (Html, div, h2, h3, li, ul)

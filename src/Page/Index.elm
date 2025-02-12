@@ -1,4 +1,4 @@
-module Page.Index exposing (Model, init, update, view)
+module Page.Index exposing (view)
 
 import Browser.Navigation as Nav
 import Global exposing (GlobalState)

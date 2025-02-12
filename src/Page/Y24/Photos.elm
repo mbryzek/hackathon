@@ -1,4 +1,4 @@
-module Page.Y24.Photos exposing (Model, init, update, view)
+module Page.Y24.Photos exposing (view)
 
 import Global exposing (GlobalState)
 import Html exposing (Html)

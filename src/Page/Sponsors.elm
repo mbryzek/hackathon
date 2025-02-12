@@ -1,4 +1,4 @@
-module Page.Sponsors exposing (Model, init, update, view)
+module Page.Sponsors exposing (view)
 
 import Global exposing (GlobalState)
 import Html exposing (Html)
