@@ -7,10 +7,10 @@ import NotFound
 import Route exposing (Route)
 import Templates.Shell as Shell
 import Url
-import Page.Claire as PageClaire
 import Page.Contact as PageContact
 import Page.Donate as PageDonate
 import Page.Index as PageIndex
+import Page.Luna as PageLuna
 import Page.Sponsors as PageSponsors
 import Page.Y24.Index as PageY24Index
 import Page.Y24.Photos as PageY24Photos
@@ -179,10 +179,10 @@ pageSubscriptions =
 
 
 type Page
-    = PageClaire
-    | PageContact
+    = PageContact
     | PageDonate
     | PageIndex
+    | PageLuna
     | PageSponsors
     | PageY24Index
     | PageY24Photos PageY24Photos.Model
@@ -201,14 +201,14 @@ getPageFromRoute maybeRoute =
             PageY24Photos.init
                 |> Tuple.mapFirst PageY24Photos
                 |> Tuple.mapSecond (Cmd.map PageY24PhotosMsg)
-        Just Route.RouteClaire ->
-            ( PageClaire, Cmd.none )
         Just Route.RouteContact ->
             ( PageContact, Cmd.none )
         Just Route.RouteDonate ->
             ( PageDonate, Cmd.none )
         Just Route.RouteIndex ->
             ( PageIndex, Cmd.none )
+        Just Route.RouteLuna ->
+            ( PageLuna, Cmd.none )
         Just Route.RouteSponsors ->
             ( PageSponsors, Cmd.none )
         Just Route.RouteY24Index ->
@@ -221,9 +221,6 @@ getPageFromRoute maybeRoute =
 viewReady : ReadyModel -> Browser.Document Msg
 viewReady model =
     case model.page of
-        PageClaire ->
-            PageClaire.view (shellViewProps model)
-
         PageContact ->
             PageContact.view (shellViewProps model)
 
@@ -232,6 +229,9 @@ viewReady model =
 
         PageIndex ->
             PageIndex.view (mainViewProps model.global PageIndexMsg) (shellViewProps model)
+
+        PageLuna ->
+            PageLuna.view (shellViewProps model)
 
         PageSponsors ->
             PageSponsors.view (shellViewProps model)
