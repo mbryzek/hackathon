@@ -7,6 +7,7 @@ import NotFound
 import Route exposing (Route)
 import Templates.Shell as Shell
 import Url
+import Page.Claire as PageClaire
 import Page.Contact as PageContact
 import Page.Donate as PageDonate
 import Page.Index as PageIndex
@@ -178,7 +179,8 @@ pageSubscriptions =
 
 
 type Page
-    = PageContact
+    = PageClaire
+    | PageContact
     | PageDonate
     | PageIndex
     | PageSponsors
@@ -199,6 +201,8 @@ getPageFromRoute maybeRoute =
             PageY24Photos.init
                 |> Tuple.mapFirst PageY24Photos
                 |> Tuple.mapSecond (Cmd.map PageY24PhotosMsg)
+        Just Route.RouteClaire ->
+            ( PageClaire, Cmd.none )
         Just Route.RouteContact ->
             ( PageContact, Cmd.none )
         Just Route.RouteDonate ->
@@ -217,6 +221,9 @@ getPageFromRoute maybeRoute =
 viewReady : ReadyModel -> Browser.Document Msg
 viewReady model =
     case model.page of
+        PageClaire ->
+            PageClaire.view (shellViewProps model)
+
         PageContact ->
             PageContact.view (shellViewProps model)
 
