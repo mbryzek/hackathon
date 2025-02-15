@@ -19,7 +19,9 @@ view props =
                   , style "border-radius" "50%"
                   ] []
             , p [ class "mt-4 mb-4 text-lg" ]
-                [ Html.text "Exciting news! I'm heading to Cancun tomorrow for some sun and relaxation! I'll be staying at the GR Solaris Cancun resort. 🌴☀️" ]
+                [ Html.text "Exciting news! I'm heading to Cancun tomorrow for some sun and relaxation! I'll be staying at the GR Solaris Cancun resort. ��☀️" ]
+            , p [ class "mt-4 mb-4 text-lg text-rose-600 font-semibold" ]
+                [ Html.text "BTW, Happy Valentine's Day! 💝" ]
             , h3 [ class "text-xl font-bold text-amber-700 mt-6 mb-3" ]
                 [ Html.text "This is where we are staying!" ]
             , img [ src "https://images.trvl-media.com/lodging/2000000/1120000/1110100/1110099/1d5a8cd9.jpg?impolicy=resizecrop&rw=1200&ra=fit"
