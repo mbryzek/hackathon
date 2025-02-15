@@ -12,6 +12,7 @@ type Route
     | RouteDonate
     | RouteContact
     | RouteLuna
+    | RouteClaire
 
 fromUrl : Url -> Maybe Route
 fromUrl url =
@@ -28,4 +29,5 @@ matchRoute =
         , map RouteDonate (s "donate")
         , map RouteContact (s "contact")
         , map RouteLuna (s "luna")
+        , map RouteClaire (s "claire")
         ]
