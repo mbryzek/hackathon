@@ -10,6 +10,7 @@ import Url
 import Page.Contact as PageContact
 import Page.Donate as PageDonate
 import Page.Index as PageIndex
+import Page.Luna as PageLuna
 import Page.Sponsors as PageSponsors
 import Page.Y24.Index as PageY24Index
 import Page.Y24.Photos as PageY24Photos
@@ -181,6 +182,7 @@ type Page
     = PageContact
     | PageDonate
     | PageIndex
+    | PageLuna
     | PageSponsors
     | PageY24Index
     | PageY24Photos PageY24Photos.Model
@@ -205,6 +207,8 @@ getPageFromRoute maybeRoute =
             ( PageDonate, Cmd.none )
         Just Route.RouteIndex ->
             ( PageIndex, Cmd.none )
+        Just Route.RouteLuna ->
+            ( PageLuna, Cmd.none )
         Just Route.RouteSponsors ->
             ( PageSponsors, Cmd.none )
         Just Route.RouteY24Index ->
@@ -225,6 +229,9 @@ viewReady model =
 
         PageIndex ->
             PageIndex.view (mainViewProps model.global PageIndexMsg) (shellViewProps model)
+
+        PageLuna ->
+            PageLuna.view (shellViewProps model)
 
         PageSponsors ->
             PageSponsors.view (shellViewProps model)

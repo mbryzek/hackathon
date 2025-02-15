@@ -11,6 +11,8 @@ type Route
     | RouteSponsors
     | RouteDonate
     | RouteContact
+    | RouteLuna
+
 fromUrl : Url -> Maybe Route
 fromUrl url =
     parse matchRoute url
@@ -25,4 +27,5 @@ matchRoute =
         , map RouteSponsors (s "sponsors")
         , map RouteDonate (s "donate")
         , map RouteContact (s "contact")
+        , map RouteLuna (s "luna")
         ]
