@@ -25,7 +25,7 @@ view props =
                 , ul [ class "list-disc pl-6 space-y-2 mb-6" ]
                     [ li [] 
                         [ Html.text "Unconditional love and loyalty "
-                        , Html.span [ class "inline-block animate-pulse" ] [ Html.text "💗" ]
+                        , Html.span [ class "inline-block animate-pulse text-2xl" ] [ Html.text "💗" ]
                         ]
                     , li [] [ Html.text "Emotional support and companionship" ]
                     , li [] [ Html.text "Protection and security" ]
