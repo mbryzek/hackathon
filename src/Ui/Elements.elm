@@ -3,7 +3,6 @@ module Ui.Elements exposing (..)
 import Html exposing (Html, a, div, text)
 import Html.Attributes as Attr exposing (class)
 import Html.Events exposing (onClick)
-import Templates.Buttons exposing (renderDefaultTextLink)
 
 
 textColor : String
@@ -43,6 +42,7 @@ calloutBox2 props1 props2 =
         , calloutBox props2
         ]
 
+
 button : msg -> String -> Html msg
 button msg label =
     div [ class "mt-8 text-center" ]
@@ -53,6 +53,7 @@ button msg label =
             [ text label ]
         ]
 
+
 callToAction : String -> String -> Html msg
 callToAction url label =
     div [ class "mt-8 text-center" ]
@@ -62,12 +63,3 @@ callToAction url label =
             ]
             [ text label ]
         ]
-
-link : msg -> String -> Html msg
-link msg label =
-    Html.p
-        [ Attr.class (textColor ++ " mt-4 text-center text-sm underline hover:no-underline")
-        ]
-        [ renderDefaultTextLink msg label
-        ]
-
