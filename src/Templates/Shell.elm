@@ -227,7 +227,7 @@ mobileMenuButton model props =
         contents : Html ShellMsg
         contents =
             div
-                [ class "absolute right-0 top-full mt-4 w-48 bg-gray-800 shadow-lg rounded-md" ]
+                [ class "absolute right-0 top-full mt-4 w-48 bg-gray-800 shadow-lg rounded-md z-50" ]
                 [ div
                     [ class "space-y-1 px-2 py-2" ]
                     (List.map
