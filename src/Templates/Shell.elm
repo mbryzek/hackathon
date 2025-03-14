@@ -82,6 +82,11 @@ allSections =
         , children = []
         }
     , Section
+        { href = Urls.y25Rubric
+        , name = "Rubric"
+        , children = []
+        }
+    , Section
         { href = Urls.y24Index
         , name = "2024"
         , children =

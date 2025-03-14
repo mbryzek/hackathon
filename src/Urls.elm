@@ -16,6 +16,10 @@ y25Prizes : String
 y25Prizes =
     "/Y25/prizes"
 
+y25Rubric : String
+y25Rubric =
+    "/Y25/rubric"
+
 donate : String
 donate =
     "/donate"

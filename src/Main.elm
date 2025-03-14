@@ -16,6 +16,7 @@ import Page.Y24.Index as PageY24Index
 import Page.Y24.Photos as PageY24Photos
 import Page.Y24.Sponsors as PageY24Sponsors
 import Page.Y25.Prizes as PageY25Prizes
+import Page.Y25.Rubric as PageY25Rubric
 
 
 main : Program () Model Msg
@@ -190,6 +191,7 @@ type Page
     | PageY24Photos PageY24Photos.Model
     | PageY24Sponsors
     | PageY25Prizes
+    | PageY25Rubric
     | PageNotFound
 
 
@@ -221,6 +223,8 @@ getPageFromRoute maybeRoute =
             ( PageY24Sponsors, Cmd.none )
         Just Route.RouteY25Prizes ->
             ( PageY25Prizes, Cmd.none )
+        Just Route.RouteY25Rubric ->
+            ( PageY25Rubric, Cmd.none )
 
         Nothing ->
             ( PageNotFound, Cmd.none )
@@ -255,6 +259,9 @@ viewReady model =
 
         PageY25Prizes ->
             PageY25Prizes.view (shellViewProps model)
+
+        PageY25Rubric ->
+            PageY25Rubric.view (shellViewProps model)
 
         PageNotFound ->
             NotFound.view
