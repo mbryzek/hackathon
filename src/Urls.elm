@@ -4,13 +4,17 @@ index : String
 index =
     "/"
 
-photos : String
-photos =
+y24Photos : String
+y24Photos =
     "/Y24/photos"
 
-sponsors : String
-sponsors =
-    "/sponsors"
+y24Sponsors : String
+y24Sponsors =
+    "/Y24/sponsors"
+
+y25Prizes : String
+y25Prizes =
+    "/Y25/prizes"
 
 donate : String
 donate =
@@ -20,7 +24,7 @@ contact : String
 contact =
     "/contact"
 
-events2024 : String
-events2024 =
+y24Index : String
+y24Index =
     "/Y24/"
 

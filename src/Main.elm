@@ -15,6 +15,7 @@ import Page.Luna as PageLuna
 import Page.Y24.Index as PageY24Index
 import Page.Y24.Photos as PageY24Photos
 import Page.Y24.Sponsors as PageY24Sponsors
+import Page.Y25.Prizes as PageY25Prizes
 
 
 main : Program () Model Msg
@@ -188,6 +189,7 @@ type Page
     | PageY24Index
     | PageY24Photos PageY24Photos.Model
     | PageY24Sponsors
+    | PageY25Prizes
     | PageNotFound
 
 
@@ -217,6 +219,8 @@ getPageFromRoute maybeRoute =
             ( PageY24Index, Cmd.none )
         Just Route.RouteY24Sponsors ->
             ( PageY24Sponsors, Cmd.none )
+        Just Route.RouteY25Prizes ->
+            ( PageY25Prizes, Cmd.none )
 
         Nothing ->
             ( PageNotFound, Cmd.none )
@@ -248,6 +252,9 @@ viewReady model =
 
         PageY24Sponsors ->
             PageY24Sponsors.view (shellViewProps model)
+
+        PageY25Prizes ->
+            PageY25Prizes.view (shellViewProps model)
 
         PageNotFound ->
             NotFound.view
