@@ -9,6 +9,8 @@ type Route
     | RouteY24Index
     | RouteY24Photos
     | RouteY24Sponsors
+    | RouteY25Prizes
+    | RouteY25Rubric
     | RouteDonate
     | RouteContact
     | RouteLuna
@@ -25,7 +27,9 @@ matchRoute =
         [ map RouteIndex top
         , map RouteY24Index (s "Y24")
         , map RouteY24Photos (s "Y24" </> s "photos")
-        , map RouteY24Sponsors (s "sponsors")
+        , map RouteY24Sponsors (s "Y24" </> s "sponsors")
+        , map RouteY25Prizes (s "Y25" </> s "prizes")
+        , map RouteY25Rubric (s "Y25" </> s "rubric")
         , map RouteDonate (s "donate")
         , map RouteContact (s "contact")
         , map RouteLuna (s "luna")
