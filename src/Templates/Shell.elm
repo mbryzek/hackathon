@@ -79,7 +79,7 @@ allSections =
 topNavSections : Url.Url -> Html msg
 topNavSections currentUrl =
     div
-        [ Attr.class "hidden md:block" ]
+        [ Attr.class "md:block hidden" ]
         [ div
             [ Attr.class "ml-10 flex items-baseline space-x-4"
             ]
@@ -223,6 +223,25 @@ srOnly text =
 
 mobileMenuButton : Model -> ViewProps msg -> Html msg
 mobileMenuButton model props =
+    let
+        contents : Html ShellMsg
+        contents =
+            div
+                [ Attr.class "absolute right-0 top-full mt-2 w-48 bg-gray-800 shadow-lg rounded-md" ]
+                [ div
+                    [ Attr.class "space-y-1 px-2 py-2" ]
+                    (List.map
+                        (\section ->
+                            a
+                                [ Attr.href section.href
+                                , Attr.class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                                ]
+                                [ text section.name ]
+                        )
+                        allSections
+                    )
+                ]
+    in
     div
         [ Attr.class "-mr-2 flex md:hidden"
         ]
@@ -237,20 +256,19 @@ mobileMenuButton model props =
                 [ Attr.class "absolute -inset-0.5"
                 ]
                 []
-            , srOnly
-                (case model.mobileMenuState of
-                    Open ->
-                        "Close menu"
-
-                    Closed ->
-                        "Open menu"
-                )
-            , case model.mobileMenuState of
-                Open ->
-                    closeIcon
-
-                Closed ->
-                    hamburgerMenuIcon
+            , srOnly (mobile model "Close menu" "Open menu")
+            , mobile model closeIcon hamburgerMenuIcon
+            , mobile model contents (text "")
             ]
         ]
         |> Html.map props.onShellMsg
+
+
+mobile : Model -> a -> a -> a
+mobile model ifOpen ifClosed =
+    case model.mobileMenuState of
+        Open ->
+            ifOpen
+
+        Closed ->
+            ifClosed

@@ -6,7 +6,7 @@ import Global exposing (GlobalState, MainViewProps)
 import Html exposing (Html, img, text)
 import Html.Attributes exposing (class, src)
 import Templates.Shell as Shell
-import Ui.Elements exposing (calloutBox2, link, p, textColor)
+import Ui.Elements exposing (calloutBox2, button, p, textColor)
 import Urls
 
 
@@ -27,7 +27,7 @@ view { msgMap } shellProps =
 
 contents : Html Msg
 contents =
-    Html.div [] [
+    Html.div [class "flex flex-col gap-y-4"] [
         calloutBox2
             { title = "Date & Time"
             , contents = twoLines "April 5, 2025" "9am - 9pm"
@@ -40,7 +40,7 @@ contents =
         , p "We need your help! To make this event a huge success, we're seeking donations from individuals and companies interested in sponsoring the event. All donations are tax deductible and 100% of the funds raised directly support this event. "
         , p "This even is open to students of Bergen Tech at the Teterboro and Paramus campuses."
         , p "Every contribution, big or small, makes a difference. Let's come together to inspire and nurture the next generation of tech wizards at Bergen Tech! "
-        , link (RedirectTo Urls.donate) "Donate or Become a Sponsor"
+        , button (RedirectTo Urls.donate) "Donate or Become a Sponsor"
         , thankYouMessage
         , studentPhoto
     ]
