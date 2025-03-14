@@ -806,6 +806,14 @@ select {
   top: 100%;
 }
 
+.-right-2 {
+  right: -0.5rem;
+}
+
+.-right-1 {
+  right: -0.25rem;
+}
+
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
