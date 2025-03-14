@@ -5,7 +5,7 @@ import Browser.Navigation as Nav
 import Constants exposing (logoSrc)
 import Global exposing (GlobalState)
 import Html exposing (Html, a, button, div, h1, header, img, main_, nav, span, text)
-import Html.Attributes as Attr
+import Html.Attributes as Attr exposing (class)
 import Html.Events exposing (onClick)
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
@@ -79,9 +79,9 @@ allSections =
 topNavSections : Url.Url -> Html msg
 topNavSections currentUrl =
     div
-        [ Attr.class "hidden md:block" ]
+        [ class "md:block hidden" ]
         [ div
-            [ Attr.class "ml-10 flex items-baseline space-x-4"
+            [ class "ml-10 flex items-baseline space-x-4"
             ]
             (List.map (navLink currentUrl) allSections)
         ]
@@ -101,7 +101,7 @@ navLink currentUrl section =
     in
     a
         [ Attr.href section.href
-        , Attr.class <|
+        , class <|
             "rounded-md px-3 py-2 text-sm font-medium "
                 ++ (if isActive then
                         "bg-gray-900 text-white"
@@ -113,7 +113,7 @@ navLink currentUrl section =
             Attr.attribute "aria-current" "page"
 
           else
-            Attr.class ""
+            class ""
         ]
         [ text section.name ]
 
@@ -121,9 +121,9 @@ navLink currentUrl section =
 logo : ViewProps msg -> Html msg
 logo props =
     div
-        [ Attr.class "shrink-0" ]
+        [ class "shrink-0" ]
         [ img
-            [ Attr.class "h-12 w-36"
+            [ class "h-12 w-36"
             , Attr.src logoSrc
             , Attr.alt "2025 Bergen Tech Hackathon"
             , onClick (RedirectTo Urls.index)
@@ -143,19 +143,19 @@ render props title contents =
 renderBody : ViewProps msg -> String -> List (Html msg) -> Html msg
 renderBody props title contents =
     div
-        [ Attr.class "min-h-full"
+        [ class "min-h-full"
         ]
         [ nav
-            [ Attr.class "bg-gray-800"
+            [ class "bg-gray-800"
             ]
             [ div
-                [ Attr.class "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+                [ class "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
                 ]
                 [ div
-                    [ Attr.class "flex h-16 items-center justify-between"
+                    [ class "flex h-16 items-center justify-between"
                     ]
                     [ div
-                        [ Attr.class "flex items-center"
+                        [ class "flex items-center"
                         ]
                         [ logo props
                         , topNavSections props.global.url
@@ -165,20 +165,20 @@ renderBody props title contents =
                 ]
             ]
         , header
-            [ Attr.class "bg-white shadow-sm"
+            [ class "bg-white shadow-sm"
             ]
             [ div
-                [ Attr.class "mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8"
+                [ class "mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8"
                 ]
                 [ h1
-                    [ Attr.class (textColor ++ " text-lg/6 font-semibold")
+                    [ class (textColor ++ " text-lg/6 font-semibold")
                     ]
                     [ text title ]
                 ]
             ]
         , main_ []
             [ div
-                [ Attr.class "mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
+                [ class "mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
                 ]
                 contents
             ]
@@ -218,39 +218,57 @@ closeIcon =
 
 srOnly : String -> Html msg
 srOnly text =
-    span [ Attr.class "sr-only" ] [ Html.text text ]
+    span [ class "sr-only" ] [ Html.text text ]
 
 
 mobileMenuButton : Model -> ViewProps msg -> Html msg
 mobileMenuButton model props =
+    let
+        contents : Html ShellMsg
+        contents =
+            div
+                [ class "absolute right-0 top-full mt-4 w-48 bg-gray-800 shadow-lg rounded-md z-50" ]
+                [ div
+                    [ class "space-y-1 px-2 py-2" ]
+                    (List.map
+                        (\section ->
+                            button
+                                [ class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                                , onClick (RedirectTo section.href)
+                                ]
+                                [ text section.name ]
+                        )
+                        allSections
+                    )
+                ]
+    in
     div
-        [ Attr.class "-mr-2 flex md:hidden"
+        [ class "-mr-2 flex md:hidden"
         ]
         [ button
             [ Attr.type_ "button"
-            , Attr.class "relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+            , class "relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
             , Attr.attribute "aria-controls" "mobile-menu"
             , Attr.attribute "aria-expanded" "false"
             , onClick ToggleMenu
             ]
             [ span
-                [ Attr.class "absolute -inset-0.5"
+                [ class "absolute -inset-0.5"
                 ]
                 []
-            , srOnly
-                (case model.mobileMenuState of
-                    Open ->
-                        "Close menu"
-
-                    Closed ->
-                        "Open menu"
-                )
-            , case model.mobileMenuState of
-                Open ->
-                    closeIcon
-
-                Closed ->
-                    hamburgerMenuIcon
+            , srOnly (mobile model "Close menu" "Open menu")
+            , mobile model closeIcon hamburgerMenuIcon
+            , mobile model contents (text "")
             ]
         ]
         |> Html.map props.onShellMsg
+
+
+mobile : Model -> a -> a -> a
+mobile model ifOpen ifClosed =
+    case model.mobileMenuState of
+        Open ->
+            ifOpen
+
+        Closed ->
+            ifClosed
