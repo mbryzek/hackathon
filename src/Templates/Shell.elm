@@ -61,18 +61,40 @@ toggleMenuState state =
             Open
 
 
-type alias Section =
-    { href : String, name : String }
+type Section =
+    Section
+        { href : String
+        , name : String
+        , children : List Section
+        }
 
 
 allSections : List Section
 allSections =
-    [ { href = Urls.index, name = "Overview" }
-    , { href = Urls.photos, name = "Photos" }
-    , { href = Urls.events2024, name = "2024 Event" }
-    , { href = Urls.sponsors, name = "Sponsors" }
-    , { href = Urls.donate, name = "Donate" }
-    , { href = Urls.contact, name = "Contact" }
+    [ Section
+        { href = Urls.index
+        , name = "Overview"
+        , children = []
+        }
+    , Section
+        { href = Urls.events2024
+        , name = "2024"
+        , children =
+            [ Section { href = Urls.events2024, name = "Event", children = [] }
+            , Section { href = Urls.photos, name = "Photos", children = [] }
+            , Section { href = Urls.sponsors, name = "Sponsors", children = [] }
+            ]
+        }
+    , Section
+        { href = Urls.donate
+        , name = "Donate"
+        , children = []
+        }
+    , Section
+        { href = Urls.contact
+        , name = "Contact"
+        , children = []
+        }
     ]
 
 
@@ -88,34 +110,62 @@ topNavSections currentUrl =
 
 
 isSectionActive : Url.Url -> Section -> Bool
-isSectionActive currentUrl section =
+isSectionActive currentUrl (Section section) =
     currentUrl.path == section.href
 
 
 navLink : Url.Url -> Section -> Html msg
-navLink currentUrl section =
+navLink currentUrl ((Section section) as fullSection) =
     let
         isActive : Bool
         isActive =
-            isSectionActive currentUrl section
-    in
-    a
-        [ Attr.href section.href
-        , class <|
+            isSectionActive currentUrl fullSection
+
+        hasActiveChild : Bool
+        hasActiveChild =
+            List.any (isSectionActive currentUrl) section.children
+
+        baseClasses : String
+        baseClasses =
             "rounded-md px-3 py-2 text-sm font-medium "
-                ++ (if isActive then
-                        "bg-gray-900 text-white"
 
-                    else
-                        "text-gray-300 hover:bg-gray-700 hover:text-white"
-                   )
-        , if isActive then
-            Attr.attribute "aria-current" "page"
-
-          else
-            class ""
-        ]
-        [ text section.name ]
+        activeClasses : String
+        activeClasses =
+            if isActive || hasActiveChild then
+                "bg-gray-900 text-white"
+            else
+                "text-gray-300 hover:bg-gray-700 hover:text-white"
+    in
+    if List.isEmpty section.children then
+        a
+            [ Attr.href section.href
+            , class (baseClasses ++ activeClasses)
+            , if isActive then
+                Attr.attribute "aria-current" "page"
+              else
+                class ""
+            ]
+            [ text section.name ]
+    else
+        div [ class "relative group" ]
+            [ a
+                [ Attr.href section.href
+                , class (baseClasses ++ activeClasses)
+                ]
+                [ text section.name ]
+            , div
+                [ class "absolute left-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg hidden group-hover:block" ]
+                (List.map
+                    (\child ->
+                        a
+                            [ Attr.href (case child of Section s -> s.href)
+                            , class "block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+                            ]
+                            [ text (case child of Section s -> s.name) ]
+                    )
+                    section.children
+                )
+            ]
 
 
 logo : ViewProps msg -> Html msg
@@ -224,23 +274,37 @@ srOnly text =
 mobileMenuButton : Model -> ViewProps msg -> Html msg
 mobileMenuButton model props =
     let
+        renderMobileMenuItem : Section -> Html ShellMsg
+        renderMobileMenuItem (Section section) =
+            div []
+                [ button
+                    [ class "block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                    , onClick (RedirectTo section.href)
+                    ]
+                    [ text section.name ]
+                , if not (List.isEmpty section.children) then
+                    div [ class "pl-4" ]
+                        (List.map
+                            (\child ->
+                                case child of
+                                    Section s ->
+                                        button
+                                            [ class "block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                                            , onClick (RedirectTo s.href)
+                                            ]
+                                            [ text s.name ]
+                            )
+                            section.children
+                        )
+                  else
+                    text ""
+                ]
+
         contents : Html ShellMsg
         contents =
             div
                 [ class "absolute right-0 top-full mt-4 w-48 bg-gray-800 shadow-lg rounded-md z-50" ]
-                [ div
-                    [ class "space-y-1 px-2 py-2" ]
-                    (List.map
-                        (\section ->
-                            button
-                                [ class "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                , onClick (RedirectTo section.href)
-                                ]
-                                [ text section.name ]
-                        )
-                        allSections
-                    )
-                ]
+                (List.map renderMobileMenuItem allSections)
     in
     div
         [ class "-mr-2 flex md:hidden"
