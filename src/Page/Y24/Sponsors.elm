@@ -1,4 +1,4 @@
-module Page.Sponsors exposing (view)
+module Page.Y24.Sponsors exposing (view)
 
 import Browser
 import Templates.PhotoGallery exposing (renderPhotoGallery)
