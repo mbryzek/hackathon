@@ -10,7 +10,7 @@ import Ui.Elements exposing (p)
 
 view : Shell.ViewProps mainMsg -> Browser.Document mainMsg
 view shellProps =
-    Shell.render shellProps "2025 Prizes" [ contents ]
+    Shell.render shellProps "2025 Rubric" [ contents ]
 
 
 contents : Html mainMsg
