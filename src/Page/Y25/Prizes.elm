@@ -1,3 +1,4 @@
+-- codegen.global.state: GlobalStateAnonymousData
 module Page.Y25.Prizes exposing (view)
 
 import Browser

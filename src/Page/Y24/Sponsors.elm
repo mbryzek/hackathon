@@ -1,3 +1,4 @@
+-- codegen.global.state: GlobalStateAnonymousData
 module Page.Y24.Sponsors exposing (view)
 
 import Browser

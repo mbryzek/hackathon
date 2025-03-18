@@ -1,3 +1,4 @@
+-- codegen.global.state: GlobalStateAnonymousData
 module Page.Y25.Rubric exposing (view)
 
 import Browser

@@ -1,3 +1,4 @@
+-- codegen.global.state: GlobalStateAnonymousData
 module Page.Index exposing (Msg, update, view)
 
 import Browser

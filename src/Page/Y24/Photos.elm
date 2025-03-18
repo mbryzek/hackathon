@@ -1,3 +1,4 @@
+-- codegen.global.state: GlobalStateAnonymousData
 module Page.Y24.Photos exposing (Model, Msg, init, update, view)
 
 import Browser
