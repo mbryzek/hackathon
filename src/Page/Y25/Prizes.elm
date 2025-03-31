@@ -34,8 +34,8 @@ contents =
             [ Html.h2 [ class "text-2xl font-bold mb-4" ] [ text "Additional Awards" ]
             , Html.div [ class "flex flex-col gap-y-4" ]
                 [ prizeEntry "Best Mobile Application" "$500 Cash" "Awarded to the team with the highest # of points that has built a native mobile application (android or iOs)."
+                , prizeEntry "Cybersecurity" "$500 Cash" "An application built to directly improve cyber security in some way. This criterion will be independently evaluated by the judges."
                 , prizeEntry "Freshman Prize" "$250 Cash" "Awarded to the team with the highest # of points with all members in their first year of high school."
-                , prizeEntry "Cybersecurity" "$250 Cash" "An application built to directly improve cyber security in some way. This criterion will be independently evaluated by the judges."
                 , prizeEntry "New Coder Prize" "$250 Cash" "Awarded to the team with the highest # of points with all members as New Coders. A new coder is somebody to have less than 1 year experience with any type of coding."
                 , prizeEntry "Best use of Artificial Intelligence" "$250 Cash" "Awarded to the team that presents the most interesting / novel use of a large language model. This criterion will be independently evaluated by the judges."
                 , prizeEntry "Best Device (Robotics / Arduino / etc.)" "$250 Cash" "The idea here is to encourage students to build robotic, arduino, etc devices / products"
