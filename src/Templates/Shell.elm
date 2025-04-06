@@ -158,24 +158,30 @@ navLink currentUrl ((Section section) as fullSection) =
             ]
             [ text section.name ]
     else
-        div [ class "relative group" ]
+        div [ class "relative group z-50" ]
             [ a
                 [ Attr.href section.href
                 , class (baseClasses ++ activeClasses)
                 ]
                 [ text section.name ]
-            , div
-                [ class "absolute left-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg hidden group-hover:block" ]
-                (List.map
-                    (\child ->
-                        a
-                            [ Attr.href (case child of Section s -> s.href)
-                            , class "block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
-                            ]
-                            [ text (case child of Section s -> s.name) ]
-                    )
-                    section.children
-                )
+            , div 
+                [ class "absolute left-0 top-full w-48" ]
+                [ div 
+                    [ class "pt-2 pb-1" ]
+                    [ div
+                        [ class "bg-gray-800 rounded-md shadow-lg hidden group-hover:block transition-[display] duration-300 z-[150]" ]
+                        (List.map
+                            (\child ->
+                                a
+                                    [ Attr.href (case child of Section s -> s.href)
+                                    , class "block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+                                    ]
+                                    [ text (case child of Section s -> s.name) ]
+                            )
+                            section.children
+                        )
+                    ]
+                ]
             ]
 
 
