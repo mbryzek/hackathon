@@ -15,8 +15,11 @@ import Page.Luna as PageLuna
 import Page.Y24.Index as PageY24Index
 import Page.Y24.Photos as PageY24Photos
 import Page.Y24.Sponsors as PageY24Sponsors
+import Page.Y25.Index as PageY25Index
+import Page.Y25.Photos as PageY25Photos
 import Page.Y25.Prizes as PageY25Prizes
 import Page.Y25.Rubric as PageY25Rubric
+import Page.Y25.Sponsors as PageY25Sponsors
 
 
 main : Program () Model Msg
@@ -190,14 +193,18 @@ type Page
     | PageY24Index
     | PageY24Photos PageY24Photos.Model
     | PageY24Sponsors
+    | PageY25Index
+    | PageY25Photos PageY25Photos.Model
     | PageY25Prizes
     | PageY25Rubric
+    | PageY25Sponsors
     | PageNotFound
 
 
 type PageMsg
     = PageIndexMsg PageIndex.Msg
     | PageY24PhotosMsg PageY24Photos.Msg
+    | PageY25PhotosMsg PageY25Photos.Msg
 
 
 getPageFromRoute : Maybe Route -> ( Page, Cmd PageMsg )
@@ -207,6 +214,11 @@ getPageFromRoute maybeRoute =
             PageY24Photos.init
                 |> Tuple.mapFirst PageY24Photos
                 |> Tuple.mapSecond (Cmd.map PageY24PhotosMsg)
+
+        Just Route.RouteY25Photos ->
+            PageY25Photos.init
+                |> Tuple.mapFirst PageY25Photos
+                |> Tuple.mapSecond (Cmd.map PageY25PhotosMsg)
         Just Route.RouteClaire ->
             ( PageClaire, Cmd.none )
         Just Route.RouteContact ->
@@ -221,10 +233,14 @@ getPageFromRoute maybeRoute =
             ( PageY24Index, Cmd.none )
         Just Route.RouteY24Sponsors ->
             ( PageY24Sponsors, Cmd.none )
+        Just Route.RouteY25Index ->
+            ( PageY25Index, Cmd.none )
         Just Route.RouteY25Prizes ->
             ( PageY25Prizes, Cmd.none )
         Just Route.RouteY25Rubric ->
             ( PageY25Rubric, Cmd.none )
+        Just Route.RouteY25Sponsors ->
+            ( PageY25Sponsors, Cmd.none )
 
         Nothing ->
             ( PageNotFound, Cmd.none )
@@ -257,11 +273,20 @@ viewReady model =
         PageY24Sponsors ->
             PageY24Sponsors.view (shellViewProps model)
 
+        PageY25Index ->
+            PageY25Index.view (shellViewProps model)
+
+        PageY25Photos pageModel ->
+            PageY25Photos.view (shellViewProps model) pageModel
+
         PageY25Prizes ->
             PageY25Prizes.view (shellViewProps model)
 
         PageY25Rubric ->
             PageY25Rubric.view (shellViewProps model)
+
+        PageY25Sponsors ->
+            PageY25Sponsors.view (shellViewProps model)
 
         PageNotFound ->
             NotFound.view
@@ -278,6 +303,11 @@ updatePage model msg =
             PageY24Photos.update pageMsg pageModel
                 |> Tuple.mapFirst PageY24Photos
                 |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedPage << PageY24PhotosMsg))
+
+        ( PageY25Photos pageModel, PageY25PhotosMsg pageMsg ) ->
+            PageY25Photos.update pageMsg pageModel
+                |> Tuple.mapFirst PageY25Photos
+                |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedPage << PageY25PhotosMsg))
 
         ( page, _ ) ->
             ( page, Cmd.none )

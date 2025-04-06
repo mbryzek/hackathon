@@ -20,6 +20,18 @@ y25Rubric : String
 y25Rubric =
     "/Y25/rubric"
 
+y25Index : String
+y25Index =
+    "/Y25/"
+
+y25Photos : String
+y25Photos =
+    "/Y25/photos"
+
+y25Sponsors : String
+y25Sponsors =
+    "/Y25/sponsors"
+
 donate : String
 donate =
     "/donate"

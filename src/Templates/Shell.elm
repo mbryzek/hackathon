@@ -77,14 +77,15 @@ allSections =
         , children = []
         }
     , Section
-        { href = Urls.y25Prizes
-        , name = "Prizes"
-        , children = []
-        }
-    , Section
-        { href = Urls.y25Rubric
-        , name = "Rubric"
-        , children = []
+        { href = Urls.y25Index
+        , name = "2025"
+        , children =
+            [ Section { href = Urls.y25Index, name = "Event", children = [] }
+            , Section { href = Urls.y25Photos, name = "Photos", children = [] }
+            , Section { href = Urls.y25Sponsors, name = "Sponsors", children = [] }
+            , Section { href = Urls.y25Prizes, name = "Prizes", children = [] }
+            , Section { href = Urls.y25Rubric, name = "Rubric", children = [] }
+            ]
         }
     , Section
         { href = Urls.y24Index
