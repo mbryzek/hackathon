@@ -25,11 +25,9 @@ logos =
     List.map toUrl
         [ "mek-review.png"
         , "costco.jpg"
-        , "carbon-sustain.png"
-        , "catalano.jpg"
+        , "catalano-coffee.jpg"
         , "francesca.jpg"
         , "sunrise.png"
         , "west-clinton.jpg"
-        , "pan.jpg"
         , "bryzek.jpg"
         ]

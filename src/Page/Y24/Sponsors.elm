@@ -25,7 +25,7 @@ logos =
     List.map toUrl
         [ "mek-review.png"
         , "carbon-sustain.png"
-        , "catalano.jpg"
+        , "catalano-coffee.jpg"
         , "francesca.jpg"
         , "sunrise.png"
         , "west-clinton.jpg"

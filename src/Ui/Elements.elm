@@ -63,3 +63,10 @@ callToAction url label =
             ]
             [ text label ]
         ]
+
+twoLines : String -> String -> Html msg
+twoLines first second =
+    Html.div [ class "flex flex-col gap-y-2" ]
+        [ Html.div [] [ Html.text first ]
+        , Html.div [] [ Html.text second ]
+        ]

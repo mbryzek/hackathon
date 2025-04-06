@@ -7,7 +7,7 @@ import Global exposing (GlobalState, MainViewProps)
 import Html exposing (Html, img, text)
 import Html.Attributes exposing (class, src)
 import Templates.Shell as Shell
-import Ui.Elements exposing (calloutBox2, button, p, textColor)
+import Ui.Elements exposing (calloutBox2, button, p, textColor, twoLines)
 import Urls
 
 
@@ -57,9 +57,3 @@ studentPhoto : Html Msg
 studentPhoto =
     img [ src "https://github.com/mbryzek/hackathon-photos/blob/main/2024/all-students.jpg?raw=true" ] []
 
-twoLines : String -> String -> Html Msg
-twoLines first second =
-    Html.div [ class "flex flex-col gap-y-2" ]
-        [ Html.div [] [ Html.text first ]
-        , Html.div [] [ Html.text second ]
-        ]
