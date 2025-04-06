@@ -1,17 +1,20 @@
 -- codegen.global.state: GlobalStateAnonymousData
+
+
 module Page.Y25.Index exposing (view)
 
 import Browser
-import Html exposing (Html, a, div, h2, h3, img, li, ul)
-import Html.Attributes exposing (class, href, src)
+import Html exposing (Html, div, h2, h3, img, li, ul)
+import Html.Attributes exposing (class, src)
 import Templates.Shell as Shell
-import Ui.Elements exposing (p, textDiv, twoLines, calloutBox2)
+import Ui.Elements exposing (calloutBox2, p, textDiv, twoLines)
+
 
 view : Shell.ViewProps msg -> Browser.Document msg
 view props =
-    Shell.render props "2025 Hackathon Event Summary" [
-        textDiv
-
+    Shell.render props
+        "2025 Hackathon Event Summary"
+        [ textDiv
             [ calloutBox2
                 { title = "Date & Time"
                 , contents = twoLines "April 5, 2025" "9am - 9pm"
@@ -20,6 +23,7 @@ view props =
                 , contents = twoLines "Bergen Tech High School" "Teterboro NJ"
                 }
             , p "The 2025 Bergen Tech Hackathon was a huge success! We wanted to deeply thank you for your support and share a few highlights from the day - we could not have put this event together without you!"
+
             -- , div [ class "mt-4" ] [ a [ class "hover:underline", href "https://drive.google.com/file/d/1wOa76kLDIPP24XWYF1qtEaPvSoOZp7R3/view?usp=sharing" ] [ p "Download our 2025 event summary here" ] ]
             , p "This year the event doubled in size with 102 high school students registering from both the Teterboro and Paramus campuses. These students formed 30 teams to compete in the 12-hour coding event. From idea generation to building their apps and projects to final demos, the students impressed everyone involved."
             , div [ class "mt-4 pl-4" ]
@@ -49,7 +53,7 @@ view props =
                 , studentPhoto
                 ]
             ]
-    ]
+        ]
 
 
 studentPhoto : Html msg
