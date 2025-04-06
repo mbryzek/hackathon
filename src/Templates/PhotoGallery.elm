@@ -1,7 +1,7 @@
 module Templates.PhotoGallery exposing (renderPhotoGallery)
 
-import Html exposing (Html, div, img)
-import Html.Attributes exposing (class, src)
+import Html exposing (Html, div, img, a)
+import Html.Attributes exposing (class, src, href)
 
 renderPhotoGallery : List String -> Html msg
 renderPhotoGallery images =
@@ -19,10 +19,12 @@ tile url =
         [ class "group relative" ]
         [ div
                 [ class "w-full overflow-hidden rounded-lg group-hover:opacity-75 hover:shadow-lg transition duration-300" ]
-                [ img
-                    [ src url
-                    , class "h-auto w-full object-contain"
-                    ]
-                    []
+                [ a [ href url ] [
+                    img
+                        [ src url
+                        , class "h-auto w-full object-contain"
+                        ]
+                        []
+                ]
                 ]
         ]
