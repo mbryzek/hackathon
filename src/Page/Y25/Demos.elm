@@ -9,7 +9,7 @@ import Random.List
 import Ui.Elements exposing (p)
 
 type alias Model =
-    { randomSeed : Random.Seed
+    { randomSeed : Maybe Random.Seed
     }
 
 
@@ -19,7 +19,7 @@ type Msg =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { randomSeed = Random.initialSeed 0
+    ( { randomSeed = Nothing
       }
     , Random.generate GotRandomSeed (Random.int Random.minInt Random.maxInt)
     )
@@ -29,16 +29,20 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotRandomSeed seed ->
-            ( { model | randomSeed = Random.initialSeed seed }, Cmd.none )
+            ( { model | randomSeed = Just (Random.initialSeed seed) }, Cmd.none )
 
 
 view : Shell.ViewProps msg -> Model -> Browser.Document msg
 view props model =
     Shell.render props "2025 Demos" [
-        if List.isEmpty allVideos then
-            p "Coming soon!"
-        else
-            renderVideoGallery (shuffledVideoUrls model.randomSeed)
+        case model.randomSeed of
+            Nothing ->
+                p "Loading..."
+            Just seed ->
+                if List.isEmpty allVideos then
+                    p "Coming soon!"
+                else
+                    renderVideoGallery (shuffledVideoUrls seed)
     ]
 
 
@@ -51,12 +55,12 @@ shuffledVideoUrls : Random.Seed -> List VideoInfo
 shuffledVideoUrls seed =
     Random.step (Random.List.shuffle allVideos) seed
         |> Tuple.first
-        |> List.map (\v -> { url = toUrl v.url, title = v.title })
+        |> List.map (\v -> { v | url = toUrl v.url })
 
 
 allVideos : List VideoInfo
 allVideos =
     [
-        { title = "Team 5: RPGain", url = "team5.mov" }
-        , { title = "Team 21: Net Reaper", url = "team21.mp4" }
+        { title = "Team 5: Net Reaper", url = "team5.mov" }
+        , { title = "Team 21: RPGain", url = "team21.mp4" }
     ]

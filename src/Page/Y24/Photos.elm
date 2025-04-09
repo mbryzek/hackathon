@@ -6,9 +6,10 @@ import Templates.PhotoGallery exposing (renderPhotoGallery)
 import Templates.Shell as Shell
 import Random
 import Random.List
+import Ui.Elements exposing (p)
 
 type alias Model =
-    { randomSeed : Random.Seed
+    { randomSeed : Maybe Random.Seed
     }
 
 
@@ -18,7 +19,7 @@ type Msg =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { randomSeed = Random.initialSeed 0
+    ( { randomSeed = Nothing
       }
     , Random.generate GotRandomSeed (Random.int Random.minInt Random.maxInt)
     )
@@ -28,13 +29,18 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotRandomSeed seed ->
-            ( { model | randomSeed = Random.initialSeed seed }, Cmd.none )
+            ( { model | randomSeed = Just (Random.initialSeed seed) }, Cmd.none )
 
 
 view : Shell.ViewProps msg -> Model -> Browser.Document msg
 view props model =
     Shell.render props "2024 Photos" [
-        renderPhotoGallery (shuffledPhotoUrls model.randomSeed)
+        case model.randomSeed of
+            Nothing ->
+                p "Loading..."
+
+            Just seed ->
+                renderPhotoGallery (shuffledPhotoUrls seed)
     ]
 
 
