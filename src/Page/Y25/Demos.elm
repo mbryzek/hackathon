@@ -35,7 +35,7 @@ update msg model =
 view : Shell.ViewProps msg -> Model -> Browser.Document msg
 view props model =
     Shell.render props "2025 Videos" [
-        if List.isEmpty allFilenames then
+        if List.isEmpty allVideos then
             p "Coming soon!"
         else
             renderVideoGallery (shuffledVideoUrls model.randomSeed)
@@ -49,13 +49,17 @@ toUrl filename =
 
 shuffledVideoUrls : Random.Seed -> List String
 shuffledVideoUrls seed =
-    Random.step (Random.List.shuffle (List.map toUrl allFilenames)) seed
+    Random.step (Random.List.shuffle (List.map (\v -> toUrl v.url) allVideos)) seed
         |> Tuple.first
 
+type alias Video =
+    { title : String
+    , url : String
+    }
 
-allFilenames : List String
-allFilenames =
+allVideos : List Video
+allVideos =
     [
-        "team5.mov"
-        , "team21.mp4"
+        { title = "Team 5", url = "team5.mov" }
+        , { title = "Team 21", url = "team21.mp4" }
     ]
