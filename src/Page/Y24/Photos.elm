@@ -40,7 +40,7 @@ view props model =
 
 toUrl : String -> String
 toUrl filename =
-    "https://github.com/mbryzek/hackathon-photos/blob/main/2024/ambiance/" ++ filename ++ "?raw=true"
+    "https://github.com/mbryzek/hackathon-static/blob/main/2024/ambiance/" ++ filename ++ "?raw=true"
 
 
 shuffledPhotoUrls : Random.Seed -> List String

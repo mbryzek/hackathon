@@ -64,6 +64,6 @@ studentPhoto : Html msg
 studentPhoto =
     img
         [ class "mt-4"
-        , src "https://github.com/mbryzek/hackathon-photos/blob/main/2025/everybody.w640.jpg?raw=true"
+        , src "https://github.com/mbryzek/hackathon-static/blob/main/2025/everybody.w640.jpg?raw=true"
         ]
         []

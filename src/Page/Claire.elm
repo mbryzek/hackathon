@@ -14,7 +14,7 @@ view props =
         [ div [ class "max-w-3xl mx-auto py-8" ]
             [ h2 [ class "text-2xl font-bold text-amber-800 mb-4" ]
                 [ Html.text "Welcome to Claire's Page" ]
-            , img [ src "https://github.com/mbryzek/hackathon-photos/blob/main/claire/head.jpg?raw=true"
+            , img [ src "https://github.com/mbryzek/hackathon-static/blob/main/claire/head.jpg?raw=true"
                   , alt "Claire's photo"
                   , style "width" "200px"
                   , style "border-radius" "50%"

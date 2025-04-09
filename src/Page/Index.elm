@@ -47,4 +47,4 @@ thankYouMessage =
 
 studentPhoto : Html Msg
 studentPhoto =
-    img [ src "https://github.com/mbryzek/hackathon-photos/blob/main/2025/everybody.w640.jpg?raw=true" ] []
+    img [ src "https://github.com/mbryzek/hackathon-static/blob/main/2025/everybody.w640.jpg?raw=true" ] []

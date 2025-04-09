@@ -13,7 +13,7 @@ view props =
         "Luna - My Amazing Dog"
         [ div [ class "max-w-3xl mx-auto py-8 flex flex-col md:flex-row gap-8" ]
             [ img
-                [ src "https://raw.githubusercontent.com/mbryzek/hackathon-photos/main/luna/luna.jpg"
+                [ src "https://raw.githubusercontent.com/mbryzek/hackathon-static/main/luna/luna.jpg"
                 , alt "Luna, my beautiful red-coated collie/shepherd mix"
                 , class "md:w-1/3 rounded-lg shadow-lg object-cover h-[300px]"
                 ]

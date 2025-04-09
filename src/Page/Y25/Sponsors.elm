@@ -17,7 +17,7 @@ view props =
 
 toUrl : String -> String
 toUrl filename =
-    "https://github.com/mbryzek/hackathon-photos/blob/main/2025/sponsors/" ++ filename ++ "?raw=true"
+    "https://github.com/mbryzek/hackathon-static/blob/main/2025/sponsors/" ++ filename ++ "?raw=true"
 
 
 logos : List String
