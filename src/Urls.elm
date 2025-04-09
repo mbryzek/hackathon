@@ -24,6 +24,10 @@ y25Index : String
 y25Index =
     "/Y25/"
 
+y25Demos : String
+y25Demos =
+    "/Y25/demos"
+
 y25Photos : String
 y25Photos =
     "/Y25/photos"

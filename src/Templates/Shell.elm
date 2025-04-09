@@ -81,6 +81,7 @@ allSections =
         , name = "2025"
         , children =
             [ Section { href = Urls.y25Index, name = "Event", children = [] }
+            , Section { href = Urls.y25Demos, name = "Demos", children = [] }
             , Section { href = Urls.y25Photos, name = "Photos", children = [] }
             , Section { href = Urls.y25Sponsors, name = "Sponsors", children = [] }
             , Section { href = Urls.y25Prizes, name = "Prizes", children = [] }

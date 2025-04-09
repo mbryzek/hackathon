@@ -15,6 +15,7 @@ import Page.Luna as PageLuna
 import Page.Y24.Index as PageY24Index
 import Page.Y24.Photos as PageY24Photos
 import Page.Y24.Sponsors as PageY24Sponsors
+import Page.Y25.Demos as PageY25Demos
 import Page.Y25.Index as PageY25Index
 import Page.Y25.Photos as PageY25Photos
 import Page.Y25.Prizes as PageY25Prizes
@@ -193,6 +194,7 @@ type Page
     | PageY24Index
     | PageY24Photos PageY24Photos.Model
     | PageY24Sponsors
+    | PageY25Demos PageY25Demos.Model
     | PageY25Index
     | PageY25Photos PageY25Photos.Model
     | PageY25Prizes
@@ -204,6 +206,8 @@ type Page
 type PageMsg
     = PageIndexMsg PageIndex.Msg
     | PageY24PhotosMsg PageY24Photos.Msg
+    | PageY25DemosMsg PageY25Demos.Msg
+    | PageY25IndexMsg PageY25Index.Msg
     | PageY25PhotosMsg PageY25Photos.Msg
 
 
@@ -214,6 +218,11 @@ getPageFromRoute maybeRoute =
             PageY24Photos.init
                 |> Tuple.mapFirst PageY24Photos
                 |> Tuple.mapSecond (Cmd.map PageY24PhotosMsg)
+
+        Just Route.RouteY25Demos ->
+            PageY25Demos.init
+                |> Tuple.mapFirst PageY25Demos
+                |> Tuple.mapSecond (Cmd.map PageY25DemosMsg)
 
         Just Route.RouteY25Photos ->
             PageY25Photos.init
@@ -273,8 +282,11 @@ viewReady model =
         PageY24Sponsors ->
             PageY24Sponsors.view (shellViewProps model)
 
+        PageY25Demos pageModel ->
+            PageY25Demos.view (shellViewProps model) pageModel
+
         PageY25Index ->
-            PageY25Index.view (shellViewProps model)
+            PageY25Index.view (mainViewProps model.global PageY25IndexMsg) (shellViewProps model)
 
         PageY25Photos pageModel ->
             PageY25Photos.view (shellViewProps model) pageModel
@@ -303,6 +315,15 @@ updatePage model msg =
             PageY24Photos.update pageMsg pageModel
                 |> Tuple.mapFirst PageY24Photos
                 |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedPage << PageY24PhotosMsg))
+
+        ( PageY25Demos pageModel, PageY25DemosMsg pageMsg ) ->
+            PageY25Demos.update pageMsg pageModel
+                |> Tuple.mapFirst PageY25Demos
+                |> Tuple.mapSecond (Cmd.map (ReadyMsg << ChangedPage << PageY25DemosMsg))
+
+        ( PageY25Index, PageY25IndexMsg pageMsg ) ->
+            PageY25Index.update model.global pageMsg
+                |> \c -> (model.page, Cmd.map (ReadyMsg << ChangedPage << PageY25IndexMsg) c)
 
         ( PageY25Photos pageModel, PageY25PhotosMsg pageMsg ) ->
             PageY25Photos.update pageMsg pageModel

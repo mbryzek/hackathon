@@ -11,6 +11,7 @@ type Route
     | RouteY24Sponsors
     | RouteY25Index
     | RouteY25Photos
+    | RouteY25Demos
     | RouteY25Sponsors
     | RouteY25Prizes
     | RouteY25Rubric
@@ -32,6 +33,7 @@ matchRoute =
         , map RouteY24Photos (s "Y24" </> s "photos")
         , map RouteY24Sponsors (s "Y24" </> s "sponsors")
         , map RouteY25Index (s "Y25")
+        , map RouteY25Demos (s "Y25" </> s "demos")
         , map RouteY25Photos (s "Y25" </> s "photos")
         , map RouteY25Sponsors (s "Y25" </> s "sponsors")
         , map RouteY25Prizes (s "Y25" </> s "prizes")
