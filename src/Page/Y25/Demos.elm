@@ -2,7 +2,7 @@
 module Page.Y25.Demos exposing (Model, Msg, init, update, view)
 
 import Browser
-import Templates.VideoGallery exposing (renderVideoGallery)
+import Templates.VideoGallery exposing (renderVideoGallery, VideoInfo)
 import Templates.Shell as Shell
 import Random
 import Random.List
@@ -34,7 +34,7 @@ update msg model =
 
 view : Shell.ViewProps msg -> Model -> Browser.Document msg
 view props model =
-    Shell.render props "2025 Videos" [
+    Shell.render props "2025 Demos" [
         if List.isEmpty allVideos then
             p "Coming soon!"
         else
@@ -47,19 +47,16 @@ toUrl filename =
     "https://github.com/mbryzek/hackathon-static/blob/main/2025/demos/" ++ filename ++ "?raw=true"
 
 
-shuffledVideoUrls : Random.Seed -> List String
+shuffledVideoUrls : Random.Seed -> List VideoInfo
 shuffledVideoUrls seed =
-    Random.step (Random.List.shuffle (List.map (\v -> toUrl v.url) allVideos)) seed
+    Random.step (Random.List.shuffle allVideos) seed
         |> Tuple.first
+        |> List.map (\v -> { url = toUrl v.url, title = v.title })
 
-type alias Video =
-    { title : String
-    , url : String
-    }
 
-allVideos : List Video
+allVideos : List VideoInfo
 allVideos =
     [
-        { title = "Team 5", url = "team5.mov" }
-        , { title = "Team 21", url = "team21.mp4" }
+        { title = "Team 5: RPGain", url = "team5.mov" }
+        , { title = "Team 21: Net Reaper", url = "team21.mp4" }
     ]
