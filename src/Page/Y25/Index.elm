@@ -9,7 +9,7 @@ import Global exposing (GlobalState, MainViewProps)
 import Html exposing (Html, div, h2, h3, img, li, ul)
 import Html.Attributes exposing (class, src)
 import Templates.Shell as Shell
-import Ui.Elements exposing (calloutBox2, p, textDiv, twoLines, button)
+import Ui.Elements exposing (calloutBox2, p, textDiv, twoLines, button, externalButton)
 import Urls
 
 type Msg
@@ -40,6 +40,7 @@ contents =
         , div [class "flex items-center gap-x-4"] [
             button (RedirectTo Urls.y25Demos) "Watch the demos"
             , button (RedirectTo Urls.y25Photos) "View the photos"
+            , externalButton "https://raw.githubusercontent.com/mbryzek/hackathon-static/refs/heads/main/2025/2025-Event-Summary.pdf" "Event summary"
         ]
         , p "The 2025 Bergen Tech Hackathon was a huge success! We wanted to deeply thank you for your support and share a few highlights from the day - we could not have put this event together without you!"
         -- , div [ class "mt-4" ] [ a [ class "hover:underline", href "https://drive.google.com/file/d/1wOa76kLDIPP24XWYF1qtEaPvSoOZp7R3/view?usp=sharing" ] [ p "Download our 2025 event summary here" ] ]

@@ -2,17 +2,17 @@
 module Page.Y24.Index exposing (view)
 
 import Browser
-import Html exposing (Html, a, div, h2, h3, img, li, ul)
-import Html.Attributes exposing (class, href, src)
+import Html exposing (Html, div, h2, h3, img, li, ul)
+import Html.Attributes exposing (class, src)
 import Templates.Shell as Shell
-import Ui.Elements exposing (p, textDiv)
+import Ui.Elements exposing (p, textDiv, externalButton)
 
 view : Shell.ViewProps msg -> Browser.Document msg
 view props =
     Shell.render props "2024 Hackathon Event Summary" [
         textDiv
             [ p "The inaugural 2024 Bergen Tech Hackathon was a huge success! We wanted to deeply thank you for your support and share a few highlights from the day - we could not have put this event together without you!"
-            , div [ class "mt-4" ] [ a [ class "hover:underline", href "https://drive.google.com/file/d/1wOa76kLDIPP24XWYF1qtEaPvSoOZp7R3/view?usp=sharing" ] [ p "Download our 2024 event summary here" ] ]
+            , externalButton "https://raw.githubusercontent.com/mbryzek/hackathon-static/refs/heads/main/2024/2024-Event-Summary.pdf" "Download our 2024 event summary"
             , p "52 students from grades 9-12 competed in a 12-hour coding event. From idea generation to building their apps and projects to final presentations, the students impressed everyone involved."
             , div [ class "mt-4 pl-4" ]
                 [ h3 [ class "text-xl font-semibold mb-2" ] [ p "Projects" ]
