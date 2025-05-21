@@ -62,6 +62,7 @@ allVideos : List VideoInfo
 allVideos =
     [
         { title = "Team 5: Net Reaper", url = "team5.mov" }
+        , { title = "Team 2: Community Connect", url = "team2.mov" }
         , { title = "Team 21: RPGain", url = "team21.mp4" }
         , { title = "Team 22: NGO & Co.", url = "team22.mov" }
     ]
