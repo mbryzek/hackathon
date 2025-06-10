@@ -6,7 +6,7 @@ index =
 
 signup : String
 signup =
-    "http://signup.bthackathon.com"
+    "https://signup.bthackathon.com"
 
 y24Photos : String
 y24Photos =
