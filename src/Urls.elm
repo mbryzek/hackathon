@@ -4,6 +4,10 @@ index : String
 index =
     "/"
 
+signup : String
+signup =
+    "http://signup.bthackathon.com"
+
 y24Photos : String
 y24Photos =
     "/Y24/photos"

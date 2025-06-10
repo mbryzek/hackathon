@@ -77,6 +77,11 @@ allSections =
         , children = []
         }
     , Section
+        { href = Urls.signup
+        , name = "Signup"
+        , children = []
+        }
+    , Section
         { href = Urls.y25Index
         , name = "2025"
         , children =
