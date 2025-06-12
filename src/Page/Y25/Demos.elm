@@ -35,6 +35,7 @@ update msg model =
 view : Shell.ViewProps msg -> Model -> Browser.Document msg
 view props model =
     Shell.render props "2025 Demos" [
+        p "In 2025, we had ~30 teams participate in the Hackathon and build amazing projects. Below are screen recordings the teams who chose to share their demos online.",
         case model.randomSeed of
             Nothing ->
                 p "Loading..."
