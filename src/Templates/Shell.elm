@@ -301,7 +301,7 @@ mobileMenuButton model props =
         renderMobileMenuItem (Section section) =
             div []
                 [ button
-                    [ class "block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                    [ class "block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     , onClick (RedirectTo section.href)
                     ]
                     [ text section.name ]
@@ -312,7 +312,7 @@ mobileMenuButton model props =
                                 case child of
                                     Section s ->
                                         button
-                                            [ class "block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                                            [ class "block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                                             , onClick (RedirectTo s.href)
                                             ]
                                             [ text s.name ]
@@ -326,7 +326,7 @@ mobileMenuButton model props =
         contents : Html ShellMsg
         contents =
             div
-                [ class "absolute right-0 top-full mt-4 w-48 bg-gray-800 shadow-lg rounded-md z-50" ]
+                [ class "absolute right-0 top-full mt-4 w-48 bg-white shadow-lg rounded-md z-50" ]
                 (List.map renderMobileMenuItem allSections)
     in
     div

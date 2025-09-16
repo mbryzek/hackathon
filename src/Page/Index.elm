@@ -26,18 +26,22 @@ update global msg =
 
 view : MainViewProps Msg mainMsg -> Shell.ViewProps mainMsg -> Browser.Document mainMsg
 view { msgMap } shellProps =
-    Shell.render shellProps "2025 Bergen Tech Hackathon" [ contents |> Html.map msgMap ]
+    Shell.render shellProps "Bergen Tech Hackathon" [ contents |> Html.map msgMap ]
 
 
 contents : Html Msg
 contents =
     Html.div [ class "flex flex-col gap-y-4" ]
-        [ p "The Bergen Tech 2025 Hackathon was an incredible success!"
-        , button (RedirectTo Urls.y25Index) "Read more about the 2025 Hackathon"
+        [ saveTheDate
+        , button (RedirectTo Urls.y25Index) "Read more about the incredible 2025 Hackathon"
         , thankYouMessage
         , studentPhoto
         ]
 
+saveTheDate : Html Msg
+saveTheDate =
+    Html.p [ class (textColor ++ " font-bold text-2xl text-center italic mt-8") ]
+        [ text "Save the date: 2026 Bergen Tech Hackathon will be on April 18, 2026" ]
 
 thankYouMessage : Html Msg
 thankYouMessage =

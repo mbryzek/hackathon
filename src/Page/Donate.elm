@@ -26,7 +26,7 @@ individualDonors =
         [ h2 [ class "text-2xl font-bold mb-4" ] [ Html.text "Individual Donors" ]
         , p "Every contribution, big or small, makes a difference. Let's come together to inspire and nurture the next generation of tech wizards at Bergen Tech!"
         , p "We are also looking for donations for the event and raffle - eg. food, drink, and small prizes that the students will enjoy. Last year's raffle included gift certificates to local restaurants, subscriptions to online coding platforms, and more."
-        , callToAction "https://donorbox.org/2025-bt-computer-science-hackathon" "Donate here"
+        , callToAction "https://donorbox.org/2026-bt-hackathon" "Donate here"
         ]
 
 
@@ -34,7 +34,7 @@ corporateSponsors : Html msg
 corporateSponsors =
     div []
         [ h2 [ class "text-2xl font-bold mt-8 mb-4" ] [ Html.text "Corporate Sponsorship Levels" ]
-        , callToAction "https://drive.google.com/file/d/1LqjB9SEQnjghTK6R6V3aDBjtxbnZNjeb/view?usp=sharing" "Download Sponsorship Package"
+        , callToAction "https://donorbox.org/events/816634" "Become a sponsor here"
         , div [class "mt-4"] [
             ul [ class "space-y-6" ]
                 [ sponsorshipTier "Headline Sponsor"
@@ -62,7 +62,6 @@ corporateSponsors =
                     ]
                 ]
             ]
-        , callToAction "https://donorbox.org/events/680776" "Become a sponsor here"
         ]
 
 
