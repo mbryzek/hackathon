@@ -9,7 +9,7 @@ import Global exposing (GlobalState, MainViewProps)
 import Html exposing (Html, img, text)
 import Html.Attributes exposing (class, src)
 import Templates.Shell as Shell
-import Ui.Elements exposing (button, p, textColor)
+import Ui.Elements exposing (button, textColor)
 import Urls
 
 
@@ -38,10 +38,12 @@ contents =
         , studentPhoto
         ]
 
+
 saveTheDate : Html Msg
 saveTheDate =
     Html.p [ class (textColor ++ " font-bold text-2xl text-center italic mt-8") ]
         [ text "Save the date: 2026 Bergen Tech Hackathon will be on April 18, 2026" ]
+
 
 thankYouMessage : Html Msg
 thankYouMessage =
