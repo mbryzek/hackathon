@@ -7,7 +7,7 @@ import Browser
 import Browser.Navigation as Nav
 import Global exposing (GlobalState, MainViewProps)
 import Html exposing (Html, img, text)
-import Html.Attributes exposing (class, src)
+import Html.Attributes exposing (attribute, class, height, src, width)
 import Templates.Shell as Shell
 import Ui.Elements exposing (button, textColor)
 import Urls
@@ -33,9 +33,26 @@ contents : Html Msg
 contents =
     Html.div [ class "flex flex-col gap-y-4" ]
         [ saveTheDate
+        , hackathon2025Video
         , button (RedirectTo Urls.y25Index) "Read more about the incredible 2025 Hackathon"
         , thankYouMessage
         , studentPhoto
+        ]
+
+
+hackathon2025Video : Html Msg
+hackathon2025Video =
+    Html.div [ class "flex justify-center mt-4" ]
+        [ Html.iframe
+            [ src "https://www.youtube.com/embed/phM9BT55MlE"
+            , width 560
+            , height 315
+            , attribute "allow" "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            , attribute "allowfullscreen" ""
+            , attribute "frameborder" "0"
+            , class "max-w-full"
+            ]
+            []
         ]
 
 
