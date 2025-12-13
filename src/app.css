@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-gray-800;
+  }
+}
+
+@layer components {
+  /* Primary CTA button (yellow) */
+  .btn-primary {
+    @apply bg-yellow-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-md hover:scale-105 transition-transform duration-200;
+  }
+
+  /* External link button */
+  .btn-external {
+    @apply bg-yellow-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-md hover:scale-105 transition-transform duration-200 inline-block;
+  }
+
+  /* Callout box with yellow border */
+  .callout-box {
+    @apply bg-gray-800 text-white p-6 rounded-lg border-l-4 border-yellow-300;
+  }
+
+  /* Photo gallery item */
+  .gallery-item {
+    @apply rounded-lg shadow-md overflow-hidden hover:opacity-90 hover:shadow-lg transition-all duration-200;
+  }
+}
