@@ -25,7 +25,9 @@
 		</div>
 
 		<!-- Button -->
-		<Button href="/Y25/" label="Read more about the incredible 2025 Hackathon" />
+		<div class="mt-8 text-center">
+			<Button href="/Y25/" label="Read more about the incredible 2025 Hackathon" />
+		</div>
 
 		<!-- Thank You Message -->
 		<p class="text-gray-800 font-semibold text-center italic mt-8">

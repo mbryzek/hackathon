@@ -11,11 +11,13 @@
 			together without you!
 		</p>
 
-		<Button
-			href="https://raw.githubusercontent.com/mbryzek/hackathon-static/refs/heads/main/2024/2024-Event-Summary.pdf"
-			label="Download our 2024 event summary"
-			external
-		/>
+		<div class="text-center">
+			<Button
+				href="https://raw.githubusercontent.com/mbryzek/hackathon-static/refs/heads/main/2024/2024-Event-Summary.pdf"
+				label="Download our 2024 event summary"
+				external
+			/>
+		</div>
 
 		<p class="text-gray-800 font-light">
 			52 students from grades 9-12 competed in a 12-hour coding event. From idea generation to
