@@ -3,18 +3,33 @@
 @tailwind utilities;
 
 @layer base {
+  /* Smooth scrolling */
+  html {
+    @apply scroll-smooth;
+  }
+
   body {
-    @apply text-gray-800;
+    @apply text-gray-800 antialiased;
+  }
+
+  /* Better focus styles for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-yellow-400 ring-offset-2;
+  }
+
+  /* Remove default focus outline when using mouse */
+  :focus:not(:focus-visible) {
+    @apply outline-none ring-0;
   }
 }
 
 @layer components {
-  /* Primary CTA button (yellow) */
+  /* Primary CTA button (yellow) - legacy support */
   .btn-primary {
     @apply bg-yellow-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-md hover:scale-105 transition-transform duration-200;
   }
 
-  /* External link button */
+  /* External link button - legacy support */
   .btn-external {
     @apply bg-yellow-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-md hover:scale-105 transition-transform duration-200 inline-block;
   }
@@ -27,5 +42,73 @@
   /* Photo gallery item */
   .gallery-item {
     @apply rounded-lg shadow-md overflow-hidden hover:opacity-90 hover:shadow-lg transition-all duration-200;
+  }
+
+  /* Responsive video container */
+  .video-responsive {
+    @apply relative w-full pb-[56.25%] h-0 overflow-hidden rounded-lg shadow-lg;
+  }
+
+  .video-responsive iframe,
+  .video-responsive video {
+    @apply absolute top-0 left-0 w-full h-full;
+  }
+
+  /* Skip to content link for accessibility */
+  .skip-link {
+    @apply absolute -top-10 left-0 bg-yellow-500 text-white px-4 py-2 z-50 transition-all duration-200;
+  }
+
+  .skip-link:focus {
+    @apply top-0;
+  }
+}
+
+@layer utilities {
+  /* Fade in animation */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  /* Scale in animation */
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  /* Slide up animation */
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

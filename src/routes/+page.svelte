@@ -11,17 +11,15 @@
 		</p>
 
 		<!-- 2025 Hackathon Video -->
-		<div class="flex justify-center mt-4">
-			<iframe
-				src="https://www.youtube.com/embed/phM9BT55MlE"
-				width="560"
-				height="315"
-				allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-				allowfullscreen
-				frameborder="0"
-				class="max-w-full"
-				title="2025 Bergen Tech Hackathon Video"
-			></iframe>
+		<div class="mt-4 max-w-2xl mx-auto">
+			<div class="video-responsive">
+				<iframe
+					src="https://www.youtube.com/embed/phM9BT55MlE"
+					allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+					allowfullscreen
+					title="2025 Bergen Tech Hackathon Video"
+				></iframe>
+			</div>
 		</div>
 
 		<!-- Button -->
