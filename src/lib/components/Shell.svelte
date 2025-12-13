@@ -72,6 +72,13 @@
 	const navClasses = $derived(
 		sticky ? 'bg-gray-800 sticky top-0 z-40' : 'bg-gray-800'
 	);
+
+	// Reorder sections for mobile menu with Donate first
+	const mobileSections = $derived(() => {
+		const donate = sections.find((s) => s.href === urls.donate);
+		const others = sections.filter((s) => s.href !== urls.donate);
+		return donate ? [donate, ...others] : sections;
+	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -192,10 +199,10 @@
 		<!-- Mobile menu with slide animation -->
 		<div
 			id="mobile-menu"
-			class="md:hidden overflow-hidden transition-all duration-300 ease-in-out {mobileMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}"
+			class="md:hidden overflow-hidden transition-all duration-300 ease-in-out {mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}"
 		>
 			<div class="px-2 pt-2 pb-3 space-y-1 bg-gray-800 border-t border-gray-700">
-				{#each sections as section}
+				{#each mobileSections() as section}
 					{@const active = isActive(section) || hasActiveChild(section)}
 					<div>
 						<a
