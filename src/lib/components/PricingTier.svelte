@@ -28,15 +28,6 @@
 </script>
 
 <div class="relative rounded-xl p-6 {cardClasses} shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-	<!-- Featured badge -->
-	{#if featured}
-		<div class="absolute -top-3 left-1/2 -translate-x-1/2">
-			<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-900 text-white uppercase tracking-wide">
-				Most Popular
-			</span>
-		</div>
-	{/if}
-
 	<!-- Header -->
 	<div class="text-center mb-6">
 		<h3 class="text-xl font-bold {titleClasses}">{name}</h3>
