@@ -22,6 +22,7 @@
 	const sections: Section[] = [
 		{ href: urls.index, name: 'Overview', children: [] },
 		{ href: urls.signup, name: 'Signup', children: [] },
+		{ href: urls.donate, name: 'Donate', children: [] },
 		{
 			href: urls.y25Index,
 			name: '2025',
@@ -43,7 +44,6 @@
 				{ href: urls.y24Sponsors, name: 'Sponsors', children: [] },
 			],
 		},
-		{ href: urls.donate, name: 'Donate', children: [] },
 		{ href: urls.contact, name: 'Contact', children: [] },
 	];
 
@@ -70,15 +70,8 @@
 	}
 
 	const navClasses = $derived(
-		sticky ? 'bg-gray-800 sticky top-0 z-40' : 'bg-gray-800'
+		sticky ? 'bg-gray-800 sticky top-0 z-40' : 'bg-gray-800 relative z-40'
 	);
-
-	// Reorder sections for mobile menu with Donate first
-	const mobileSections = $derived(() => {
-		const donate = sections.find((s) => s.href === urls.donate);
-		const others = sections.filter((s) => s.href !== urls.donate);
-		return donate ? [donate, ...others] : sections;
-	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -202,7 +195,7 @@
 			class="md:hidden overflow-hidden transition-all duration-300 ease-in-out {mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}"
 		>
 			<div class="px-2 pt-2 pb-3 space-y-1 bg-gray-800 border-t border-gray-700">
-				{#each mobileSections() as section}
+				{#each sections as section}
 					{@const active = isActive(section) || hasActiveChild(section)}
 					<div>
 						<a

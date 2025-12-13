@@ -112,9 +112,5 @@
 			</div>
 		</Card>
 
-		<!-- Additional Info -->
-		<p class="text-gray-500 text-sm text-center">
-			We typically respond within 1-2 business days.
-		</p>
 	</div>
 </Shell>
