@@ -37,7 +37,7 @@
 		loadingVideos = new Set([...loadingVideos].filter(i => i !== index));
 	}
 
-	function playVideo(_index: number, event: MouseEvent) {
+	function playVideo(event: MouseEvent) {
 		const button = event.currentTarget as HTMLButtonElement;
 		const container = button.closest('.video-container');
 		const video = container?.querySelector('video');
@@ -72,7 +72,7 @@
 						<button
 							type="button"
 							class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-100 group-hover:bg-black/40 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:ring-offset-2"
-							onclick={(e) => playVideo(index, e)}
+							onclick={playVideo}
 							aria-label="Play video: {video.title}"
 						>
 							<!-- Play button circle -->
