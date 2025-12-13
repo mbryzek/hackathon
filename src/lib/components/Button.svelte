@@ -48,11 +48,15 @@
 		lg: 'px-8 py-4 text-lg gap-2.5'
 	};
 
-	const hoverTransform = disabled || loading ? '' : 'hover:scale-105 active:scale-100';
-	const widthClass = fullWidth ? 'w-full' : '';
-	const cursorClass = disabled || loading ? 'cursor-not-allowed opacity-70' : 'cursor-pointer';
+	const hoverTransform = $derived(disabled || loading ? '' : 'hover:scale-105 active:scale-100');
+	const widthClass = $derived(fullWidth ? 'w-full' : '');
+	const cursorClass = $derived(
+		disabled || loading ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'
+	);
 
-	const buttonClasses = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${hoverTransform} ${widthClass} ${cursorClass}`;
+	const buttonClasses = $derived(
+		`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${hoverTransform} ${widthClass} ${cursorClass}`
+	);
 </script>
 
 {#if href && !disabled}
