@@ -260,13 +260,13 @@ export const adminApi = {
 		sessionId: string,
 		eventId: string,
 		projectIds: string[]
-	): Promise<ApiResponse<Project[]>> {
+	): Promise<ApiResponse<void>> {
 		const response = await voteAdminClient.projects.postReorder({
 			headers: getAuthHeaders(sessionId),
 			event_id: eventId,
 			body: { project_ids: projectIds },
 		});
-		return toApiResponse<Project[]>(response);
+		return toApiResponse<void>(response);
 	},
 
 	// Codes

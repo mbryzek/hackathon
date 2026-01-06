@@ -2,13 +2,13 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { urls } from '$lib/urls';
-	import { voteApi, type CodeVerification } from '$lib/api/client';
+	import { voteApi, type Vote } from '$lib/api/client';
 
 	const eventKey = $derived($page.params.event_key ?? '');
 	let codeFromUrl = $derived($page.url.searchParams.get('code') || '');
 
 	let code = $state('');
-	let verification = $state<CodeVerification | null>(null);
+	let verification = $state<Vote | null>(null);
 	let selectedProjectIds = $state<Set<string>>(new Set());
 	let error = $state<string | null>(null);
 	let isVerifying = $state(false);
