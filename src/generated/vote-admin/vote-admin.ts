@@ -23,13 +23,6 @@ declare namespace com.bryzek.vote.api.v0.enums {
 }
 
 declare namespace com.bryzek.vote.api.v0.models {
-  interface CodeVerification {
-    readonly 'voter_type': com.bryzek.vote.api.v0.enums.VoterType;
-    readonly 'max_votes': number;
-    readonly 'event': com.bryzek.vote.api.v0.models.Event;
-    readonly 'projects': com.bryzek.vote.api.v0.models.ProjectVote[];
-  }
-
   interface CodeVerificationForm {
     readonly 'code': string;
   }
@@ -63,7 +56,10 @@ declare namespace com.bryzek.vote.api.v0.models {
   }
 
   interface Vote {
-    readonly 'projects': com.bryzek.vote.api.v0.models.Project[];
+    readonly 'voter_type': com.bryzek.vote.api.v0.enums.VoterType;
+    readonly 'max_votes': number;
+    readonly 'event': com.bryzek.vote.api.v0.models.Event;
+    readonly 'projects': com.bryzek.vote.api.v0.models.ProjectVote[];
   }
 
   interface VoteForm {
@@ -550,6 +546,11 @@ export interface ProjectsGetParameters {
   offset?: number;
 }
 
+export interface ProjectsGetAllParameters {
+  headers?: $HttpHeaders;
+  event_id: string;
+}
+
 export interface ProjectsGetByIdParameters {
   headers?: $HttpHeaders;
   event_id: string;
@@ -598,11 +599,12 @@ export type EventsPostResponse = $HttpCreated<com.bryzek.vote.api.v0.models.Even
 export type EventsPutByIdResponse = $HttpOk<com.bryzek.vote.api.v0.models.Event> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type EventsDeleteByIdResponse = $HttpNoContent<undefined> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined>;
 export type ProjectsGetResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project[]> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
+export type ProjectsGetAllResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined>;
 export type ProjectsGetByIdResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined>;
-export type ProjectsPostResponse = $HttpCreated<com.bryzek.vote.api.v0.models.Project> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
+export type ProjectsPostResponse = $HttpCreated<com.bryzek.vote.api.v0.models.Project> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type ProjectsPutByIdResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type ProjectsDeleteByIdResponse = $HttpNoContent<undefined> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined>;
-export type ProjectsPostReorderResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project[]> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
+export type ProjectsPostReorderResponse = $HttpNoContent<undefined> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type EventResultsGetResponse = $HttpOk<com.bryzek.vote.admin.v0.models.EventResults> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined>;
 
 export class AdminSessionsResource extends $Resource {
@@ -731,6 +733,14 @@ export class ProjectsResource extends $Resource {
         limit: params.limit,
         offset: params.offset,
       },
+    });
+  }
+
+  public getAll(params: ProjectsGetAllParameters): Promise<ProjectsGetAllResponse> {
+    return this.client.request({
+      endpoint: `/vote/admin/events/${encodeURIComponent(params.event_id)}/projects/all`,
+      headers: params.headers,
+      method: 'GET',
     });
   }
 

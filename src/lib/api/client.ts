@@ -1,7 +1,6 @@
 import { config } from '$lib/config';
 import {
 	createClient as createVoteApiClient,
-	type CodeVerification,
 	type Vote,
 	type Event,
 	type Project,
@@ -23,7 +22,6 @@ import {
 
 // Re-export types for use in components
 export type {
-	CodeVerification,
 	Vote,
 	Event,
 	Project,
@@ -107,12 +105,12 @@ const voteAdminClient = createApiClient(createVoteAdminClient);
 
 // Public API client
 export const voteApi = {
-	async verifyCode(eventKey: string, code: string): Promise<ApiResponse<CodeVerification>> {
+	async verifyCode(eventKey: string, code: string): Promise<ApiResponse<Vote>> {
 		const response = await voteApiClient.votes.postCodeAndVerifications({
 			event_key: eventKey,
 			body: { code },
 		});
-		return toApiResponse<CodeVerification>(response);
+		return toApiResponse<Vote>(response);
 	},
 
 	async submitVote(

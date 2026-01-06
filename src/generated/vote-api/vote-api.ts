@@ -23,13 +23,6 @@ declare namespace com.bryzek.vote.api.v0.enums {
 }
 
 declare namespace com.bryzek.vote.api.v0.models {
-  interface CodeVerification {
-    readonly 'voter_type': com.bryzek.vote.api.v0.enums.VoterType;
-    readonly 'max_votes': number;
-    readonly 'event': com.bryzek.vote.api.v0.models.Event;
-    readonly 'projects': com.bryzek.vote.api.v0.models.ProjectVote[];
-  }
-
   interface CodeVerificationForm {
     readonly 'code': string;
   }
@@ -63,7 +56,10 @@ declare namespace com.bryzek.vote.api.v0.models {
   }
 
   interface Vote {
-    readonly 'projects': com.bryzek.vote.api.v0.models.Project[];
+    readonly 'voter_type': com.bryzek.vote.api.v0.enums.VoterType;
+    readonly 'max_votes': number;
+    readonly 'event': com.bryzek.vote.api.v0.models.Event;
+    readonly 'projects': com.bryzek.vote.api.v0.models.ProjectVote[];
   }
 
   interface VoteForm {
@@ -72,7 +68,6 @@ declare namespace com.bryzek.vote.api.v0.models {
   }
 }
 
-export type CodeVerification = com.bryzek.vote.api.v0.models.CodeVerification;
 export type CodeVerificationForm = com.bryzek.vote.api.v0.models.CodeVerificationForm;
 export type Event = com.bryzek.vote.api.v0.models.Event;
 export type EventReference = com.bryzek.vote.api.v0.models.EventReference;
@@ -299,8 +294,8 @@ export interface VotesPostParameters {
   event_key: string;
 }
 
-export type VotesPostCodeAndVerificationsResponse = $HttpOk<com.bryzek.vote.api.v0.models.CodeVerification> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
-export type VotesPostResponse = $HttpOk<com.bryzek.vote.api.v0.models.Vote> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
+export type VotesPostCodeAndVerificationsResponse = $HttpOk<com.bryzek.vote.api.v0.models.Vote> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
+export type VotesPostResponse = $HttpOk<com.bryzek.vote.api.v0.models.Vote> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 
 export class VotesResource extends $Resource {
   /*Verify a voting code and return voting information*/
