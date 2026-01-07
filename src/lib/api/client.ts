@@ -12,6 +12,7 @@ import {
 	createClient as createVoteAdminClient,
 	type AdminSession,
 	type Code,
+	type CodeSummary,
 	type EventResults,
 	type EventForm,
 	type ProjectForm,
@@ -30,6 +31,7 @@ export type {
 	VoterType,
 	AdminSession,
 	Code,
+	CodeSummary,
 	EventResults,
 	EventForm,
 	ProjectForm,
@@ -289,6 +291,14 @@ export const adminApi = {
 			offset: params?.offset,
 		});
 		return toApiResponse<Code[]>(response);
+	},
+
+	async getCodeSummary(sessionId: string, eventId: string): Promise<ApiResponse<CodeSummary>> {
+		const response = await voteAdminClient.codes.getSummary({
+			headers: getAuthHeaders(sessionId),
+			event_id: eventId,
+		});
+		return toApiResponse<CodeSummary>(response);
 	},
 
 	async generateCodes(

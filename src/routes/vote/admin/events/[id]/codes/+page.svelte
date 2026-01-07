@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { urls } from '$lib/urls';
-	import { adminApi, type VoteEvent, type Code, type VoterType } from '$lib/api/client';
+	import { adminApi, type VoteEvent, type Code, type CodeSummary, type VoterType } from '$lib/api/client';
 	import { MAX_LIMIT_PER_REQUEST, MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
 	import type { PageData } from './$types';
 
@@ -15,6 +15,7 @@
 
 	let event = $state<VoteEvent | null>(null);
 	let codes = $state<Code[]>([]);
+	let summary = $state<CodeSummary | null>(null);
 	let error = $state<string | null>(null);
 	let isLoading = $state(true);
 
@@ -45,8 +46,11 @@
 		isLoading = true;
 		error = null;
 
-		// Load event first
-		const eventResponse = await adminApi.getEvent(sessionId, eventId);
+		// Load event and summary in parallel
+		const [eventResponse, summaryResponse] = await Promise.all([
+			adminApi.getEvent(sessionId, eventId),
+			adminApi.getCodeSummary(sessionId, eventId),
+		]);
 
 		if (eventResponse.errors) {
 			isLoading = false;
@@ -55,6 +59,7 @@
 		}
 
 		event = eventResponse.data || null;
+		summary = summaryResponse.data || null;
 
 		// Load all codes with pagination
 		const allCodes: Code[] = [];
@@ -138,11 +143,7 @@
 		navigator.clipboard.writeText(codeText);
 	}
 
-	// Stats
-	const studentCodes = $derived(codes.filter((c) => c.voter_type === 'student'));
-	const parentCodes = $derived(codes.filter((c) => c.voter_type === 'parent'));
-	const usedCodes = $derived(codes.filter((c) => c.has_voted));
-</script>
+	</script>
 
 <div class="animate-fade-in">
 	<div class="mb-8">
@@ -175,19 +176,19 @@
 		<!-- Stats -->
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 			<div class="bg-white shadow rounded-xl p-4 text-center">
-				<div class="text-3xl font-bold text-gray-900">{codes.length}</div>
+				<div class="text-3xl font-bold text-gray-900">{summary?.total ?? 0}</div>
 				<div class="text-sm text-gray-600">Total Codes</div>
 			</div>
 			<div class="bg-white shadow rounded-xl p-4 text-center">
-				<div class="text-3xl font-bold text-blue-600">{studentCodes.length}</div>
+				<div class="text-3xl font-bold text-blue-600">{summary?.student ?? 0}</div>
 				<div class="text-sm text-gray-600">Student Codes</div>
 			</div>
 			<div class="bg-white shadow rounded-xl p-4 text-center">
-				<div class="text-3xl font-bold text-purple-600">{parentCodes.length}</div>
+				<div class="text-3xl font-bold text-purple-600">{summary?.parent ?? 0}</div>
 				<div class="text-sm text-gray-600">Parent Codes</div>
 			</div>
 			<div class="bg-white shadow rounded-xl p-4 text-center">
-				<div class="text-3xl font-bold text-green-600">{usedCodes.length}</div>
+				<div class="text-3xl font-bold text-green-600">{summary?.votes ?? 0}</div>
 				<div class="text-sm text-gray-600">Votes Cast</div>
 			</div>
 		</div>

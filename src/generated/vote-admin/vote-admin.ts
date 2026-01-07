@@ -230,6 +230,13 @@ declare namespace com.bryzek.vote.admin.v0.models {
     readonly 'count': number;
   }
 
+  interface CodeSummary {
+    readonly 'total': number;
+    readonly 'student': number;
+    readonly 'parent': number;
+    readonly 'votes': number;
+  }
+
   interface EventForm {
     readonly 'key': string;
     readonly 'name': string;
@@ -265,6 +272,7 @@ declare namespace com.bryzek.vote.admin.v0.models {
 export type AdminSession = com.bryzek.vote.admin.v0.models.AdminSession;
 export type Code = com.bryzek.vote.admin.v0.models.Code;
 export type CodeGenerateForm = com.bryzek.vote.admin.v0.models.CodeGenerateForm;
+export type CodeSummary = com.bryzek.vote.admin.v0.models.CodeSummary;
 export type EventForm = com.bryzek.vote.admin.v0.models.EventForm;
 export type EventResults = com.bryzek.vote.admin.v0.models.EventResults;
 export type ProjectForm = com.bryzek.vote.admin.v0.models.ProjectForm;
@@ -498,6 +506,11 @@ export interface CodesGetParameters {
   offset?: number;
 }
 
+export interface CodesGetSummaryParameters {
+  headers?: $HttpHeaders;
+  event_id: string;
+}
+
 export interface CodesPostGenerateParameters {
   body: com.bryzek.vote.admin.v0.models.CodeGenerateForm;
   headers?: $HttpHeaders;
@@ -585,8 +598,9 @@ export interface EventResultsGetParameters {
 export type AdminSessionsGetSessionResponse = $HttpOk<com.bryzek.vote.admin.v0.models.AdminSession> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]>;
 export type AdminSessionsPostSessionsAndLoginsResponse = $HttpCreated<com.bryzek.vote.admin.v0.models.AdminSession> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type AdminSessionsDeleteSessionResponse = $HttpNoContent<undefined> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]>;
-export type CodesGetResponse = $HttpOk<com.bryzek.vote.admin.v0.models.Code[]> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
-export type CodesPostGenerateResponse = $HttpNoContent<undefined> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
+export type CodesGetResponse = $HttpOk<com.bryzek.vote.admin.v0.models.Code[]> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
+export type CodesGetSummaryResponse = $HttpOk<com.bryzek.vote.admin.v0.models.CodeSummary[]> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined>;
+export type CodesPostGenerateResponse = $HttpNoContent<undefined> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type CodesDeleteByIdResponse = $HttpNoContent<undefined> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type EventsGetResponse = $HttpOk<com.bryzek.vote.api.v0.models.Event[]> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type EventsGetByIdResponse = $HttpOk<com.bryzek.vote.api.v0.models.Event> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined>;
@@ -644,6 +658,14 @@ export class CodesResource extends $Resource {
         offset: params.offset,
         voter_type: params.voter_type,
       },
+    });
+  }
+
+  public getSummary(params: CodesGetSummaryParameters): Promise<CodesGetSummaryResponse> {
+    return this.client.request({
+      endpoint: `/vote/admin/events/${encodeURIComponent(params.event_id)}/codes/summary`,
+      headers: params.headers,
+      method: 'GET',
     });
   }
 
