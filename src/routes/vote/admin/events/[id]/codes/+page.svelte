@@ -44,6 +44,7 @@
 
 	// Export
 	let isExporting = $state(false);
+	let isExportingPdf = $state(false);
 
 	// Track if initial data has been loaded (to enable debounced search)
 	let initialLoadComplete = $state(false);
@@ -266,6 +267,43 @@
 		}
 	}
 
+	async function exportPdf() {
+		if (!sessionId) return;
+
+		isExportingPdf = true;
+		error = null;
+
+		try {
+			const response = await fetch(`${config.apiBaseUrl}/vote/admin/events/${eventId}/codes/export.pdf`, {
+				headers: { session_id: sessionId },
+			});
+
+			if (!response.ok) {
+				if (response.status === 401) {
+					await invalidateAll();
+					await goto(urls.voteAdminLogin);
+					return;
+				}
+				error = 'Failed to export PDF';
+				return;
+			}
+
+			const blob = await response.blob();
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `${event?.key ?? eventId}-codes.pdf`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		} catch {
+			error = 'Failed to export PDF';
+		} finally {
+			isExportingPdf = false;
+		}
+	}
+
 	</script>
 
 <div class="animate-fade-in">
@@ -392,6 +430,26 @@
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
 							</svg>
 							Export CSV
+						{/if}
+					</button>
+					<button
+						type="button"
+						onclick={exportPdf}
+						disabled={isExportingPdf || (summary?.total ?? 0) === 0}
+						class="inline-flex items-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+						title="Print cards for distribution"
+					>
+						{#if isExportingPdf}
+							<svg class="animate-spin w-5 h-5 mr-2" viewBox="0 0 24 24">
+								<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
+								<path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+							</svg>
+							Exporting...
+						{:else}
+							<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+							</svg>
+							Print Cards
 						{/if}
 					</button>
 				</div>
