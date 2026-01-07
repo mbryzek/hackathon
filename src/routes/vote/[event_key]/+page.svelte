@@ -3,14 +3,16 @@
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
     import { urls } from "$lib/urls";
-    import { voteApi, type Vote, type Event } from "$lib/api/client";
+    import { voteApi, type Vote } from "$lib/api/client";
+    import type { PageData } from "./$types";
+
+    let { data }: { data: PageData } = $props();
 
     const eventKey = $derived($page.params.event_key ?? "");
 
     // Get initial code from URL (only read once on mount)
     const initialCode = $page.url.searchParams.get("code") || "";
 
-    let event = $state<Event | null>(null);
     let code = $state(initialCode);
     let verification = $state<Vote | null>(null);
     let selectedProjectIds = $state<Set<string>>(new Set());
@@ -19,14 +21,8 @@
     let isSubmitting = $state(false);
     let codeVerified = $state(false);
 
-    // Fetch event details and auto-verify code if provided
-    onMount(async () => {
-        // Fetch event details to get the name
-        const response = await voteApi.getOpenEvents();
-        if (response.data) {
-            event = response.data.find((e) => e.key === eventKey) ?? null;
-        }
-
+    // Auto-verify code if provided in URL
+    onMount(() => {
         if (initialCode) {
             verifyCode();
         }
@@ -138,7 +134,7 @@
     );
 
     const eventName = $derived(
-        verification?.event.name ?? event?.name ?? "Project Voting",
+        verification?.event.name ?? data.event?.name ?? "Project Voting",
     );
 </script>
 
