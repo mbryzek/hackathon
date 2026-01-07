@@ -7,10 +7,6 @@
 	let isLoading = $state(true);
 	let error = $state<string | null>(null);
 
-	let selectedEvent = $state<Event | null>(null);
-	let code = $state('');
-	let isSubmitting = $state(false);
-
 	// Fetch open events on mount
 	$effect(() => {
 		fetchOpenEvents();
@@ -38,30 +34,7 @@
 	}
 
 	function selectEvent(event: Event) {
-		selectedEvent = event;
-	}
-
-	function handleCodeInput(evt: globalThis.Event) {
-		const input = evt.target as HTMLInputElement;
-		code = input.value;
-	}
-
-	async function handleSubmit(evt: globalThis.Event) {
-		evt.preventDefault();
-
-		if (!selectedEvent) {
-			error = 'Please select an event';
-			return;
-		}
-
-		isSubmitting = true;
-		await goto(`${urls.voteEvent(selectedEvent.key)}?code=${code}`);
-	}
-
-	function goBack() {
-		selectedEvent = null;
-		code = '';
-		error = null;
+		goto(urls.voteEvent(event.key));
 	}
 </script>
 
