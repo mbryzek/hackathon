@@ -67,8 +67,9 @@ export async function waitForElement(
 }
 
 /**
- * Safe click on a button with the given label text
- * Provides clear error messages when button is not found
+ * Safe click on a button or link with the given label text
+ * Supports both <button> elements and <a> elements (links styled as buttons)
+ * Provides clear error messages when element is not found
  */
 export async function safeClick(
   page: Page,
@@ -76,20 +77,49 @@ export async function safeClick(
 ): Promise<boolean> {
   const retries = 3;
   const timeout = config.TIMEOUTS.action;
-  const selector = `button:has-text("${buttonLabel}")`;
+  const buttonSelector = `button:has-text("${buttonLabel}")`;
+  const linkSelector = `a:has-text("${buttonLabel}")`;
 
   for (let i = 0; i < retries; i++) {
     try {
-      await page.waitForSelector(selector, { timeout, state: "visible" });
-      await page.click(selector, { timeout });
-      return true;
+      // Try button first
+      const buttonVisible = await page
+        .waitForSelector(buttonSelector, { timeout: 500, state: "visible" })
+        .then(() => true)
+        .catch(() => false);
+
+      if (buttonVisible) {
+        await page.click(buttonSelector, { timeout });
+        return true;
+      }
+
+      // Try link
+      const linkVisible = await page
+        .waitForSelector(linkSelector, { timeout: 500, state: "visible" })
+        .then(() => true)
+        .catch(() => false);
+
+      if (linkVisible) {
+        await page.click(linkSelector, { timeout });
+        return true;
+      }
+
+      // Neither found, retry if attempts remaining
+      if (i === retries - 1) {
+        console.error(
+          `❌ Button or link with text '${buttonLabel}' not found after ${retries} attempts`,
+        );
+        await takeScreenshot(page, "click-failed");
+        throw new Error(`Button or link with text '${buttonLabel}' not found`);
+      }
+      await page.waitForTimeout(250);
     } catch (error) {
       if (i === retries - 1) {
         console.error(
-          `❌ Button with text '${buttonLabel}' not found after ${retries} attempts`,
+          `❌ Button or link with text '${buttonLabel}' not found after ${retries} attempts`,
         );
         await takeScreenshot(page, "click-failed");
-        throw new Error(`Button with text '${buttonLabel}' not found`);
+        throw new Error(`Button or link with text '${buttonLabel}' not found`);
       }
       await page.waitForTimeout(250);
     }

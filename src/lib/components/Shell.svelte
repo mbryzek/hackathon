@@ -22,6 +22,7 @@
 	const sections: Section[] = [
 		{ href: urls.index, name: 'Overview', children: [] },
 		{ href: urls.signup, name: 'Signup', children: [] },
+		{ href: urls.vote, name: 'Vote', children: [] },
 		{ href: urls.donate, name: 'Donate', children: [] },
 		{
 			href: urls.y25Index,
