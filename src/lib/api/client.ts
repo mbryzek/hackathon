@@ -78,7 +78,7 @@ function toApiResponse<T>(response: { body: unknown; status: number; ok: boolean
 // Helper to create authorization header
 function getAuthHeaders(sessionId?: string): Record<string, string> {
 	if (sessionId) {
-		return { Authorization: `Bearer ${sessionId}` };
+		return { session_id: sessionId };
 	}
 	return {};
 }

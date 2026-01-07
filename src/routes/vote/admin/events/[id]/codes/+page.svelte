@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type Code, type VoterType } from '$lib/api/client';
-	import { MAX_CODES_PER_REQUEST, MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
+	import { MAX_LIMIT_PER_REQUEST, MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -45,24 +45,49 @@
 		isLoading = true;
 		error = null;
 
-		const params: { voter_type?: VoterType; has_voted?: boolean; limit?: number } = { limit: MAX_CODES_PER_REQUEST };
-		if (filterVoterType) params.voter_type = filterVoterType;
-		if (filterHasVoted !== '') params.has_voted = filterHasVoted;
-
-		const [eventResponse, codesResponse] = await Promise.all([
-			adminApi.getEvent(sessionId, eventId),
-			adminApi.getCodes(sessionId, eventId, params),
-		]);
-
-		isLoading = false;
+		// Load event first
+		const eventResponse = await adminApi.getEvent(sessionId, eventId);
 
 		if (eventResponse.errors) {
+			isLoading = false;
 			error = eventResponse.errors[0]?.message || 'Failed to load event';
 			return;
 		}
 
 		event = eventResponse.data || null;
-		codes = codesResponse.data || [];
+
+		// Load all codes with pagination
+		const allCodes: Code[] = [];
+		let offset = 0;
+		let hasMore = true;
+
+		while (hasMore) {
+			const params: { voter_type?: VoterType; has_voted?: boolean; limit?: number; offset?: number } = {
+				limit: MAX_LIMIT_PER_REQUEST,
+				offset,
+			};
+			if (filterVoterType) params.voter_type = filterVoterType;
+			if (filterHasVoted !== '') params.has_voted = filterHasVoted;
+
+			const codesResponse = await adminApi.getCodes(sessionId, eventId, params);
+
+			if (codesResponse.errors) {
+				break;
+			}
+
+			const batch = codesResponse.data || [];
+			allCodes.push(...batch);
+
+			// If we got fewer than the limit, we've reached the end
+			if (batch.length < MAX_LIMIT_PER_REQUEST) {
+				hasMore = false;
+			} else {
+				offset += MAX_LIMIT_PER_REQUEST;
+			}
+		}
+
+		codes = allCodes;
+		isLoading = false;
 	}
 
 	async function handleGenerateCodes(evt: SubmitEvent) {
