@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type Project } from '$lib/api/client';
 	import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
 	import type { PageData } from './$types';
@@ -53,13 +55,14 @@
 
 		isLoading = false;
 
-		if (eventResponse.errors) {
-			error = eventResponse.errors[0]?.message || 'Failed to load event';
+		if (eventResponse.errors || projectsResponse.errors) {
+			if (eventResponse.status === 401 || projectsResponse.status === 401) {
+				await invalidateAll();
+				await goto(urls.voteAdminLogin);
+				return;
+			}
+			error = eventResponse.errors?.[0]?.message || projectsResponse.errors?.[0]?.message || 'Failed to load data';
 			return;
-		}
-
-		if (projectsResponse.errors) {
-			error = projectsResponse.errors[0]?.message || 'Failed to load projects';
 		}
 
 		event = eventResponse.data || null;

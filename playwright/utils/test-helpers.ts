@@ -279,11 +279,12 @@ export async function checkForErrors(page: Page): Promise<string[]> {
 export async function createTestEvent(
   options: Partial<TestEventForm> = {},
 ): Promise<TestEvent> {
-  const { number_students = 0, number_parents = 0 } = options;
+  const { number_projects = 4, number_students = 0, number_parents = 0 } = options;
 
   return apiClient.createPlaywrightVoteEvents({
     tenantId: config.TENANT_ID,
     body: {
+      number_projects,
       number_parents,
       number_students,
     },

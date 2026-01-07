@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type Code, type CodeSummary, VoterType } from '$lib/api/client';
 	import { MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
 	import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
@@ -100,6 +102,11 @@
 
 		if (eventResponse.errors) {
 			isLoading = false;
+			if (eventResponse.status === 401) {
+				await invalidateAll();
+				await goto(urls.voteAdminLogin);
+				return;
+			}
 			error = eventResponse.errors[0]?.message || 'Failed to load event';
 			return;
 		}
@@ -135,6 +142,11 @@
 		isSearching = false;
 
 		if (codesResponse.errors) {
+			if (codesResponse.status === 401) {
+				await invalidateAll();
+				await goto(urls.voteAdminLogin);
+				return;
+			}
 			error = codesResponse.errors[0]?.message || 'Failed to load codes';
 			return;
 		}
