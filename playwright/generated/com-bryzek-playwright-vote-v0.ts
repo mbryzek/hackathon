@@ -22,7 +22,7 @@ export interface TestEvent {
 }
 
 export interface TestEventForm {
-  number_projects: number;
+  project_names: string[];
   number_students: number;
   number_parents: number;
 }
