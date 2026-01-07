@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { urls } from '$lib/urls';
-	import { adminApi, type VoteEvent, type EventStatus } from '$lib/api/client';
+	import { adminApi, type VoteEvent, EventStatus } from '$lib/api/client';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -16,7 +16,7 @@
 	let event = $state<VoteEvent | null>(null);
 	let name = $state('');
 	let key = $state('');
-	let status = $state<EventStatus>('draft');
+	let status = $state<EventStatus>(EventStatus.Draft);
 	let error = $state<string | null>(null);
 	let isLoading = $state(true);
 	let isSubmitting = $state(false);
@@ -31,6 +31,11 @@
 		isLoading = false;
 
 		if (response.errors) {
+			if (response.status === 401) {
+				await invalidateAll();
+				await goto(urls.voteAdminLogin);
+				return;
+			}
 			if (response.status === 404) {
 				error = 'Event not found';
 				return;

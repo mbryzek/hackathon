@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { urls } from '$lib/urls';
-	import { adminApi, type EventStatus } from '$lib/api/client';
+	import { adminApi, EventStatus } from '$lib/api/client';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	let name = $state('');
 	let key = $state('');
-	let status = $state<EventStatus>('draft');
+	let status = $state<EventStatus>(EventStatus.Draft);
 	let error = $state<string | null>(null);
 	let isSubmitting = $state(false);
 

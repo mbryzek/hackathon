@@ -1,15 +1,15 @@
 import { config } from '$lib/config';
 import {
-	createClient as createVoteApiClient,
+	ApiClient as VoteApiClient,
 	type Vote,
 	type Event,
 	type Project,
 	type ProjectVote,
-	type EventStatus,
-	type VoterType,
-} from '$generated/vote-api/vote-api';
+	EventStatus,
+	VoterType,
+} from '../../generated/com-bryzek-vote-api-v0';
 import {
-	createClient as createVoteAdminClient,
+	ApiClient as VoteAdminClient,
 	type AdminSession,
 	type Code,
 	type CodeSummary,
@@ -19,7 +19,10 @@ import {
 	type CodeGenerateForm,
 	type Tally,
 	type ProjectTally,
-} from '$generated/vote-admin/vote-admin';
+} from '../../generated/com-bryzek-vote-admin-v0';
+import { ValidationErrorsResponse } from '../../generated/generated-error-validation-errors-response';
+import { UnauthorizedErrorsResponse } from '../../generated/generated-error-unauthorized-errors-response';
+import { VoidResponse } from '../../generated/generated-error-void-response';
 
 // Re-export types for use in components
 export type {
@@ -27,8 +30,6 @@ export type {
 	Event,
 	Project,
 	ProjectVote,
-	EventStatus,
-	VoterType,
 	AdminSession,
 	Code,
 	CodeSummary,
@@ -39,6 +40,8 @@ export type {
 	Tally,
 	ProjectTally,
 };
+
+export { EventStatus, VoterType };
 
 // Alias Event as VoteEvent for backward compatibility
 export type VoteEvent = Event;
@@ -56,26 +59,9 @@ export interface ApiResponse<T> {
 	status: number;
 }
 
-// Helper to convert generated client responses to ApiResponse format
-function toApiResponse<T>(response: { body: unknown; status: number; ok: boolean }): ApiResponse<T> {
-	if (response.ok) {
-		if (response.status === 204) {
-			return { status: response.status };
-		}
-		return { data: response.body as T, status: response.status };
-	}
-
-	if (response.status === 401 || response.status === 422) {
-		const errors = response.body as ValidationError[];
-		return { errors: Array.isArray(errors) ? errors : [errors], status: response.status };
-	}
-
-	if (response.status === 404) {
-		return { errors: [{ code: 'not_found', message: 'Not found' }], status: 404 };
-	}
-
-	return { errors: [{ code: 'server_error', message: 'Server error' }], status: response.status };
-}
+// Create API clients
+const voteApiClient = new VoteApiClient(config.apiBaseUrl);
+const voteAdminClient = new VoteAdminClient(config.apiBaseUrl);
 
 // Helper to create authorization header
 function getAuthHeaders(sessionId?: string): Record<string, string> {
@@ -85,51 +71,112 @@ function getAuthHeaders(sessionId?: string): Record<string, string> {
 	return {};
 }
 
-// Custom fetch wrapper to redirect API calls to configured base URL during development
-// The generated client has the production URL hardcoded, so we intercept and rewrite
-const PRODUCTION_API_HOST = 'https://api.bthackathon.com';
-
-function createApiClient<T>(createFn: (options: { fetch: typeof fetch }) => T): T {
-	const customFetch: typeof fetch = (input, init) => {
-		if (typeof input === 'string' && config.apiBaseUrl !== PRODUCTION_API_HOST) {
-			// Replace production URL with configured base URL
-			const url = input.replace(PRODUCTION_API_HOST, config.apiBaseUrl);
-			return fetch(url, init);
+// Helper to handle API errors and convert to ApiResponse format
+async function handleApiCall<T>(
+	apiCall: () => Promise<T>,
+	successStatus: number = 200
+): Promise<ApiResponse<T>> {
+	try {
+		const data = await apiCall();
+		return { data, status: successStatus };
+	} catch (error) {
+		if (error instanceof ValidationErrorsResponse) {
+			const validationErrors = await error.validationErrors();
+			return {
+				errors: validationErrors.map((e) => ({
+					discriminator: e.discriminator,
+					message: e.message,
+					field: e.field,
+				})),
+				status: error.response.status,
+			};
 		}
-		return fetch(input, init);
-	};
-	return createFn({ fetch: customFetch });
+
+		if (error instanceof UnauthorizedErrorsResponse) {
+			return {
+				errors: [{ code: 'unauthorized', message: 'Unauthorized' }],
+				status: 401,
+			};
+		}
+
+		if (error instanceof VoidResponse) {
+			return {
+				errors: [{ code: 'not_found', message: 'Not found' }],
+				status: 404,
+			};
+		}
+
+		return {
+			errors: [{ code: 'server_error', message: 'Server error' }],
+			status: 500,
+		};
+	}
 }
 
-// Create API clients
-const voteApiClient = createApiClient(createVoteApiClient);
-const voteAdminClient = createApiClient(createVoteAdminClient);
+// Helper for void responses
+async function handleVoidApiCall(
+	apiCall: () => Promise<void>,
+	successStatus: number = 204
+): Promise<ApiResponse<void>> {
+	try {
+		await apiCall();
+		return { status: successStatus };
+	} catch (error) {
+		if (error instanceof ValidationErrorsResponse) {
+			const validationErrors = await error.validationErrors();
+			return {
+				errors: validationErrors.map((e) => ({
+					discriminator: e.discriminator,
+					message: e.message,
+					field: e.field,
+				})),
+				status: error.response.status,
+			};
+		}
+
+		if (error instanceof UnauthorizedErrorsResponse) {
+			return {
+				errors: [{ code: 'unauthorized', message: 'Unauthorized' }],
+				status: 401,
+			};
+		}
+
+		if (error instanceof VoidResponse) {
+			return {
+				errors: [{ code: 'not_found', message: 'Not found' }],
+				status: 404,
+			};
+		}
+
+		return {
+			errors: [{ code: 'server_error', message: 'Server error' }],
+			status: 500,
+		};
+	}
+}
 
 // Public API client
 export const voteApi = {
 	async getOpenEvents(): Promise<ApiResponse<Event[]>> {
-		const response = await voteApiClient.events.getAllAndOpen({});
-		return toApiResponse<Event[]>(response);
+		return handleApiCall(() => voteApiClient.getAllEventsOpen({}));
 	},
 
 	async verifyCode(eventKey: string, code: string): Promise<ApiResponse<Vote>> {
-		const response = await voteApiClient.votes.postCodeAndVerifications({
-			event_key: eventKey,
-			body: { code },
-		});
-		return toApiResponse<Vote>(response);
+		return handleApiCall(() =>
+			voteApiClient.createVoteCodeAndVerifications({
+				eventKey,
+				body: { code },
+			})
+		);
 	},
 
-	async submitVote(
-		eventKey: string,
-		code: string,
-		projectIds: string[]
-	): Promise<ApiResponse<Vote>> {
-		const response = await voteApiClient.votes.post({
-			event_key: eventKey,
-			body: { code, project_ids: projectIds },
-		});
-		return toApiResponse<Vote>(response);
+	async submitVote(eventKey: string, code: string, projectIds: string[]): Promise<ApiResponse<Vote>> {
+		return handleApiCall(() =>
+			voteApiClient.createVote({
+				eventKey,
+				body: { code, project_ids: projectIds },
+			})
+		);
 	},
 };
 
@@ -137,24 +184,29 @@ export const voteApi = {
 export const adminApi = {
 	// Session
 	async login(email: string, password: string): Promise<ApiResponse<AdminSession>> {
-		const response = await voteAdminClient.adminSessions.postSessionsAndLogins({
-			body: { email, password },
-		});
-		return toApiResponse<AdminSession>(response);
+		return handleApiCall(
+			() =>
+				voteAdminClient.createAdminSessionSessionsAndLogins({
+					body: { email, password },
+				}),
+			201
+		);
 	},
 
 	async getSession(sessionId: string): Promise<ApiResponse<AdminSession>> {
-		const response = await voteAdminClient.adminSessions.getSession({
-			headers: getAuthHeaders(sessionId),
-		});
-		return toApiResponse<AdminSession>(response);
+		return handleApiCall(() =>
+			voteAdminClient.getAdminSessionSession({
+				headers: getAuthHeaders(sessionId),
+			})
+		);
 	},
 
 	async logout(sessionId: string): Promise<ApiResponse<void>> {
-		const response = await voteAdminClient.adminSessions.deleteSession({
-			headers: getAuthHeaders(sessionId),
-		});
-		return toApiResponse<void>(response);
+		return handleVoidApiCall(() =>
+			voteAdminClient.deleteAdminSessionSession({
+				headers: getAuthHeaders(sessionId),
+			})
+		);
 	},
 
 	// Events
@@ -162,32 +214,36 @@ export const adminApi = {
 		sessionId: string,
 		params?: { status?: EventStatus[]; limit?: number; offset?: number }
 	): Promise<ApiResponse<Event[]>> {
-		const response = await voteAdminClient.events.get({
-			headers: getAuthHeaders(sessionId),
-			status: params?.status,
-			limit: params?.limit,
-			offset: params?.offset,
-		});
-		return toApiResponse<Event[]>(response);
+		return handleApiCall(() =>
+			voteAdminClient.getEvents({
+				headers: getAuthHeaders(sessionId),
+				status: params?.status,
+				limit: params?.limit ?? 100,
+				offset: params?.offset ?? 0,
+			})
+		);
 	},
 
 	async getEvent(sessionId: string, id: string): Promise<ApiResponse<Event>> {
-		const response = await voteAdminClient.events.getById({
-			headers: getAuthHeaders(sessionId),
-			id,
-		});
-		return toApiResponse<Event>(response);
+		return handleApiCall(() =>
+			voteAdminClient.getEventById(id, {
+				headers: getAuthHeaders(sessionId),
+			})
+		);
 	},
 
 	async createEvent(
 		sessionId: string,
 		form: { key: string; name: string; status?: EventStatus }
 	): Promise<ApiResponse<Event>> {
-		const response = await voteAdminClient.events.post({
-			headers: getAuthHeaders(sessionId),
-			body: form,
-		});
-		return toApiResponse<Event>(response);
+		return handleApiCall(
+			() =>
+				voteAdminClient.createEvent({
+					headers: getAuthHeaders(sessionId),
+					body: form,
+				}),
+			201
+		);
 	},
 
 	async updateEvent(
@@ -195,20 +251,21 @@ export const adminApi = {
 		id: string,
 		form: { key: string; name: string; status?: EventStatus }
 	): Promise<ApiResponse<Event>> {
-		const response = await voteAdminClient.events.putById({
-			headers: getAuthHeaders(sessionId),
-			id,
-			body: form,
-		});
-		return toApiResponse<Event>(response);
+		return handleApiCall(() =>
+			voteAdminClient.updateEventById({
+				headers: getAuthHeaders(sessionId),
+				id,
+				body: form,
+			})
+		);
 	},
 
 	async deleteEvent(sessionId: string, id: string): Promise<ApiResponse<void>> {
-		const response = await voteAdminClient.events.deleteById({
-			headers: getAuthHeaders(sessionId),
-			id,
-		});
-		return toApiResponse<void>(response);
+		return handleVoidApiCall(() =>
+			voteAdminClient.deleteEventById(id, {
+				headers: getAuthHeaders(sessionId),
+			})
+		);
 	},
 
 	// Projects
@@ -217,13 +274,14 @@ export const adminApi = {
 		eventId: string,
 		params?: { limit?: number; offset?: number }
 	): Promise<ApiResponse<Project[]>> {
-		const response = await voteAdminClient.projects.get({
-			headers: getAuthHeaders(sessionId),
-			event_id: eventId,
-			limit: params?.limit,
-			offset: params?.offset,
-		});
-		return toApiResponse<Project[]>(response);
+		return handleApiCall(() =>
+			voteAdminClient.getProjects({
+				headers: getAuthHeaders(sessionId),
+				eventId,
+				limit: params?.limit ?? 100,
+				offset: params?.offset ?? 0,
+			})
+		);
 	},
 
 	async createProject(
@@ -231,12 +289,15 @@ export const adminApi = {
 		eventId: string,
 		form: { name: string; description?: string }
 	): Promise<ApiResponse<Project>> {
-		const response = await voteAdminClient.projects.post({
-			headers: getAuthHeaders(sessionId),
-			event_id: eventId,
-			body: form,
-		});
-		return toApiResponse<Project>(response);
+		return handleApiCall(
+			() =>
+				voteAdminClient.createProject({
+					headers: getAuthHeaders(sessionId),
+					eventId,
+					body: form,
+				}),
+			201
+		);
 	},
 
 	async updateProject(
@@ -245,35 +306,34 @@ export const adminApi = {
 		id: string,
 		form: { name: string; description?: string }
 	): Promise<ApiResponse<Project>> {
-		const response = await voteAdminClient.projects.putById({
-			headers: getAuthHeaders(sessionId),
-			event_id: eventId,
-			id,
-			body: form,
-		});
-		return toApiResponse<Project>(response);
+		return handleApiCall(() =>
+			voteAdminClient.updateProjectById({
+				headers: getAuthHeaders(sessionId),
+				eventId,
+				id,
+				body: form,
+			})
+		);
 	},
 
 	async deleteProject(sessionId: string, eventId: string, id: string): Promise<ApiResponse<void>> {
-		const response = await voteAdminClient.projects.deleteById({
-			headers: getAuthHeaders(sessionId),
-			event_id: eventId,
-			id,
-		});
-		return toApiResponse<void>(response);
+		return handleVoidApiCall(() =>
+			voteAdminClient.deleteProjectById({
+				headers: getAuthHeaders(sessionId),
+				eventId,
+				id,
+			})
+		);
 	},
 
-	async reorderProjects(
-		sessionId: string,
-		eventId: string,
-		projectIds: string[]
-	): Promise<ApiResponse<void>> {
-		const response = await voteAdminClient.projects.postReorder({
-			headers: getAuthHeaders(sessionId),
-			event_id: eventId,
-			body: { project_ids: projectIds },
-		});
-		return toApiResponse<void>(response);
+	async reorderProjects(sessionId: string, eventId: string, projectIds: string[]): Promise<ApiResponse<void>> {
+		return handleVoidApiCall(() =>
+			voteAdminClient.createProjectReorder({
+				headers: getAuthHeaders(sessionId),
+				eventId,
+				body: { project_ids: projectIds },
+			})
+		);
 	},
 
 	// Codes
@@ -282,24 +342,25 @@ export const adminApi = {
 		eventId: string,
 		params?: { voter_type?: VoterType; has_voted?: boolean; q?: string; limit?: number; offset?: number }
 	): Promise<ApiResponse<Code[]>> {
-		const response = await voteAdminClient.codes.get({
-			headers: getAuthHeaders(sessionId),
-			event_id: eventId,
-			voter_type: params?.voter_type,
-			has_voted: params?.has_voted,
-			q: params?.q,
-			limit: params?.limit,
-			offset: params?.offset,
-		});
-		return toApiResponse<Code[]>(response);
+		return handleApiCall(() =>
+			voteAdminClient.getCodes({
+				headers: getAuthHeaders(sessionId),
+				eventId,
+				voterType: params?.voter_type,
+				hasVoted: params?.has_voted,
+				q: params?.q,
+				limit: params?.limit ?? 100,
+				offset: params?.offset ?? 0,
+			})
+		);
 	},
 
 	async getCodeSummary(sessionId: string, eventId: string): Promise<ApiResponse<CodeSummary>> {
-		const response = await voteAdminClient.codes.getSummary({
-			headers: getAuthHeaders(sessionId),
-			event_id: eventId,
-		});
-		return toApiResponse<CodeSummary>(response);
+		return handleApiCall(() =>
+			voteAdminClient.getCodeSummary(eventId, {
+				headers: getAuthHeaders(sessionId),
+			})
+		);
 	},
 
 	async generateCodes(
@@ -307,29 +368,31 @@ export const adminApi = {
 		eventId: string,
 		form: { voter_type: VoterType; count: number }
 	): Promise<ApiResponse<Code[]>> {
-		const response = await voteAdminClient.codes.postGenerate({
-			headers: getAuthHeaders(sessionId),
-			event_id: eventId,
-			body: form,
-		});
-		return toApiResponse<Code[]>(response);
+		return handleVoidApiCall(() =>
+			voteAdminClient.createCodeGenerate({
+				headers: getAuthHeaders(sessionId),
+				eventId,
+				body: form,
+			})
+		) as Promise<ApiResponse<Code[]>>;
 	},
 
 	async deleteCode(sessionId: string, eventId: string, id: string): Promise<ApiResponse<void>> {
-		const response = await voteAdminClient.codes.deleteById({
-			headers: getAuthHeaders(sessionId),
-			event_id: eventId,
-			id,
-		});
-		return toApiResponse<void>(response);
+		return handleVoidApiCall(() =>
+			voteAdminClient.deleteCodeById({
+				headers: getAuthHeaders(sessionId),
+				eventId,
+				id,
+			})
+		);
 	},
 
 	// Results
 	async getResults(sessionId: string, eventId: string): Promise<ApiResponse<EventResults>> {
-		const response = await voteAdminClient.eventResults.get({
-			headers: getAuthHeaders(sessionId),
-			event_id: eventId,
-		});
-		return toApiResponse<EventResults>(response);
+		return handleApiCall(() =>
+			voteAdminClient.getEventResults(eventId, {
+				headers: getAuthHeaders(sessionId),
+			})
+		);
 	},
 };

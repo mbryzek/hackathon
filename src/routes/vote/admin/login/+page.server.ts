@@ -1,21 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { SESSION_COOKIE, config } from '$lib/config';
-import { createClient } from '$generated/vote-admin/vote-admin';
-
-// Create server-side API client
-const PRODUCTION_API_HOST = 'https://api.bthackathon.com';
-
-function createServerApiClient() {
-	const customFetch: typeof fetch = (input, init) => {
-		if (typeof input === 'string' && config.apiBaseUrl !== PRODUCTION_API_HOST) {
-			const url = input.replace(PRODUCTION_API_HOST, config.apiBaseUrl);
-			return fetch(url, init);
-		}
-		return fetch(input, init);
-	};
-	return createClient({ fetch: customFetch });
-}
+import { adminApi } from '$lib/api/client';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// If already logged in, redirect to admin dashboard
@@ -45,21 +31,24 @@ export const actions = {
 			});
 		}
 
-		const client = createServerApiClient();
-		const response = await client.adminSessions.postSessionsAndLogins({
-			body: { email, password },
-		});
+		const response = await adminApi.login(email, password);
 
-		if (!response.ok) {
-			const errors = Array.isArray(response.body) ? response.body : [response.body];
+		if (response.errors) {
 			return fail(response.status, {
-				errors: errors.map((e) => ({ message: e.message || 'Login failed' })),
+				errors: response.errors.map((e) => ({ message: e.message || 'Login failed' })),
+				email,
+			});
+		}
+
+		if (!response.data) {
+			return fail(500, {
+				errors: [{ message: 'Unexpected error' }],
 				email,
 			});
 		}
 
 		// Set session cookie server-side with httpOnly for security
-		cookies.set(SESSION_COOKIE, response.body.session.id, {
+		cookies.set(SESSION_COOKIE, response.data.session.id, {
 			path: '/',
 			httpOnly: true,
 			sameSite: 'lax',

@@ -4,19 +4,24 @@ code:
       version: latest
       generators:
         - generator: typescript
-          target: ./src/generated
+          target: ./generated
     platform:
       version: latest
       generators:
         - generator: typescript
-          target: ./src/generated
+          target: ./generated
     vote-api:
       version: latest
       generators:
         - generator: typescript
-          target: ./src/generated
+          target: ./generated
     vote-admin:
       version: latest
       generators:
         - generator: typescript
-          target: ./src/generated
+          target: ./generated
+    playwright-vote:
+      version: latest
+      generators:
+        - generator: typescript
+          target: ./generated

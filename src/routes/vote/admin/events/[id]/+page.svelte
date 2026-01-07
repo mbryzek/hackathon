@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent } from '$lib/api/client';
 	import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
@@ -20,6 +20,8 @@
 	let isDeleting = $state(false);
 	let showDeleteConfirm = $state(false);
 
+	const votingUrl = $derived(event ? `${$page.url.origin}/vote/${event.key}` : '');
+
 	onMount(async () => {
 		if (!sessionId) {
 			return;
@@ -30,6 +32,11 @@
 		isLoading = false;
 
 		if (response.errors) {
+			if (response.status === 401) {
+				await invalidateAll();
+				await goto(urls.voteAdminLogin);
+				return;
+			}
 			if (response.status === 404) {
 				error = 'Event not found';
 				return;
@@ -130,8 +137,8 @@
 				<div class="py-4">
 					<dt class="text-sm font-medium text-gray-500">Voting URL</dt>
 					<dd class="mt-1">
-						<a href="/vote/{event.key}" class="text-blue-600 hover:text-blue-800 underline" target="_blank">
-							/vote/{event.key}
+						<a href={votingUrl} class="text-blue-600 hover:text-blue-800 underline break-all" target="_blank">
+							{votingUrl}
 						</a>
 					</dd>
 				</div>

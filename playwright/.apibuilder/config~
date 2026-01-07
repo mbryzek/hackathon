@@ -1,0 +1,17 @@
+code:
+  bryzek:
+    vote-api:
+      version: latest
+      generators:
+        - generator: ts_sdk
+          target: ./src/generated
+    vote-admin:
+      version: latest
+      generators:
+        - generator: ts_sdk
+          target: ./src/generated
+    playwright-vote:
+      version: latest
+      generators:
+        - generator: typescript
+          target: ./playwright/generated

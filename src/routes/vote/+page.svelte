@@ -7,10 +7,6 @@
 	let isLoading = $state(true);
 	let error = $state<string | null>(null);
 
-	let selectedEvent = $state<Event | null>(null);
-	let code = $state('');
-	let isSubmitting = $state(false);
-
 	// Fetch open events on mount
 	$effect(() => {
 		fetchOpenEvents();
@@ -38,30 +34,7 @@
 	}
 
 	function selectEvent(event: Event) {
-		selectedEvent = event;
-	}
-
-	function handleCodeInput(evt: globalThis.Event) {
-		const input = evt.target as HTMLInputElement;
-		code = input.value;
-	}
-
-	async function handleSubmit(evt: globalThis.Event) {
-		evt.preventDefault();
-
-		if (!selectedEvent) {
-			error = 'Please select an event';
-			return;
-		}
-
-		isSubmitting = true;
-		await goto(`${urls.voteEvent(selectedEvent.key)}?code=${code}`);
-	}
-
-	function goBack() {
-		selectedEvent = null;
-		code = '';
-		error = null;
+		goto(urls.voteEvent(event.key));
 	}
 </script>
 
@@ -105,7 +78,7 @@
 			<h2 class="text-xl font-bold text-gray-900 mb-2">No Active Events</h2>
 			<p class="text-gray-600">There are no voting events open at this time. Please check back later.</p>
 		</div>
-	{:else if !selectedEvent}
+	{:else}
 		<!-- Event selection -->
 		<div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto">
 			<div class="text-center mb-6">
@@ -123,69 +96,6 @@
 					</button>
 				{/each}
 			</div>
-		</div>
-	{:else}
-		<!-- Code entry for selected event -->
-		<div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto">
-			<div class="text-center mb-8">
-				<button
-					onclick={goBack}
-					class="text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center gap-1"
-				>
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-					</svg>
-					Back to events
-				</button>
-				<h1 class="text-2xl font-bold text-gray-900 mb-2">{selectedEvent.name}</h1>
-				<p class="text-gray-600">Enter your code</p>
-			</div>
-
-			<form onsubmit={handleSubmit} class="space-y-6">
-				<div>
-					<input
-						type="text"
-						id="code"
-						value={code}
-						oninput={handleCodeInput}
-						placeholder="AB1234"
-						class="w-full px-4 py-3 text-2xl text-center font-mono tracking-widest border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
-						autocomplete="off"
-						disabled={isSubmitting}
-					/>
-					<p class="mt-2 text-sm text-gray-500 text-center">
-						Enter the code from your voting card
-					</p>
-				</div>
-
-				{#if error}
-					<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center">
-						{error}
-					</div>
-				{/if}
-
-				<button
-					type="submit"
-					disabled={isSubmitting || code.length !== 6}
-					class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg shadow-md"
-				>
-					{#if isSubmitting}
-						<span class="inline-flex items-center gap-2">
-							<svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-								<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-								<path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-							</svg>
-							Loading...
-						</span>
-					{:else}
-						Continue to Vote
-					{/if}
-				</button>
-			</form>
-		</div>
-
-		<div class="mt-8 text-center text-gray-500 text-sm">
-			<p>Lost your code? Ask a hackathon organizer for assistance.</p>
 		</div>
 	{/if}
 </div>
