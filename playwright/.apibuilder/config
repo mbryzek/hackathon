@@ -1,5 +1,15 @@
 code:
   bryzek:
+    platform-error:
+      version: latest
+      generators:
+        - generator: typescript
+          target: ./generated
+    platform:
+      version: latest
+      generators:
+        - generator: typescript
+          target: ./generated
     vote-api:
       version: latest
       generators:
