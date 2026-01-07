@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type EventStatus } from '$lib/api/client';
 	import type { PageData } from './$types';
@@ -22,6 +23,12 @@
 		isLoading = false;
 
 		if (response.errors) {
+			// If unauthorized, redirect to login
+			if (response.status === 401) {
+				await invalidateAll();
+				await goto(urls.voteAdminLogin);
+				return;
+			}
 			error = response.errors[0]?.message || 'Failed to load events';
 			return;
 		}

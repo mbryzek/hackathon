@@ -45,41 +45,29 @@ export const actions = {
 			});
 		}
 
-		try {
-			const client = createServerApiClient();
-			const response = await client.adminSessions.postSessionsAndLogins({
-				body: { email, password },
-			});
+		const client = createServerApiClient();
+		const response = await client.adminSessions.postSessionsAndLogins({
+			body: { email, password },
+		});
 
-			if (!response.ok) {
-				const errors = Array.isArray(response.body) ? response.body : [response.body];
-				return fail(response.status, {
-					errors: errors.map((e) => ({ message: e.message || 'Login failed' })),
-					email,
-				});
-			}
-
-			// Set session cookie server-side with httpOnly for security
-			cookies.set(SESSION_COOKIE, response.body.session.id, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				secure: config.isProduction,
-				maxAge: 60 * 60 * 8, // 8 hours
-			});
-
-			// Redirect to admin dashboard
-			throw redirect(303, '/vote/admin');
-		} catch (error) {
-			// Re-throw redirects
-			if (error instanceof Response || (error as { status?: number })?.status === 303) {
-				throw error;
-			}
-
-			return fail(500, {
-				errors: [{ message: 'An unexpected error occurred' }],
+		if (!response.ok) {
+			const errors = Array.isArray(response.body) ? response.body : [response.body];
+			return fail(response.status, {
+				errors: errors.map((e) => ({ message: e.message || 'Login failed' })),
 				email,
 			});
 		}
+
+		// Set session cookie server-side with httpOnly for security
+		cookies.set(SESSION_COOKIE, response.body.session.id, {
+			path: '/',
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: config.isProduction,
+			maxAge: 60 * 60 * 8, // 8 hours
+		});
+
+		// Redirect to admin dashboard
+		throw redirect(303, '/vote/admin');
 	},
 } satisfies Actions;
