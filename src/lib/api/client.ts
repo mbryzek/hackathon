@@ -105,8 +105,8 @@ const voteAdminClient = createApiClient(createVoteAdminClient);
 
 // Public API client
 export const voteApi = {
-	async getActiveProjects(): Promise<ApiResponse<Project[]>> {
-		const response = await voteApiClient.projects.getAllAndActive({});
+	async getActiveProjects(eventId: string): Promise<ApiResponse<Project[]>> {
+		const response = await voteApiClient.projects.getAllAndActiveByEventId({ event_id: eventId });
 		return toApiResponse<Project[]>(response);
 	},
 
