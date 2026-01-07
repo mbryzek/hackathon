@@ -3,13 +3,13 @@ code:
     vote-api:
       version: latest
       generators:
-        - generator: ts_sdk
-          target: .//generated
+        - generator: typescript
+          target: ./generated
     vote-admin:
       version: latest
       generators:
-        - generator: ts_sdk
-          target: .//generated
+        - generator: typescript
+          target: ./generated
     playwright-vote:
       version: latest
       generators:
