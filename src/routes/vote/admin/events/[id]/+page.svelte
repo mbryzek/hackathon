@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent } from '$lib/api/client';
+	import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
