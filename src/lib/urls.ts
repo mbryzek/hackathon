@@ -12,4 +12,18 @@ export const urls = {
 	y25Rubric: '/Y25/rubric',
 	donate: '/donate',
 	contact: '/contact',
+
+	// Voting routes
+	vote: '/vote',
+	voteEvent: (eventKey: string) => `/vote/${eventKey}`,
+	voteThanks: (eventKey: string) => `/vote/${eventKey}/thanks`,
+
+	// Admin routes
+	voteAdminLogin: '/vote/admin/login',
+	voteAdmin: '/vote/admin',
+	voteAdminEventsNew: '/vote/admin/events/new',
+	voteAdminEvent: (id: string) => `/vote/admin/events/${id}`,
+	voteAdminEventProjects: (id: string) => `/vote/admin/events/${id}/projects`,
+	voteAdminEventCodes: (id: string) => `/vote/admin/events/${id}/codes`,
+	voteAdminEventResults: (id: string) => `/vote/admin/events/${id}/results`,
 } as const;
