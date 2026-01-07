@@ -3,6 +3,10 @@
 	import { urls } from '$lib/urls';
 
 	const eventKey = $derived($page.params.event_key ?? '');
+	const code = $derived($page.url.searchParams.get('code') || '');
+	const changeVoteUrl = $derived(
+		code ? `${urls.voteEvent(eventKey)}?code=${encodeURIComponent(code)}` : urls.voteEvent(eventKey)
+	);
 </script>
 
 <div class="animate-fade-in">
@@ -28,7 +32,7 @@
 
 		<div class="space-y-3">
 			<a
-				href={urls.voteEvent(eventKey)}
+				href={changeVoteUrl}
 				class="block w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors"
 			>
 				Change My Vote

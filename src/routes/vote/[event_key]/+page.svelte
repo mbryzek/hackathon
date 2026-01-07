@@ -97,8 +97,8 @@
 			return;
 		}
 
-		// Navigate to thank you page
-		await goto(urls.voteThanks(eventKey));
+		// Navigate to thank you page with code for "change vote" functionality
+		await goto(`${urls.voteThanks(eventKey)}?code=${encodeURIComponent(code)}`);
 	}
 
 	function handleCodeInput(evt: globalThis.Event) {
