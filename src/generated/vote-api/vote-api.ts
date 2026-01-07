@@ -282,6 +282,10 @@ export class $Resource {
   }
 }
 
+export interface ProjectsGetAllAndActiveParameters {
+  headers?: $HttpHeaders;
+}
+
 export interface VotesPostCodeAndVerificationsParameters {
   body: com.bryzek.vote.api.v0.models.CodeVerificationForm;
   headers?: $HttpHeaders;
@@ -294,8 +298,19 @@ export interface VotesPostParameters {
   event_key: string;
 }
 
+export type ProjectsGetAllAndActiveResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project[]>;
 export type VotesPostCodeAndVerificationsResponse = $HttpOk<com.bryzek.vote.api.v0.models.Vote> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type VotesPostResponse = $HttpOk<com.bryzek.vote.api.v0.models.Vote> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
+
+export class ProjectsResource extends $Resource {
+  public getAllAndActive(params: ProjectsGetAllAndActiveParameters = {}): Promise<ProjectsGetAllAndActiveResponse> {
+    return this.client.request({
+      endpoint: '/vote/projects/all/active',
+      headers: params.headers,
+      method: 'GET',
+    });
+  }
+}
 
 export class VotesResource extends $Resource {
   /*Verify a voting code and return voting information*/
@@ -320,11 +335,13 @@ export class VotesResource extends $Resource {
 }
 
 export interface ClientInstance {
+  projects: ProjectsResource;
   votes: VotesResource;
 }
 
 export function createClient(options: $HttpClientOptions): ClientInstance {
   return {
+    projects: new ProjectsResource(options),
     votes: new VotesResource(options),
   };
 }
