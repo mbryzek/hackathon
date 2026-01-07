@@ -36,8 +36,8 @@ export const test = base.extend<TestFixtures>({
    */
   testEvent: async ({ page, context }, use) => {
     const event = await helpers.createTestEvent({
-      number_students = 1,
-      number_parents = 1,
+      number_students: 1,
+      number_parents: 1,
     });
 
     // Provide page, game data, and session to test
