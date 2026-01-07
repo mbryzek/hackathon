@@ -91,11 +91,6 @@
 		results?.parent.projects.slice().sort((a: ProjectTally, b: ProjectTally) => b.vote_count - a.vote_count) || []
 	);
 
-	// Calculate total votes
-	const totalVotes = $derived(
-		(results?.student.total_votes ?? 0) + (results?.parent.total_votes ?? 0)
-	);
-
 	// Calculate max votes for bar width (across both categories)
 	const maxVotes = $derived(() => {
 		const allProjects = [...sortedStudentProjects, ...sortedParentProjects];
@@ -172,16 +167,23 @@
 				<p class="text-2xl text-gray-400 text-center mb-8">Voting Results</p>
 			{/if}
 
-			<!-- Total votes -->
-			<div class="{isPresentationMode ? 'text-center mb-12' : 'bg-white shadow rounded-xl p-6 mb-6 text-center'}">
-				<div class="{isPresentationMode ? 'text-6xl font-bold text-yellow-400' : 'text-4xl font-bold text-gray-900'}">
-					{totalVotes}
+			<!-- Vote counts by type -->
+			<div class="{isPresentationMode ? 'flex justify-center gap-16 mb-12' : 'grid grid-cols-2 gap-4 mb-6'}">
+				<div class="{isPresentationMode ? 'text-center' : 'bg-white shadow rounded-xl p-6 text-center'}">
+					<div class="{isPresentationMode ? 'text-5xl font-bold text-yellow-400' : 'text-3xl font-bold text-blue-600'}">
+						{results.student.total_votes}
+					</div>
+					<div class="{isPresentationMode ? 'text-xl text-gray-400' : 'text-gray-600'}">
+						Student Votes
+					</div>
 				</div>
-				<div class="{isPresentationMode ? 'text-xl text-gray-400' : 'text-gray-600'}">
-					Total Votes Cast
-				</div>
-				<div class="{isPresentationMode ? 'text-lg text-gray-500 mt-2' : 'text-sm text-gray-500 mt-2'}">
-					{results.student.total_votes} student · {results.parent.total_votes} parent
+				<div class="{isPresentationMode ? 'text-center' : 'bg-white shadow rounded-xl p-6 text-center'}">
+					<div class="{isPresentationMode ? 'text-5xl font-bold text-blue-400' : 'text-3xl font-bold text-purple-600'}">
+						{results.parent.total_votes}
+					</div>
+					<div class="{isPresentationMode ? 'text-xl text-gray-400' : 'text-gray-600'}">
+						Parent Votes
+					</div>
 				</div>
 			</div>
 

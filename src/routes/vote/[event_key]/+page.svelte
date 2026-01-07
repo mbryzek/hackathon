@@ -1,13 +1,16 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { voteApi, type Vote } from '$lib/api/client';
 
 	const eventKey = $derived($page.params.event_key ?? '');
-	let codeFromUrl = $derived($page.url.searchParams.get('code') || '');
 
-	let code = $state('');
+	// Get initial code from URL (only read once on mount)
+	const initialCode = $page.url.searchParams.get('code') || '';
+
+	let code = $state(initialCode);
 	let verification = $state<Vote | null>(null);
 	let selectedProjectIds = $state<Set<string>>(new Set());
 	let error = $state<string | null>(null);
@@ -15,10 +18,9 @@
 	let isSubmitting = $state(false);
 	let codeVerified = $state(false);
 
-	// Initialize code from URL and verify
-	$effect(() => {
-		if (codeFromUrl && !codeVerified) {
-			code = codeFromUrl;
+	// Auto-verify if code was provided in URL
+	onMount(() => {
+		if (initialCode) {
 			verifyCode();
 		}
 	});
