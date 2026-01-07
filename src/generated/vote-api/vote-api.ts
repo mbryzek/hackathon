@@ -282,9 +282,8 @@ export class $Resource {
   }
 }
 
-export interface ProjectsGetAllAndActiveByEventIdParameters {
+export interface EventsGetAllAndActiveParameters {
   headers?: $HttpHeaders;
-  event_id: string;
 }
 
 export interface VotesPostCodeAndVerificationsParameters {
@@ -299,14 +298,14 @@ export interface VotesPostParameters {
   event_key: string;
 }
 
-export type ProjectsGetAllAndActiveByEventIdResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
+export type EventsGetAllAndActiveResponse = $HttpOk<com.bryzek.vote.api.v0.models.Event[]>;
 export type VotesPostCodeAndVerificationsResponse = $HttpOk<com.bryzek.vote.api.v0.models.Vote> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type VotesPostResponse = $HttpOk<com.bryzek.vote.api.v0.models.Vote> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 
-export class ProjectsResource extends $Resource {
-  public getAllAndActiveByEventId(params: ProjectsGetAllAndActiveByEventIdParameters): Promise<ProjectsGetAllAndActiveByEventIdResponse> {
+export class EventsResource extends $Resource {
+  public getAllAndActive(params: EventsGetAllAndActiveParameters = {}): Promise<EventsGetAllAndActiveResponse> {
     return this.client.request({
-      endpoint: `/vote/projects/all/active/${encodeURIComponent(params.event_id)}`,
+      endpoint: '/vote/events/all/active',
       headers: params.headers,
       method: 'GET',
     });
@@ -336,13 +335,13 @@ export class VotesResource extends $Resource {
 }
 
 export interface ClientInstance {
-  projects: ProjectsResource;
+  events: EventsResource;
   votes: VotesResource;
 }
 
 export function createClient(options: $HttpClientOptions): ClientInstance {
   return {
-    projects: new ProjectsResource(options),
+    events: new EventsResource(options),
     votes: new VotesResource(options),
   };
 }
