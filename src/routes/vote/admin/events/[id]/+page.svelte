@@ -20,6 +20,8 @@
 	let isDeleting = $state(false);
 	let showDeleteConfirm = $state(false);
 
+	const votingUrl = $derived(event ? `${$page.url.origin}/vote/${event.key}` : '');
+
 	onMount(async () => {
 		if (!sessionId) {
 			return;
@@ -130,7 +132,6 @@
 				<div class="py-4">
 					<dt class="text-sm font-medium text-gray-500">Voting URL</dt>
 					<dd class="mt-1">
-						{@const votingUrl = `${$page.url.origin}/vote/${event.key}`}
 						<a href={votingUrl} class="text-blue-600 hover:text-blue-800 underline break-all" target="_blank">
 							{votingUrl}
 						</a>

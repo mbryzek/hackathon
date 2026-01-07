@@ -14,7 +14,6 @@
 
     let selectedProjects = $state<Project[]>([]);
     let isLoading = $state(true);
-    let voterTypeLabel = $state("");
 
     onMount(async () => {
         if (code && eventKey) {
@@ -23,10 +22,6 @@
                 selectedProjects = response.data.projects
                     .filter((pv) => pv.selected)
                     .map((pv) => pv.project);
-                voterTypeLabel =
-                    response.data.voter_type === "student"
-                        ? "Student"
-                        : "Parent/Guest";
             }
         }
         isLoading = false;

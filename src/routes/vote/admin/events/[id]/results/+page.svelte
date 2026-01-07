@@ -113,6 +113,21 @@
 				return 'bg-gray-100 text-gray-600';
 		}
 	}
+
+	// Calculate rank with ties - tied teams share the same place
+	// e.g., if two teams have 3 votes each, both get rank 1, next team gets rank 3
+	function getRank(projects: ProjectTally[], index: number): number {
+		if (index === 0) return 1;
+		const current = projects[index];
+		const previous = projects[index - 1];
+		if (!current || !previous) return index + 1;
+		if (current.vote_count === previous.vote_count) {
+			// Same vote count as previous - share their rank
+			return getRank(projects, index - 1);
+		}
+		// Different vote count - rank is position + 1
+		return index + 1;
+	}
 </script>
 
 <div class="animate-fade-in {isPresentationMode ? 'fixed inset-0 bg-gray-900 z-50 overflow-auto' : ''}">
@@ -199,7 +214,7 @@
 				{:else}
 					<div class="space-y-{isPresentationMode ? '6' : '4'}">
 						{#each sortedStudentProjects as projectTally, index (projectTally.project.id)}
-							{@const rank = index + 1}
+							{@const rank = getRank(sortedStudentProjects, index)}
 							<div class="{isPresentationMode ? 'bg-white/10 backdrop-blur rounded-xl p-6' : 'bg-white shadow rounded-xl p-6'}">
 								<div class="flex items-center gap-4">
 									<div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg {getRankBadgeClass(rank)}">
@@ -240,7 +255,7 @@
 				{:else}
 					<div class="space-y-{isPresentationMode ? '6' : '4'}">
 						{#each sortedParentProjects as projectTally, index (projectTally.project.id)}
-							{@const rank = index + 1}
+							{@const rank = getRank(sortedParentProjects, index)}
 							<div class="{isPresentationMode ? 'bg-white/10 backdrop-blur rounded-xl p-6' : 'bg-white shadow rounded-xl p-6'}">
 								<div class="flex items-center gap-4">
 									<div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg {getRankBadgeClass(rank)}">
