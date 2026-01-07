@@ -1,27 +1,28 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type EventResults, type ProjectTally } from '$lib/api/client';
-	import { getSessionId } from '$lib/utils/session';
 	import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	const eventId = $derived($page.params.id ?? '');
+
+	// Get session ID from server-provided data
+	const sessionId = data.adminSession?.id;
 
 	let event = $state<VoteEvent | null>(null);
 	let results = $state<EventResults | null>(null);
 	let error = $state<string | null>(null);
 	let isLoading = $state(true);
-	let sessionId = $state<string | null>(null);
 	let isPresentationMode = $state(false);
 	let autoRefresh = $state(false);
 	let refreshInterval: ReturnType<typeof setInterval> | null = null;
 
 	onMount(() => {
-		sessionId = getSessionId();
 		if (!sessionId) {
-			goto(urls.voteAdminLogin);
 			return;
 		}
 
@@ -60,15 +61,11 @@
 		if (showLoading) isLoading = false;
 
 		if (eventResponse.errors) {
-			if (eventResponse.status === 401) {
-				await goto(urls.voteAdminLogin);
-				return;
-			}
 			error = eventResponse.errors[0]?.message || 'Failed to load event';
 			return;
 		}
 
-		if (resultsResponse.errors && resultsResponse.status !== 401) {
+		if (resultsResponse.errors) {
 			error = resultsResponse.errors[0]?.message || 'Failed to load results';
 		}
 

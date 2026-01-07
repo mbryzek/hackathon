@@ -4,9 +4,14 @@
 	import { goto } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type EventStatus } from '$lib/api/client';
-	import { getSessionId } from '$lib/utils/session';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	const eventId = $derived($page.params.id ?? '');
+
+	// Get session ID from server-provided data
+	const sessionId = data.adminSession?.id;
 
 	let event = $state<VoteEvent | null>(null);
 	let name = $state('');
@@ -17,12 +22,9 @@
 	let isSubmitting = $state(false);
 	let isDeleting = $state(false);
 	let showDeleteConfirm = $state(false);
-	let sessionId = $state<string | null>(null);
 
 	onMount(async () => {
-		sessionId = getSessionId();
 		if (!sessionId) {
-			await goto(urls.voteAdminLogin);
 			return;
 		}
 
@@ -31,10 +33,6 @@
 		isLoading = false;
 
 		if (response.errors) {
-			if (response.status === 401) {
-				await goto(urls.voteAdminLogin);
-				return;
-			}
 			if (response.status === 404) {
 				error = 'Event not found';
 				return;
@@ -71,10 +69,6 @@
 		isSubmitting = false;
 
 		if (response.errors) {
-			if (response.status === 401) {
-				await goto(urls.voteAdminLogin);
-				return;
-			}
 			error = response.errors[0]?.message || 'Failed to update event';
 			return;
 		}
@@ -94,10 +88,6 @@
 		isDeleting = false;
 
 		if (response.errors) {
-			if (response.status === 401) {
-				await goto(urls.voteAdminLogin);
-				return;
-			}
 			error = response.errors[0]?.message || 'Failed to delete event';
 			showDeleteConfirm = false;
 			return;

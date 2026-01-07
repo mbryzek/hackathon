@@ -1,18 +1,19 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type EventStatus } from '$lib/api/client';
-	import { getSessionId } from '$lib/utils/session';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	let events = $state<VoteEvent[]>([]);
 	let isLoading = $state(true);
 	let error = $state<string | null>(null);
 
 	onMount(async () => {
-		const sessionId = getSessionId();
+		// Session is validated by the layout, so we know we have a session here
+		const sessionId = data.adminSession?.id;
 		if (!sessionId) {
-			await goto(urls.voteAdminLogin);
 			return;
 		}
 
@@ -21,10 +22,6 @@
 		isLoading = false;
 
 		if (response.errors) {
-			if (response.status === 401) {
-				await goto(urls.voteAdminLogin);
-				return;
-			}
 			error = response.errors[0]?.message || 'Failed to load events';
 			return;
 		}

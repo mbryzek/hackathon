@@ -1,42 +1,16 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
 	import { urls } from '$lib/urls';
-	import { adminApi } from '$lib/api/client';
-	import { setSessionCookie } from '$lib/utils/session';
+	import type { ActionData } from './$types';
 
-	let email = $state('');
+	let { form }: { form: ActionData } = $props();
+
+	let email = $state(form?.email || '');
 	let password = $state('');
-	let error = $state<string | null>(null);
 	let isSubmitting = $state(false);
 
-	async function handleSubmit(event: Event) {
-		event.preventDefault();
-		error = null;
-
-		if (!email.trim() || !password) {
-			error = 'Please enter your email and password';
-			return;
-		}
-
-		isSubmitting = true;
-
-		const response = await adminApi.login(email.trim(), password);
-
-		isSubmitting = false;
-
-		if (response.errors) {
-			error = response.errors[0]?.message || 'Login failed';
-			return;
-		}
-
-		if (response.data) {
-			// Store session in cookie (8 hours expiry)
-			setSessionCookie(response.data.session.id);
-
-			// Navigate to admin dashboard
-			await goto(urls.voteAdmin);
-		}
-	}
+	// Get error message from form errors
+	let error = $derived(form?.errors?.[0]?.message || null);
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -52,7 +26,17 @@
 				<p class="text-gray-600 mt-2">Sign in to manage voting events</p>
 			</div>
 
-			<form onsubmit={handleSubmit} class="space-y-6">
+			<form
+			method="POST"
+			use:enhance={() => {
+				isSubmitting = true;
+				return async ({ update }) => {
+					await update();
+					isSubmitting = false;
+				};
+			}}
+			class="space-y-6"
+		>
 				<div>
 					<label for="email" class="block text-sm font-medium text-gray-700 mb-2">
 						Email
@@ -60,6 +44,7 @@
 					<input
 						type="email"
 						id="email"
+						name="email"
 						bind:value={email}
 						placeholder="admin@example.com"
 						class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
@@ -75,6 +60,7 @@
 					<input
 						type="password"
 						id="password"
+						name="password"
 						bind:value={password}
 						placeholder="Enter your password"
 						class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"

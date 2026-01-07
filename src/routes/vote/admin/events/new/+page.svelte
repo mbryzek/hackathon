@@ -1,23 +1,19 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { adminApi, type EventStatus } from '$lib/api/client';
-	import { getSessionId } from '$lib/utils/session';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	let name = $state('');
 	let key = $state('');
 	let status = $state<EventStatus>('draft');
 	let error = $state<string | null>(null);
 	let isSubmitting = $state(false);
-	let sessionId = $state<string | null>(null);
 
-	onMount(async () => {
-		sessionId = getSessionId();
-		if (!sessionId) {
-			await goto(urls.voteAdminLogin);
-		}
-	});
+	// Get session ID from server-provided data
+	const sessionId = data.adminSession?.id;
 
 	// Auto-generate key from name
 	function handleNameChange() {
@@ -50,7 +46,6 @@
 		}
 
 		if (!sessionId) {
-			await goto(urls.voteAdminLogin);
 			return;
 		}
 
@@ -65,10 +60,6 @@
 		isSubmitting = false;
 
 		if (response.errors) {
-			if (response.status === 401) {
-				await goto(urls.voteAdminLogin);
-				return;
-			}
 			error = response.errors[0]?.message || 'Failed to create event';
 			return;
 		}

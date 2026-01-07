@@ -1,19 +1,22 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type Code, type VoterType } from '$lib/api/client';
-	import { getSessionId } from '$lib/utils/session';
 	import { MAX_CODES_PER_REQUEST, MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	const eventId = $derived($page.params.id ?? '');
+
+	// Get session ID from server-provided data
+	const sessionId = data.adminSession?.id;
 
 	let event = $state<VoteEvent | null>(null);
 	let codes = $state<Code[]>([]);
 	let error = $state<string | null>(null);
 	let isLoading = $state(true);
-	let sessionId = $state<string | null>(null);
 
 	// Generate form
 	let showGenerateForm = $state(false);
@@ -29,9 +32,7 @@
 	let deletingCodeId = $state<string | null>(null);
 
 	onMount(async () => {
-		sessionId = getSessionId();
 		if (!sessionId) {
-			await goto(urls.voteAdminLogin);
 			return;
 		}
 
@@ -56,10 +57,6 @@
 		isLoading = false;
 
 		if (eventResponse.errors) {
-			if (eventResponse.status === 401) {
-				await goto(urls.voteAdminLogin);
-				return;
-			}
 			error = eventResponse.errors[0]?.message || 'Failed to load event';
 			return;
 		}
