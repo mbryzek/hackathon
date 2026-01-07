@@ -16,7 +16,7 @@
 	let event = $state<VoteEvent | null>(null);
 	let name = $state('');
 	let key = $state('');
-	let status = $state<EventStatus>('draft');
+	let status = $state<EventStatus>(EventStatus.Draft);
 	let error = $state<string | null>(null);
 	let isLoading = $state(true);
 	let isSubmitting = $state(false);

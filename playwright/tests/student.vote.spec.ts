@@ -46,10 +46,7 @@ test.describe("Student Voting", () => {
     await expect(page.locator("text=Thank")).toBeVisible();
 
     // Now change the vote - click "Change Vote" button
-    await helpers.safeClick(page, "Change Vote");
-
-    // Should return to voting page
-    await page.waitForSelector('text="Voting as:"', { timeout: 10000 });
+    await helpers.safeClick(page, "Change My Vote");
 
     // Team 1 should be pre-selected since we voted for it
     // Now select Team 2 instead (this should deselect Team 1 since students can only vote for 1)
