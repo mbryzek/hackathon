@@ -10,3 +10,8 @@ code:
       generators:
         - generator: ts_sdk
           target: ./src/generated/vote-admin
+    playwright-vote:
+      version: latest
+      generators:
+        - generator: typescript
+          target: ./playwright/generated
