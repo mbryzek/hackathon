@@ -39,7 +39,7 @@
 	<footer class="bg-gray-800 mt-auto">
 		<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 			<p class="text-center text-gray-400 text-sm">
-				Bergen Tech Hackathon - Project Voting System
+				Bergen Tech Hackathon Project Voting
 			</p>
 		</div>
 	</footer>

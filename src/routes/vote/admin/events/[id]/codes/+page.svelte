@@ -18,6 +18,7 @@
 	let summary = $state<CodeSummary | null>(null);
 	let error = $state<string | null>(null);
 	let isLoading = $state(true);
+	let isSearching = $state(false);
 
 	// Generate form
 	let showGenerateForm = $state(false);
@@ -106,14 +107,19 @@
 		event = eventResponse.data || null;
 		summary = summaryResponse.data || null;
 
-		await loadCodes();
+		await loadCodes(true);
 		initialLoadComplete = true;
 	}
 
-	async function loadCodes() {
+	async function loadCodes(isInitialLoad = false) {
 		if (!sessionId) return;
 
-		isLoading = true;
+		// Use isLoading for initial load, isSearching for subsequent loads
+		if (isInitialLoad) {
+			isLoading = true;
+		} else {
+			isSearching = true;
+		}
 
 		const params: { voter_type?: VoterType; has_voted?: boolean; q?: string; limit?: number; offset?: number } = {
 			limit: PAGE_SIZE + 1, // Fetch one extra to check if there are more
@@ -126,6 +132,7 @@
 		const codesResponse = await adminApi.getCodes(sessionId, eventId, params);
 
 		isLoading = false;
+		isSearching = false;
 
 		if (codesResponse.errors) {
 			error = codesResponse.errors[0]?.message || 'Failed to load codes';
@@ -376,15 +383,24 @@
 		</div>
 
 		<!-- Codes list -->
-		{#if codes.length === 0}
-			<div class="bg-white shadow rounded-xl p-12 text-center">
-				<svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-				</svg>
-				<h3 class="text-lg font-semibold text-gray-900 mb-2">No codes yet</h3>
-				<p class="text-gray-600">Generate codes for voters to use.</p>
-			</div>
-		{:else}
+		<div class="relative">
+			{#if isSearching}
+				<div class="absolute inset-0 bg-white/70 flex items-center justify-center z-10 rounded-xl">
+					<svg class="animate-spin h-8 w-8 text-gray-600" viewBox="0 0 24 24">
+						<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
+						<path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+					</svg>
+				</div>
+			{/if}
+			{#if codes.length === 0}
+				<div class="bg-white shadow rounded-xl p-12 text-center">
+					<svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+					</svg>
+					<h3 class="text-lg font-semibold text-gray-900 mb-2">No codes yet</h3>
+					<p class="text-gray-600">Generate codes for voters to use.</p>
+				</div>
+			{:else}
 			<div class="bg-white shadow rounded-xl overflow-hidden">
 				<div class="overflow-x-auto">
 					<table class="min-w-full divide-y divide-gray-200">
@@ -478,6 +494,7 @@
 					</div>
 				</div>
 			</div>
-		{/if}
+			{/if}
+		</div>
 	{/if}
 </div>
