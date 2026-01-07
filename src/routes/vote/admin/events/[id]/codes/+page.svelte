@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type Code, type CodeSummary, type VoterType } from '$lib/api/client';
-	import { MAX_LIMIT_PER_REQUEST, MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
+	import { MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -28,6 +28,11 @@
 	// Filters
 	let filterVoterType = $state<VoterType | ''>('');
 	let filterHasVoted = $state<boolean | ''>('');
+
+	// Pagination
+	let currentOffset = $state(0);
+	let hasMoreCodes = $state(false);
+	const PAGE_SIZE = 50;
 
 	// Delete
 	let deletingCodeId = $state<string | null>(null);
@@ -61,38 +66,55 @@
 		event = eventResponse.data || null;
 		summary = summaryResponse.data || null;
 
-		// Load all codes with pagination
-		const allCodes: Code[] = [];
-		let offset = 0;
-		let hasMore = true;
+		await loadCodes();
+	}
 
-		while (hasMore) {
-			const params: { voter_type?: VoterType; has_voted?: boolean; limit?: number; offset?: number } = {
-				limit: MAX_LIMIT_PER_REQUEST,
-				offset,
-			};
-			if (filterVoterType) params.voter_type = filterVoterType;
-			if (filterHasVoted !== '') params.has_voted = filterHasVoted;
+	async function loadCodes() {
+		if (!sessionId) return;
 
-			const codesResponse = await adminApi.getCodes(sessionId, eventId, params);
+		isLoading = true;
 
-			if (codesResponse.errors) {
-				break;
-			}
+		const params: { voter_type?: VoterType; has_voted?: boolean; limit?: number; offset?: number } = {
+			limit: PAGE_SIZE + 1, // Fetch one extra to check if there are more
+			offset: currentOffset,
+		};
+		if (filterVoterType) params.voter_type = filterVoterType;
+		if (filterHasVoted !== '') params.has_voted = filterHasVoted;
 
-			const batch = codesResponse.data || [];
-			allCodes.push(...batch);
+		const codesResponse = await adminApi.getCodes(sessionId, eventId, params);
 
-			// If we got fewer than the limit, we've reached the end
-			if (batch.length < MAX_LIMIT_PER_REQUEST) {
-				hasMore = false;
-			} else {
-				offset += MAX_LIMIT_PER_REQUEST;
-			}
+		isLoading = false;
+
+		if (codesResponse.errors) {
+			error = codesResponse.errors[0]?.message || 'Failed to load codes';
+			return;
 		}
 
-		codes = allCodes;
-		isLoading = false;
+		const batch = codesResponse.data || [];
+
+		// Check if there are more codes
+		if (batch.length > PAGE_SIZE) {
+			hasMoreCodes = true;
+			codes = batch.slice(0, PAGE_SIZE);
+		} else {
+			hasMoreCodes = false;
+			codes = batch;
+		}
+	}
+
+	function nextPage() {
+		currentOffset += PAGE_SIZE;
+		loadCodes();
+	}
+
+	function prevPage() {
+		currentOffset = Math.max(0, currentOffset - PAGE_SIZE);
+		loadCodes();
+	}
+
+	function resetPagination() {
+		currentOffset = 0;
+		loadCodes();
 	}
 
 	async function handleGenerateCodes(evt: SubmitEvent) {
@@ -114,10 +136,11 @@
 			return;
 		}
 
-		if (response.data) {
-			codes = [...codes, ...response.data];
-			showGenerateForm = false;
-		}
+		showGenerateForm = false;
+		// Reload summary and codes
+		const summaryResponse = await adminApi.getCodeSummary(sessionId, eventId);
+		summary = summaryResponse.data || null;
+		await loadCodes();
 	}
 
 	async function deleteCode(codeId: string) {
@@ -135,7 +158,10 @@
 			return;
 		}
 
+		// Update local list and refresh summary
 		codes = codes.filter((c) => c.id !== codeId);
+		const summaryResponse = await adminApi.getCodeSummary(sessionId, eventId);
+		summary = summaryResponse.data || null;
 	}
 
 	function copyAllCodes() {
@@ -289,7 +315,7 @@
 					<select
 						id="filter-type"
 						bind:value={filterVoterType}
-						onchange={() => loadData()}
+						onchange={() => resetPagination()}
 						class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
 					>
 						<option value="">All</option>
@@ -304,7 +330,7 @@
 					<select
 						id="filter-voted"
 						bind:value={filterHasVoted}
-						onchange={() => loadData()}
+						onchange={() => resetPagination()}
 						class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
 					>
 						<option value="">All</option>
@@ -391,6 +417,31 @@
 							{/each}
 						</tbody>
 					</table>
+				</div>
+
+				<!-- Pagination -->
+				<div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+					<div class="text-sm text-gray-600">
+						Showing {currentOffset + 1} - {currentOffset + codes.length}
+					</div>
+					<div class="flex gap-2">
+						<button
+							type="button"
+							onclick={prevPage}
+							disabled={currentOffset === 0}
+							class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+						>
+							Previous
+						</button>
+						<button
+							type="button"
+							onclick={nextPage}
+							disabled={!hasMoreCodes}
+							class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+						>
+							Next
+						</button>
+					</div>
 				</div>
 			</div>
 		{/if}
