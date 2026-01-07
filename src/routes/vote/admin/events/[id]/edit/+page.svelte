@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { urls } from '$lib/urls';
-	import { adminApi, type VoteEvent, type EventStatus } from '$lib/api/client';
+	import { adminApi, type VoteEvent, EventStatus } from '$lib/api/client';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

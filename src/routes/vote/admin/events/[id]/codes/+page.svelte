@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { adminApi, type VoteEvent, type Code, type CodeSummary, type VoterType } from '$lib/api/client';
+	import { adminApi, type VoteEvent, type Code, type CodeSummary, VoterType } from '$lib/api/client';
 	import { MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
 	import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
 	import type { PageData } from './$types';
@@ -22,7 +22,7 @@
 
 	// Generate form
 	let showGenerateForm = $state(false);
-	let generateVoterType = $state<VoterType>('student');
+	let generateVoterType = $state<VoterType>(VoterType.Student);
 	let generateCount = $state(10);
 	let isGenerating = $state(false);
 
