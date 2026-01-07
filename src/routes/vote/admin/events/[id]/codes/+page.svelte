@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type Code, type CodeSummary, type VoterType } from '$lib/api/client';
 	import { MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
+	import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -38,6 +38,45 @@
 	// Delete
 	let deletingCodeId = $state<string | null>(null);
 
+	// Track if initial data has been loaded (to enable debounced search)
+	let initialLoadComplete = $state(false);
+
+	// Debounced search - auto-search after 250ms of no typing
+	let previousQuery = '';
+	let searchSequence = 0;
+	$effect(() => {
+		// Track filterQuery changes
+		const query = filterQuery;
+
+		// Only enable debounced search after initial load is complete
+		if (!initialLoadComplete) {
+			return;
+		}
+
+		// Skip if query hasn't changed
+		if (query === previousQuery) {
+			return;
+		}
+
+		// Increment sequence to handle race conditions
+		const currentSequence = ++searchSequence;
+
+		// Set new timer to trigger search after 250ms
+		const currentTimer = setTimeout(() => {
+			// Only proceed if this is still the latest search request
+			if (sessionId && currentSequence === searchSequence) {
+				previousQuery = query;
+				currentOffset = 0;
+				loadCodes();
+			}
+		}, 250);
+
+		// Cleanup: capture timer in closure to clear the correct timer
+		return () => {
+			clearTimeout(currentTimer);
+		};
+	});
+
 	onMount(async () => {
 		if (!sessionId) {
 			return;
@@ -68,6 +107,7 @@
 		summary = summaryResponse.data || null;
 
 		await loadCodes();
+		initialLoadComplete = true;
 	}
 
 	async function loadCodes() {
@@ -169,18 +209,7 @@
 	</script>
 
 <div class="animate-fade-in">
-	<div class="mb-8">
-		<a href={urls.voteAdminEvent(eventId)} class="text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 transition-colors">
-			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-			</svg>
-			Back to Event
-		</a>
-		<h1 class="text-2xl font-bold text-gray-900 mt-4">
-			{event?.name || 'Loading...'} - Voting Codes
-		</h1>
-		<p class="text-gray-600 mt-1">Generate and manage voting codes</p>
-	</div>
+	<EventAdminTabs {eventId} eventName={event?.name} activeTab="codes" />
 
 	{#if error}
 		<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">

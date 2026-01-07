@@ -116,14 +116,17 @@
 							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 								Created
 							</th>
-							<th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-								Actions
-							</th>
 						</tr>
 					</thead>
 					<tbody class="bg-white divide-y divide-gray-200">
 						{#each events as event (event.id)}
-							<tr class="hover:bg-gray-50 transition-colors">
+							<tr
+								class="hover:bg-gray-50 transition-colors cursor-pointer"
+								onclick={() => goto(urls.voteAdminEvent(event.id))}
+								onkeydown={(e) => e.key === 'Enter' && goto(urls.voteAdminEvent(event.id))}
+								tabindex="0"
+								role="link"
+							>
 								<td class="px-6 py-4 whitespace-nowrap">
 									<div class="font-medium text-gray-900">{event.name}</div>
 								</td>
@@ -137,50 +140,6 @@
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 									{formatDate(event.created_at)}
-								</td>
-								<td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-									<div class="flex items-center justify-end gap-2">
-										<a
-											href={urls.voteAdminEvent(event.id)}
-											class="text-gray-600 hover:text-gray-900 transition-colors"
-											title="Edit event"
-											aria-label="Edit event {event.name}"
-										>
-											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-											</svg>
-										</a>
-										<a
-											href={urls.voteAdminEventProjects(event.id)}
-											class="text-gray-600 hover:text-gray-900 transition-colors"
-											title="Manage projects"
-											aria-label="Manage projects for {event.name}"
-										>
-											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-											</svg>
-										</a>
-										<a
-											href={urls.voteAdminEventCodes(event.id)}
-											class="text-gray-600 hover:text-gray-900 transition-colors"
-											title="Manage codes"
-											aria-label="Manage voting codes for {event.name}"
-										>
-											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-											</svg>
-										</a>
-										<a
-											href={urls.voteAdminEventResults(event.id)}
-											class="text-gray-600 hover:text-gray-900 transition-colors"
-											title="View results"
-											aria-label="View results for {event.name}"
-										>
-											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-											</svg>
-										</a>
-									</div>
 								</td>
 							</tr>
 						{/each}

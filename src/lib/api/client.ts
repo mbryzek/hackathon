@@ -280,13 +280,14 @@ export const adminApi = {
 	async getCodes(
 		sessionId: string,
 		eventId: string,
-		params?: { voter_type?: VoterType; has_voted?: boolean; limit?: number; offset?: number }
+		params?: { voter_type?: VoterType; has_voted?: boolean; q?: string; limit?: number; offset?: number }
 	): Promise<ApiResponse<Code[]>> {
 		const response = await voteAdminClient.codes.get({
 			headers: getAuthHeaders(sessionId),
 			event_id: eventId,
 			voter_type: params?.voter_type,
 			has_voted: params?.has_voted,
+			q: params?.q,
 			limit: params?.limit,
 			offset: params?.offset,
 		});

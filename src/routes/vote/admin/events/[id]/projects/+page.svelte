@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type Project } from '$lib/api/client';
+	import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -149,18 +149,7 @@
 </script>
 
 <div class="animate-fade-in">
-	<div class="mb-8">
-		<a href={urls.voteAdminEvent(eventId)} class="text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 transition-colors">
-			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-			</svg>
-			Back to Event
-		</a>
-		<h1 class="text-2xl font-bold text-gray-900 mt-4">
-			{event?.name || 'Loading...'} - Projects
-		</h1>
-		<p class="text-gray-600 mt-1">Manage projects that voters can select</p>
-	</div>
+	<EventAdminTabs {eventId} eventName={event?.name} activeTab="projects" />
 
 	{#if error}
 		<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">

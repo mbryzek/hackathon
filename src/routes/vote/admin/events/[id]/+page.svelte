@@ -83,15 +83,8 @@
 	}
 </script>
 
-<div class="animate-fade-in max-w-2xl mx-auto">
-	<div class="mb-8">
-		<a href={urls.voteAdmin} class="text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 transition-colors">
-			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-			</svg>
-			Back to Events
-		</a>
-	</div>
+<div class="animate-fade-in">
+	<EventAdminTabs {eventId} eventName={event?.name} activeTab="event" />
 
 	{#if isLoading}
 		<div class="flex items-center justify-center py-12">
@@ -101,25 +94,6 @@
 			</svg>
 		</div>
 	{:else if event}
-		<!-- Event Header -->
-		<div class="flex items-start justify-between mb-6">
-			<div>
-				<h1 class="text-2xl font-bold text-gray-900">{event.name}</h1>
-				<p class="text-gray-500 mt-1">
-					<code class="bg-gray-100 px-2 py-1 rounded text-sm">/vote/{event.key}</code>
-				</p>
-			</div>
-			<a
-				href="{urls.voteAdminEvent(eventId)}/edit"
-				class="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors"
-			>
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-				</svg>
-				Edit
-			</a>
-		</div>
-
 		{#if error}
 			<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
 				{error}
@@ -128,6 +102,18 @@
 
 		<!-- Event Details -->
 		<div class="bg-white shadow rounded-xl p-6 mb-6">
+			<div class="flex items-center justify-between mb-4">
+				<h2 class="text-lg font-semibold text-gray-900">Event Details</h2>
+				<a
+					href="{urls.voteAdminEvent(eventId)}/edit"
+					class="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors"
+				>
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+					</svg>
+					Edit
+				</a>
+			</div>
 			<dl class="divide-y divide-gray-200">
 				<div class="py-4 first:pt-0">
 					<dt class="text-sm font-medium text-gray-500">Status</dt>
@@ -158,40 +144,6 @@
 					<dd class="mt-1 text-gray-900">{formatDate(event.updated_at)}</dd>
 				</div>
 			</dl>
-		</div>
-
-		<!-- Quick Actions -->
-		<div class="bg-white shadow rounded-xl p-6 mb-6">
-			<h2 class="text-lg font-semibold text-gray-900 mb-4">Manage</h2>
-			<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-				<a
-					href={urls.voteAdminEventProjects(eventId)}
-					class="flex items-center gap-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-				>
-					<svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-					</svg>
-					<span class="font-medium text-gray-900">Projects</span>
-				</a>
-				<a
-					href={urls.voteAdminEventCodes(eventId)}
-					class="flex items-center gap-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-				>
-					<svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-					</svg>
-					<span class="font-medium text-gray-900">Codes</span>
-				</a>
-				<a
-					href={urls.voteAdminEventResults(eventId)}
-					class="flex items-center gap-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-				>
-					<svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-					</svg>
-					<span class="font-medium text-gray-900">Results</span>
-				</a>
-			</div>
 		</div>
 
 		<!-- Danger Zone -->

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent, type EventResults, type ProjectTally } from '$lib/api/client';
 	import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
+	import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -122,17 +122,7 @@
 
 <div class="animate-fade-in {isPresentationMode ? 'fixed inset-0 bg-gray-900 z-50 overflow-auto' : ''}">
 	{#if !isPresentationMode}
-		<div class="mb-8">
-			<a href={urls.voteAdminEvent(eventId)} class="text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 transition-colors">
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-				</svg>
-				Back to Event
-			</a>
-			<h1 class="text-2xl font-bold text-gray-900 mt-4">
-				{event?.name || 'Loading...'} - Results
-			</h1>
-		</div>
+		<EventAdminTabs {eventId} eventName={event?.name} activeTab="results" />
 	{/if}
 
 	{#if error}
