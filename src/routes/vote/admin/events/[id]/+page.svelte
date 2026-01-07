@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent } from '$lib/api/client';
 	import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
@@ -32,6 +32,11 @@
 		isLoading = false;
 
 		if (response.errors) {
+			if (response.status === 401) {
+				await invalidateAll();
+				await goto(urls.voteAdminLogin);
+				return;
+			}
 			if (response.status === 404) {
 				error = 'Event not found';
 				return;
