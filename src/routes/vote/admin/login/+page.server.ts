@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { SESSION_COOKIE, config } from '$lib/config';
-import { createClient } from '$generated/vote-admin/vote-admin';
+import { createClient } from '$generated/vote-admin';
 
 // Create server-side API client
 const PRODUCTION_API_HOST = 'https://api.bthackathon.com';

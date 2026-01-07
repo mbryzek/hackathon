@@ -7,7 +7,7 @@ import {
 	type ProjectVote,
 	type EventStatus,
 	type VoterType,
-} from '$generated/vote-api/vote-api';
+} from '$generated/vote-api';
 import {
 	createClient as createVoteAdminClient,
 	type AdminSession,
@@ -19,7 +19,7 @@ import {
 	type CodeGenerateForm,
 	type Tally,
 	type ProjectTally,
-} from '$generated/vote-admin/vote-admin';
+} from '$generated/vote-admin';
 
 // Re-export types for use in components
 export type {
