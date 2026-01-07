@@ -103,7 +103,7 @@
 
 	function handleCodeInput(evt: globalThis.Event) {
 		const input = evt.target as HTMLInputElement;
-		code = input.value.replace(/\D/g, '');
+		code = input.value;
 	}
 
 	const canSubmit = $derived(
@@ -128,7 +128,7 @@
 			<div class="text-center mb-8">
 				<h1 class="text-2xl font-bold text-gray-900 mb-2">Enter Your Code</h1>
 				<p class="text-gray-600">
-					Enter your 6-digit voting code to continue.
+					Enter your voting code to continue.
 				</p>
 			</div>
 
@@ -142,9 +142,8 @@
 						id="code"
 						value={code}
 						oninput={handleCodeInput}
-						placeholder="123456"
+						placeholder="ABC123"
 						class="w-full px-4 py-3 text-2xl text-center font-mono tracking-widest border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
-						inputmode="numeric"
 						autocomplete="off"
 						disabled={isVerifying}
 					/>

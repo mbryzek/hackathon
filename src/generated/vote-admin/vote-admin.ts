@@ -507,6 +507,7 @@ export interface CodesGetParameters {
   event_id: string;
   voter_type?: com.bryzek.vote.api.v0.enums.VoterType;
   has_voted?: boolean;
+  q?: string;
   limit?: number;
   offset?: number;
 }
@@ -661,6 +662,7 @@ export class CodesResource extends $Resource {
         has_voted: params.has_voted,
         limit: params.limit,
         offset: params.offset,
+        q: params.q,
         voter_type: params.voter_type,
       },
     });

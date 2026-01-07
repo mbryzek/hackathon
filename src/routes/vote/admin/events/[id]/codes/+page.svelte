@@ -28,6 +28,7 @@
 	// Filters
 	let filterVoterType = $state<VoterType | ''>('');
 	let filterHasVoted = $state<boolean | ''>('');
+	let filterQuery = $state('');
 
 	// Pagination
 	let currentOffset = $state(0);
@@ -74,12 +75,13 @@
 
 		isLoading = true;
 
-		const params: { voter_type?: VoterType; has_voted?: boolean; limit?: number; offset?: number } = {
+		const params: { voter_type?: VoterType; has_voted?: boolean; q?: string; limit?: number; offset?: number } = {
 			limit: PAGE_SIZE + 1, // Fetch one extra to check if there are more
 			offset: currentOffset,
 		};
 		if (filterVoterType) params.voter_type = filterVoterType;
 		if (filterHasVoted !== '') params.has_voted = filterHasVoted;
+		if (filterQuery.trim()) params.q = filterQuery.trim();
 
 		const codesResponse = await adminApi.getCodes(sessionId, eventId, params);
 
@@ -162,11 +164,6 @@
 		codes = codes.filter((c) => c.id !== codeId);
 		const summaryResponse = await adminApi.getCodeSummary(sessionId, eventId);
 		summary = summaryResponse.data || null;
-	}
-
-	function copyAllCodes() {
-		const codeText = codes.map((c) => c.code).join('\n');
-		navigator.clipboard.writeText(codeText);
 	}
 
 	</script>
@@ -289,18 +286,6 @@
 						</svg>
 						Generate Codes
 					</button>
-					{#if codes.length > 0}
-						<button
-							type="button"
-							onclick={copyAllCodes}
-							class="inline-flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors"
-						>
-							<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
-							</svg>
-							Copy All Codes
-						</button>
-					{/if}
 				</div>
 			{/if}
 		</div>
@@ -308,6 +293,19 @@
 		<!-- Filters -->
 		<div class="bg-white shadow rounded-xl p-4 mb-6">
 			<div class="flex flex-wrap gap-4 items-end">
+				<div class="flex-1 min-w-48">
+					<label for="filter-search" class="block text-sm font-medium text-gray-700 mb-2">
+						Search
+					</label>
+					<input
+						type="text"
+						id="filter-search"
+						bind:value={filterQuery}
+						onkeydown={(e) => e.key === 'Enter' && resetPagination()}
+						placeholder="Search codes..."
+						class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+					/>
+				</div>
 				<div>
 					<label for="filter-type" class="block text-sm font-medium text-gray-700 mb-2">
 						Voter Type
@@ -338,6 +336,13 @@
 						<option value={false}>Unused</option>
 					</select>
 				</div>
+				<button
+					type="button"
+					onclick={() => resetPagination()}
+					class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition-colors"
+				>
+					Search
+				</button>
 			</div>
 		</div>
 

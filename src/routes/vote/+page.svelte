@@ -43,9 +43,7 @@
 
 	function handleCodeInput(evt: globalThis.Event) {
 		const input = evt.target as HTMLInputElement;
-		let value = input.value.replace(/\D/g, '');
-		value = value.slice(0, 6);
-		code = value;
+		code = input.value;
 	}
 
 	async function handleSubmit(evt: globalThis.Event) {
@@ -53,11 +51,6 @@
 
 		if (!selectedEvent) {
 			error = 'Please select an event';
-			return;
-		}
-
-		if (code.length !== 6) {
-			error = 'Please enter a 6-digit code';
 			return;
 		}
 
@@ -145,7 +138,7 @@
 					Back to events
 				</button>
 				<h1 class="text-2xl font-bold text-gray-900 mb-2">{selectedEvent.name}</h1>
-				<p class="text-gray-600">Enter your 6-digit voting code to continue.</p>
+				<p class="text-gray-600">Enter your voting code to continue.</p>
 			</div>
 
 			<form onsubmit={handleSubmit} class="space-y-6">
@@ -158,15 +151,13 @@
 						id="code"
 						value={code}
 						oninput={handleCodeInput}
-						placeholder="123456"
+						placeholder="ABC123"
 						class="w-full px-4 py-3 text-2xl text-center font-mono tracking-widest border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
-						inputmode="numeric"
-						maxlength="6"
 						autocomplete="off"
 						disabled={isSubmitting}
 					/>
 					<p class="mt-2 text-sm text-gray-500 text-center">
-						Enter the 6-digit code from your voting card
+						Enter the code from your voting card
 					</p>
 				</div>
 
