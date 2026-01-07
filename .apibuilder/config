@@ -4,12 +4,14 @@ code:
       version: latest
       generators:
         - generator: ts_sdk
-          target: ./src/generated/vote-api
+          target: ./src/generated
+        - generator: ts_sdk
+          target: ./playwright/generated
     vote-admin:
       version: latest
       generators:
         - generator: ts_sdk
-          target: ./src/generated/vote-admin
+          target: ./src/generated
     playwright-vote:
       version: latest
       generators:
