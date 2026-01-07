@@ -24,11 +24,6 @@
 	});
 
 	async function verifyCode() {
-		if (!code || code.length !== 6) {
-			error = 'Please enter a valid 6-digit code';
-			return;
-		}
-
 		error = null;
 		isVerifying = true;
 
@@ -108,9 +103,7 @@
 
 	function handleCodeInput(evt: globalThis.Event) {
 		const input = evt.target as HTMLInputElement;
-		let value = input.value.replace(/\D/g, '');
-		value = value.slice(0, 6);
-		code = value;
+		code = input.value.replace(/\D/g, '');
 	}
 
 	const canSubmit = $derived(
@@ -152,7 +145,6 @@
 						placeholder="123456"
 						class="w-full px-4 py-3 text-2xl text-center font-mono tracking-widest border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
 						inputmode="numeric"
-						maxlength="6"
 						autocomplete="off"
 						disabled={isVerifying}
 					/>
@@ -166,7 +158,7 @@
 
 				<button
 					type="submit"
-					disabled={isVerifying || code.length !== 6}
+					disabled={isVerifying}
 					class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
 				>
 					{#if isVerifying}

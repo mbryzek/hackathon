@@ -282,7 +282,7 @@ export class $Resource {
   }
 }
 
-export interface EventsGetAllAndActiveParameters {
+export interface EventsGetAllAndOpenParameters {
   headers?: $HttpHeaders;
 }
 
@@ -298,14 +298,14 @@ export interface VotesPostParameters {
   event_key: string;
 }
 
-export type EventsGetAllAndActiveResponse = $HttpOk<com.bryzek.vote.api.v0.models.Event[]>;
+export type EventsGetAllAndOpenResponse = $HttpOk<com.bryzek.vote.api.v0.models.Event[]>;
 export type VotesPostCodeAndVerificationsResponse = $HttpOk<com.bryzek.vote.api.v0.models.Vote> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type VotesPostResponse = $HttpOk<com.bryzek.vote.api.v0.models.Vote> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 
 export class EventsResource extends $Resource {
-  public getAllAndActive(params: EventsGetAllAndActiveParameters = {}): Promise<EventsGetAllAndActiveResponse> {
+  public getAllAndOpen(params: EventsGetAllAndOpenParameters = {}): Promise<EventsGetAllAndOpenResponse> {
     return this.client.request({
-      endpoint: '/vote/events/all/active',
+      endpoint: '/vote/events/all/open',
       headers: params.headers,
       method: 'GET',
     });

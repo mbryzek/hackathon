@@ -105,9 +105,9 @@ const voteAdminClient = createApiClient(createVoteAdminClient);
 
 // Public API client
 export const voteApi = {
-	async getActiveProjects(eventId: string): Promise<ApiResponse<Project[]>> {
-		const response = await voteApiClient.projects.getAllAndActiveByEventId({ event_id: eventId });
-		return toApiResponse<Project[]>(response);
+	async getOpenEvents(): Promise<ApiResponse<Event[]>> {
+		const response = await voteApiClient.events.getAllAndOpen({});
+		return toApiResponse<Event[]>(response);
 	},
 
 	async verifyCode(eventKey: string, code: string): Promise<ApiResponse<Vote>> {

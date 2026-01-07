@@ -5,8 +5,15 @@
 
 	let { form }: { form: ActionData } = $props();
 
-	let email = $state(form?.email || '');
+	let email = $state('');
 	let password = $state('');
+
+	// Sync email from form data when it changes
+	$effect(() => {
+		if (form?.email) {
+			email = form.email;
+		}
+	});
 	let isSubmitting = $state(false);
 
 	// Get error message from form errors

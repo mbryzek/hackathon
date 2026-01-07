@@ -10,7 +10,7 @@
 	const eventId = $derived($page.params.id ?? '');
 
 	// Get session ID from server-provided data
-	const sessionId = data.adminSession?.id;
+	const sessionId = $derived(data.adminSession?.id);
 
 	let event = $state<VoteEvent | null>(null);
 	let projects = $state<Project[]>([]);
