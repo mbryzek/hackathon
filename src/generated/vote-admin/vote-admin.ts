@@ -232,8 +232,12 @@ declare namespace com.bryzek.vote.admin.v0.models {
 
   interface CodeSummary {
     readonly 'total': number;
-    readonly 'student': number;
-    readonly 'parent': number;
+    readonly 'student': com.bryzek.vote.admin.v0.models.CodeSummaryType;
+    readonly 'parent': com.bryzek.vote.admin.v0.models.CodeSummaryType;
+  }
+
+  interface CodeSummaryType {
+    readonly 'codes': number;
     readonly 'votes': number;
   }
 
@@ -273,6 +277,7 @@ export type AdminSession = com.bryzek.vote.admin.v0.models.AdminSession;
 export type Code = com.bryzek.vote.admin.v0.models.Code;
 export type CodeGenerateForm = com.bryzek.vote.admin.v0.models.CodeGenerateForm;
 export type CodeSummary = com.bryzek.vote.admin.v0.models.CodeSummary;
+export type CodeSummaryType = com.bryzek.vote.admin.v0.models.CodeSummaryType;
 export type EventForm = com.bryzek.vote.admin.v0.models.EventForm;
 export type EventResults = com.bryzek.vote.admin.v0.models.EventResults;
 export type ProjectForm = com.bryzek.vote.admin.v0.models.ProjectForm;

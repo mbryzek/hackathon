@@ -174,22 +174,26 @@
 		</div>
 	{:else}
 		<!-- Stats -->
-		<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+		<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
 			<div class="bg-white shadow rounded-xl p-4 text-center">
 				<div class="text-3xl font-bold text-gray-900">{summary?.total ?? 0}</div>
 				<div class="text-sm text-gray-600">Total Codes</div>
 			</div>
 			<div class="bg-white shadow rounded-xl p-4 text-center">
-				<div class="text-3xl font-bold text-blue-600">{summary?.student ?? 0}</div>
+				<div class="text-3xl font-bold text-blue-600">{summary?.student.codes ?? 0}</div>
 				<div class="text-sm text-gray-600">Student Codes</div>
 			</div>
 			<div class="bg-white shadow rounded-xl p-4 text-center">
-				<div class="text-3xl font-bold text-purple-600">{summary?.parent ?? 0}</div>
+				<div class="text-3xl font-bold text-blue-600">{summary?.student.votes ?? 0}</div>
+				<div class="text-sm text-gray-600">Student Votes</div>
+			</div>
+			<div class="bg-white shadow rounded-xl p-4 text-center">
+				<div class="text-3xl font-bold text-purple-600">{summary?.parent.codes ?? 0}</div>
 				<div class="text-sm text-gray-600">Parent Codes</div>
 			</div>
 			<div class="bg-white shadow rounded-xl p-4 text-center">
-				<div class="text-3xl font-bold text-green-600">{summary?.votes ?? 0}</div>
-				<div class="text-sm text-gray-600">Votes Cast</div>
+				<div class="text-3xl font-bold text-purple-600">{summary?.parent.votes ?? 0}</div>
+				<div class="text-sm text-gray-600">Parent Votes</div>
 			</div>
 		</div>
 
