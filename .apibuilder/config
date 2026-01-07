@@ -3,10 +3,10 @@ code:
     vote-api:
       version: latest
       generators:
-        - generator: ts_sdk
+        - generator: typescript
           target: ./src/generated
     vote-admin:
       version: latest
       generators:
-        - generator: ts_sdk
+        - generator: typescript
           target: ./src/generated
