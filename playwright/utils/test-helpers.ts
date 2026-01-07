@@ -7,129 +7,17 @@ import fs from "fs";
 import path from "path";
 import type { Page } from "@playwright/test";
 import { config } from "../config";
-import type {
-  TenantSession,
-  TestGame,
-  TestGameForm,
-  GuestConnection,
-  WaitForElementOptions,
-  ContextOrPage,
-} from "../types";
-import { TestGameStatus } from "../types";
-import { ApiClient } from "../generated/com-bryzek-playwright-v0";
-
-// Re-export TestGameStatus for convenience
-export { TestGameStatus };
-import type { Player } from "../../src/generated/com-bryzek-privatedinkers-api-v0";
+import type { WaitForElementOptions, ContextOrPage } from "../types";
+import {
+  ApiClient,
+  TestEvent,
+  TestEventForm,
+} from "../generated/com-bryzek-playwright-vote-v0";
 
 /**
  * Generated API client instance for playwright endpoints
  */
 const apiClient = new ApiClient(config.BACKEND_BASE_URL);
-
-/**
- * UUID cache for batch fetching - reduces API calls
- */
-const uuidCache: string[] = [];
-const UUID_BATCH_SIZE = 10;
-
-/**
- * Generate a random UUID via the backend API
- * Uses batched fetching to reduce API calls
- */
-export async function generateUUID(): Promise<string> {
-  if (uuidCache.length === 0) {
-    const uuids = await apiClient.createPlaywrightsUuids({
-      tenantId: config.COMMUNITY_ID,
-      number_: UUID_BATCH_SIZE,
-    });
-    uuidCache.push(...uuids);
-  }
-  return uuidCache.pop()!;
-}
-
-/**
- * Generate a random email using UUID from backend API
- */
-export async function generateRandomEmailAsync(): Promise<string> {
-  const uuid = await generateUUID();
-  return `playwright-${uuid}@${config.TestEmailDomain}`;
-}
-
-/**
- * API Helper: Clean up test users
- * Deletes test users from the database via the cleanup API endpoint
- * @param emails - Single email or array of emails to delete
- * @param sync - If true, server will synchronously delete the user
- */
-export async function cleanupTestUsers(
-  emails: string | string[],
-  sync: boolean = false,
-): Promise<void> {
-  // Convert single email to array for consistent handling
-  const emailArray = Array.isArray(emails) ? emails : [emails];
-
-  try {
-    await apiClient.deletePlaywrightUsers({
-      tenantId: config.COMMUNITY_ID,
-      body: { emails: emailArray },
-      sync,
-    });
-  } catch (error) {
-    console.log(`ℹ️  Cleanup response Failed: ${error}`);
-  }
-}
-
-/**
- * API Helper: Create user and session directly via API
- * Performance optimization to avoid UI-based login flow
- * Creates a new random test user each time with no parameters needed
- */
-export async function createUserSession(): Promise<TenantSession> {
-  return apiClient.createPlaywrightUsersAndSession(config.COMMUNITY_ID);
-}
-
-/**
- * API Helper: Create test player invitation
- * Creates a player invitation in "invited" status for testing player flows
- * Returns a Player object with id that can be used to test acceptance/decline
- */
-export async function createTestPlayer(): Promise<Player> {
-  return apiClient.createPlaywrightPlayers(config.COMMUNITY_ID);
-}
-
-/**
- * API Helper: Get password reset token for a user
- */
-export async function getPasswordResetToken(email: string): Promise<string> {
-  const result = await apiClient.getPlaywrightPasswordAndResetAndTokenByEmail({
-    tenantId: config.COMMUNITY_ID,
-    email,
-  });
-  return result.token;
-}
-
-/**
- * Set session cookie in browser context
- */
-export async function setSessionCookie(
-  context: ContextOrPage,
-  sessionId: string,
-): Promise<void> {
-  const cookieContext = "context" in context ? context.context() : context;
-
-  await cookieContext.addCookies([
-    {
-      name: "session_id",
-      value: sessionId,
-      domain: "localhost",
-      path: "/",
-      httpOnly: false,
-      secure: false,
-      sameSite: "Lax",
-    },
-  ]);
-}
 
 /**
  * Take screenshot with timestamp
@@ -356,103 +244,20 @@ export async function checkForErrors(page: Page): Promise<string[]> {
 }
 
 /**
- * API Helper: Create test game directly via API
- * Performance optimization to avoid UI-based game creation flow
- * Creates a new game with sensible defaults, optionally with players
- *
- * @example
- *   // Create upcoming game without players
- *   const { game, players } = await createGame();
- *
- *   // Create past game for review testing
- *   const { game, players } = await createGame({ status: TestGameStatus.Past });
- *
- *   // Create game with one invited player
- *   const { game, players } = await createGame({
- *     players: [{ status: PlayerStatus.Invited }]
- *   });
- *
- *   // Create game with players in various states
- *   const { game, players } = await createGame({
- *     players: [
- *       { status: PlayerStatus.Invited },
- *       { status: PlayerStatus.Accepted },
- *       { status: PlayerStatus.Declined }
- *     ]
- *   });
- *
- *   // Create mixed game with couple (male and female players)
- *   const { game, players } = await createGame({
- *     game_type: GameType.Mixed,
- *     players: [
- *       { status: PlayerStatus.Accepted, gender: Gender.Male },
- *       { status: PlayerStatus.Accepted, gender: Gender.Female }
- *     ]
- *   });
- *
- *   // Create past game with organizer as accepted player (for review testing)
- *   const { game, players } = await createGame({
- *     status: TestGameStatus.Past,
- *     add_user_to_game: true
- *   });
+ * API Helper: Create test event directly via API
  */
-export async function createGame(
-  options: Partial<TestGameForm> = {},
-): Promise<TestGame> {
-  const {
-    status = TestGameStatus.Upcoming,
-    players = [],
-    created_by_user_id,
-    add_user_to_game = false,
-    game_type,
-  } = options;
+export async function createTestEvent(
+  options: Partial<TestEventForm> = {},
+): Promise<TestEvent> {
+  const { number_students = 0, number_parents = 0 } = options;
 
-  return apiClient.createPlaywrightGames({
-    tenantId: config.COMMUNITY_ID,
+  return apiClient.createPlaywrightVoteEvents({
+    tenantId: config.TENANT_ID,
     body: {
-      status,
-      players,
-      created_by_user_id,
-      add_user_to_game,
-      ...(game_type ? { game_type } : {}),
+      number_parents,
+      number_students,
     },
   });
-}
-
-/**
- * Result of creating a guest connection
- */
-export interface CreateGuestConnectionResult {
-  guestConnection: GuestConnection;
-  email: string;
-}
-
-/**
- * API Helper: Create guest connection directly via API
- * Creates a guest connection for the specified user
- * Throws an error if the created guest connection does not have an email
- *
- * @example
- *   const { guestConnection, email } = await createGuestConnection(userId);
- *   console.log(email);
- */
-export async function createGuestConnection(
-  userId: string,
-): Promise<CreateGuestConnectionResult> {
-  const guestConnection =
-    await apiClient.createPlaywrightConnectionsAndGuest({
-      tenantId: config.COMMUNITY_ID,
-      body: { user_id: userId },
-    });
-
-  if (!guestConnection.guest.email) {
-    throw new Error("Guest connection was created without an email address");
-  }
-
-  return {
-    guestConnection,
-    email: guestConnection.guest.email,
-  };
 }
 
 /**

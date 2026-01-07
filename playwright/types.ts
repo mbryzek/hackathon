@@ -5,51 +5,6 @@
 
 import type { BrowserContext, Page } from "@playwright/test";
 
-// Import from generated API types
-import type {
-  TenantSession,
-  User,
-} from "../src/generated/com-bryzek-platform-v0";
-import type {
-  TestGame,
-  TestGameForm,
-  DeleteTestUsersForm,
-  PlaywrightPasswordResetToken,
-  TestGuestConnectionForm,
-} from "./generated/com-bryzek-playwright-v0";
-import { TestGameStatus } from "./generated/com-bryzek-playwright-v0";
-
-// Import from API error handler
-import type { ApiResponse } from "../src/lib/api/error-handler";
-
-// Import GuestConnection from main app generated types
-import type { GuestConnection } from "../src/generated/com-bryzek-privatedinkers-api-v0";
-
-// Re-export generated types for convenience
-export type {
-  TenantSession,
-  User,
-  TestGame,
-  TestGameForm,
-  DeleteTestUsersForm,
-  PlaywrightPasswordResetToken,
-  TestGuestConnectionForm,
-  GuestConnection,
-  ApiResponse,
-};
-
-export { TestGameStatus };
-
-/**
- * Test game configuration (for form filling in UI tests)
- */
-export interface TestGameData {
-  location: string;
-  duration: number;
-  numCourts: number;
-  desiredNumPlayers: number;
-}
-
 /**
  * Browser configuration options
  */
@@ -86,18 +41,11 @@ export interface ScreenshotConfig {
 export interface TestConfig {
   FRONTEND_BASE_URL: string;
   BACKEND_BASE_URL: string;
-  TestEmailDomain: string;
-  COMMUNITY_ID: string;
+  TENANT_ID: string;
   BROWSER_CONFIG: BrowserConfig;
   TIMEOUTS: TimeoutConfig;
   SCREENSHOTS: ScreenshotConfig;
 }
-
-/**
- * Alias for TenantSession from generated types
- * Used for backward compatibility in test code
- */
-export type SessionData = TenantSession;
 
 /**
  * Wait for element options
