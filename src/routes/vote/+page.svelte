@@ -138,14 +138,11 @@
 					Back to events
 				</button>
 				<h1 class="text-2xl font-bold text-gray-900 mb-2">{selectedEvent.name}</h1>
-				<p class="text-gray-600">Enter your code.</p>
+				<p class="text-gray-600">Enter your code</p>
 			</div>
 
 			<form onsubmit={handleSubmit} class="space-y-6">
 				<div>
-					<label for="code" class="block text-sm font-medium text-gray-700 mb-2">
-						Voting Code
-					</label>
 					<input
 						type="text"
 						id="code"

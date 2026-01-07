@@ -128,17 +128,11 @@
 		<!-- Code entry form -->
 		<div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto">
 			<div class="text-center mb-8">
-				<h1 class="text-2xl font-bold text-gray-900 mb-2">Enter Your Code</h1>
-				<p class="text-gray-600">
-					Enter your code.
-				</p>
+				<h1 class="text-2xl font-bold text-gray-900 mb-2">Enter your code</h1>
 			</div>
 
 			<form onsubmit={(e) => { e.preventDefault(); verifyCode(); }} class="space-y-6">
 				<div>
-					<label for="code" class="block text-sm font-medium text-gray-700 mb-2">
-						Voting Code
-					</label>
 					<input
 						type="text"
 						id="code"
