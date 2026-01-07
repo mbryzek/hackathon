@@ -9,9 +9,9 @@ import * as helpers from "../utils/test-helpers";
 
 test.describe("Parent Voting", () => {
   test("should verify parent code and vote for Team 1, then change vote to Teams 1, 2, and 3", async ({
-    testEvent,
+    parentFixture,
   }) => {
-    const { page, event } = testEvent;
+    const { page, event } = parentFixture;
     const parentCode = event.parent_codes[0];
     const eventKey = event.event.key;
 

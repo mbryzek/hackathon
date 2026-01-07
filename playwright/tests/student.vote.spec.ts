@@ -8,9 +8,9 @@ import * as helpers from "../utils/test-helpers";
 
 test.describe("Student Voting", () => {
   test("should verify student code and vote for Team 1, then change vote to Team 2", async ({
-    testEvent,
+    studentFixture,
   }) => {
-    const { page, event } = testEvent;
+    const { page, event } = studentFixture;
     const studentCode = event.student_codes[0];
     const eventKey = event.event.key;
 

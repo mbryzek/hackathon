@@ -7,8 +7,8 @@ import { test, expect } from "../fixtures";
 import * as helpers from "../utils/test-helpers";
 
 test.describe("Invalid Code Handling", () => {
-  test("should reject an invalid voting code", async ({ testEvent }) => {
-    const { page, event } = testEvent;
+  test("should reject an invalid voting code", async ({ studentFixture }) => {
+    const { page, event } = studentFixture;
     const eventKey = event.event.key;
     const invalidCode = "INVALID123";
 
