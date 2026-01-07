@@ -282,8 +282,9 @@ export class $Resource {
   }
 }
 
-export interface ProjectsGetAllAndActiveParameters {
+export interface ProjectsGetAllAndActiveByEventIdParameters {
   headers?: $HttpHeaders;
+  event_id: string;
 }
 
 export interface VotesPostCodeAndVerificationsParameters {
@@ -298,14 +299,14 @@ export interface VotesPostParameters {
   event_key: string;
 }
 
-export type ProjectsGetAllAndActiveResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project[]>;
+export type ProjectsGetAllAndActiveByEventIdResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type VotesPostCodeAndVerificationsResponse = $HttpOk<com.bryzek.vote.api.v0.models.Vote> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type VotesPostResponse = $HttpOk<com.bryzek.vote.api.v0.models.Vote> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 
 export class ProjectsResource extends $Resource {
-  public getAllAndActive(params: ProjectsGetAllAndActiveParameters = {}): Promise<ProjectsGetAllAndActiveResponse> {
+  public getAllAndActiveByEventId(params: ProjectsGetAllAndActiveByEventIdParameters): Promise<ProjectsGetAllAndActiveByEventIdResponse> {
     return this.client.request({
-      endpoint: '/vote/projects/all/active',
+      endpoint: `/vote/projects/all/active/${encodeURIComponent(params.event_id)}`,
       headers: params.headers,
       method: 'GET',
     });

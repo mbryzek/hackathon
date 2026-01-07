@@ -546,11 +546,6 @@ export interface ProjectsGetParameters {
   offset?: number;
 }
 
-export interface ProjectsGetAllParameters {
-  headers?: $HttpHeaders;
-  event_id: string;
-}
-
 export interface ProjectsGetByIdParameters {
   headers?: $HttpHeaders;
   event_id: string;
@@ -599,7 +594,6 @@ export type EventsPostResponse = $HttpCreated<com.bryzek.vote.api.v0.models.Even
 export type EventsPutByIdResponse = $HttpOk<com.bryzek.vote.api.v0.models.Event> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type EventsDeleteByIdResponse = $HttpNoContent<undefined> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined>;
 export type ProjectsGetResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project[]> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
-export type ProjectsGetAllResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined>;
 export type ProjectsGetByIdResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined>;
 export type ProjectsPostResponse = $HttpCreated<com.bryzek.vote.api.v0.models.Project> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
 export type ProjectsPutByIdResponse = $HttpOk<com.bryzek.vote.api.v0.models.Project> | $HttpUnauthorized<com.bryzek.platform.error.v0.models.UnauthorizedError[]> | $HttpNotFound<undefined> | $HttpUnprocessableEntity<com.bryzek.platform.error.v0.models.ValidationError[]>;
@@ -733,14 +727,6 @@ export class ProjectsResource extends $Resource {
         limit: params.limit,
         offset: params.offset,
       },
-    });
-  }
-
-  public getAll(params: ProjectsGetAllParameters): Promise<ProjectsGetAllResponse> {
-    return this.client.request({
-      endpoint: `/vote/admin/events/${encodeURIComponent(params.event_id)}/projects/all`,
-      headers: params.headers,
-      method: 'GET',
     });
   }
 
