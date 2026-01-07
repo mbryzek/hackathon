@@ -138,7 +138,7 @@
 					Back to events
 				</button>
 				<h1 class="text-2xl font-bold text-gray-900 mb-2">{selectedEvent.name}</h1>
-				<p class="text-gray-600">Enter your voting code to continue.</p>
+				<p class="text-gray-600">Enter your code.</p>
 			</div>
 
 			<form onsubmit={handleSubmit} class="space-y-6">
@@ -151,7 +151,7 @@
 						id="code"
 						value={code}
 						oninput={handleCodeInput}
-						placeholder="ABC123"
+						placeholder="AB1234"
 						class="w-full px-4 py-3 text-2xl text-center font-mono tracking-widest border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
 						autocomplete="off"
 						disabled={isSubmitting}
