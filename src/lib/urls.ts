@@ -26,4 +26,5 @@ export const urls = {
 	voteAdminEventProjects: (id: string) => `/vote/admin/events/${id}/projects`,
 	voteAdminEventCodes: (id: string) => `/vote/admin/events/${id}/codes`,
 	voteAdminEventResults: (id: string) => `/vote/admin/events/${id}/results`,
+	voteAdminEventProjectsBulk: (id: string) => `/vote/admin/events/${id}/projects/bulk`,
 } as const;

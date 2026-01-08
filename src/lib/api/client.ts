@@ -336,6 +336,16 @@ export const adminApi = {
 		);
 	},
 
+	async createProjectCsv(sessionId: string, eventId: string, data: string): Promise<ApiResponse<void>> {
+		return handleVoidApiCall(() =>
+			voteAdminClient.createProjectCsv({
+				headers: getAuthHeaders(sessionId),
+				eventId,
+				body: { data },
+			})
+		);
+	},
+
 	// Codes
 	async getCodes(
 		sessionId: string,

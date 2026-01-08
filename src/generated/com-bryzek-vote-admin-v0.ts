@@ -71,6 +71,10 @@ export interface EventResults {
   parent: Tally;
 }
 
+export interface ProjectCsvForm {
+  data: string;
+}
+
 export interface ProjectForm {
   name: string;
   description?: string;
@@ -188,6 +192,12 @@ export interface GetProjectByIdOptions {
 export interface CreateProjectOptions {
   eventId: string;
   body: ProjectForm;
+  headers?: Record<string, string>;
+}
+
+export interface CreateProjectCsvOptions {
+  eventId: string;
+  body: ProjectCsvForm;
   headers?: Record<string, string>;
 }
 
@@ -659,6 +669,38 @@ export class ApiClient {
     if (response.status === 201) {
       const data = await response.json();
       return data;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorsResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createProjectCsv(params: CreateProjectCsvOptions): Promise<void> {
+    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects/csv`;
+
+      const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 204) {
+      return;
     }
 
     if (response.status === 401) {
