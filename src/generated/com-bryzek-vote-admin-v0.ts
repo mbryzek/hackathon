@@ -73,6 +73,7 @@ export interface EventResults {
 
 export interface ProjectCsvForm {
   data: string;
+  delete_all_projects: boolean;
 }
 
 export interface ProjectForm {
