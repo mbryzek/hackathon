@@ -336,6 +336,16 @@ export const adminApi = {
 		);
 	},
 
+	async createProjectCsv(sessionId: string, eventId: string, data: string, deleteAllProjects: boolean): Promise<ApiResponse<void>> {
+		return handleVoidApiCall(() =>
+			voteAdminClient.createProjectCsv({
+				headers: getAuthHeaders(sessionId),
+				eventId,
+				body: { data, delete_all_projects: deleteAllProjects },
+			})
+		);
+	},
+
 	// Codes
 	async getCodes(
 		sessionId: string,
