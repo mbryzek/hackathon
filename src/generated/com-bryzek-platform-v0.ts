@@ -139,6 +139,20 @@ export interface PasswordResetForm {
   email: string;
 }
 
+export interface Person {
+  id: string;
+  tenant: TenantReference;
+  email?: Email;
+  /** Full name */
+  name?: string;
+  /** What to call the user */
+  nickname?: string;
+  birth?: BirthInfo;
+  gender?: Gender;
+  mobile_phone?: Phone;
+  time_zone: TimeZone;
+}
+
 export interface Phone {
   id: string;
   number: string;
