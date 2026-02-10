@@ -11,6 +11,12 @@ import type { ISODateTimeString } from './generated-types';
 // Enums
 // ============================================================================
 
+export enum CalendarProvider {
+  Google = 'google',
+  Apple = 'apple',
+  Outlook = 'outlook',
+}
+
 export enum Consent {
   OptedIn = 'opted_in',
   OptedOut = 'opted_out',
@@ -26,6 +32,28 @@ export enum Gender {
   Male = 'male',
   Female = 'female',
   Other = 'other',
+}
+
+export enum NotificationChannel {
+  EmailAndSms = 'email_and_sms',
+  EmailOnly = 'email_only',
+  SmsOnly = 'sms_only',
+  None = 'none',
+}
+
+export enum RallydNotificationType {
+  GameActivity = 'game_activity',
+  OrganizerHelp = 'organizer_help',
+  OrganizerAdded = 'organizer_added',
+  OrganizerGameConfirmed = 'organizer_game_confirmed',
+  Marketing = 'marketing',
+  SmsOptinExpired = 'sms_optin_expired',
+}
+
+export enum SportRatingSystem {
+  PickleballDupr = 'pickleball_dupr',
+  PadelWpr = 'padel_wpr',
+  TennisNtrp = 'tennis_ntrp',
 }
 
 export enum TimeZone {
@@ -119,6 +147,21 @@ export interface LoginForm {
   password: string;
 }
 
+/**
+ * Form to request a phone login code via SMS
+ */
+export interface LoginPhoneRequestForm {
+  phone: string;
+}
+
+/**
+ * Form to verify a phone login code and create a session
+ */
+export interface LoginPhoneVerifyForm {
+  phone: string;
+  code: string;
+}
+
 export interface MobilePhoneForm {
   number: string;
   optin_to_sms?: boolean;
@@ -153,18 +196,24 @@ export interface Person {
   time_zone: TimeZone;
 }
 
+export interface PersonReference {
+  id: string;
+}
+
 export interface Phone {
   id: string;
   number: string;
   consent: Consent;
 }
 
-export interface PrivateDinkersUserData {
-  dupr: number;
+export interface RallydRating {
+  system: SportRatingSystem;
+  rating: number;
 }
 
-export interface PrivateDinkersUserDataForm {
-  dupr: number;
+export interface RallydRatingForm {
+  system: SportRatingSystem;
+  rating: number;
 }
 
 export interface SessionReference {
@@ -174,6 +223,8 @@ export interface SessionReference {
 export interface SignupForm {
   user: UserForm;
   password: string;
+  /** Notification types to opt into during registration */
+  opt_ins?: RallydNotificationType[];
 }
 
 export interface TenantReference {
@@ -189,7 +240,8 @@ export interface TenantSession {
 export interface User {
   id: string;
   tenant: TenantReference;
-  email: Email;
+  person: PersonReference;
+  email?: Email;
   /** Full name */
   name?: string;
   /** What to call the user */
@@ -200,11 +252,15 @@ export interface User {
   role: UserRole;
   mobile_phone?: Phone;
   time_zone: TimeZone;
-  private_dinkers?: PrivateDinkersUserData;
+  rallyd?: RallydRating[];
+}
+
+export interface UserCalendarForm {
+  provider: CalendarProvider;
 }
 
 export interface UserForm {
-  email: string;
+  email?: string;
   /** Full name */
   name?: string;
   /** What to call the user */
@@ -213,12 +269,25 @@ export interface UserForm {
   gender?: Gender;
   mobile_phone?: MobilePhoneForm;
   time_zone?: TimeZone;
-  private_dinkers?: PrivateDinkersUserDataForm;
+  rallyd?: RallydRatingForm[];
 }
 
 export interface UserInactive {
   discriminator: 'user_inactive';
   status: UserStatus;
+}
+
+export interface UserNotificationForm {
+  type: RallydNotificationType;
+  channel: NotificationChannel;
+}
+
+/**
+ * A single notification type with its delivery channel
+ */
+export interface UserNotificationPreference {
+  type: RallydNotificationType;
+  channel: NotificationChannel;
 }
 
 export interface UserPasswordForm {
@@ -230,6 +299,28 @@ export interface UserPasswordSuggestion {
   password: string;
 }
 
+/**
+ * User preferences
+ */
+export interface UserPreferences {
+  /** The list of notification preferences per type */
+  notifications: UserNotificationPreference[];
+  /** The user's preferred calendar provider */
+  preferred_calendar_provider?: CalendarProvider;
+}
+
+/**
+ * Form for updating primary user information without affecting secondary fields like gender or birth date
+ */
+export interface UserPrimaryForm {
+  email?: string;
+  /** Full name */
+  name?: string;
+  /** What to call the user */
+  nickname?: string;
+  mobile_phone?: MobilePhoneForm;
+}
+
 export interface UserReference {
   id: string;
 }
@@ -238,7 +329,7 @@ export interface UserSecondaryForm {
   birth?: BirthInfoForm;
   gender?: Gender;
   time_zone?: TimeZone;
-  private_dinkers?: PrivateDinkersUserDataForm;
+  rallyd?: RallydRatingForm[];
 }
 
 // ============================================================================
@@ -305,6 +396,18 @@ export interface CreateTenantSessionPasswordAndResetsOptions {
   headers?: Record<string, string>;
 }
 
+export interface CreateTenantSessionLoginAndPhoneAndRequestsOptions {
+  tenantId: string;
+  body: LoginPhoneRequestForm;
+  headers?: Record<string, string>;
+}
+
+export interface CreateTenantSessionLoginAndPhoneAndVerificationsOptions {
+  tenantId: string;
+  body: LoginPhoneVerifyForm;
+  headers?: Record<string, string>;
+}
+
 export interface DeleteTenantSessionOptions {
   headers?: Record<string, string>;
 }
@@ -343,6 +446,12 @@ export interface UpdateUserSecondaryByIdOptions {
   headers?: Record<string, string>;
 }
 
+export interface UpdateUserPrimaryByIdOptions {
+  id: string;
+  body: UserPrimaryForm;
+  headers?: Record<string, string>;
+}
+
 export interface UpdateUserPasswordByIdOptions {
   id: string;
   body: UserPasswordForm;
@@ -354,6 +463,26 @@ export interface CreateUserPasswordAndSuggestionsOptions {
 }
 
 export interface CreateUserEmailAndVerificationsByIdOptions {
+  headers?: Record<string, string>;
+}
+
+export interface GetUserPreferencesOptions {
+  tenantId: string;
+  userId: string;
+  headers?: Record<string, string>;
+}
+
+export interface CreateUserPreferencesNotificationsOptions {
+  tenantId: string;
+  userId: string;
+  body: UserNotificationForm;
+  headers?: Record<string, string>;
+}
+
+export interface CreateUserPreferencesCalendarOptions {
+  tenantId: string;
+  userId: string;
+  body: UserCalendarForm;
   headers?: Record<string, string>;
 }
 
@@ -535,6 +664,55 @@ export class ApiClient {
 
     if (response.status === 204) {
       return;
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createTenantSessionLoginAndPhoneAndRequests(params: CreateTenantSessionLoginAndPhoneAndRequestsOptions): Promise<void> {
+    const url = `${this.baseUrl}/tenant/${params.tenantId}/session/login/phone/requests`;
+
+      const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 204) {
+      return;
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createTenantSessionLoginAndPhoneAndVerifications(params: CreateTenantSessionLoginAndPhoneAndVerificationsOptions): Promise<SessionState> {
+    const url = `${this.baseUrl}/tenant/${params.tenantId}/session/login/phone/verifications`;
+
+      const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 201) {
+      const data = await response.json();
+      return data;
     }
 
     if (response.status === 422) {
@@ -741,6 +919,39 @@ export class ApiClient {
 
   }
 
+  async updateUserPrimaryById(params: UpdateUserPrimaryByIdOptions): Promise<User> {
+    const url = `${this.baseUrl}/users/${params.id}/primary`;
+
+      const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorsResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
   async updateUserPasswordById(params: UpdateUserPasswordByIdOptions): Promise<void> {
     const url = `${this.baseUrl}/users/${params.id}/password`;
 
@@ -806,6 +1017,100 @@ export class ApiClient {
 
     if (response.status === 204) {
       return;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorsResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async getUserPreferences(params: GetUserPreferencesOptions): Promise<UserPreferences> {
+    const url = `${this.baseUrl}/${params.tenantId}/users/${params.userId}/preferences`;
+
+      const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+    });
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorsResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createUserPreferencesNotifications(params: CreateUserPreferencesNotificationsOptions): Promise<UserPreferences> {
+    const url = `${this.baseUrl}/${params.tenantId}/users/${params.userId}/preferences/notifications`;
+
+      const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorsResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createUserPreferencesCalendar(params: CreateUserPreferencesCalendarOptions): Promise<UserPreferences> {
+    const url = `${this.baseUrl}/${params.tenantId}/users/${params.userId}/preferences/calendar`;
+
+      const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
     }
 
     if (response.status === 401) {
