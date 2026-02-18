@@ -1,14 +1,23 @@
 <script lang="ts">
 	import Shell from '$lib/components/Shell.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import { urls } from '$lib/urls';
 </script>
 
 <Shell title="Bergen Tech Hackathon">
 	<div class="flex flex-col gap-y-4">
-		<!-- Save the Date -->
-		<p class="text-gray-800 font-bold text-2xl text-center italic mt-4">
-			Save the date: 2026 Bergen Tech Hackathon will be on April 18, 2026
-		</p>
+		<!-- Sign Up CTA -->
+		<div class="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-6 mt-4 text-center">
+			<p class="text-gray-900 font-bold text-2xl sm:text-3xl">
+				2026 Bergen Tech Hackathon — April 18, 2026
+			</p>
+			<p class="text-gray-700 text-lg mt-2">
+				Registration is open! Sign up now to secure your spot.
+			</p>
+			<div class="mt-4">
+				<Button href={urls.signup} external label="Sign Up for 2026" variant="primary" size="lg" />
+			</div>
+		</div>
 
 		<!-- Action Buttons -->
 		<div class="flex flex-col sm:flex-row justify-center items-center gap-3 mt-2">
