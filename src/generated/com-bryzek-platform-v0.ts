@@ -7,6 +7,8 @@
 
 import type { ISODateTimeString } from './generated-types';
 
+import type { File } from './com-bryzek-platform-storage-v0.ts';
+
 // ============================================================================
 // Enums
 // ============================================================================
@@ -194,10 +196,45 @@ export interface Person {
   gender?: Gender;
   mobile_phone?: Phone;
   time_zone: TimeZone;
+  photo?: File;
+}
+
+export interface PersonForm {
+  email?: string;
+  /** Full name */
+  name?: string;
+  /** What to call the user */
+  nickname?: string;
+  birth?: BirthInfoForm;
+  gender?: Gender;
+  mobile_phone?: MobilePhoneForm;
+  time_zone?: TimeZone;
+}
+
+export interface PersonPhotoForm {
+  photo_id: string;
+}
+
+/**
+ * Form for updating primary person information
+ */
+export interface PersonPrimaryForm {
+  email?: string;
+  /** Full name */
+  name?: string;
+  /** What to call the user */
+  nickname?: string;
+  mobile_phone?: MobilePhoneForm;
 }
 
 export interface PersonReference {
   id: string;
+}
+
+export interface PersonSecondaryForm {
+  birth?: BirthInfoForm;
+  gender?: Gender;
+  time_zone?: TimeZone;
 }
 
 export interface Phone {
@@ -227,6 +264,28 @@ export interface SignupForm {
   opt_ins?: RallydNotificationType[];
 }
 
+export interface SmsOptinRequestResultOptedIn {
+  discriminator: 'opted_in';
+  at: ISODateTimeString;
+}
+
+export interface SmsOptinRequestResultOptedOut {
+  discriminator: 'opted_out';
+  at: ISODateTimeString;
+}
+
+export interface SmsOptinRequestResultRateLimited {
+  discriminator: 'rate_limited';
+  /** Time after which a retry is allowed */
+  retry_after: ISODateTimeString;
+}
+
+export interface SmsOptinRequestResultScheduled {
+  discriminator: 'scheduled';
+  /** When the SMS is scheduled to be sent */
+  scheduled_at: ISODateTimeString;
+}
+
 export interface TenantReference {
   id: string;
 }
@@ -240,18 +299,9 @@ export interface TenantSession {
 export interface User {
   id: string;
   tenant: TenantReference;
-  person: PersonReference;
-  email?: Email;
-  /** Full name */
-  name?: string;
-  /** What to call the user */
-  nickname?: string;
-  birth?: BirthInfo;
-  gender?: Gender;
+  person: Person;
   status: UserStatus;
   role: UserRole;
-  mobile_phone?: Phone;
-  time_zone: TimeZone;
   rallyd?: RallydRating[];
 }
 
@@ -260,15 +310,7 @@ export interface UserCalendarForm {
 }
 
 export interface UserForm {
-  email?: string;
-  /** Full name */
-  name?: string;
-  /** What to call the user */
-  nickname?: string;
-  birth?: BirthInfoForm;
-  gender?: Gender;
-  mobile_phone?: MobilePhoneForm;
-  time_zone?: TimeZone;
+  person: PersonForm;
   rallyd?: RallydRatingForm[];
 }
 
@@ -313,12 +355,7 @@ export interface UserPreferences {
  * Form for updating primary user information without affecting secondary fields like gender or birth date
  */
 export interface UserPrimaryForm {
-  email?: string;
-  /** Full name */
-  name?: string;
-  /** What to call the user */
-  nickname?: string;
-  mobile_phone?: MobilePhoneForm;
+  person: PersonPrimaryForm;
 }
 
 export interface UserReference {
@@ -326,9 +363,7 @@ export interface UserReference {
 }
 
 export interface UserSecondaryForm {
-  birth?: BirthInfoForm;
-  gender?: Gender;
-  time_zone?: TimeZone;
+  person: PersonSecondaryForm;
   rallyd?: RallydRatingForm[];
 }
 
@@ -351,6 +386,31 @@ export function isUserInactive(obj: SessionState): obj is UserInactive {
   return obj.discriminator === 'user_inactive';
 }
 
+export type SmsOptinRequestResult = SmsOptinRequestResultOptedIn | SmsOptinRequestResultOptedOut | SmsOptinRequestResultScheduled | SmsOptinRequestResultRateLimited;
+
+export const SmsOptinRequestResultDiscriminator = {
+  SmsOptinRequestResultOptedIn: 'opted_in',
+  SmsOptinRequestResultOptedOut: 'opted_out',
+  SmsOptinRequestResultScheduled: 'scheduled',
+  SmsOptinRequestResultRateLimited: 'rate_limited'
+} as const;
+
+export function isSmsOptinRequestResultOptedIn(obj: SmsOptinRequestResult): obj is SmsOptinRequestResultOptedIn {
+  return obj.discriminator === 'opted_in';
+}
+
+export function isSmsOptinRequestResultOptedOut(obj: SmsOptinRequestResult): obj is SmsOptinRequestResultOptedOut {
+  return obj.discriminator === 'opted_out';
+}
+
+export function isSmsOptinRequestResultScheduled(obj: SmsOptinRequestResult): obj is SmsOptinRequestResultScheduled {
+  return obj.discriminator === 'scheduled';
+}
+
+export function isSmsOptinRequestResultRateLimited(obj: SmsOptinRequestResult): obj is SmsOptinRequestResultRateLimited {
+  return obj.discriminator === 'rate_limited';
+}
+
 // ============================================================================
 // API Client
 // ============================================================================
@@ -364,7 +424,13 @@ export interface UpdateEmailVerificationByTokenOptions {
   headers?: Record<string, string>;
 }
 
-export interface CreatePhoneOptinAndRequestByIdOptions {
+export interface UpdatePersonPhotoByIdOptions {
+  id: string;
+  body: PersonPhotoForm;
+  headers?: Record<string, string>;
+}
+
+export interface CreatePhoneOptinAndResendByIdOptions {
   headers?: Record<string, string>;
 }
 
@@ -516,8 +582,41 @@ export class ApiClient {
 
   }
 
-  async createPhoneOptinAndRequestById(id: string, options?: CreatePhoneOptinAndRequestByIdOptions): Promise<void> {
-    const url = `${this.baseUrl}/phones/${id}/optin/request`;
+  async updatePersonPhotoById(params: UpdatePersonPhotoByIdOptions): Promise<Person> {
+    const url = `${this.baseUrl}/people/${params.id}/photo`;
+
+      const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorsResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createPhoneOptinAndResendById(id: string, options?: CreatePhoneOptinAndResendByIdOptions): Promise<SmsOptinRequestResult> {
+    const url = `${this.baseUrl}/phones/${id}/optin/resend`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -527,8 +626,9 @@ export class ApiClient {
       },
     });
 
-    if (response.status === 204) {
-      return;
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
     }
 
     if (response.status === 401) {

@@ -10,6 +10,16 @@ code:
       generators:
         - generator: typescript
           target: ./src/generated
+    platform-storage:
+      version: latest
+      generators:
+        - generator: typescript
+          target: ./src/generated
+          attributes:
+            - name: "filter"
+              value:
+                types:
+                  - file
     vote-api:
       version: latest
       generators:
