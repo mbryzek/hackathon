@@ -14,6 +14,9 @@
 			<p class="text-gray-700 text-lg mt-2">
 				Registration is open! Sign up now to secure your spot.
 			</p>
+			<p class="text-red-600 font-semibold text-base mt-2">
+				Registration deadline: March 27, 2026
+			</p>
 			<div class="mt-4">
 				<Button href={urls.signup} external label="Sign Up for 2026" variant="primary" size="lg" />
 			</div>
