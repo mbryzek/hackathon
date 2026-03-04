@@ -11,6 +11,7 @@ export const urls = {
 	y25Prizes: '/Y25/prizes',
 	y25Rubric: '/Y25/rubric',
 	donate: '/donate',
+	press: '/press',
 	contact: '/contact',
 
 	// Voting routes

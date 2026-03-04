@@ -45,6 +45,7 @@
 				{ href: urls.y24Sponsors, name: 'Sponsors', children: [] },
 			],
 		},
+		{ href: urls.press, name: 'Press', children: [] },
 		{ href: urls.contact, name: 'Contact', children: [] },
 	];
 
