@@ -13,7 +13,7 @@
 
 		<div class="text-center">
 			<Button
-				href="https://raw.githubusercontent.com/mbryzek/hackathon-static/refs/heads/main/2024/2024-Event-Summary.pdf"
+				href="/2024/2024-Event-Summary.pdf"
 				label="Download our 2024 event summary"
 				external
 			/>
@@ -68,7 +68,7 @@
 			</ul>
 			<img
 				class="mt-4"
-				src="https://github.com/mbryzek/hackathon-static/blob/main/2024/jumping.jpg?raw=true"
+				src="/2024/jumping.jpg"
 				alt="Students jumping in celebration at the 2024 hackathon"
 			/>
 		</div>

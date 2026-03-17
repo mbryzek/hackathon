@@ -1,4 +1,4 @@
-const baseUrl = 'https://github.com/mbryzek/hackathon-static/blob/main/2024/ambiance/';
+const baseUrl = '/2024/ambiance/';
 
 const filenames = [
 	'IMG_0968.640.JPG',
@@ -61,4 +61,4 @@ const filenames = [
 	'IMG_7527.640.jpg',
 ];
 
-export const photosY24 = filenames.map((filename) => `${baseUrl}${filename}?raw=true`);
+export const photosY24 = filenames.map((filename) => `${baseUrl}${filename}`);

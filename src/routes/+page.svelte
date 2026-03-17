@@ -47,7 +47,7 @@
 
 		<!-- Student Photo -->
 		<img
-			src="https://github.com/mbryzek/hackathon-static/blob/main/2025/everybody.w640.jpg?raw=true"
+			src="/2025/everybody.w640.jpg"
 			alt="2025 Hackathon participants"
 		/>
 	</div>
