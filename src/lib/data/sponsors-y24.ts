@@ -1,4 +1,4 @@
-const baseUrl = '/2024/sponsors/';
+const baseUrl = 'https://github.com/mbryzek/hackathon-static/blob/main/2024/sponsors/';
 
 const filenames = [
 	'mek-review.png',
@@ -11,4 +11,4 @@ const filenames = [
 	'bryzek.jpg',
 ];
 
-export const sponsorsY24 = filenames.map((filename) => `${baseUrl}${filename}`);
+export const sponsorsY24 = filenames.map((filename) => `${baseUrl}${filename}?raw=true`);

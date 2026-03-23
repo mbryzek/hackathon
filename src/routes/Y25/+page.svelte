@@ -39,7 +39,7 @@
 			<Button href="/Y25/demos" label="Watch the demos" size="sm" />
 			<Button href="/Y25/photos" label="View the photos" size="sm" />
 			<Button
-				href="/2025/2025-Event-Summary.pdf"
+				href="https://raw.githubusercontent.com/mbryzek/hackathon-static/refs/heads/main/2025/2025-Event-Summary.pdf"
 				label="Event summary"
 				size="sm"
 				external
@@ -128,7 +128,7 @@
 		<div class="mt-8">
 			<img
 				class="w-full rounded-lg shadow-lg"
-				src="/2025/everybody.w640.jpg"
+				src="https://github.com/mbryzek/hackathon-static/blob/main/2025/everybody.w640.jpg?raw=true"
 				alt="All participants gathered together at the 2025 hackathon"
 			/>
 		</div>
