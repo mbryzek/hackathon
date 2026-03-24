@@ -7,7 +7,7 @@ import {
 	type ProjectVote,
 	EventStatus,
 	VoterType,
-} from '../../generated/com-bryzek-vote-api-v0';
+} from '../../generated/com-bryzek-vote-api';
 import {
 	ApiClient as VoteAdminClient,
 	type AdminSession,
@@ -19,7 +19,7 @@ import {
 	type CodeGenerateForm,
 	type Tally,
 	type ProjectTally,
-} from '../../generated/com-bryzek-vote-admin-v0';
+} from '../../generated/com-bryzek-vote-admin';
 import { ValidationErrorsResponse } from '../../generated/generated-error-validation-errors-response';
 import { UnauthorizedErrorsResponse } from '../../generated/generated-error-unauthorized-errors-response';
 import { VoidResponse } from '../../generated/generated-error-void-response';

@@ -12,7 +12,7 @@ import {
   ApiClient,
   TestEvent,
   TestEventForm,
-} from "../generated/com-bryzek-playwright-vote-v0";
+} from "../generated/com-bryzek-playwright-vote";
 
 /**
  * Generated API client instance for playwright endpoints
