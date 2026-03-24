@@ -4,7 +4,7 @@
  */
 
 import { Util } from './generated-util.ts';
-import type { ValidationError } from './com-bryzek-platform-error-v0.ts';
+import type { ValidationError } from './com-bryzek-platform-error.ts';
 
 export class ValidationErrorsResponse extends Error {
   constructor(public readonly response: Response) {

@@ -4,7 +4,7 @@
  */
 
 import { Util } from './generated-util.ts';
-import type { UnauthorizedError } from './com-bryzek-platform-error-v0.ts';
+import type { UnauthorizedError } from './com-bryzek-platform-error.ts';
 
 export class UnauthorizedErrorsResponse extends Error {
   constructor(public readonly response: Response) {
