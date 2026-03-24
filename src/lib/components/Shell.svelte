@@ -24,6 +24,16 @@
 		{ href: urls.signup, name: 'Signup', children: [] },
 		{ href: urls.vote, name: 'Vote', children: [] },
 		{ href: urls.donate, name: 'Donate', children: [] },
+		{ href: urls.mission, name: 'Mission', children: [] },
+		{
+			href: urls.y26Index,
+			name: '2026',
+			children: [
+				{ href: urls.y26Index, name: 'Event', children: [] },
+				{ href: urls.y26Rubric, name: 'Rubric', children: [] },
+				{ href: urls.y26Sponsors, name: 'Sponsors', children: [] },
+			],
+		},
 		{
 			href: urls.y25Index,
 			name: '2025',

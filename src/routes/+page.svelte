@@ -40,8 +40,15 @@
 			</div>
 		</div>
 
+		<!-- Mission Link -->
+		<p class="text-gray-800 text-center mt-8">
+			<a href={urls.mission} class="text-yellow-600 hover:text-yellow-700 font-semibold underline">
+				Learn about our vision and mission
+			</a>
+		</p>
+
 		<!-- Thank You Message -->
-		<p class="text-gray-800 font-semibold text-center italic mt-8">
+		<p class="text-gray-800 font-semibold text-center italic mt-4">
 			Thank you for being a part of our community's growth and innovation!
 		</p>
 
