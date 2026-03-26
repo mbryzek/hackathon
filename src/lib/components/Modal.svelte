@@ -24,21 +24,29 @@
 		}
 	}
 
+	function handleBackdropClick(event: MouseEvent) {
+		if (event.target === event.currentTarget) {
+			onclose();
+		}
+	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
 	<!-- Backdrop -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center animate-fade-in"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in"
+		onclick={handleBackdropClick}
 		role="dialog"
 		aria-modal="true"
+		tabindex="-1"
 	>
-		<button type="button" class="fixed inset-0 bg-black/80 backdrop-blur-sm cursor-default" onclick={onclose} aria-label="Close" tabindex="-1"></button>
 		<!-- Modal content -->
 		<div
-			class="relative {sizeClasses[size]} w-full mx-4 animate-scale-in"
+			class="{sizeClasses[size]} w-full mx-4 animate-scale-in"
 		>
 			<!-- Close button -->
 			<button
@@ -56,3 +64,33 @@
 		</div>
 	</div>
 {/if}
+
+<style>
+	@keyframes fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes scale-in {
+		from {
+			opacity: 0;
+			transform: scale(0.95);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	.animate-fade-in {
+		animation: fade-in 0.2s ease-out;
+	}
+
+	.animate-scale-in {
+		animation: scale-in 0.2s ease-out;
+	}
+</style>

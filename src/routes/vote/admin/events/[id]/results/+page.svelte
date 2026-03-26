@@ -215,7 +215,7 @@
 						No student votes yet.
 					</div>
 				{:else}
-					<div class={isPresentationMode ? 'space-y-6' : 'space-y-4'}>
+					<div class="space-y-{isPresentationMode ? '6' : '4'}">
 						{#each sortedStudentProjects as projectTally, index (projectTally.project.id)}
 							{@const rank = getRank(sortedStudentProjects, index)}
 							<div class="{isPresentationMode ? 'bg-white/10 backdrop-blur rounded-xl p-6' : 'bg-white shadow rounded-xl p-6'}">
@@ -256,7 +256,7 @@
 						No parent votes yet.
 					</div>
 				{:else}
-					<div class={isPresentationMode ? 'space-y-6' : 'space-y-4'}>
+					<div class="space-y-{isPresentationMode ? '6' : '4'}">
 						{#each sortedParentProjects as projectTally, index (projectTally.project.id)}
 							{@const rank = getRank(sortedParentProjects, index)}
 							<div class="{isPresentationMode ? 'bg-white/10 backdrop-blur rounded-xl p-6' : 'bg-white shadow rounded-xl p-6'}">
