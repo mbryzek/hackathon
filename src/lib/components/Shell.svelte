@@ -12,6 +12,15 @@
 	let { title, children, sticky = false }: Props = $props();
 
 	let mobileMenuOpen = $state(false);
+	let openDropdownIndex = $state<number | null>(null);
+
+	function toggleDropdown(index: number) {
+		openDropdownIndex = openDropdownIndex === index ? null : index;
+	}
+
+	function closeDropdowns() {
+		openDropdownIndex = null;
+	}
 
 	interface Section {
 		href: string;
@@ -73,8 +82,13 @@
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape' && mobileMenuOpen) {
-			mobileMenuOpen = false;
+		if (event.key === 'Escape') {
+			if (mobileMenuOpen) {
+				mobileMenuOpen = false;
+			}
+			if (openDropdownIndex !== null) {
+				openDropdownIndex = null;
+			}
 		}
 	}
 
@@ -109,7 +123,7 @@
 							<img
 								class="h-12 w-36 cursor-pointer"
 								src="/assets/bt-cs-logo.png"
-								alt="2025 Bergen Tech Hackathon"
+								alt="Bergen Tech Hackathon"
 							/>
 						</a>
 					</div>
@@ -117,7 +131,7 @@
 					<!-- Desktop Navigation -->
 					<div class="md:block hidden">
 						<div class="ml-10 flex items-baseline space-x-4">
-							{#each sections as section}
+							{#each sections as section, sectionIndex}
 								{@const active = isActive(section) || hasActiveChild(section)}
 								{#if section.children.length === 0}
 									<a
@@ -137,21 +151,22 @@
 										{/if}
 									</a>
 								{:else}
-									<div class="relative group z-50">
+									<div class="relative group z-50" onfocusout={(e) => { if (!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget as Node)) closeDropdowns(); }}>
 										<a
 											href={section.href}
 											class="rounded-md px-3 py-2 text-sm font-medium flex items-center gap-1 transition-colors duration-150 {active
 												? 'bg-gray-900 text-white'
 												: 'text-gray-300 hover:bg-gray-700 hover:text-white'}"
+											onclick={(e) => { e.preventDefault(); toggleDropdown(sectionIndex); }}
 										>
 											{section.name}
 											<!-- Dropdown chevron -->
-											<svg class="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<svg class="w-4 h-4 transition-transform duration-200 {openDropdownIndex === sectionIndex ? 'rotate-180' : 'group-hover:rotate-180'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
 											</svg>
 										</a>
 										<!-- Dropdown menu with smooth transition -->
-										<div class="absolute left-0 top-full w-48 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out">
+										<div class="absolute left-0 top-full w-48 pt-2 transition-all duration-200 ease-out {openDropdownIndex === sectionIndex ? 'opacity-100 visible' : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible'}">
 											<div class="bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
 												{#each section.children as child, i}
 													{@const childActive = $page.url.pathname === child.href}
@@ -205,8 +220,9 @@
 		<!-- Mobile menu with slide animation -->
 		<div
 			id="mobile-menu"
-			class="md:hidden overflow-hidden transition-all duration-300 ease-in-out {mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}"
+			class="md:hidden grid transition-all duration-300 ease-in-out {mobileMenuOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}"
 		>
+			<div class="overflow-hidden">
 			<div class="px-2 pt-2 pb-3 space-y-1 bg-gray-800 border-t border-gray-700">
 				{#each sections as section}
 					{@const active = isActive(section) || hasActiveChild(section)}
@@ -246,6 +262,7 @@
 					</div>
 				{/each}
 			</div>
+			</div>
 		</div>
 	</nav>
 
@@ -260,4 +277,18 @@
 			{@render children()}
 		</div>
 	</main>
+
+	<footer class="bg-gray-800 mt-12">
+		<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+			<div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
+				<p>&copy; {new Date().getFullYear()} Bergen Youth Enrichment. All rights reserved.</p>
+				<nav class="flex items-center gap-4" aria-label="Footer">
+					<a href={urls.mission} class="hover:text-white transition-colors">Mission</a>
+					<a href={urls.donate} class="hover:text-white transition-colors">Donate</a>
+					<a href={urls.contact} class="hover:text-white transition-colors">Contact</a>
+					<a href={urls.press} class="hover:text-white transition-colors">Press</a>
+				</nav>
+			</div>
+		</div>
+	</footer>
 </div>

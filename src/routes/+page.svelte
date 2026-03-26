@@ -34,6 +34,7 @@
 			<div class="video-responsive">
 				<iframe
 					src="https://www.youtube.com/embed/phM9BT55MlE"
+					loading="lazy"
 					allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
 					allowfullscreen
 					title="2025 Bergen Tech Hackathon Video"
@@ -57,6 +58,9 @@
 		<img
 			src="https://github.com/mbryzek/hackathon-static/blob/main/2025/everybody.w640.jpg?raw=true"
 			alt="2025 Hackathon participants"
+			width="640"
+			height="427"
+			class="w-full h-auto rounded-lg"
 		/>
 	</div>
 </Shell>

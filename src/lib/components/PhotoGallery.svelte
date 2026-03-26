@@ -124,7 +124,7 @@
 					{/if}
 					<img
 						src={photo}
-						alt=""
+						alt="Photo {index + 1} of {displayPhotos.length}"
 						loading="lazy"
 						class="h-auto w-full object-contain transition-opacity duration-500 {loadedImages.has(index) ? 'opacity-100' : 'opacity-0'}"
 						onload={() => handleImageLoad(index)}
@@ -197,7 +197,7 @@
 			{:else}
 				<img
 					src={currentPhoto}
-					alt=""
+					alt="Photo {currentIndex + 1} of {displayPhotos.length}"
 					class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl transition-opacity duration-300 {imageLoading ? 'opacity-0' : 'opacity-100'}"
 					onload={handleLightboxImageLoad}
 					onerror={handleLightboxImageError}
