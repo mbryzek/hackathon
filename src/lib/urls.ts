@@ -13,6 +13,7 @@ export const urls = {
 	y26Index: '/Y26/',
 	y26Rubric: '/Y26/rubric',
 	y26Sponsors: '/Y26/sponsors',
+	y26ProgramAd: '/Y26/program/ad',
 	mission: '/mission',
 	donate: '/donate',
 	press: '/press',

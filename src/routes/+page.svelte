@@ -25,6 +25,7 @@
 		<!-- Action Buttons -->
 		<div class="flex flex-col sm:flex-row justify-center items-center gap-3 mt-2">
 			<Button href="/donate" label="Donate" variant="primary" />
+			<Button href={urls.y26ProgramAd} label="Buy a Program Ad" variant="primary" />
 			<Button href="/Y25/" label="2025 Hackathon" variant="secondary" />
 		</div>
 

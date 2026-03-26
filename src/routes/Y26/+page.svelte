@@ -28,6 +28,8 @@
 			<Button href={urls.signup} external label="Sign up" size="sm" />
 			<Button href={urls.y26Rubric} label="View the rubric" size="sm" variant="secondary" />
 			<Button href={urls.y26Sponsors} label="Our sponsors" size="sm" variant="secondary" />
+			<Button href={urls.donate} label="Donate" size="sm" variant="secondary" />
+			<Button href={urls.y26ProgramAd} label="Buy a Program Ad" size="sm" variant="secondary" />
 		</div>
 
 		<p class="text-gray-800 font-light">
