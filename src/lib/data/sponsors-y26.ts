@@ -34,7 +34,7 @@ export const sponsorsY26: Sponsor[] = [
 	},
 	{
 		name: 'TEA',
-		logo: '/sponsors/y26/tea.png',
+		logo: '/sponsors/y26/tea.black.png',
 	},
 	{
 		name: 'West Clinton Consulting Group',
