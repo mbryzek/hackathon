@@ -19,6 +19,9 @@
 	let encouragementSize = $state(0);
 	let businessSize = $state(0);
 
+	let currentEncouragementSize: SizeOption = $derived(sizes[encouragementSize]!);
+	let currentBusinessSize: SizeOption = $derived(sizes[businessSize]!);
+
 	const formUrl = 'https://forms.gle/aU3B4u73KqUcoSja8';
 </script>
 
@@ -74,7 +77,7 @@
 				{/each}
 			</div>
 
-			<div class="border-2 rounded-lg p-4 flex flex-col items-center justify-center mx-auto overflow-hidden" style="border-color: #b8960c; width: {sizes[encouragementSize].width}; height: {sizes[encouragementSize].height};">
+			<div class="border-2 rounded-lg p-4 flex flex-col items-center justify-center mx-auto overflow-hidden" style="border-color: #b8960c; width: {currentEncouragementSize.width}; height: {currentEncouragementSize.height};">
 				<div class="text-center" style="max-width: 180px;">
 					{#if encouragementSize <= 1}
 						<div class="w-16 h-16 rounded-full bg-gray-200 mx-auto mb-2 flex items-center justify-center">
@@ -99,7 +102,7 @@
 				</div>
 			</div>
 			<p class="text-sm text-gray-500 mt-2 text-center">
-				{sizes[encouragementSize].label} &mdash; {sizes[encouragementSize].dimensions} &mdash; {sizes[encouragementSize].price}
+				{currentEncouragementSize.label} &mdash; {currentEncouragementSize.dimensions} &mdash; {currentEncouragementSize.price}
 			</p>
 		</div>
 
@@ -120,7 +123,7 @@
 				{/each}
 			</div>
 
-			<div class="border-2 rounded-lg p-4 flex flex-col items-center justify-center mx-auto overflow-hidden" style="border-color: #b8960c; width: {sizes[businessSize].width}; height: {sizes[businessSize].height};">
+			<div class="border-2 rounded-lg p-4 flex flex-col items-center justify-center mx-auto overflow-hidden" style="border-color: #b8960c; width: {currentBusinessSize.width}; height: {currentBusinessSize.height};">
 				<div class="text-center" style="max-width: 180px;">
 					{#if businessSize <= 1}
 						<div class="w-16 h-12 bg-gray-200 rounded mx-auto mb-2 flex items-center justify-center">
@@ -137,7 +140,7 @@
 				</div>
 			</div>
 			<p class="text-sm text-gray-500 mt-2 text-center">
-				{sizes[businessSize].label} &mdash; {sizes[businessSize].dimensions} &mdash; {sizes[businessSize].price}
+				{currentBusinessSize.label} &mdash; {currentBusinessSize.dimensions} &mdash; {currentBusinessSize.price}
 			</p>
 		</div>
 	</div>
