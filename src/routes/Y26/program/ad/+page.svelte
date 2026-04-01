@@ -110,15 +110,12 @@
 		<div>
 			<h2 class="text-2xl font-bold text-gray-900 mb-1">Example Ad</h2>
 			<p class="text-gray-600 font-light mb-4">
-				Here's an example of what a full page encouragement ad looks like in the printed program.
+				Here's an example of what an encouragement ad with photo.
 			</p>
 
 			<div class="border-2 rounded-lg overflow-hidden mx-auto" style="border-color: #b8960c; width: 240px;">
 				<img src="/assets/ad.people.jpg" alt="Example encouragement ad" class="w-full h-auto" />
 			</div>
-			<p class="text-sm text-gray-500 mt-2 text-center">
-				Full Page &mdash; 10 in x 4 in &mdash; $150
-			</p>
 		</div>
 
 		<!-- Business Ad Space -->
