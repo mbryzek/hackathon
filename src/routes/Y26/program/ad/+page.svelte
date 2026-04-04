@@ -161,12 +161,11 @@
 	<div class="fixed bottom-0 left-0 right-0 bg-yellow-50 border-t-2 border-yellow-400 py-3 px-4 text-center z-50">
 		<div class="flex items-center justify-center gap-3">
 			<p class="text-gray-900 font-semibold text-sm sm:text-base">
-				Show your student you're cheering for them
+				Deadline has passed. Support your students with a donation.
 			</p>
 			<Button
-				href={formUrl}
-				external
-				label="Purchase an Ad"
+				href="/donate"
+				label="Donate"
 				variant="primary"
 				size="sm"
 			/>

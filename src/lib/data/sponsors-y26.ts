@@ -14,7 +14,7 @@ export const sponsorsY26: Sponsor[] = [
 	},
 	{
 		name: 'BTCS Parents Group',
-		logo: '/sponsors/y26/btcs-parents-group.jpeg',
+		logo: '/sponsors/y26/btcs-logo.jpg',
 	},
 	{
 		name: 'Catalano Coffee',
@@ -42,7 +42,7 @@ export const sponsorsY26: Sponsor[] = [
 	},
 	{
 		name: 'Bryzek',
-		logo: '/sponsors/y26/bryzek.jpg',
+		logo: '/sponsors/y26/bryzek-logo.jpg',
 	},
 	{
 		name: 'KMC Specialists',

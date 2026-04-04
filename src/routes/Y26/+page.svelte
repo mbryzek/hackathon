@@ -29,7 +29,6 @@
 			<Button href={urls.y26Rubric} label="View the rubric" size="sm" variant="secondary" />
 			<Button href={urls.y26Sponsors} label="Our sponsors" size="sm" variant="secondary" />
 			<Button href={urls.donate} label="Donate" size="sm" variant="secondary" />
-			<Button href={urls.y26ProgramAd} label="Buy a Program Ad" size="sm" variant="secondary" />
 		</div>
 
 		<p class="text-gray-800 font-light">
@@ -71,12 +70,5 @@
 			</ul>
 		</div>
 
-		<!-- Sign Up CTA -->
-		<div class="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-6 text-center mt-8">
-			<p class="text-gray-900 font-bold text-xl">Ready to build something amazing?</p>
-			<div class="mt-4">
-				<Button href={urls.signup} external label="Sign Up Now" variant="primary" size="lg" />
-			</div>
-		</div>
 	</div>
 </Shell>

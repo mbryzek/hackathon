@@ -6,26 +6,10 @@
 
 <Shell title="Bergen Tech Hackathon">
 	<div class="flex flex-col gap-y-4">
-		<!-- Sign Up CTA -->
-		<div class="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-6 mt-4 text-center">
-			<p class="text-gray-900 font-bold text-2xl sm:text-3xl">
-				2026 Bergen Tech Hackathon — April 18, 2026
-			</p>
-			<p class="text-gray-700 text-lg mt-2">
-				Registration is open! Sign up now to secure your spot.
-			</p>
-			<p class="text-red-600 font-semibold text-base mt-2">
-				Registration deadline: March 27, 2026
-			</p>
-			<div class="mt-4">
-				<Button href={urls.signup} external label="Sign Up for 2026" variant="primary" size="lg" />
-			</div>
-		</div>
-
 		<!-- Action Buttons -->
 		<div class="flex flex-col sm:flex-row justify-center items-center gap-3 mt-2">
 			<Button href="/donate" label="Donate" variant="primary" />
-			<Button href={urls.y26ProgramAd} label="Buy a Program Ad" variant="primary" />
+
 			<Button href="/Y25/" label="2025 Hackathon" variant="secondary" />
 		</div>
 

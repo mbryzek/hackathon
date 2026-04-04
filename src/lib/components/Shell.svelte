@@ -30,9 +30,9 @@
 			name: '2026',
 			children: [
 				{ href: urls.y26Index, name: 'Event', children: [] },
+				{ href: urls.y26Prizes, name: 'Prizes', children: [] },
 				{ href: urls.y26Rubric, name: 'Rubric', children: [] },
 				{ href: urls.y26Sponsors, name: 'Sponsors', children: [] },
-				{ href: urls.y26ProgramAd, name: 'Program Ad', children: [] },
 			],
 		},
 		{
