@@ -13,6 +13,7 @@
 				<div class="flex flex-col gap-y-2">
 					<div>April 18, 2026</div>
 					<div>9am - 9pm</div>
+					<div class="text-sm">Registration opens at 8:30am</div>
 				</div>
 			</CalloutBox>
 			<CalloutBox title="Location">
