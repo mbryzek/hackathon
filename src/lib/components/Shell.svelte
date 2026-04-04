@@ -30,6 +30,7 @@
 			name: '2026',
 			children: [
 				{ href: urls.y26Index, name: 'Event', children: [] },
+				{ href: urls.y26Program, name: 'Program', children: [] },
 				{ href: urls.y26Prizes, name: 'Prizes', children: [] },
 				{ href: urls.y26Rubric, name: 'Rubric', children: [] },
 				{ href: urls.y26Sponsors, name: 'Sponsors', children: [] },
@@ -109,7 +110,7 @@
 							<img
 								class="h-12 w-36 cursor-pointer"
 								src="/assets/bt-cs-logo.png"
-								alt="2025 Bergen Tech Hackathon"
+								alt="Bergen Tech Hackathon"
 							/>
 						</a>
 					</div>

@@ -11,6 +11,7 @@ export const urls = {
 	y25Prizes: '/Y25/prizes',
 	y25Rubric: '/Y25/rubric',
 	y26Index: '/Y26/',
+	y26Program: '/Y26/program',
 	y26Prizes: '/Y26/prizes',
 	y26Rubric: '/Y26/rubric',
 	y26Sponsors: '/Y26/sponsors',

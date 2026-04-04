@@ -20,13 +20,18 @@
 				<div class="flex flex-col gap-y-2">
 					<div>Bergen Tech High School</div>
 					<div>Teterboro NJ</div>
+					<div class="text-sm">504 US-46, Teterboro, NJ 07608</div>
 				</div>
+			</CalloutBox>
+			<CalloutBox title="Theme">
+				Build
 			</CalloutBox>
 		</div>
 
 		<!-- Action Buttons -->
 		<div class="flex flex-wrap items-center gap-3">
 			<Button href={urls.signup} external label="Sign up" size="sm" />
+			<Button href={urls.y26Program} label="Program" size="sm" variant="secondary" />
 			<Button href={urls.y26Prizes} label="Prizes" size="sm" variant="secondary" />
 			<Button href={urls.y26Rubric} label="Rubric" size="sm" variant="secondary" />
 			<Button href={urls.y26Sponsors} label="Our sponsors" size="sm" variant="secondary" />
