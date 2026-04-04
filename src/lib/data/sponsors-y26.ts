@@ -44,4 +44,8 @@ export const sponsorsY26: Sponsor[] = [
 		name: 'Bryzek',
 		logo: '/sponsors/y26/bryzek.jpg',
 	},
+	{
+		name: 'KMC Specialists',
+		logo: '/sponsors/y26/kmc-specialists.png',
+	},
 ];
