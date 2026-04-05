@@ -31,7 +31,7 @@
 	const additionalAwards: Award[] = [
 		{
 			title: 'No AI',
-			prize: '$1,000',
+			prize: '$250',
 			description:
 				'Teams can elect to build without AI support - only google search is allowed. Awarded to the team with the highest number of points in this category. All team members must sign an honor pledge.',
 		},
