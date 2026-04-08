@@ -52,4 +52,8 @@ export const sponsorsY26: Sponsor[] = [
 		name: 'BM Insurance Services',
 		logo: '/sponsors/y26/bm-insurance-services.jpg',
 	},
+	{
+		name: 'Isabelle DiPopolo Designs',
+		logo: '/sponsors/y26/isabelle-dipopolo-designs.png',
+	},
 ];
