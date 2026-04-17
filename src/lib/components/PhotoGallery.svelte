@@ -150,6 +150,8 @@
 <Modal open={lightboxOpen} onclose={closeLightbox} size="full">
 	<div
 		class="relative flex items-center justify-center min-h-[50vh]"
+		role="group"
+		aria-label="Photo viewer, swipe to navigate"
 		ontouchstart={handleTouchStart}
 		ontouchmove={handleTouchMove}
 		ontouchend={handleTouchEnd}

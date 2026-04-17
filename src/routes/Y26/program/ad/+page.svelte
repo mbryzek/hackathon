@@ -21,8 +21,6 @@
 
 	let currentEncouragementSize: SizeOption = $derived(sizes[encouragementSize]!);
 	let currentBusinessSize: SizeOption = $derived(sizes[businessSize]!);
-
-	const formUrl = 'https://forms.gle/aU3B4u73KqUcoSja8';
 </script>
 
 <Shell title="Program Ad Space">
