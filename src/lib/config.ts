@@ -1,5 +1,5 @@
 export const config = {
-	apiBaseUrl: import.meta.env['VITE_API_BASE_URL'] || 'http://localhost:9000',
+	apiBaseUrl: import.meta.env['VITE_API_BASE_URL'] || 'http://localhost:9300',
 	isProduction: import.meta.env['VITE_ENVIRONMENT'] === 'production' || import.meta.env.PROD,
 } as const;
 
