@@ -263,7 +263,7 @@ export interface SessionReference {
 
 export interface SignupForm {
   user: UserForm;
-  password: string;
+  password?: string;
   /** Notification types to opt into during registration */
   opt_ins?: RallydNotificationType[];
 }

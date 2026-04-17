@@ -283,6 +283,7 @@ export async function createTestEvent(
     project_names = ["Team 1", "Team 2", "Team 3", "Team 4"],
     number_students = 0,
     number_parents = 0,
+    status,
   } = options;
 
   return apiClient.createPlaywrightVoteEvents({
@@ -291,6 +292,7 @@ export async function createTestEvent(
       project_names,
       number_parents,
       number_students,
+      ...(status !== undefined ? { status } : {}),
     },
   });
 }
