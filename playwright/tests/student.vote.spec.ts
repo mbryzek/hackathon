@@ -45,6 +45,15 @@ test.describe("Student Voting", () => {
     // Verify we're on the thanks page
     await expect(page.locator("text=Thank")).toBeVisible();
 
+    // Wait for verifyCode to finish populating state (so absence assertions are meaningful)
+    await expect(page.locator("text=You voted for:")).toBeVisible();
+
+    // Parent-only CTAs must NOT appear for students
+    await expect(
+      page.locator('[data-testid="organizer-cta"]'),
+    ).toHaveCount(0);
+    await expect(page.locator('[data-testid="donate-cta"]')).toHaveCount(0);
+
     // Now change the vote - click "Change Vote" button
     await helpers.safeClick(page, "Change My Vote");
 

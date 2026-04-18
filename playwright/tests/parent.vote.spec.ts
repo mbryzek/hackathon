@@ -46,6 +46,23 @@ test.describe("Parent Voting", () => {
     // Verify we're on the thanks page
     await expect(page.locator("text=Thank")).toBeVisible();
 
+    // Wait for verifyCode to populate state (CTAs depend on voter_type from API)
+    await expect(page.locator("text=You voted for:")).toBeVisible();
+
+    // Verify parent-only "next year" CTAs render with correct external URLs
+    const organizerCta = page.locator('[data-testid="organizer-cta"]');
+    const donateCta = page.locator('[data-testid="donate-cta"]');
+    await expect(organizerCta).toBeVisible();
+    await expect(organizerCta).toHaveAttribute(
+      "href",
+      "https://forms.gle/zh6AKeEaa415QdTp8",
+    );
+    await expect(donateCta).toBeVisible();
+    await expect(donateCta).toHaveAttribute(
+      "href",
+      "https://donorbox.org/2026-bt-hackathon",
+    );
+
     // Now change the vote - click "Change My Vote" button
     await helpers.safeClick(page, "Change My Vote");
 

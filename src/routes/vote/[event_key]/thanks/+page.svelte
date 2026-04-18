@@ -2,7 +2,10 @@
     import { onMount } from "svelte";
     import { page } from "$app/stores";
     import { urls } from "$lib/urls";
-    import { voteApi, type Project } from "$lib/api/client";
+    import { voteApi, VoterType, type Project } from "$lib/api/client";
+
+    const ORGANIZER_FORM_URL = "https://forms.gle/zh6AKeEaa415QdTp8";
+    const DONATION_URL = "https://donorbox.org/2026-bt-hackathon";
 
     const eventKey = $derived($page.params.event_key ?? "");
     const code = $derived($page.url.searchParams.get("code") || "");
@@ -13,12 +16,16 @@
     );
 
     let selectedProjects = $state<Project[]>([]);
+    let voterType = $state<VoterType | null>(null);
     let isLoading = $state(true);
+
+    const isParent = $derived(voterType === VoterType.Parent);
 
     onMount(async () => {
         if (code && eventKey) {
             const response = await voteApi.verifyCode(eventKey, code);
             if (response.data) {
+                voterType = response.data.voter_type;
                 selectedProjects = response.data.projects
                     .filter((pv) => pv.selected)
                     .map((pv) => pv.project);
@@ -113,10 +120,47 @@
             </p>
         </div>
 
+        {#if isParent}
+            <div class="border-t border-gray-200 pt-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-2">
+                    We need your help for next year
+                </h2>
+                <p class="text-gray-600 mb-5">
+                    The hackathon only happens because parents step up. Please
+                    consider joining the organizing team for 2027 — or
+                    supporting this year's event with a donation.
+                </p>
+
+                <div class="space-y-3">
+                    <a
+                        href={ORGANIZER_FORM_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid="organizer-cta"
+                        class="block w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors"
+                    >
+                        Learn more
+                        <span class="sr-only">(opens in a new tab)</span>
+                    </a>
+
+                    <a
+                        href={DONATION_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid="donate-cta"
+                        class="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                    >
+                        Donate to support the hackathon
+                        <span class="sr-only">(opens in a new tab)</span>
+                    </a>
+                </div>
+            </div>
+        {/if}
+
         <div class="space-y-3">
             <a
                 href={changeVoteUrl}
-                class="block w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors"
+                class="block w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-6 rounded-lg border border-gray-300 transition-colors"
             >
                 Change My Vote
             </a>
