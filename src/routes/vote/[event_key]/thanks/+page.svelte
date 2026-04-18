@@ -139,7 +139,7 @@
                         data-testid="organizer-cta"
                         class="block w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors"
                     >
-                        Join the organizing team
+                        Learn more
                         <span class="sr-only">(opens in a new tab)</span>
                     </a>
 
