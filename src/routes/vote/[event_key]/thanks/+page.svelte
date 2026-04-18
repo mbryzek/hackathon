@@ -139,9 +139,8 @@
                         data-testid="organizer-cta"
                         class="block w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors"
                     >
-                        Join the organizing team<span class="sr-only">
-                            (opens in a new tab)</span
-                        >
+                        Join the organizing team
+                        <span class="sr-only">(opens in a new tab)</span>
                     </a>
 
                     <a
@@ -151,9 +150,8 @@
                         data-testid="donate-cta"
                         class="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                     >
-                        Donate to support the hackathon<span class="sr-only">
-                            (opens in a new tab)</span
-                        >
+                        Donate to support the hackathon
+                        <span class="sr-only">(opens in a new tab)</span>
                     </a>
                 </div>
             </div>
