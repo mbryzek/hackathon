@@ -47,7 +47,7 @@
 				</div>
 			</CalloutBox>
 			<CalloutBox title="Theme">
-				Build with AI
+				Build
 			</CalloutBox>
 		</div>
 
@@ -66,10 +66,10 @@
 
 		<p class="text-gray-800 font-light">
 			This year the event grew again, with 130 high school students from both the Teterboro and
-			Paramus campuses registering to compete. Students formed 39 teams for a 12-hour sprint under
-			our "Build with AI" theme — going from a blank screen to a working demo in a single day. From
-			idea generation, to building, to final presentations in front of industry judges, the
-			creativity and ambition on display was genuinely extraordinary.
+			Paramus campuses registering to compete. Students formed 39 teams for a 12-hour "Build"
+			themed sprint — going from a blank screen to a working demo in a single day. From idea
+			generation, to building, to final presentations in front of industry judges, the creativity
+			and ambition on display was genuinely extraordinary.
 		</p>
 
 		<p class="text-gray-800 font-light">
