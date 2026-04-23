@@ -1,0 +1,10 @@
+amends "modulepath:/api_config.pkl"
+
+org = "bryzek"
+
+blocks {
+  new TypeScript {
+    target = "./generated"
+    applications { "platform-error"; "platform"; "vote-api"; "vote-admin"; "playwright-vote" }
+  }
+}

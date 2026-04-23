@@ -1,9 +1,0 @@
-bryzek:
-  - generators:
-      typescript: ./generated
-    applications:
-      platform-error:
-      platform:
-      vote-api:
-      vote-admin:
-      playwright-vote:
