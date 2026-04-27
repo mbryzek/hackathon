@@ -34,6 +34,7 @@
 				{ href: urls.y26Prizes, name: 'Prizes', children: [] },
 				{ href: urls.y26Rubric, name: 'Rubric', children: [] },
 				{ href: urls.y26Sponsors, name: 'Sponsors', children: [] },
+				{ href: urls.y26Photos, name: 'Photos', children: [] },
 			],
 		},
 		{
