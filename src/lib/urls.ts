@@ -15,6 +15,7 @@ export const urls = {
 	y26Prizes: '/Y26/prizes',
 	y26Rubric: '/Y26/rubric',
 	y26Sponsors: '/Y26/sponsors',
+	y26Photos: '/Y26/photos',
 	y26ProgramAd: '/Y26/program/ad',
 	y26EventSummary:
 		'https://raw.githubusercontent.com/mbryzek/hackathon-static/refs/heads/main/2026/2026-BTCSP-Hackathon-Event-Summary.pdf',
