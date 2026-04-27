@@ -54,6 +54,7 @@
 		<!-- Action Buttons -->
 		<div class="flex flex-wrap items-center gap-3">
 			<Button href={urls.y26EventSummary} label="Event summary" size="sm" external />
+			<Button href={urls.y26Photos} label="Photos" size="sm" variant="secondary" />
 			<Button href={urls.y26Prizes} label="Prizes" size="sm" variant="secondary" />
 			<Button href={urls.y26Sponsors} label="Our sponsors" size="sm" variant="secondary" />
 		</div>
