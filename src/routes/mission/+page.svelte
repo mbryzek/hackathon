@@ -74,8 +74,7 @@
 
 		<!-- CTA -->
 		<div class="flex flex-wrap items-center gap-3 pt-4">
-			<Button href={urls.signup} external label="Sign up for 2026" />
-			<Button href={urls.donate} label="Support us" variant="secondary" />
+			<Button href={urls.donate} label="Support us" />
 		</div>
 	</div>
 </Shell>
