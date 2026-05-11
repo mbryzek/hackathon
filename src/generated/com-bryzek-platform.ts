@@ -51,12 +51,18 @@ export enum RallydNotificationType {
   OrganizerGameConfirmed = 'organizer_game_confirmed',
   Marketing = 'marketing',
   SmsOptinExpired = 'sms_optin_expired',
+  ConnectionShare = 'connection_share',
 }
 
 export enum SportRatingSystem {
   PickleballDupr = 'pickleball_dupr',
   PadelWpr = 'padel_wpr',
   TennisNtrp = 'tennis_ntrp',
+}
+
+export enum TenantFeature {
+  EmailVerification = 'email_verification',
+  SmsOptin = 'sms_optin',
 }
 
 export enum TimeZone {
@@ -125,6 +131,22 @@ export enum UserStatus {
 // Models
 // ============================================================================
 
+export interface Address {
+  streets?: string[];
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  country?: string;
+}
+
+export interface AddressForm {
+  streets?: string[];
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  country?: string;
+}
+
 export interface BirthInfo {
   month: number;
   year: number;
@@ -133,6 +155,13 @@ export interface BirthInfo {
 export interface BirthInfoForm {
   month: number;
   year: number;
+}
+
+/**
+ * The cleartext value of a token, returned exactly once after creation.
+ */
+export interface CleartextToken {
+  token: string;
 }
 
 export interface Email {
@@ -290,6 +319,54 @@ export interface SmsOptinRequestResultScheduled {
   scheduled_at: ISODateTimeString;
 }
 
+/**
+ * Health snapshot of an async platform task. Always emitted alongside resources backed by tasks so callers can see retry / give-up state without a second query.
+ */
+export interface TaskOverview {
+  id: string;
+  /** Task discriminator, e.g. fire_worker_request, process_worker_report. */
+  discriminator: string;
+  num_attempts: number;
+  status: TaskOverviewStatus;
+}
+
+/**
+ * Task succeeded (completed_at IS NOT NULL).
+ */
+export interface TaskOverviewStatusComplete {
+  discriminator: 'complete';
+  completed_at: ISODateTimeString;
+}
+
+/**
+ * Retries exhausted; will not run again until requeued (gave_up_at IS NOT NULL, completed_at IS NULL).
+ */
+export interface TaskOverviewStatusGaveUp {
+  discriminator: 'gave_up';
+  gave_up_at: ISODateTimeString;
+  errors: string[];
+  /** Java stacktrace from the final failed attempt. Omitted when the failure was a returned validation error rather than a thrown exception. */
+  stacktrace?: string;
+}
+
+/**
+ * Task will run again at next_run_at. May be pre-first-attempt (num_attempts = 0) or awaiting a retry (num_attempts > 0). If next_run_at is in the past, the task is queued and waiting for a worker to pick it up.
+ */
+export interface TaskOverviewStatusScheduled {
+  discriminator: 'scheduled';
+  next_run_at: ISODateTimeString;
+  errors: string[];
+  /** Java stacktrace from the most recent failed attempt. Omitted when the most recent attempt was a returned validation error or there have been no attempts yet. */
+  stacktrace?: string;
+}
+
+/**
+ * Result of a per-resource requeue request. Only scheduled (with prior attempts) and gave_up tasks are reset; pre-attempt scheduled and completed tasks are silently skipped.
+ */
+export interface TaskRequeueResult {
+  requeued: number;
+}
+
 export interface TenantReference {
   id: string;
 }
@@ -304,6 +381,22 @@ export interface TenantSession {
 export interface TenantSummary {
   id: string;
   name: string;
+}
+
+/**
+ * An API token tied to a user. Tokens authenticate API requests via HTTP Basic Auth (token as username, empty password).
+ */
+export interface Token {
+  id: string;
+  user: UserReference;
+  masked_token: string;
+  description?: string;
+  created_at: ISODateTimeString;
+}
+
+export interface TokenForm {
+  user_id: string;
+  description?: string;
 }
 
 export interface User {
@@ -421,6 +514,29 @@ export function isSmsOptinRequestResultRateLimited(obj: SmsOptinRequestResult): 
   return obj.discriminator === 'rate_limited';
 }
 
+/**
+ * Lifecycle state of an async platform task. Mutually exclusive: scheduled (will run again at next_run_at — covers both pre-first-attempt and retrying), gave_up (retries exhausted), or complete.
+ */
+export type TaskOverviewStatus = TaskOverviewStatusScheduled | TaskOverviewStatusGaveUp | TaskOverviewStatusComplete;
+
+export const TaskOverviewStatusDiscriminator = {
+  TaskOverviewStatusScheduled: 'scheduled',
+  TaskOverviewStatusGaveUp: 'gave_up',
+  TaskOverviewStatusComplete: 'complete'
+} as const;
+
+export function isTaskOverviewStatusScheduled(obj: TaskOverviewStatus): obj is TaskOverviewStatusScheduled {
+  return obj.discriminator === 'scheduled';
+}
+
+export function isTaskOverviewStatusGaveUp(obj: TaskOverviewStatus): obj is TaskOverviewStatusGaveUp {
+  return obj.discriminator === 'gave_up';
+}
+
+export function isTaskOverviewStatusComplete(obj: TaskOverviewStatus): obj is TaskOverviewStatusComplete {
+  return obj.discriminator === 'complete';
+}
+
 // ============================================================================
 // API Client
 // ============================================================================
@@ -485,6 +601,26 @@ export interface CreateTenantSessionLoginAndPhoneAndVerificationsOptions {
 }
 
 export interface DeleteTenantSessionOptions {
+  headers?: Record<string, string>;
+}
+
+export interface GetTokensUsersByUserIdOptions {
+  userId: string;
+  limit: number;
+  offset: number;
+  headers?: Record<string, string>;
+}
+
+export interface CreateTokenOptions {
+  body: TokenForm;
+  headers?: Record<string, string>;
+}
+
+export interface GetTokenCleartextByIdOptions {
+  headers?: Record<string, string>;
+}
+
+export interface DeleteTokenByIdOptions {
   headers?: Record<string, string>;
 }
 
@@ -850,6 +986,118 @@ export class ApiClient {
 
     if (response.status === 401) {
       throw new UnauthorizedErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async getTokensUsersByUserId(params: GetTokensUsersByUserIdOptions): Promise<Token[]> {
+    const queryParts: string[] = [];
+    queryParts.push(`limit=${encodeURIComponent(String(params.limit))}`);
+    queryParts.push(`offset=${encodeURIComponent(String(params.offset))}`);
+    const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
+    const url = `${this.baseUrl}/tokens/users/${params.userId}${queryString}`;
+
+      const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+    });
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createToken(params: CreateTokenOptions): Promise<Token> {
+    const url = `${this.baseUrl}/tokens`;
+
+      const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 201) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorsResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async getTokenCleartextById(id: string, options?: GetTokenCleartextByIdOptions): Promise<CleartextToken> {
+    const url = `${this.baseUrl}/tokens/${id}/cleartext`;
+
+      const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.headers || {}),
+      },
+    });
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorsResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async deleteTokenById(id: string, options?: DeleteTokenByIdOptions): Promise<void> {
+    const url = `${this.baseUrl}/tokens/${id}`;
+
+      const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.headers || {}),
+      },
+    });
+
+    if (response.status === 204) {
+      return;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorsResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);

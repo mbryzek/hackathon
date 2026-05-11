@@ -1,0 +1,13 @@
+amends "../../devops/api/ApiConfig.pkl"
+
+org = "bryzek"
+
+local tsSrc = "./src/generated"
+
+local fileFilter = new Filter { types { "file" } }
+
+applications = new Listing<AppGroup> {
+  new { names { "platform-storage" }; generators = module.singleGenerator("typescript", tsSrc); filter = fileFilter }
+  new { names { "platform-error"; "platform"; "vote-api"; "vote-admin" }
+                                      generators = module.singleGenerator("typescript", tsSrc) }
+}
