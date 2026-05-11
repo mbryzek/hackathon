@@ -1,0 +1,10 @@
+amends "../../../devops/api/ApiConfig.pkl"
+
+org = "bryzek"
+
+local tsSrc = "./generated"
+
+applications = new Listing<AppGroup> {
+  new { names { "platform-error"; "platform"; "vote-api"; "vote-admin"; "playwright-vote" }
+        generators = module.singleGenerator("typescript", tsSrc) }
+}
