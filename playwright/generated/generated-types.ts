@@ -9,3 +9,6 @@ export type ISODateString = string;
 
 /** ISO 8601 date-time string in format YYYY-MM-DDTHH:mm:ss.sssZ */
 export type ISODateTimeString = string;
+
+/** ISO 8601 time string in format HH:MM:SS */
+export type ISOTimeString = string;

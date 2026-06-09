@@ -106,7 +106,7 @@ export interface Tally {
 // API Client
 // ============================================================================
 
-import { UnauthorizedErrorsResponse } from './generated-error-unauthorized-errors-response.ts';
+import { UnauthorizedErrorResponse } from './generated-error-unauthorized-error-response.ts';
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
 import { VoidResponse } from './generated-error-void-response.ts';
 import { ApiException } from "./generated-util.ts";
@@ -249,7 +249,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
@@ -297,7 +297,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
@@ -334,7 +334,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -366,7 +366,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -394,7 +394,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -425,7 +425,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -467,7 +467,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 422) {
@@ -495,7 +495,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -524,7 +524,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 422) {
@@ -553,7 +553,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -584,7 +584,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -616,7 +616,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 422) {
@@ -644,7 +644,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -673,7 +673,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -705,7 +705,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -738,7 +738,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -769,7 +769,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -797,7 +797,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
@@ -829,7 +829,7 @@ export class ApiClient {
     }
 
     if (response.status === 401) {
-      throw new UnauthorizedErrorsResponse(response);
+      throw new UnauthorizedErrorResponse(response);
     }
 
     if (response.status === 404) {
