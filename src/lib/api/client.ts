@@ -21,7 +21,7 @@ import {
 	type ProjectTally,
 } from '../../generated/com-bryzek-vote-admin';
 import { ValidationErrorsResponse } from '../../generated/generated-error-validation-errors-response';
-import { UnauthorizedErrorsResponse } from '../../generated/generated-error-unauthorized-errors-response';
+import { UnauthorizedErrorResponse } from '../../generated/generated-error-unauthorized-error-response';
 import { VoidResponse } from '../../generated/generated-error-void-response';
 
 // Re-export types for use in components
@@ -92,7 +92,7 @@ async function handleApiCall<T>(
 			};
 		}
 
-		if (error instanceof UnauthorizedErrorsResponse) {
+		if (error instanceof UnauthorizedErrorResponse) {
 			return {
 				errors: [{ code: 'unauthorized', message: 'Unauthorized' }],
 				status: 401,
@@ -134,7 +134,7 @@ async function handleVoidApiCall(
 			};
 		}
 
-		if (error instanceof UnauthorizedErrorsResponse) {
+		if (error instanceof UnauthorizedErrorResponse) {
 			return {
 				errors: [{ code: 'unauthorized', message: 'Unauthorized' }],
 				status: 401,
