@@ -37,6 +37,11 @@ export enum Gender {
   Other = 'other',
 }
 
+export enum LoginTokenType {
+  Login = 'login',
+  Impersonation = 'impersonation',
+}
+
 export enum NotificationChannel {
   EmailAndSms = 'email_and_sms',
   EmailOnly = 'email_only',
@@ -182,6 +187,10 @@ export interface EmailVerification {
 
 }
 
+export interface ImpersonationTokenForm {
+  user_id: string;
+}
+
 export interface LoginForm {
   email: string;
   password: string;
@@ -206,16 +215,20 @@ export interface LoginPhoneVerifyForm {
  * A minted one-time login token. token is carried in the redirect URL to the destination host and exchanged there. No cookie is set by the minting host.
  */
 export interface LoginToken {
+  user: UserReference;
   token: string;
+  type: LoginTokenType;
   expires_at: ISODateTimeString;
 }
 
+export interface LoginTokenExchangeForm {
+  token: string;
+}
+
 /**
- * Mint a one-time login token by verifying a tenant user's credentials. redirect_url's host is validated server-side against a known-hosts allowlist (else 422) so the token is only ever bounced to a trusted host; it is NOT persisted.
+ * Mint a one-time login token. redirect_url's host is validated server-side against a known-hosts allowlist (else 422) so the token is only ever bounced to a trusted host; it is NOT persisted.
  */
 export interface LoginTokenForm {
-  email: string;
-  password: string;
   redirect_url: string;
 }
 
@@ -441,6 +454,7 @@ export interface TenantSession {
   session: SessionReference;
   user: User;
   tenant: TenantSummary;
+  impersonated_by?: UserReference;
 }
 
 export interface TenantSummary {
@@ -617,15 +631,26 @@ export function isTaskOverviewStatusComplete(obj: TaskOverviewStatus): obj is Ta
 // ============================================================================
 
 import { VoidResponse } from './generated-error-void-response.ts';
-import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
 import { UnauthorizedErrorResponse } from './generated-error-unauthorized-error-response.ts';
+import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
 import { ApiException } from "./generated-util.ts";
 
 export interface UpdateEmailVerificationByTokenOptions {
   headers?: Record<string, string>;
 }
 
-export interface CreateLoginTokenExchangesByTokenOptions {
+export interface CreateLoginTokenOptions {
+  body: LoginTokenForm;
+  headers?: Record<string, string>;
+}
+
+export interface CreateLoginTokenImpersonationOptions {
+  body: ImpersonationTokenForm;
+  headers?: Record<string, string>;
+}
+
+export interface CreateLoginTokenExchangeOptions {
+  body: LoginTokenExchangeForm;
   headers?: Record<string, string>;
 }
 
@@ -660,12 +685,6 @@ export interface CreateTenantSessionLoginsOptions {
 export interface CreateTenantSessionSignupsOptions {
   tenantId: string;
   body: SignupForm;
-  headers?: Record<string, string>;
-}
-
-export interface CreateTenantSessionLoginAndTokensOptions {
-  tenantId: string;
-  body: LoginTokenForm;
   headers?: Record<string, string>;
 }
 
@@ -835,15 +854,74 @@ export class ApiClient {
 
   }
 
-  async createLoginTokenExchangesByToken(token: string, options?: CreateLoginTokenExchangesByTokenOptions): Promise<SessionState> {
-    const url = `${this.baseUrl}/session/login/tokens/${token}/exchanges`;
+  async createLoginToken(params: CreateLoginTokenOptions): Promise<LoginToken> {
+    const url = `${this.baseUrl}/login/tokens`;
 
       const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
+        ...(params.headers || {}),
       },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 201) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createLoginTokenImpersonation(params: CreateLoginTokenImpersonationOptions): Promise<LoginToken> {
+    const url = `${this.baseUrl}/login/tokens/impersonation`;
+
+      const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 201) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createLoginTokenExchange(params: CreateLoginTokenExchangeOptions): Promise<SessionState> {
+    const url = `${this.baseUrl}/login/tokens/exchange`;
+
+      const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
     });
 
     if (response.status === 201) {
@@ -1027,31 +1105,6 @@ export class ApiClient {
 
   async createTenantSessionSignups(params: CreateTenantSessionSignupsOptions): Promise<SessionState> {
     const url = `${this.baseUrl}/tenant/${params.tenantId}/session/signups`;
-
-      const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
-      body: JSON.stringify(params.body),
-    });
-
-    if (response.status === 201) {
-      const data = await response.json();
-      return data;
-    }
-
-    if (response.status === 422) {
-      throw new ValidationErrorsResponse(response);
-    }
-
-    throw new ApiException(response, `Request failed with status ${response.status}`);
-
-  }
-
-  async createTenantSessionLoginAndTokens(params: CreateTenantSessionLoginAndTokensOptions): Promise<LoginToken> {
-    const url = `${this.baseUrl}/tenant/${params.tenantId}/session/login/tokens`;
 
       const response = await fetch(url, {
       method: 'POST',
