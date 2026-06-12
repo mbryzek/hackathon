@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent } from '$lib/api/client';
@@ -9,7 +9,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const eventId = $derived($page.params.id ?? '');
+	const eventId = $derived(page.params.id ?? '');
 
 	// Get session ID from server-provided data
 	const sessionId = $derived(data.adminSession?.id);
@@ -20,7 +20,7 @@
 	let isDeleting = $state(false);
 	let showDeleteConfirm = $state(false);
 
-	const votingUrl = $derived(event ? `${$page.url.origin}/vote/${event.key}` : '');
+	const votingUrl = $derived(event ? `${page.url.origin}/vote/${event.key}` : '');
 
 	onMount(async () => {
 		if (!sessionId) {

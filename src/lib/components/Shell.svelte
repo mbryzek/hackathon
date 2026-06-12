@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { urls } from '$lib/urls';
 
 	interface Props {
@@ -63,11 +63,11 @@
 	];
 
 	function isActive(section: Section): boolean {
-		return $page.url.pathname === section.href;
+		return page.url.pathname === section.href;
 	}
 
 	function hasActiveChild(section: Section): boolean {
-		return section.children.some((child) => $page.url.pathname === child.href);
+		return section.children.some((child) => page.url.pathname === child.href);
 	}
 
 	function isExternal(href: string): boolean {
@@ -156,7 +156,7 @@
 										<div class="absolute left-0 top-full w-48 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out">
 											<div class="bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
 												{#each section.children as child, i}
-													{@const childActive = $page.url.pathname === child.href}
+													{@const childActive = page.url.pathname === child.href}
 													<a
 														href={child.href}
 														class="block px-4 py-2.5 text-sm transition-colors duration-150 {childActive
@@ -232,7 +232,7 @@
 						{#if section.children.length > 0}
 							<div class="pl-4 mt-1 space-y-1">
 								{#each section.children as child}
-									{@const childActive = $page.url.pathname === child.href}
+									{@const childActive = page.url.pathname === child.href}
 									<a
 										href={child.href}
 										class="block rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150 {childActive
