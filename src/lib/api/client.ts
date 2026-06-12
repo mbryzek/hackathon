@@ -377,14 +377,14 @@ export const adminApi = {
 		sessionId: string,
 		eventId: string,
 		form: { voter_type: VoterType; count: number }
-	): Promise<ApiResponse<Code[]>> {
+	): Promise<ApiResponse<void>> {
 		return handleVoidApiCall(() =>
 			voteAdminClient.createCodeGenerate({
 				headers: getAuthHeaders(sessionId),
 				eventId,
 				body: form,
 			})
-		) as Promise<ApiResponse<Code[]>>;
+		);
 	},
 
 	async deleteCode(sessionId: string, eventId: string, id: string): Promise<ApiResponse<void>> {
