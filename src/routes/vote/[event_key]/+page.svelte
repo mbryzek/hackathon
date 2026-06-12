@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { page } from "$app/stores";
+    import { page } from "$app/state";
     import { goto } from "$app/navigation";
     import { urls } from "$lib/urls";
     import { voteApi, type Vote } from "$lib/api/client";
@@ -8,10 +8,10 @@
 
     let { data }: { data: PageData } = $props();
 
-    const eventKey = $derived($page.params.event_key ?? "");
+    const eventKey = $derived(page.params.event_key ?? "");
 
     // Get initial code from URL (only read once on mount)
-    const initialCode = $page.url.searchParams.get("code") || "";
+    const initialCode = page.url.searchParams.get("code") || "";
 
     let code = $state(initialCode);
     let verification = $state<Vote | null>(null);

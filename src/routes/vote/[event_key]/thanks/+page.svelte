@@ -1,14 +1,14 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { page } from "$app/stores";
+    import { page } from "$app/state";
     import { urls } from "$lib/urls";
     import { voteApi, VoterType, type Project } from "$lib/api/client";
 
     const ORGANIZER_FORM_URL = "https://forms.gle/zh6AKeEaa415QdTp8";
     const DONATION_URL = "https://donorbox.org/2026-bt-hackathon";
 
-    const eventKey = $derived($page.params.event_key ?? "");
-    const code = $derived($page.url.searchParams.get("code") || "");
+    const eventKey = $derived(page.params.event_key ?? "");
+    const code = $derived(page.url.searchParams.get("code") || "");
     const changeVoteUrl = $derived(
         code
             ? `${urls.voteEvent(eventKey)}?code=${encodeURIComponent(code)}`

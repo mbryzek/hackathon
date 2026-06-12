@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../../../app.css';
 	import type { Snippet } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { urls } from '$lib/urls';
 
 	interface Props {
@@ -11,7 +11,7 @@
 	let { children }: Props = $props();
 
 	// Check if we're on the login page
-	const isLoginPage = $derived($page.url.pathname === urls.voteAdminLogin);
+	const isLoginPage = $derived(page.url.pathname === urls.voteAdminLogin);
 </script>
 
 <svelte:head>

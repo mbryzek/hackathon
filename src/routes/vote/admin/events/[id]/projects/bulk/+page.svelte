@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { urls } from '$lib/urls';
 	import { adminApi, type VoteEvent } from '$lib/api/client';
@@ -8,7 +8,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const eventId = $derived($page.params.id ?? '');
+	const eventId = $derived(page.params.id ?? '');
 
 	// Get session ID from server-provided data
 	const sessionId = $derived(data.adminSession?.id);
