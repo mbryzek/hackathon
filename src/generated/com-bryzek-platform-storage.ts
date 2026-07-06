@@ -21,6 +21,17 @@ export enum FileType {
   Html = 'html',
   Xlsx = 'xlsx',
   Xls = 'xls',
+  Bmp = 'bmp',
+  Webp = 'webp',
+  Heic = 'heic',
+  Tiff = 'tiff',
+  Mp4 = 'mp4',
+  Mov = 'mov',
+  Mp3 = 'mp3',
+  M4a = 'm4a',
+  Amr = 'amr',
+  Ogg = 'ogg',
+  Vcf = 'vcf',
 }
 
 // ============================================================================
