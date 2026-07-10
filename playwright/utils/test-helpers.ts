@@ -3,16 +3,12 @@
  * Common functions used across multiple test files
  */
 
-import fs from "fs";
-import path from "path";
-import type { Page } from "@playwright/test";
-import { config } from "../config";
-import type { WaitForElementOptions, ContextOrPage } from "../types";
-import {
-  ApiClient,
-  TestEvent,
-  TestEventForm,
-} from "../generated/com-bryzek-playwright-vote";
+import fs from 'fs';
+import path from 'path';
+import type { Page } from '@playwright/test';
+import { config } from '../config';
+import type { WaitForElementOptions, ContextOrPage } from '../types';
+import { ApiClient, TestEvent, TestEventForm } from '../generated/com-bryzek-playwright-vote';
 
 /**
  * Generated API client instance for playwright endpoints
@@ -22,13 +18,10 @@ const apiClient = new ApiClient(config.BACKEND_BASE_URL);
 /**
  * Take screenshot with timestamp
  */
-export async function takeScreenshot(
-  page: Page,
-  name: string,
-): Promise<string | undefined> {
+export async function takeScreenshot(page: Page, name: string): Promise<string | undefined> {
   if (!config.SCREENSHOTS.enabled) return;
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const filename = `${name}-${timestamp}.png`;
   const filepath = path.join(config.SCREENSHOTS.path, filename);
 
@@ -39,7 +32,7 @@ export async function takeScreenshot(
 
   await page.screenshot({
     path: filepath,
-    fullPage: config.SCREENSHOTS.fullPage,
+    fullPage: config.SCREENSHOTS.fullPage
   });
 
   console.log(`        Screenshot: ${filepath}`);
@@ -49,11 +42,7 @@ export async function takeScreenshot(
 /**
  * Wait for element with custom timeout
  */
-export async function waitForElement(
-  page: Page,
-  selector: string,
-  options: WaitForElementOptions = {},
-): Promise<boolean> {
+export async function waitForElement(page: Page, selector: string, options: WaitForElementOptions = {}): Promise<boolean> {
   const timeout = options.timeout || config.TIMEOUTS.default;
 
   try {
@@ -61,7 +50,7 @@ export async function waitForElement(
     return true;
   } catch (error) {
     console.error(`❌ Element not found: ${selector}`);
-    await takeScreenshot(page, "element-not-found");
+    await takeScreenshot(page, 'element-not-found');
     throw error;
   }
 }
@@ -71,10 +60,7 @@ export async function waitForElement(
  * Supports both <button> elements and <a> elements (links styled as buttons)
  * Provides clear error messages when element is not found
  */
-export async function safeClick(
-  page: Page,
-  buttonLabel: string,
-): Promise<boolean> {
+export async function safeClick(page: Page, buttonLabel: string): Promise<boolean> {
   const retries = 3;
   const timeout = config.TIMEOUTS.action;
   const buttonSelector = `button:has-text("${buttonLabel}")`;
@@ -84,7 +70,7 @@ export async function safeClick(
     try {
       // Try button first
       const buttonVisible = await page
-        .waitForSelector(buttonSelector, { timeout: 500, state: "visible" })
+        .waitForSelector(buttonSelector, { timeout: 500, state: 'visible' })
         .then(() => true)
         .catch(() => false);
 
@@ -95,7 +81,7 @@ export async function safeClick(
 
       // Try link
       const linkVisible = await page
-        .waitForSelector(linkSelector, { timeout: 500, state: "visible" })
+        .waitForSelector(linkSelector, { timeout: 500, state: 'visible' })
         .then(() => true)
         .catch(() => false);
 
@@ -106,19 +92,15 @@ export async function safeClick(
 
       // Neither found, retry if attempts remaining
       if (i === retries - 1) {
-        console.error(
-          `❌ Button or link with text '${buttonLabel}' not found after ${retries} attempts`,
-        );
-        await takeScreenshot(page, "click-failed");
+        console.error(`❌ Button or link with text '${buttonLabel}' not found after ${retries} attempts`);
+        await takeScreenshot(page, 'click-failed');
         throw new Error(`Button or link with text '${buttonLabel}' not found`);
       }
       await page.waitForTimeout(250);
     } catch (error) {
       if (i === retries - 1) {
-        console.error(
-          `❌ Button or link with text '${buttonLabel}' not found after ${retries} attempts`,
-        );
-        await takeScreenshot(page, "click-failed");
+        console.error(`❌ Button or link with text '${buttonLabel}' not found after ${retries} attempts`);
+        await takeScreenshot(page, 'click-failed');
         throw new Error(`Button or link with text '${buttonLabel}' not found`);
       }
       await page.waitForTimeout(250);
@@ -150,11 +132,11 @@ export async function waitForCondition(
     intervalMs?: number;
     maxAttempts?: number;
     description?: string;
-  } = {},
+  } = {}
 ): Promise<void> {
   const intervalMs = options.intervalMs || 250;
   const maxAttempts = options.maxAttempts || 10;
-  const description = options.description || "condition to be met";
+  const description = options.description || 'condition to be met';
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const result = await conditionFn();
@@ -167,9 +149,7 @@ export async function waitForCondition(
     }
   }
 
-  throw new Error(
-    `Timeout waiting for ${description} after ${maxAttempts} attempts (${maxAttempts * intervalMs}ms)`,
-  );
+  throw new Error(`Timeout waiting for ${description} after ${maxAttempts} attempts (${maxAttempts * intervalMs}ms)`);
 }
 
 /**
@@ -183,11 +163,7 @@ export async function waitForCondition(
  *   await clickAndWaitForUrl(page, "Submit", "/dashboard");
  *   await clickAndWaitForUrl(page, "Logout", "/login");
  */
-export async function clickAndWaitForUrl(
-  page: Page,
-  buttonLabel: string,
-  urlPattern: string,
-): Promise<void> {
+export async function clickAndWaitForUrl(page: Page, buttonLabel: string, urlPattern: string): Promise<void> {
   const timeout = config.TIMEOUTS.navigation;
   // Support both buttons and anchor tags (links styled as buttons)
   const buttonSelector = `button:has-text("${buttonLabel}")`;
@@ -198,7 +174,7 @@ export async function clickAndWaitForUrl(
   try {
     // Try button first
     const buttonVisible = await page
-      .waitForSelector(buttonSelector, { timeout: 1000, state: "visible" })
+      .waitForSelector(buttonSelector, { timeout: 1000, state: 'visible' })
       .then(() => true)
       .catch(() => false);
 
@@ -208,12 +184,12 @@ export async function clickAndWaitForUrl(
       // Try link
       await page.waitForSelector(linkSelector, {
         timeout: timeout - 1000,
-        state: "visible",
+        state: 'visible'
       });
       selector = linkSelector;
     }
   } catch (error) {
-    await takeScreenshot(page, "button-not-found");
+    await takeScreenshot(page, 'button-not-found');
     throw new Error(`Button or link with text '${buttonLabel}' not found`);
   }
 
@@ -226,27 +202,21 @@ export async function clickAndWaitForUrl(
       const urlString = url.toString();
       return urlString.includes(urlPattern);
     },
-    { timeout },
+    { timeout }
   );
 }
 
 /**
  * Fill form field with validation
  */
-export async function fillField(
-  page: Page,
-  selector: string,
-  value: string,
-): Promise<void> {
-  await page.waitForSelector(selector, { state: "visible" });
+export async function fillField(page: Page, selector: string, value: string): Promise<void> {
+  await page.waitForSelector(selector, { state: 'visible' });
   await page.fill(selector, value);
 
   // Verify value was set
   const actualValue = await page.inputValue(selector);
   if (actualValue !== value) {
-    throw new Error(
-      `Failed to fill field ${selector}. Expected: ${value}, Got: ${actualValue}`,
-    );
+    throw new Error(`Failed to fill field ${selector}. Expected: ${value}, Got: ${actualValue}`);
   }
 }
 
@@ -254,18 +224,12 @@ export async function fillField(
  * Check for error messages on page
  */
 export async function checkForErrors(page: Page): Promise<string[]> {
-  const errorSelectors = [
-    ".error-message",
-    '[class*="error"]',
-    '[class*="Error"]',
-  ];
+  const errorSelectors = ['.error-message', '[class*="error"]', '[class*="Error"]'];
 
   for (const selector of errorSelectors) {
     const errors = await page.locator(selector).all();
     if (errors.length > 0) {
-      const errorTexts = await Promise.all(
-        errors.map(async (el) => await el.textContent()),
-      );
+      const errorTexts = await Promise.all(errors.map(async (el) => await el.textContent()));
       return errorTexts.filter((text): text is string => text !== null);
     }
   }
@@ -276,15 +240,8 @@ export async function checkForErrors(page: Page): Promise<string[]> {
 /**
  * API Helper: Create test event directly via API
  */
-export async function createTestEvent(
-  options: Partial<TestEventForm> = {},
-): Promise<TestEvent> {
-  const {
-    project_names = ["Team 1", "Team 2", "Team 3", "Team 4"],
-    number_students = 0,
-    number_parents = 0,
-    status,
-  } = options;
+export async function createTestEvent(options: Partial<TestEventForm> = {}): Promise<TestEvent> {
+  const { project_names = ['Team 1', 'Team 2', 'Team 3', 'Team 4'], number_students = 0, number_parents = 0, status } = options;
 
   return apiClient.createPlaywrightVoteEvents({
     tenantId: config.TENANT_ID,
@@ -292,22 +249,18 @@ export async function createTestEvent(
       project_names,
       number_parents,
       number_students,
-      ...(status !== undefined ? { status } : {}),
-    },
+      ...(status !== undefined ? { status } : {})
+    }
   });
 }
 
 /**
  * Assert element is visible
  */
-export async function assertVisible(
-  page: Page,
-  selector: string,
-  message?: string,
-): Promise<void> {
+export async function assertVisible(page: Page, selector: string, message?: string): Promise<void> {
   const isVisible = await page.locator(selector).isVisible();
   if (!isVisible) {
-    await takeScreenshot(page, "assert-visible-failed");
+    await takeScreenshot(page, 'assert-visible-failed');
     throw new Error(message || `Element not visible: ${selector}`);
   }
 }
@@ -316,11 +269,7 @@ export async function assertVisible(
  * Assert text content
  * Searches across all matching elements to find the expected text
  */
-export async function assertText(
-  page: Page,
-  selector: string,
-  expectedText: string,
-): Promise<void> {
+export async function assertText(page: Page, selector: string, expectedText: string): Promise<void> {
   const elements = await page.locator(selector).all();
 
   // Search through all matching elements
@@ -332,21 +281,15 @@ export async function assertText(
   }
 
   // If we get here, we didn't find the text in any element
-  await takeScreenshot(page, "assert-text-failed");
-  throw new Error(
-    `Did not find expected text "${expectedText}" in any ${selector} element (checked ${elements.length} elements)`,
-  );
+  await takeScreenshot(page, 'assert-text-failed');
+  throw new Error(`Did not find expected text "${expectedText}" in any ${selector} element (checked ${elements.length} elements)`);
 }
 
 /**
  * Check if text content is visible in any matching element
  * Returns true if the expected text is found in a visible element
  */
-export async function isVisibleText(
-  page: Page,
-  selector: string,
-  expectedText: string,
-): Promise<boolean> {
+export async function isVisibleText(page: Page, selector: string, expectedText: string): Promise<boolean> {
   const elements = await page.locator(selector).all();
 
   for (const element of elements) {
@@ -367,18 +310,12 @@ export async function isVisibleText(
  * Assert text content AND visibility
  * Searches across all matching elements to find the expected text in a visible element
  */
-export async function assertVisibleText(
-  page: Page,
-  selector: string,
-  expectedText: string,
-): Promise<void> {
+export async function assertVisibleText(page: Page, selector: string, expectedText: string): Promise<void> {
   const found = await isVisibleText(page, selector, expectedText);
 
   if (!found) {
-    await takeScreenshot(page, "assert-visible-text-failed");
-    throw new Error(
-      `Did not find expected text "${expectedText}" in any visible ${selector} element`,
-    );
+    await takeScreenshot(page, 'assert-visible-text-failed');
+    throw new Error(`Did not find expected text "${expectedText}" in any visible ${selector} element`);
   }
 }
 
@@ -391,9 +328,7 @@ export async function assertVisibleText(
  */
 export async function loadUrl(page: Page, path: string): Promise<void> {
   // If path starts with http, use as-is, otherwise prepend FRONTEND_BASE_URL
-  const url = path.startsWith("http")
-    ? path
-    : `${config.FRONTEND_BASE_URL}${path}`;
+  const url = path.startsWith('http') ? path : `${config.FRONTEND_BASE_URL}${path}`;
 
   const response = await page.goto(url);
 
@@ -404,18 +339,16 @@ export async function loadUrl(page: Page, path: string): Promise<void> {
 
   const status = response.status();
   if (status !== 200) {
-    throw new Error(
-      `Failed to load ${url}: Expected HTTP 200 but got ${status}`,
-    );
+    throw new Error(`Failed to load ${url}: Expected HTTP 200 but got ${status}`);
   }
 
-  await page.waitForLoadState("load");
+  await page.waitForLoadState('load');
 
   try {
     // Wait for "Loading..." text to disappear (common pattern in auth-protected pages)
     const loadingText = page.locator('text="Loading..."');
     if ((await loadingText.count()) > 0) {
-      await loadingText.waitFor({ state: "hidden", timeout: 3000 });
+      await loadingText.waitFor({ state: 'hidden', timeout: 3000 });
     }
   } catch (e) {
     // Ignore timeout errors - loading text may not be present

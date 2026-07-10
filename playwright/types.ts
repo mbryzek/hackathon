@@ -3,7 +3,7 @@
  * Shared types used across all test files
  */
 
-import type { BrowserContext, Page } from "@playwright/test";
+import type { BrowserContext, Page } from '@playwright/test';
 
 /**
  * Browser configuration options
@@ -52,7 +52,7 @@ export interface TestConfig {
  */
 export interface WaitForElementOptions {
   timeout?: number;
-  state?: "attached" | "detached" | "visible" | "hidden";
+  state?: 'attached' | 'detached' | 'visible' | 'hidden';
 }
 
 /**
@@ -86,7 +86,7 @@ export interface TestSummaryExtraInfo {
 export interface TestResult {
   testFile: string;
   testName: string;
-  status: "passed" | "failed";
+  status: 'passed' | 'failed';
   exitCode: number;
   testsPassed: number;
   testsFailed: number;

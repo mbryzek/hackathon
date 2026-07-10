@@ -3,9 +3,9 @@
  * Reusable test fixtures for voting tests
  */
 
-import { test as base } from "@playwright/test";
-import type { Page } from "@playwright/test";
-import * as helpers from "./utils/test-helpers";
+import { test as base } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import * as helpers from './utils/test-helpers';
 
 /**
  * Extended test fixtures
@@ -46,14 +46,14 @@ export const test = base.extend<TestFixtures>({
    */
   studentFixture: async ({ page }, use) => {
     const event = await helpers.createTestEvent({
-      project_names: ["Team 1", "Team 2"],
+      project_names: ['Team 1', 'Team 2'],
       number_students: 1,
-      number_parents: 0,
+      number_parents: 0
     });
 
     await use({
       page,
-      event,
+      event
     });
   },
 
@@ -63,14 +63,14 @@ export const test = base.extend<TestFixtures>({
    */
   parentFixture: async ({ page }, use) => {
     const event = await helpers.createTestEvent({
-      project_names: ["Team 1", "Team 2", "Team 3", "Team 4"],
+      project_names: ['Team 1', 'Team 2', 'Team 3', 'Team 4'],
       number_students: 0,
-      number_parents: 1,
+      number_parents: 1
     });
 
     await use({
       page,
-      event,
+      event
     });
   },
 
@@ -80,11 +80,11 @@ export const test = base.extend<TestFixtures>({
    */
   apiHelpers: async ({}, use) => {
     await use(helpers);
-  },
+  }
 });
 
 /**
  * Export expect and Page type from Playwright for convenience
  */
-export { expect } from "@playwright/test";
-export type { Page } from "@playwright/test";
+export { expect } from '@playwright/test';
+export type { Page } from '@playwright/test';

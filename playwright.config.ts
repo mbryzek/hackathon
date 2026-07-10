@@ -24,7 +24,7 @@ export default defineConfig({
   // Timeout configuration
   timeout: 60000, // 60 seconds per test
   expect: {
-    timeout: 30000, // 30 seconds for assertions
+    timeout: 30000 // 30 seconds for assertions
   },
 
   // Run tests in files in parallel
@@ -43,7 +43,7 @@ export default defineConfig({
   reporter: [
     ['list'],
     ['html', { outputFolder: `${TEST_RUN_DIR}/html-report` }],
-    ['json', { outputFile: `${TEST_RUN_DIR}/test-results.json` }],
+    ['json', { outputFile: `${TEST_RUN_DIR}/test-results.json` }]
   ],
 
   // Shared settings for all projects
@@ -53,7 +53,7 @@ export default defineConfig({
 
     // Bypass rate limiting for Playwright tests (only works in Dev/Test mode on backend)
     extraHTTPHeaders: {
-      'X-Bypass-Rate-Limit': 'true',
+      'X-Bypass-Rate-Limit': 'true'
     },
 
     // Collect trace when retrying the failed test
@@ -69,7 +69,7 @@ export default defineConfig({
     navigationTimeout: 60000,
 
     // Action timeout
-    actionTimeout: 30000,
+    actionTimeout: 30000
   },
 
   // Configure projects for major browsers
@@ -80,10 +80,10 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
         launchOptions: {
-          slowMo: HEADLESS ? 0 : 50, // Slow down by 50ms only for visible mode
-        },
-      },
-    },
+          slowMo: HEADLESS ? 0 : 50 // Slow down by 50ms only for visible mode
+        }
+      }
+    }
 
     // Uncomment to test on other browsers
     // {
@@ -111,7 +111,7 @@ export default defineConfig({
     //   name: 'Mobile Safari',
     //   use: { ...devices['iPhone 12'] },
     // },
-  ],
+  ]
 
   // Run your local dev server before starting the tests
   // webServer: {

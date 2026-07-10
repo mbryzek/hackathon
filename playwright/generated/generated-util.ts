@@ -30,10 +30,7 @@ export class Util {
     try {
       const data = await response.json();
       if (!Array.isArray(data)) {
-        throw new ApiException(
-          response,
-          `Unable to parse response body. Expected an array but found a ${typeof data}`
-        );
+        throw new ApiException(response, `Unable to parse response body. Expected an array but found a ${typeof data}`);
       }
       return data as T[];
     } catch (error) {

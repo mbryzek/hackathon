@@ -74,6 +74,7 @@ export SKIP_DEPENDENCY_CHECK=true
 ## Server Dependency Check
 
 Before running tests, Playwright automatically verifies that required servers are running:
+
 - **Frontend**: Checks `http://localhost:5173` (or `$FRONTEND_BASE_URL`)
 - **Backend API**: Checks `http://localhost:9300/_internal_/healthcheck` (or `$BACKEND_BASE_URL/_internal_/healthcheck`)
 
@@ -122,6 +123,7 @@ tsconfig.playwright.json # TypeScript configuration for tests
 ## Test Suites
 
 ### Authentication & Registration (15 tests)
+
 - **authentication.spec.ts** - Login, registration, form validation
 - **mobile-registration-optimized.spec.ts** - Mobile phone registration
 - **mobile-registration-variant.spec.ts** - Registration without SMS
@@ -129,23 +131,28 @@ tsconfig.playwright.json # TypeScript configuration for tests
 - **registration-partners.spec.ts** - Partner registration step
 
 ### Account Management (8 tests)
+
 - **account-management.spec.ts** - Profile, password, account settings
 - **password-reset.spec.ts** - Complete password reset flow
 
 ### Game Management (14 tests)
+
 - **game-list.spec.ts** - Game filters and list display
 - **game-management.spec.ts** - Game creation and details
 - **game-player-selection.spec.ts** - Player selection during scheduling
 
 ### Player Invitations (6 tests)
+
 - **player-invitation-accept.spec.ts** - Accept game invitations
 - **player-invitation-decline.spec.ts** - Decline invitations
 - **player-invitation-initial.spec.ts** - Initial invitation page
 
 ### Partners & Connections (2 tests)
+
 - **partners-star-rating.spec.ts** - Partner management and ratings
 
 ### Navigation (2 tests)
+
 - **home-redirect.spec.ts** - Home page redirect logic
 
 **Total: 55 tests across 15 test suites**
@@ -155,6 +162,7 @@ tsconfig.playwright.json # TypeScript configuration for tests
 The test suite provides custom fixtures for common scenarios:
 
 ### `authenticatedPage`
+
 Provides a page with user session already set up (auto-cleanup).
 
 ```typescript
@@ -165,6 +173,7 @@ test('my test', async ({ authenticatedPage }) => {
 ```
 
 ### `testSession`
+
 Creates a test user and session (auto-cleanup).
 
 ```typescript
@@ -175,6 +184,7 @@ test('my test', async ({ testSession, context }) => {
 ```
 
 ### `testGame`
+
 Creates an authenticated user, creates a game for that user, and provides both the page and game data (auto-cleanup).
 
 ```typescript
@@ -190,16 +200,14 @@ For games with custom options, use `authenticatedPage` + `apiHelpers.createGame(
 ```typescript
 test('my test', async ({ authenticatedPage: page, apiHelpers }) => {
   const { game } = await apiHelpers.createGame({
-    players: [
-      { status: PlayerStatus.Invited },
-      { status: PlayerStatus.Accepted }
-    ]
+    players: [{ status: PlayerStatus.Invited }, { status: PlayerStatus.Accepted }]
   });
   await apiHelpers.loadUrl(page, `/games/${game.id}`);
 });
 ```
 
 ### `apiHelpers`
+
 Access to all test helper functions.
 
 ```typescript
@@ -214,6 +222,7 @@ test('my test', async ({ apiHelpers, page }) => {
 The `test-helpers.ts` file provides utilities for common operations:
 
 ### API Helpers
+
 - `createUserSession()` - Create authenticated user via API
 - `createTestPlayer()` - Create test player invitation
 - `createGame(options)` - Create test game with optional players
@@ -221,18 +230,21 @@ The `test-helpers.ts` file provides utilities for common operations:
 - `cleanupTestUsers(emails)` - Delete test users
 
 ### Browser Helpers
+
 - `login(page, email, password)` - Log in user
 - `logout(page)` - Log out user
 - `setSessionCookie(context, sessionId)` - Set authentication cookie
 - `loadUrl(page, path)` - Navigate and wait for page load
 
 ### UI Helpers
+
 - `waitForElement(page, selector, options)` - Wait for element
 - `safeClick(page, selector, options)` - Click with retry logic
 - `fillField(page, selector, value)` - Fill form field with validation
 - `takeScreenshot(page, name)` - Capture screenshot
 
 ### Assertion Helpers
+
 - `assertVisible(page, selector, message)` - Assert element visibility
 - `assertText(page, selector, expectedText)` - Assert text content
 - `assertVisibleText(page, selector, expectedText)` - Assert visible text
@@ -292,7 +304,9 @@ test('typed data', async ({ testSession }) => {
 ## Test Output
 
 ### Console Output
+
 Tests display progress and results in the console with emoji indicators:
+
 - 🚀 Test starting
 - ✅ Test passed / Step completed
 - ❌ Test failed
@@ -301,43 +315,57 @@ Tests display progress and results in the console with emoji indicators:
 - 🔑 User created
 
 ### Screenshots
+
 Failed tests and explicit `takeScreenshot()` calls save to:
+
 - Default: `/tmp/playwright-screenshots/`
 - Custom: `$TEST_RUN_DIR/screenshots/`
 
 ### HTML Report
+
 View detailed test results:
+
 ```bash
 npm run test:e2e:report
 ```
 
 ### JSON Results
+
 Test results are saved to:
+
 - `$TEST_RUN_DIR/test-results.json` (summary)
 - `$TEST_RUN_DIR/individual/*.json` (per-test results)
 
 ## Debugging Tests
 
 ### Debug Mode
+
 ```bash
 npm run test:e2e:debug
 ```
+
 Opens Playwright Inspector for step-by-step debugging.
 
 ### UI Mode
+
 ```bash
 npm run test:e2e:ui
 ```
+
 Interactive mode with test explorer and time travel debugging.
 
 ### Headed Mode
+
 ```bash
 npm run test:e2e:headed
 ```
+
 Run tests with visible browser window.
 
 ### VSCode Integration
+
 Install the [Playwright Test for VSCode](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright) extension for:
+
 - Run tests from editor
 - Set breakpoints
 - View test results inline
@@ -345,6 +373,7 @@ Install the [Playwright Test for VSCode](https://marketplace.visualstudio.com/it
 ## CI/CD Integration
 
 Tests are configured for CI environments:
+
 - Automatic retry on failure (2 retries)
 - Serial execution on CI
 - JSON and HTML reports generated
@@ -361,6 +390,7 @@ Tests are configured for CI environments:
 ## Migration Notes
 
 This test suite was migrated from JavaScript to TypeScript in November 2024:
+
 - All 16 test files converted to TypeScript
 - Migrated from custom framework to @playwright/test
 - Added comprehensive type definitions
@@ -369,6 +399,7 @@ This test suite was migrated from JavaScript to TypeScript in November 2024:
 - Removed manual browser lifecycle management
 
 ### Key Benefits
+
 - Full TypeScript type safety
 - Better IDE autocomplete and refactoring
 - Modern Playwright Test features (fixtures, retry, parallelization)
@@ -378,12 +409,15 @@ This test suite was migrated from JavaScript to TypeScript in November 2024:
 ## Troubleshooting
 
 ### Tests fail with "Cannot find module"
+
 Ensure you're running tests from the project root and dependencies are installed:
+
 ```bash
 npm install
 ```
 
 ### Server dependency check fails
+
 If you see "Server dependency check FAILED", ensure all required servers are running:
 
 ```bash
@@ -395,6 +429,7 @@ npm run dev
 ```
 
 To verify servers manually:
+
 ```bash
 # Check frontend
 curl http://localhost:5173
@@ -404,25 +439,32 @@ curl http://localhost:9300/_internal_/healthcheck
 ```
 
 To run tests anyway (not recommended):
+
 ```bash
 SKIP_DEPENDENCY_CHECK=true npx playwright test
 ```
 
 ### Backend API not responding
+
 Verify the backend server is running on `http://localhost:9300`:
+
 ```bash
 # Check if server is running via healthcheck
 curl http://localhost:9300/_internal_/healthcheck
 ```
 
 ### Application not loading
+
 Verify the frontend is running on `http://localhost:5173`:
+
 ```bash
 npm run dev
 ```
 
 ### Type errors
+
 Ensure TypeScript configuration is correct:
+
 ```bash
 npx tsc --noEmit --project tsconfig.playwright.json
 ```
