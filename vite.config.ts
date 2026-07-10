@@ -3,10 +3,10 @@ import { defineConfig } from 'vite';
 import path from 'path';
 
 export default defineConfig({
-	plugins: [sveltekit()],
-	resolve: {
-		alias: {
-			url: path.resolve(__dirname, 'src/lib/url-shim.ts'),
-		},
-	},
+  plugins: [sveltekit()],
+  resolve: {
+    alias: {
+      url: path.resolve(__dirname, 'src/lib/url-shim.ts')
+    }
+  }
 });

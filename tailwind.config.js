@@ -4,11 +4,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        'hackathon-blue': '#5B7FF6',
-      },
-    },
+        'hackathon-blue': '#5B7FF6'
+      }
+    }
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-  ],
-}
+  plugins: [require('@tailwindcss/forms')]
+};

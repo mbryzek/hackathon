@@ -18,12 +18,8 @@ function isGenerated(path) {
 function groupOf(path) {
   if (isGenerated(path)) return '4. Generated';
   if (/\.json$/.test(path)) return '1. Specs & JSON';
-  if (
-    /(^|\/)tests?\//i.test(path) ||
-    /(^|\/)playwright\//i.test(path) ||
-    /Spec\.scala$/.test(path) ||
-    /\.(test|spec)\.[jt]s$/.test(path)
-  ) return '3. Tests';
+  if (/(^|\/)tests?\//i.test(path) || /(^|\/)playwright\//i.test(path) || /Spec\.scala$/.test(path) || /\.(test|spec)\.[jt]s$/.test(path))
+    return '3. Tests';
   return '2. Source';
 }
 
@@ -34,7 +30,7 @@ var files = review.files.map(function (f) {
     vendored: isGenerated(f.path),
     // Mark every revision reviewed so the file matrix is green with no clicks.
     revisions: (f.revisions || []).map(function (r) {
-      return {key: r.key, reviewed: true};
+      return { key: r.key, reviewed: true };
     })
   };
 });

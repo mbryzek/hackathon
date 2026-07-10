@@ -17,36 +17,36 @@ export enum CalendarPreference {
   Google = 'google',
   Apple = 'apple',
   Outlook = 'outlook',
-  AlwaysAsk = 'always_ask',
+  AlwaysAsk = 'always_ask'
 }
 
 export enum Consent {
   OptedIn = 'opted_in',
   OptedOut = 'opted_out',
-  Pending = 'pending',
+  Pending = 'pending'
 }
 
 export enum Environment {
   Production = 'production',
-  Sandbox = 'sandbox',
+  Sandbox = 'sandbox'
 }
 
 export enum Gender {
   Male = 'male',
   Female = 'female',
-  Other = 'other',
+  Other = 'other'
 }
 
 export enum LoginTokenType {
   Login = 'login',
-  Impersonation = 'impersonation',
+  Impersonation = 'impersonation'
 }
 
 export enum NotificationChannel {
   EmailAndSms = 'email_and_sms',
   EmailOnly = 'email_only',
   SmsOnly = 'sms_only',
-  None = 'none',
+  None = 'none'
 }
 
 export enum RallydNotificationType {
@@ -56,18 +56,18 @@ export enum RallydNotificationType {
   OrganizerGameConfirmed = 'organizer_game_confirmed',
   Marketing = 'marketing',
   SmsOptinExpired = 'sms_optin_expired',
-  ConnectionShare = 'connection_share',
+  ConnectionShare = 'connection_share'
 }
 
 export enum SportRatingSystem {
   PickleballDupr = 'pickleball_dupr',
   PadelWpr = 'padel_wpr',
-  TennisNtrp = 'tennis_ntrp',
+  TennisNtrp = 'tennis_ntrp'
 }
 
 export enum TenantFeature {
   EmailVerification = 'email_verification',
-  SmsOptin = 'sms_optin',
+  SmsOptin = 'sms_optin'
 }
 
 export enum TimeZone {
@@ -118,18 +118,18 @@ export enum TimeZone {
   AfricaJohannesburg = 'africa_johannesburg',
   AfricaNairobi = 'africa_nairobi',
   AfricaCasablanca = 'africa_casablanca',
-  Utc = 'utc',
+  Utc = 'utc'
 }
 
 export enum UserRole {
   Admin = 'admin',
-  User = 'user',
+  User = 'user'
 }
 
 export enum UserStatus {
   Pending = 'pending',
   Active = 'active',
-  Inactive = 'inactive',
+  Inactive = 'inactive'
 }
 
 // ============================================================================
@@ -183,9 +183,7 @@ export interface Email {
   verified_at?: ISODateTimeString;
 }
 
-export interface EmailVerification {
-
-}
+export interface EmailVerification {}
 
 export interface ImpersonationTokenForm {
   user_id: string;
@@ -568,7 +566,8 @@ export function isUserInactive(obj: SessionState): obj is UserInactive {
   return obj.discriminator === 'user_inactive';
 }
 
-export type SmsOptinRequestResult = SmsOptinRequestResultOptedIn | SmsOptinRequestResultOptedOut | SmsOptinRequestResultScheduled | SmsOptinRequestResultRateLimited;
+export type SmsOptinRequestResult =
+  SmsOptinRequestResultOptedIn | SmsOptinRequestResultOptedOut | SmsOptinRequestResultScheduled | SmsOptinRequestResultRateLimited;
 
 export const SmsOptinRequestResultDiscriminator = {
   SmsOptinRequestResultOptedIn: 'opted_in',
@@ -596,7 +595,12 @@ export function isSmsOptinRequestResultRateLimited(obj: SmsOptinRequestResult): 
 /**
  * Lifecycle state of an async platform task. Mutually exclusive: scheduled (future next_run_at; pre-first-attempt or retry after failure), deferred (last attempt succeeded and asked to resume later, future timestamp), waiting (next_run_at has elapsed; ready to run, awaiting a worker), gave_up (retries exhausted), or complete.
  */
-export type TaskOverviewStatus = TaskOverviewStatusScheduled | TaskOverviewStatusDeferred | TaskOverviewStatusWaiting | TaskOverviewStatusGaveUp | TaskOverviewStatusComplete;
+export type TaskOverviewStatus =
+  | TaskOverviewStatusScheduled
+  | TaskOverviewStatusDeferred
+  | TaskOverviewStatusWaiting
+  | TaskOverviewStatusGaveUp
+  | TaskOverviewStatusComplete;
 
 export const TaskOverviewStatusDiscriminator = {
   TaskOverviewStatusScheduled: 'scheduled',
@@ -633,7 +637,7 @@ export function isTaskOverviewStatusComplete(obj: TaskOverviewStatus): obj is Ta
 import { VoidResponse } from './generated-error-void-response.ts';
 import { UnauthorizedErrorResponse } from './generated-error-unauthorized-error-response.ts';
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
-import { ApiException } from "./generated-util.ts";
+import { ApiException } from './generated-util.ts';
 
 export interface UpdateEmailVerificationByTokenOptions {
   headers?: Record<string, string>;
@@ -834,12 +838,12 @@ export class ApiClient {
   async updateEmailVerificationByToken(token: string, options?: UpdateEmailVerificationByTokenOptions): Promise<void> {
     const url = `${this.baseUrl}/email/verifications/${token}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 204) {
@@ -851,19 +855,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createLoginToken(params: CreateLoginTokenOptions): Promise<LoginToken> {
     const url = `${this.baseUrl}/login/tokens`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -880,19 +883,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createLoginTokenImpersonation(params: CreateLoginTokenImpersonationOptions): Promise<LoginToken> {
     const url = `${this.baseUrl}/login/tokens/impersonation`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -909,19 +911,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createLoginTokenExchange(params: CreateLoginTokenExchangeOptions): Promise<SessionState> {
     const url = `${this.baseUrl}/login/tokens/exchange`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -934,19 +935,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updatePersonPhotoById(params: UpdatePersonPhotoByIdOptions): Promise<Person> {
     const url = `${this.baseUrl}/people/${params.id}/photo`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 200) {
@@ -967,18 +967,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createPhoneOptinAndResendById(id: string, options?: CreatePhoneOptinAndResendByIdOptions): Promise<SmsOptinRequestResult> {
     const url = `${this.baseUrl}/phones/${id}/optin/resend`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -999,18 +998,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getTenant(id: string, options?: GetTenantOptions): Promise<Tenant> {
     const url = `${this.baseUrl}/tenant/${id}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -1023,18 +1021,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getTenantHierarchyNodes(tenantId: string, options?: GetTenantHierarchyNodesOptions): Promise<TenantHierarchyNode[]> {
     const url = `${this.baseUrl}/tenant/${tenantId}/hierarchy`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -1047,18 +1044,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getTenantSession(tenantId: string, options?: GetTenantSessionOptions): Promise<TenantSession> {
     const url = `${this.baseUrl}/tenant/${tenantId}/session`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -1075,19 +1071,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createTenantSessionLogins(params: CreateTenantSessionLoginsOptions): Promise<SessionState> {
     const url = `${this.baseUrl}/tenant/${params.tenantId}/session/logins`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -1100,19 +1095,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createTenantSessionSignups(params: CreateTenantSessionSignupsOptions): Promise<SessionState> {
     const url = `${this.baseUrl}/tenant/${params.tenantId}/session/signups`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -1125,19 +1119,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createTenantSessionPasswordAndChanges(params: CreateTenantSessionPasswordAndChangesOptions): Promise<SessionState> {
     const url = `${this.baseUrl}/tenant/${params.tenantId}/session/password/changes`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -1150,19 +1143,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createTenantSessionPasswordAndResets(params: CreateTenantSessionPasswordAndResetsOptions): Promise<void> {
     const url = `${this.baseUrl}/tenant/${params.tenantId}/session/password/resets`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 204) {
@@ -1174,19 +1166,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createTenantSessionLoginAndPhoneAndRequests(params: CreateTenantSessionLoginAndPhoneAndRequestsOptions): Promise<void> {
     const url = `${this.baseUrl}/tenant/${params.tenantId}/session/login/phone/requests`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 204) {
@@ -1198,19 +1189,20 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
-  async createTenantSessionLoginAndPhoneAndVerifications(params: CreateTenantSessionLoginAndPhoneAndVerificationsOptions): Promise<SessionState> {
+  async createTenantSessionLoginAndPhoneAndVerifications(
+    params: CreateTenantSessionLoginAndPhoneAndVerificationsOptions
+  ): Promise<SessionState> {
     const url = `${this.baseUrl}/tenant/${params.tenantId}/session/login/phone/verifications`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -1223,18 +1215,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async deleteTenantSession(tenantId: string, options?: DeleteTenantSessionOptions): Promise<void> {
     const url = `${this.baseUrl}/tenant/${tenantId}/session`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 204) {
@@ -1246,7 +1237,6 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getTokensUsersByUserId(params: GetTokensUsersByUserIdOptions): Promise<Token[]> {
@@ -1256,12 +1246,12 @@ export class ApiClient {
     const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
     const url = `${this.baseUrl}/tokens/users/${params.userId}${queryString}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -1274,19 +1264,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createToken(params: CreateTokenOptions): Promise<Token> {
     const url = `${this.baseUrl}/tokens`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -1303,18 +1292,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getTokenCleartextById(id: string, options?: GetTokenCleartextByIdOptions): Promise<CleartextToken> {
     const url = `${this.baseUrl}/tokens/${id}/cleartext`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -1331,18 +1319,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async deleteTokenById(id: string, options?: DeleteTokenByIdOptions): Promise<void> {
     const url = `${this.baseUrl}/tokens/${id}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 204) {
@@ -1358,13 +1345,12 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getUsers(params: GetUsersOptions): Promise<User[]> {
     const queryParts: string[] = [];
     if (params.id !== undefined && params.id !== null) {
-      params.id.forEach(value => queryParts.push(`id=${encodeURIComponent(value)}`));
+      params.id.forEach((value) => queryParts.push(`id=${encodeURIComponent(value)}`));
     }
     if (params.q !== undefined && params.q !== null) {
       queryParts.push(`q=${encodeURIComponent(params.q)}`);
@@ -1373,10 +1359,10 @@ export class ApiClient {
       queryParts.push(`tenant_id=${encodeURIComponent(params.tenantId)}`);
     }
     if (params.status !== undefined && params.status !== null) {
-      params.status.forEach(value => queryParts.push(`status=${encodeURIComponent(String(value))}`));
+      params.status.forEach((value) => queryParts.push(`status=${encodeURIComponent(String(value))}`));
     }
     if (params.role !== undefined && params.role !== null) {
-      params.role.forEach(value => queryParts.push(`role=${encodeURIComponent(String(value))}`));
+      params.role.forEach((value) => queryParts.push(`role=${encodeURIComponent(String(value))}`));
     }
     queryParts.push(`limit=${encodeURIComponent(String(params.limit))}`);
     queryParts.push(`offset=${encodeURIComponent(String(params.offset))}`);
@@ -1386,12 +1372,12 @@ export class ApiClient {
     const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
     const url = `${this.baseUrl}/users${queryString}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -1408,18 +1394,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getUserById(id: string, options?: GetUserByIdOptions): Promise<User> {
     const url = `${this.baseUrl}/users/${id}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -1436,19 +1421,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createUserTenantByTenantId(params: CreateUserTenantByTenantIdOptions): Promise<User> {
     const url = `${this.baseUrl}/users/tenant/${params.tenantId}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -1465,19 +1449,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updateUserById(params: UpdateUserByIdOptions): Promise<User> {
     const url = `${this.baseUrl}/users/${params.id}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 200) {
@@ -1498,19 +1481,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updateUserSecondaryById(params: UpdateUserSecondaryByIdOptions): Promise<User> {
     const url = `${this.baseUrl}/users/${params.id}/secondary`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 200) {
@@ -1531,19 +1513,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updateUserPrimaryById(params: UpdateUserPrimaryByIdOptions): Promise<User> {
     const url = `${this.baseUrl}/users/${params.id}/primary`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 200) {
@@ -1564,18 +1545,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updateActiveUserById(id: string, options?: UpdateActiveUserByIdOptions): Promise<User> {
     const url = `${this.baseUrl}/users/${id}/active`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -1596,18 +1576,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updateInactiveUserById(id: string, options?: UpdateInactiveUserByIdOptions): Promise<User> {
     const url = `${this.baseUrl}/users/${id}/inactive`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -1628,18 +1607,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updateUserRoleByIdAndRole(params: UpdateUserRoleByIdAndRoleOptions): Promise<User> {
     const url = `${this.baseUrl}/users/${params.id}/role/${String(params.role)}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -1660,19 +1638,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updateUserPasswordById(params: UpdateUserPasswordByIdOptions): Promise<void> {
     const url = `${this.baseUrl}/users/${params.id}/password`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 204) {
@@ -1692,18 +1669,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createUserPasswordAndSuggestions(params: CreateUserPasswordAndSuggestionsOptions): Promise<UserPasswordSuggestion> {
     const url = `${this.baseUrl}/users/password/suggestions`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 201) {
@@ -1712,18 +1688,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createUserEmailAndVerificationsById(id: string, options?: CreateUserEmailAndVerificationsByIdOptions): Promise<void> {
     const url = `${this.baseUrl}/users/${id}/email/verifications`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 204) {
@@ -1743,18 +1718,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getUserPreferences(params: GetUserPreferencesOptions): Promise<UserPreferences> {
     const url = `${this.baseUrl}/${params.tenantId}/users/${params.userId}/preferences`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -1771,19 +1745,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createUserPreferencesNotifications(params: CreateUserPreferencesNotificationsOptions): Promise<UserPreferences> {
     const url = `${this.baseUrl}/${params.tenantId}/users/${params.userId}/preferences/notifications`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 200) {
@@ -1804,19 +1777,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createUserPreferencesCalendar(params: CreateUserPreferencesCalendarOptions): Promise<UserPreferences> {
     const url = `${this.baseUrl}/${params.tenantId}/users/${params.userId}/preferences/calendar`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 200) {
@@ -1837,7 +1809,5 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
-
 }

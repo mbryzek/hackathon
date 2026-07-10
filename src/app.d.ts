@@ -2,19 +2,19 @@
 // for information about these interfaces
 
 export type AdminSession = {
-	id: string;
+  id: string;
 };
 
 declare global {
-	namespace App {
-		// interface Error {}
-		interface Locals {
-			adminSession?: AdminSession | undefined;
-		}
-		interface PageData {
-			adminSession?: AdminSession | undefined;
-		}
-	}
+  namespace App {
+    // interface Error {}
+    interface Locals {
+      adminSession?: AdminSession | undefined;
+    }
+    interface PageData {
+      adminSession?: AdminSession | undefined;
+    }
+  }
 }
 
 export {};

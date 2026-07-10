@@ -109,7 +109,7 @@ export interface Tally {
 import { UnauthorizedErrorResponse } from './generated-error-unauthorized-error-response.ts';
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
 import { VoidResponse } from './generated-error-void-response.ts';
-import { ApiException } from "./generated-util.ts";
+import { ApiException } from './generated-util.ts';
 
 export interface GetAdminSessionSessionOptions {
   headers?: Record<string, string>;
@@ -235,12 +235,12 @@ export class ApiClient {
   async getAdminSessionSession(params: GetAdminSessionSessionOptions): Promise<AdminSession> {
     const url = `${this.baseUrl}/vote/admin/session`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -253,19 +253,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createAdminSessionSessionsAndLogins(params: CreateAdminSessionSessionsAndLoginsOptions): Promise<AdminSession> {
     const url = `${this.baseUrl}/vote/admin/sessions/logins`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -278,18 +277,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async deleteAdminSessionSession(params: DeleteAdminSessionSessionOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/session`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 204) {
@@ -301,7 +299,6 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getCodes(params: GetCodesOptions): Promise<Code[]> {
@@ -320,12 +317,12 @@ export class ApiClient {
     const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
     const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/codes${queryString}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -346,18 +343,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getCodeSummary(eventId: string, options?: GetCodeSummaryOptions): Promise<CodeSummary> {
     const url = `${this.baseUrl}/vote/admin/events/${eventId}/codes/summary`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -374,19 +370,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createCodeGenerate(params: CreateCodeGenerateOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/codes/generate`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 204) {
@@ -406,18 +401,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async deleteCodeById(params: DeleteCodeByIdOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/codes/${params.id}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 204) {
@@ -437,28 +431,27 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getEvents(params: GetEventsOptions): Promise<Event[]> {
     const queryParts: string[] = [];
     if (params.id !== undefined && params.id !== null) {
-      params.id.forEach(value => queryParts.push(`id=${encodeURIComponent(value)}`));
+      params.id.forEach((value) => queryParts.push(`id=${encodeURIComponent(value)}`));
     }
     if (params.status !== undefined && params.status !== null) {
-      params.status.forEach(value => queryParts.push(`status=${encodeURIComponent(String(value))}`));
+      params.status.forEach((value) => queryParts.push(`status=${encodeURIComponent(String(value))}`));
     }
     queryParts.push(`limit=${encodeURIComponent(String(params.limit))}`);
     queryParts.push(`offset=${encodeURIComponent(String(params.offset))}`);
     const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
     const url = `${this.baseUrl}/vote/admin/events${queryString}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -475,18 +468,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getEventById(id: string, options?: GetEventByIdOptions): Promise<Event> {
     const url = `${this.baseUrl}/vote/admin/events/${id}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -503,19 +495,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createEvent(params: CreateEventOptions): Promise<Event> {
     const url = `${this.baseUrl}/vote/admin/events`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -532,19 +523,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updateEventById(params: UpdateEventByIdOptions): Promise<Event> {
     const url = `${this.baseUrl}/vote/admin/events/${params.id}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 200) {
@@ -565,18 +555,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async deleteEventById(id: string, options?: DeleteEventByIdOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${id}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 204) {
@@ -592,7 +581,6 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getProjects(params: GetProjectsOptions): Promise<Project[]> {
@@ -602,12 +590,12 @@ export class ApiClient {
     const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
     const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects${queryString}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -624,18 +612,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getProjectById(params: GetProjectByIdOptions): Promise<Project> {
     const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects/${params.id}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -652,19 +639,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createProject(params: CreateProjectOptions): Promise<Project> {
     const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 201) {
@@ -685,19 +671,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createProjectCsv(params: CreateProjectCsvOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects/csv`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 204) {
@@ -717,19 +702,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updateProjectById(params: UpdateProjectByIdOptions): Promise<Project> {
     const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects/${params.id}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 200) {
@@ -750,18 +734,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async deleteProjectById(params: DeleteProjectByIdOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects/${params.id}`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
+        ...(params.headers || {})
+      }
     });
 
     if (response.status === 204) {
@@ -777,19 +760,18 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createProjectReorder(params: CreateProjectReorderOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects/reorder`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {}),
+        ...(params.headers || {})
       },
-      body: JSON.stringify(params.body),
+      body: JSON.stringify(params.body)
     });
 
     if (response.status === 204) {
@@ -809,18 +791,17 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getEventResults(eventId: string, options?: GetEventResultsOptions): Promise<EventResults> {
     const url = `${this.baseUrl}/vote/admin/events/${eventId}/results`;
 
-      const response = await fetch(url, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+        ...(options?.headers || {})
+      }
     });
 
     if (response.status === 200) {
@@ -837,7 +818,5 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
-
 }
