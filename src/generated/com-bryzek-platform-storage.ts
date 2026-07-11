@@ -12,6 +12,7 @@
 export enum FileType {
   Pdf = 'pdf',
   Csv = 'csv',
+  Json = 'json',
   Png = 'png',
   Gif = 'gif',
   Jpg = 'jpg',
