@@ -358,68 +358,6 @@ export interface SmsOptinRequestResultScheduled {
 }
 
 /**
- * Health snapshot of an async platform task. Always emitted alongside resources backed by tasks so callers can see retry / give-up state without a second query.
- */
-export interface TaskOverview {
-  id: string;
-  /** Task discriminator, e.g. fire_worker_request, process_worker_report. */
-  discriminator: string;
-  num_attempts: number;
-  status: TaskOverviewStatus;
-}
-
-/**
- * Task succeeded (completed_at IS NOT NULL).
- */
-export interface TaskOverviewStatusComplete {
-  discriminator: 'complete';
-  completed_at: ISODateTimeString;
-}
-
-/**
- * The most recent attempt succeeded but asked to run again (TaskOutcome.Deferred); task will resume at a future next_run_at. Distinct from scheduled: deferred = healthy, voluntarily waiting; scheduled = pre-first-attempt or retry after failure. Once next_run_at elapses, the status flips to waiting. By design carries no errors / stacktrace: a successful Deferred clears prior failure state (setDeferred wipes errors), so deferred always represents a healthy, voluntarily-waiting task.
- */
-export interface TaskOverviewStatusDeferred {
-  discriminator: 'deferred';
-  next_run_at: ISODateTimeString;
-}
-
-/**
- * Retries exhausted; will not run again until requeued (gave_up_at IS NOT NULL, completed_at IS NULL).
- */
-export interface TaskOverviewStatusGaveUp {
-  discriminator: 'gave_up';
-  gave_up_at: ISODateTimeString;
-  errors: string[];
-  /** Java stacktrace from the final failed attempt. Omitted when the failure was a returned validation error rather than a thrown exception. */
-  stacktrace?: string;
-}
-
-/**
- * Task will run again at a future next_run_at. May be pre-first-attempt (num_attempts = 0) or awaiting a retry (num_attempts > 0). Once next_run_at elapses without the task being picked up, the status flips to waiting.
- */
-export interface TaskOverviewStatusScheduled {
-  discriminator: 'scheduled';
-  next_run_at: ISODateTimeString;
-  errors: string[];
-  /** Java stacktrace from the most recent failed attempt. Omitted when the most recent attempt was a returned validation error or there have been no attempts yet. */
-  stacktrace?: string;
-}
-
-/**
- * Task is due to run but the dispatcher has not yet picked it up. Reachable when next_run_at, deferred_until, or first_attempt_at has elapsed — covers both post-attempt overdue (from scheduled / deferred) and the pre-first-attempt case where firstAttemptAt is already in the past at task-creation time. Usually transient (cleared by the next dispatcher tick); sustained presence indicates dispatcher lag or a paused scheduler.
- */
-export interface TaskOverviewStatusWaiting {
-  discriminator: 'waiting';
-  /** When the task became ready to run (the elapsed next_attempt_at, deferred_until, or first_attempt_at). */
-  next_run_at: ISODateTimeString;
-  /** Errors from the most recent failed attempt, if any. Empty when the task has not yet failed. */
-  errors: string[];
-  /** Java stacktrace from the most recent failed attempt, if any. */
-  stacktrace?: string;
-}
-
-/**
  * Result of a per-resource requeue request. Only scheduled (with prior attempts) and gave_up tasks are reset; pre-attempt scheduled and completed tasks are silently skipped.
  */
 export interface TaskRequeueResult {
@@ -591,39 +529,6 @@ export function isSmsOptinRequestResultScheduled(obj: SmsOptinRequestResult): ob
 
 export function isSmsOptinRequestResultRateLimited(obj: SmsOptinRequestResult): obj is SmsOptinRequestResultRateLimited {
   return obj.discriminator === 'rate_limited';
-}
-
-/**
- * Lifecycle state of an async platform task. Mutually exclusive: scheduled (future next_run_at; pre-first-attempt or retry after failure), deferred (last attempt succeeded and asked to resume later, future timestamp), waiting (next_run_at has elapsed; ready to run, awaiting a worker), gave_up (retries exhausted), or complete.
- */
-export type TaskOverviewStatus = TaskOverviewStatusScheduled | TaskOverviewStatusDeferred | TaskOverviewStatusWaiting | TaskOverviewStatusGaveUp | TaskOverviewStatusComplete;
-
-export const TaskOverviewStatusDiscriminator = {
-  TaskOverviewStatusScheduled: 'scheduled',
-  TaskOverviewStatusDeferred: 'deferred',
-  TaskOverviewStatusWaiting: 'waiting',
-  TaskOverviewStatusGaveUp: 'gave_up',
-  TaskOverviewStatusComplete: 'complete'
-} as const;
-
-export function isTaskOverviewStatusScheduled(obj: TaskOverviewStatus): obj is TaskOverviewStatusScheduled {
-  return obj.discriminator === 'scheduled';
-}
-
-export function isTaskOverviewStatusDeferred(obj: TaskOverviewStatus): obj is TaskOverviewStatusDeferred {
-  return obj.discriminator === 'deferred';
-}
-
-export function isTaskOverviewStatusWaiting(obj: TaskOverviewStatus): obj is TaskOverviewStatusWaiting {
-  return obj.discriminator === 'waiting';
-}
-
-export function isTaskOverviewStatusGaveUp(obj: TaskOverviewStatus): obj is TaskOverviewStatusGaveUp {
-  return obj.discriminator === 'gave_up';
-}
-
-export function isTaskOverviewStatusComplete(obj: TaskOverviewStatus): obj is TaskOverviewStatusComplete {
-  return obj.discriminator === 'complete';
 }
 
 // ============================================================================
