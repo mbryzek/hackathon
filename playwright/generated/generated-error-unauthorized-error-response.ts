@@ -16,7 +16,7 @@ export class UnauthorizedErrorResponse extends Error {
 
   async unauthorizedError(): Promise<UnauthorizedError> {
     if (this._unauthorizedError === undefined) {
-      this._unauthorizedError = await Util.mustParse<UnauthorizedError>(this.response, 'UnauthorizedError');
+      this._unauthorizedError = await Util.mustParse<UnauthorizedError>(this.response, "UnauthorizedError");
     }
     return this._unauthorizedError;
   }
