@@ -14,12 +14,12 @@ import type { ISODateTimeString } from './generated-types';
 export enum EventStatus {
   Draft = 'draft',
   Open = 'open',
-  Closed = 'closed'
+  Closed = 'closed',
 }
 
 export enum VoterType {
   Student = 'student',
-  Parent = 'parent'
+  Parent = 'parent',
 }
 
 // ============================================================================
@@ -99,7 +99,7 @@ export interface VoteForm {
 
 import { VoidResponse } from './generated-error-void-response.ts';
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
-import { ApiException } from './generated-util.ts';
+import { ApiException } from "./generated-util.ts";
 
 export interface GetAllEventsOpenOptions {
   headers?: Record<string, string>;
@@ -127,12 +127,12 @@ export class ApiClient {
   async getAllEventsOpen(params: GetAllEventsOpenOptions): Promise<Event[]> {
     const url = `${this.baseUrl}/vote/events/all/open`;
 
-    const response = await fetch(url, {
+      const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {})
-      }
+        ...(params.headers || {}),
+      },
     });
 
     if (response.status === 200) {
@@ -141,18 +141,19 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
+
   }
 
   async createVoteCodeAndVerifications(params: CreateVoteCodeAndVerificationsOptions): Promise<Vote> {
     const url = `${this.baseUrl}/vote/events/${params.eventKey}/code/verifications`;
 
-    const response = await fetch(url, {
+      const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {})
+        ...(params.headers || {}),
       },
-      body: JSON.stringify(params.body)
+      body: JSON.stringify(params.body),
     });
 
     if (response.status === 200) {
@@ -169,18 +170,19 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
+
   }
 
   async createVote(params: CreateVoteOptions): Promise<Vote> {
     const url = `${this.baseUrl}/vote/events/${params.eventKey}`;
 
-    const response = await fetch(url, {
+      const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {})
+        ...(params.headers || {}),
       },
-      body: JSON.stringify(params.body)
+      body: JSON.stringify(params.body),
     });
 
     if (response.status === 200) {
@@ -197,5 +199,7 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
+
   }
+
 }

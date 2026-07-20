@@ -11,7 +11,9 @@ import type { Event, EventStatus } from './com-bryzek-vote-api.ts';
 // Models
 // ============================================================================
 
-export interface PlaywrightVote {}
+export interface PlaywrightVote {
+
+}
 
 export interface TestEvent {
   event: Event;
@@ -31,7 +33,7 @@ export interface TestEventForm {
 // ============================================================================
 
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
-import { ApiException } from './generated-util.ts';
+import { ApiException } from "./generated-util.ts";
 
 export interface CreatePlaywrightVoteEventsOptions {
   tenantId: string;
@@ -49,13 +51,13 @@ export class ApiClient {
   async createPlaywrightVoteEvents(params: CreatePlaywrightVoteEventsOptions): Promise<TestEvent> {
     const url = `${this.baseUrl}/${params.tenantId}/playwright/events`;
 
-    const response = await fetch(url, {
+      const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(params.headers || {})
+        ...(params.headers || {}),
       },
-      body: JSON.stringify(params.body)
+      body: JSON.stringify(params.body),
     });
 
     if (response.status === 201) {
@@ -68,5 +70,7 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
+
   }
+
 }

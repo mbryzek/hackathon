@@ -16,7 +16,7 @@ export class ValidationErrorsResponse extends Error {
 
   async validationErrors(): Promise<ValidationError[]> {
     if (this._validationErrors === undefined) {
-      this._validationErrors = await Util.mustParseArray<ValidationError>(this.response, 'ValidationError');
+      this._validationErrors = await Util.mustParseArray<ValidationError>(this.response, "ValidationError");
     }
     return this._validationErrors;
   }
