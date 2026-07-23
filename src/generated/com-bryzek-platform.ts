@@ -20,6 +20,10 @@ export enum CalendarPreference {
   AlwaysAsk = 'always_ask',
 }
 
+export enum ClubaidFeature {
+  Billing = 'billing',
+}
+
 export enum Consent {
   OptedIn = 'opted_in',
   OptedOut = 'opted_out',
@@ -29,6 +33,11 @@ export enum Consent {
 export enum Environment {
   Production = 'production',
   Sandbox = 'sandbox',
+}
+
+export enum FeatureType {
+  System = 'system',
+  User = 'user',
 }
 
 export enum Gender {
@@ -49,6 +58,11 @@ export enum NotificationChannel {
   None = 'none',
 }
 
+export enum PlatformFeature {
+  EmailVerification = 'email_verification',
+  SmsOptin = 'sms_optin',
+}
+
 export enum RallydNotificationType {
   GameActivity = 'game_activity',
   OrganizerHelp = 'organizer_help',
@@ -65,9 +79,9 @@ export enum SportRatingSystem {
   TennisNtrp = 'tennis_ntrp',
 }
 
-export enum TenantFeature {
-  EmailVerification = 'email_verification',
-  SmsOptin = 'sms_optin',
+export enum Subproject {
+  Platform = 'platform',
+  Playbook = 'playbook',
 }
 
 export enum TimeZone {
@@ -193,6 +207,14 @@ export interface Email {
 
 export interface EmailVerification {
 
+}
+
+/**
+ * A feature enabled for the current session (already role-filtered). Returned on tenant_session.
+ */
+export interface EnabledFeature {
+  subproject: Subproject;
+  feature: string;
 }
 
 export interface ImpersonationTokenForm {
@@ -372,6 +394,15 @@ export interface SmsOptinRequestResultScheduled {
 }
 
 /**
+ * A backend capability enabled per tenant. No role dimension; evaluated server-side only and never exposed to frontends.
+ */
+export interface SystemFeature {
+  type: 'system_feature';
+  subproject: Subproject;
+  feature: string;
+}
+
+/**
  * Result of a per-resource requeue request. Only scheduled (with prior attempts) and gave_up tasks are reset; pre-attempt scheduled and completed tasks are silently skipped.
  */
 export interface TaskRequeueResult {
@@ -407,6 +438,8 @@ export interface TenantSession {
   user: User;
   tenant: TenantSummary;
   impersonated_by?: UserReference;
+  /** User-features enabled for this tenant AND this session user's role. Clients match subproject+feature against their generated feature enum (e.g. clubaid_feature). System features are never included. */
+  enabled_features: EnabledFeature[];
 }
 
 export interface TenantSummary {
@@ -441,6 +474,17 @@ export interface User {
 
 export interface UserCalendarForm {
   preference: CalendarPreference;
+}
+
+/**
+ * An authenticated UI feature enabled per tenant, optionally restricted to specific roles.
+ */
+export interface UserFeature {
+  type: 'user_feature';
+  subproject: Subproject;
+  feature: string;
+  /** Roles this feature is deployed to for the tenant. Empty means all authenticated roles. */
+  roles: UserRole[];
 }
 
 export interface UserForm {
@@ -515,6 +559,21 @@ export interface UserSummary {
 // ============================================================================
 // Union Types
 // ============================================================================
+
+export type Feature = SystemFeature | UserFeature;
+
+export const FeatureDiscriminator = {
+  SystemFeature: 'system_feature',
+  UserFeature: 'user_feature'
+} as const;
+
+export function isSystemFeature(obj: Feature): obj is SystemFeature {
+  return obj.type === 'system_feature';
+}
+
+export function isUserFeature(obj: Feature): obj is UserFeature {
+  return obj.type === 'user_feature';
+}
 
 export type SessionState = TenantSession | UserInactive;
 
