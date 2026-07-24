@@ -20,10 +20,6 @@ export enum CalendarPreference {
   AlwaysAsk = 'always_ask',
 }
 
-export enum ClubaidFeature {
-  Billing = 'billing',
-}
-
 export enum Consent {
   OptedIn = 'opted_in',
   OptedOut = 'opted_out',
@@ -61,6 +57,11 @@ export enum NotificationChannel {
 export enum PlatformFeature {
   EmailVerification = 'email_verification',
   SmsOptin = 'sms_optin',
+}
+
+export enum PlaybookFeature {
+  Billing = 'billing',
+  Checklist = 'checklist',
 }
 
 export enum RallydNotificationType {
@@ -438,7 +439,7 @@ export interface TenantSession {
   user: User;
   tenant: TenantSummary;
   impersonated_by?: UserReference;
-  /** User-features enabled for this tenant AND this session user's role. Clients match subproject+feature against their generated feature enum (e.g. clubaid_feature). System features are never included. */
+  /** User-features enabled for this tenant AND this session user's role. Clients match subproject+feature against their generated feature enum (e.g. playbook_feature). System features are never included. */
   enabled_features: EnabledFeature[];
 }
 
