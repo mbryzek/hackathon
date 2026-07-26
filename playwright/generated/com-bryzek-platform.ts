@@ -168,6 +168,13 @@ export interface AddressForm {
 }
 
 /**
+ * A randomly generated password suggestion for admin-initiated password resets. Tenant-agnostic — any tenant admin may request one.
+ */
+export interface AdminSuggestedPassword {
+  password: string;
+}
+
+/**
  * When and by whom something happened.
  */
 export interface AuditStamp {
@@ -620,10 +627,14 @@ export function isSmsOptinRequestResultRateLimited(obj: SmsOptinRequestResult): 
 // API Client
 // ============================================================================
 
-import { VoidResponse } from './generated-error-void-response.ts';
 import { UnauthorizedErrorResponse } from './generated-error-unauthorized-error-response.ts';
+import { VoidResponse } from './generated-error-void-response.ts';
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
 import { ApiException } from "./generated-util.ts";
+
+export interface GetAdminSuggestedPasswordOptions {
+  headers?: Record<string, string>;
+}
 
 export interface UpdateEmailVerificationByTokenOptions {
   headers?: Record<string, string>;
@@ -825,6 +836,30 @@ export class ApiClient {
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+  }
+
+  async getAdminSuggestedPassword(params: GetAdminSuggestedPasswordOptions): Promise<AdminSuggestedPassword> {
+    const url = `${this.baseUrl}/admin/suggested/password`;
+
+      const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+    });
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
   }
 
   async updateEmailVerificationByToken(token: string, options?: UpdateEmailVerificationByTokenOptions): Promise<void> {
