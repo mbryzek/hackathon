@@ -448,6 +448,8 @@ export interface TenantSession {
   impersonated_by?: UserReference;
   /** User-features enabled for this tenant AND this session user's role. Clients match subproject+feature against their generated feature enum (e.g. playbook_feature). System features are never included. */
   enabled_features: EnabledFeature[];
+  /** True when an admin set this user's password and required them to choose their own. Clients gate the session on this until the user sets a new password - regardless of how the session was obtained (password, login link, sms code). Never true for an impersonated session. */
+  password_change_required: boolean;
 }
 
 export interface TenantSummary {
@@ -518,8 +520,11 @@ export interface UserNotificationPreference {
   channel: NotificationChannel;
 }
 
+/**
+ * Body for PUT /users/:id/password. current_password is required and verified, EXCEPT when the user's password_change_required flag is set - the admin-issued password they just signed in with is not re-demanded. A successful change always clears password_change_required.
+ */
 export interface UserPasswordForm {
-  current_password: string;
+  current_password?: string;
   new_password: string;
 }
 
