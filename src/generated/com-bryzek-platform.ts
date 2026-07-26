@@ -482,6 +482,25 @@ export interface User {
   rallyd?: RallydRating[];
 }
 
+/**
+ * A pending invitation for a user to set their initial password. Returned unauthenticated to whoever holds the activation token, so it carries only what the welcome page renders.
+ */
+export interface UserActivation {
+  user: UserReference;
+  /** What to call the invitee - nickname when set, otherwise full name. Absent when the person record has neither. */
+  name?: string;
+  /** The address the invitation was sent to, so the page can show which account is being activated. */
+  email?: Email;
+  expires_at: ISODateTimeString;
+}
+
+/**
+ * Body for POST /activations/:token/password. Sets the user's initial password and consumes the activation.
+ */
+export interface UserActivationPasswordForm {
+  password: string;
+}
+
 export interface UserCalendarForm {
   preference: CalendarPreference;
 }
@@ -813,6 +832,16 @@ export interface CreateUserPasswordAndSuggestionsOptions {
 }
 
 export interface CreateUserEmailAndVerificationsByIdOptions {
+  headers?: Record<string, string>;
+}
+
+export interface GetUserActivationByTokenOptions {
+  headers?: Record<string, string>;
+}
+
+export interface CreateUserActivationPasswordByTokenOptions {
+  token: string;
+  body: UserActivationPasswordForm;
   headers?: Record<string, string>;
 }
 
@@ -1792,6 +1821,59 @@ export class ApiClient {
 
     if (response.status === 401) {
       throw new UnauthorizedErrorResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async getUserActivationByToken(token: string, options?: GetUserActivationByTokenOptions): Promise<UserActivation> {
+    const url = `${this.baseUrl}/activations/${token}`;
+
+      const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.headers || {}),
+      },
+    });
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createUserActivationPasswordByToken(params: CreateUserActivationPasswordByTokenOptions): Promise<SessionState> {
+    const url = `${this.baseUrl}/activations/${params.token}/password`;
+
+      const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 201) {
+      const data = await response.json();
+      return data;
     }
 
     if (response.status === 404) {
