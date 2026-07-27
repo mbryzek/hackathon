@@ -8,6 +8,7 @@
 import type { ISODateTimeString } from './generated-types';
 
 import type { LoginForm, SessionReference, User } from './com-bryzek-platform.ts';
+import type { File, FileType } from './com-bryzek-platform-storage.ts';
 import type { Event, EventReference, EventStatus, Project, VoterType } from './com-bryzek-vote-api.ts';
 
 // ============================================================================
@@ -32,6 +33,16 @@ export interface Code {
   voter_type: VoterType;
   has_voted: boolean;
   created_at: ISODateTimeString;
+}
+
+/**
+ * Format selection + filters for a voting code export. The filters are the code list endpoint's filters and mean the same thing here, so an export always matches the table it was generated from. Only csv and pdf can be produced; any other format is rejected with a 422.
+ */
+export interface CodeExportForm {
+  format: FileType;
+  voter_type?: VoterType;
+  has_voted?: boolean;
+  q?: string;
 }
 
 /**
@@ -141,6 +152,12 @@ export interface GetCodeSummaryOptions {
 export interface CreateCodeGenerateOptions {
   eventId: string;
   body: CodeGenerateForm;
+  headers?: Record<string, string>;
+}
+
+export interface CreateCodeExportsOptions {
+  eventId: string;
+  body: CodeExportForm;
   headers?: Record<string, string>;
 }
 
@@ -391,6 +408,39 @@ export class ApiClient {
 
     if (response.status === 204) {
       return;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createCodeExports(params: CreateCodeExportsOptions): Promise<File> {
+    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/codes/exports`;
+
+      const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(params.headers || {}),
+      },
+      body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 201) {
+      const data = await response.json();
+      return data;
     }
 
     if (response.status === 401) {

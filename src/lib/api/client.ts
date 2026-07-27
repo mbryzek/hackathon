@@ -17,9 +17,11 @@ import {
   type EventForm,
   type ProjectForm,
   type CodeGenerateForm,
+  type CodeExportForm,
   type Tally,
   type ProjectTally
 } from '../../generated/com-bryzek-vote-admin';
+import { type File, FileType } from '../../generated/com-bryzek-platform-storage';
 import { ValidationErrorsResponse } from '../../generated/generated-error-validation-errors-response';
 import { UnauthorizedErrorResponse } from '../../generated/generated-error-unauthorized-error-response';
 import { VoidResponse } from '../../generated/generated-error-void-response';
@@ -37,11 +39,13 @@ export type {
   EventForm,
   ProjectForm,
   CodeGenerateForm,
+  CodeExportForm,
+  File,
   Tally,
   ProjectTally
 };
 
-export { EventStatus, VoterType };
+export { EventStatus, FileType, VoterType };
 
 // Alias Event as VoteEvent for backward compatibility
 export type VoteEvent = Event;
@@ -366,6 +370,22 @@ export const adminApi = {
         eventId,
         id
       })
+    );
+  },
+
+  /**
+   * Builds an export of this event's codes and returns the stored file. The file's `url` is
+   * signed and expiring, so the browser can follow it directly with no session header.
+   */
+  async exportCodes(sessionId: string, eventId: string, form: CodeExportForm): Promise<ApiResponse<File>> {
+    return handleApiCall(
+      () =>
+        voteAdminClient.createCodeExports({
+          headers: getAuthHeaders(sessionId),
+          eventId,
+          body: form
+        }),
+      201
     );
   },
 
