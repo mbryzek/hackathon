@@ -11,3 +11,12 @@ applications = new Listing<AppGroup> {
   new { names { "platform-error"; "platform"; "vote-api"; "vote-admin" }
                                       generators = module.singleGenerator("typescript", tsSrc) }
 }
+
+// playwright/ is its own codegen root on purpose: it regenerates these clients
+// plus the test-only playwright-vote one, which must not land in src/ and reach
+// the shipped bundle. Naming it here is what makes a single `api` at the repo
+// root cover both - before this, its copy only updated if you remembered to cd
+// into playwright/ and run `api` again, and it silently rotted (#54).
+nestedConfigs {
+  "playwright"
+}
