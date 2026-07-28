@@ -3,9 +3,8 @@
   import { page } from '$app/state';
   import { goto, invalidateAll } from '$app/navigation';
   import { urls } from '$lib/urls';
-  import { adminApi, type VoteEvent, type Code, type CodeSummary, VoterType } from '$lib/api/client';
+  import { adminApi, type VoteEvent, type Code, type CodeSummary, FileType, VoterType } from '$lib/api/client';
   import { MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
-  import { config } from '$lib/config';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
   import type { PageData } from './$types';
 
@@ -230,75 +229,49 @@
     summary = summaryResponse.data || null;
   }
 
-  async function exportCsv() {
+  /**
+   * The server builds the export, stores it, and returns a file whose `url` is signed and
+   * expiring — so the browser follows it directly with no credentials attached, and the
+   * filename comes from the stored file rather than being guessed here.
+   */
+  async function exportCodes(format: FileType, failureMessage: string) {
     if (!sessionId) return;
 
-    isExporting = true;
     error = null;
 
-    try {
-      const response = await fetch(`${config.apiBaseUrl}/vote/admin/events/${eventId}/codes/export.csv`, {
-        headers: { session_id: sessionId }
-      });
+    const response = await adminApi.exportCodes(sessionId, eventId, {
+      format,
+      voter_type: filterVoterType || undefined,
+      has_voted: filterHasVoted === '' ? undefined : filterHasVoted,
+      q: filterQuery.trim() || undefined
+    });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          await invalidateAll();
-          await goto(urls.voteAdminLogin);
-          return;
-        }
-        error = 'Failed to export codes';
+    if (response.errors || !response.data) {
+      if (response.status === 401) {
+        await invalidateAll();
+        await goto(urls.voteAdminLogin);
         return;
       }
+      error = response.errors?.[0]?.message || failureMessage;
+      return;
+    }
 
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${event?.key ?? eventId}-codes.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch {
-      error = 'Failed to export codes';
+    window.location.href = response.data.url;
+  }
+
+  async function exportCsv() {
+    isExporting = true;
+    try {
+      await exportCodes(FileType.Csv, 'Failed to export codes');
     } finally {
       isExporting = false;
     }
   }
 
   async function exportPdf() {
-    if (!sessionId) return;
-
     isExportingPdf = true;
-    error = null;
-
     try {
-      const response = await fetch(`${config.apiBaseUrl}/vote/admin/events/${eventId}/codes/export.pdf`, {
-        headers: { session_id: sessionId }
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          await invalidateAll();
-          await goto(urls.voteAdminLogin);
-          return;
-        }
-        error = 'Failed to export PDF';
-        return;
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${event?.key ?? eventId}-codes.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch {
-      error = 'Failed to export PDF';
+      await exportCodes(FileType.Pdf, 'Failed to export PDF');
     } finally {
       isExportingPdf = false;
     }
