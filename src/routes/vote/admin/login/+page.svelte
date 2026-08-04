@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Spinner from '$lib/components/Spinner.svelte';
   import { enhance } from '$app/forms';
   import { urls } from '$lib/urls';
   import type { ActionData } from './$types';
@@ -81,10 +82,7 @@
         >
           {#if isSubmitting}
             <span class="inline-flex items-center justify-center gap-2">
-              <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
+              <Spinner />
               Signing in...
             </span>
           {:else}

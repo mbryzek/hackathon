@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Spinner from '$lib/components/Spinner.svelte';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
@@ -175,10 +176,7 @@
         >
           {#if isVerifying}
             <span class="inline-flex items-center justify-center gap-2">
-              <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
+              <Spinner />
               Verifying...
             </span>
           {:else}
@@ -286,10 +284,7 @@
         >
           {#if isSubmitting}
             <span class="inline-flex items-center justify-center gap-2">
-              <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
+              <Spinner />
               Submitting Vote...
             </span>
           {:else}
