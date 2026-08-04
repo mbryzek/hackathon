@@ -62,6 +62,8 @@ export enum PlatformFeature {
 export enum PlaybookFeature {
   Billing = 'billing',
   Checklist = 'checklist',
+  LocationComparison = 'location_comparison',
+  Executions = 'executions',
 }
 
 export enum RallydNotificationType {
@@ -198,6 +200,14 @@ export interface CleartextToken {
 export interface DateRange {
   start: ISODateString;
   end: ISODateString;
+}
+
+/**
+ * Half-open range of instants: start is inclusive, end is exclusive. The instant-precision counterpart of date_range, for windows a chart bucket or a report is computed over.
+ */
+export interface DateTimeRange {
+  start: ISODateTimeString;
+  end: ISODateTimeString;
 }
 
 export interface Email {
