@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { urls } from '$lib/urls';
   import { adminApi, EventStatus } from '$lib/api/client';
+  import { EVENT_STATUS_OPTIONS } from '$lib/utils/eventDisplay';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -119,9 +120,9 @@
           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
           disabled={isSubmitting}
         >
-          <option value="draft">Draft</option>
-          <option value="open">Open</option>
-          <option value="closed">Closed</option>
+          {#each EVENT_STATUS_OPTIONS as option (option.value)}
+            <option value={option.value}>{option.label}</option>
+          {/each}
         </select>
         <p class="mt-2 text-sm text-gray-500">Set to "Open" when ready to accept votes.</p>
       </div>

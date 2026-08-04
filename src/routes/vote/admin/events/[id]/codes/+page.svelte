@@ -5,6 +5,7 @@
   import { urls } from '$lib/urls';
   import { adminApi, type VoteEvent, type Code, type CodeSummary, FileType, VoterType } from '$lib/api/client';
   import { MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
+  import { VOTER_TYPE_OPTIONS, voterTypeBadgeClass, voterTypeLabel } from '$lib/utils/eventDisplay';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
   import type { PageData } from './$types';
 
@@ -86,6 +87,8 @@
 
   onMount(async () => {
     if (!sessionId) {
+      isLoading = false;
+      error = 'Your session has expired. Please sign in again.';
       return;
     }
 
@@ -124,6 +127,9 @@
 
   async function loadCodes(isInitialLoad = false) {
     if (!sessionId) return;
+
+    // A stale banner from an earlier failed search must not survive a successful one.
+    error = null;
 
     // Use isLoading for initial load, isSearching for subsequent loads
     if (isInitialLoad) {
@@ -223,10 +229,12 @@
       return;
     }
 
-    // Update local list and refresh summary
-    codes = codes.filter((c) => c.id !== codeId);
+    // Refetch the page rather than splicing locally: dropping the row left the page one
+    // short and kept `hasMoreCodes`/the offset pointing past the code that shifted up,
+    // so the next page skipped an entry.
     const summaryResponse = await adminApi.getCodeSummary(sessionId, eventId);
     summary = summaryResponse.data || null;
+    await loadCodes();
   }
 
   /**
@@ -334,8 +342,9 @@
                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
                   disabled={isGenerating}
                 >
-                  <option value="student">Student (1 vote)</option>
-                  <option value="parent">Parent (3 votes)</option>
+                  {#each VOTER_TYPE_OPTIONS as option (option.value)}
+                    <option value={option.value}>{option.label}</option>
+                  {/each}
                 </select>
               </div>
               <div>
@@ -457,8 +466,9 @@
             class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
           >
             <option value="">All</option>
-            <option value="student">Student</option>
-            <option value="parent">Parent</option>
+            {#each VOTER_TYPE_OPTIONS as option (option.value)}
+              <option value={option.value}>{option.label}</option>
+            {/each}
           </select>
         </div>
         <div>
@@ -504,8 +514,20 @@
               d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
             ></path>
           </svg>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">No codes yet</h3>
-          <p class="text-gray-600">Generate codes for voters to use.</p>
+          {#if currentOffset > 0}
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">No codes on this page</h3>
+            <p class="text-gray-600 mb-6">Codes may have been deleted while you were paging.</p>
+            <button
+              type="button"
+              onclick={prevPage}
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Previous page
+            </button>
+          {:else}
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">No codes yet</h3>
+            <p class="text-gray-600">Generate codes for voters to use.</p>
+          {/if}
         </div>
       {:else}
         <div class="bg-white shadow rounded-xl overflow-hidden">
@@ -526,11 +548,8 @@
                       <code class="text-lg font-mono font-bold tracking-widest">{code.code}</code>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <span
-                        class="px-2 py-1 text-xs font-medium rounded-full
-											{code.voter_type === 'student' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}"
-                      >
-                        {code.voter_type}
+                      <span class="px-2 py-1 text-xs font-medium rounded-full {voterTypeBadgeClass(code.voter_type)}">
+                        {voterTypeLabel(code.voter_type)}
                       </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
