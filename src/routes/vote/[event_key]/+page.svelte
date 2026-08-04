@@ -3,7 +3,7 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { urls } from '$lib/urls';
-  import { voteApi, type Vote } from '$lib/api/client';
+  import { voteApi, VoterType, type Vote } from '$lib/api/client';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -113,7 +113,14 @@
 
   const canSubmit = $derived(verification && selectedProjectIds.size > 0 && selectedProjectIds.size <= (verification?.max_votes || 0));
 
-  const voterTypeLabel = $derived(verification?.voter_type === 'student' ? 'Student' : 'Parent/Guest');
+  // Keyed by the generated enum rather than a bare 'student' string: a voter_type the UI
+  // does not know about used to silently render as "Parent/Guest".
+  const VOTER_TYPE_LABELS: Record<VoterType, string> = {
+    [VoterType.Student]: 'Student',
+    [VoterType.Parent]: 'Parent/Guest'
+  };
+
+  const voterTypeLabel = $derived(verification ? VOTER_TYPE_LABELS[verification.voter_type] : '');
 
   const voteInstructions = $derived(
     verification?.max_votes === 1 ? 'Select 1 project' : `Select up to ${verification?.max_votes} projects`
@@ -142,6 +149,7 @@
         class="space-y-6"
       >
         <div>
+          <label for="code" class="sr-only">Voting code</label>
           <input
             type="text"
             id="code"
@@ -218,6 +226,7 @@
           <button
             type="button"
             onclick={() => handleProjectSelect(pv.project.id)}
+            aria-pressed={isSelected}
             disabled={isDisabled && verification.max_votes > 1}
             class="w-full text-left bg-white shadow rounded-xl p-6 transition-all duration-200
 							{isSelected ? 'ring-2 ring-yellow-400 bg-yellow-50' : 'hover:shadow-lg'}
