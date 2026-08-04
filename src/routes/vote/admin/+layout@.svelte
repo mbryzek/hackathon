@@ -34,9 +34,11 @@
             <a href={urls.voteAdmin} class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
               Events
             </a>
-            <a href="/vote/admin/logout" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-              Logout
-            </a>
+            <form method="POST" action={urls.voteAdminLogout}>
+              <button type="submit" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                Logout
+              </button>
+            </form>
           </div>
         </div>
       </div>
