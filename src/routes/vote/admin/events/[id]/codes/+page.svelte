@@ -4,7 +4,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { urls } from '$lib/urls';
   import { adminApi, type VoteEvent, type Code, type CodeSummary, FileType, VoterType } from '$lib/api/client';
-  import { MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
+  import { MAX_CODES_TO_GENERATE, SEARCH_DEBOUNCE_MS } from '$lib/utils/constants';
   import { VOTER_TYPE_OPTIONS, voterTypeBadgeClass, voterTypeLabel } from '$lib/utils/eventDisplay';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
@@ -21,7 +21,11 @@
   let codes = $state<Code[]>([]);
   let summary = $state<CodeSummary | null>(null);
   let error = $state<string | null>(null);
-  let isLoading = $state(true);
+  // The page spinner covers both first loads: the event/summary header and the first page of codes.
+  // Without the codes half, the "No codes yet" empty state flashes before the first rows land.
+  let eventLoaded = $state(false);
+  let codesLoaded = $state(false);
+  const isLoading = $derived(!eventLoaded || !codesLoaded);
   let isSearching = $state(false);
 
   // Generate form
@@ -33,12 +37,26 @@
   // Filters
   let filterVoterType = $state<VoterType | ''>('');
   let filterHasVoted = $state<boolean | ''>('');
+  /** What is in the search box right now — changes on every keystroke and fetches nothing. */
+  let searchText = $state('');
+  /** The query the codes on screen were fetched with, and the one an export matches. Only the
+   * debounce (or Enter / the Search button) applies a new one, so a burst of typing is one fetch. */
   let filterQuery = $state('');
 
   // Pagination
   let currentOffset = $state(0);
   let hasMoreCodes = $state(false);
   const PAGE_SIZE = 50;
+
+  /** Bumped to ask for the same page again — the refetches that no change to a filter or the
+   * offset implies: a generate, a delete, and the Search button pressed on unchanged filters. */
+  let reloadNonce = $state(0);
+
+  /** Identifies the newest in-flight request. A response whose id is no longer the latest belongs
+   * to a request that a newer one has overtaken, and is dropped rather than painted — otherwise a
+   * slow earlier page repaints rows the admin has already moved off. Deliberately not `$state`:
+   * nothing renders it, and it must not become a reactive dependency of anything. */
+  let latestRequestId = 0;
 
   // Delete
   let deletingCodeId = $state<string | null>(null);
@@ -47,59 +65,62 @@
   let isExporting = $state(false);
   let isExportingPdf = $state(false);
 
-  // Track if initial data has been loaded (to enable debounced search)
-  let initialLoadComplete = $state(false);
+  // Debounced search: keystrokes only move `searchText`, and the timer applies it to `filterQuery`,
+  // which is what the effect below fetches on.
+  let searchDebounce: ReturnType<typeof setTimeout> | undefined;
 
-  // Debounced search - auto-search after 250ms of no typing
-  let previousQuery = '';
-  let searchSequence = 0;
-  $effect(() => {
-    // Track filterQuery changes
-    const query = filterQuery;
+  function onSearchInput() {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(applySearch, SEARCH_DEBOUNCE_MS);
+  }
 
-    // Only enable debounced search after initial load is complete
-    if (!initialLoadComplete) {
-      return;
-    }
+  /** Applies what is typed, now. Cancelling the pending debounce is what stops Enter and the Search
+   * button from firing a second, identical request behind the one they just asked for. The nonce
+   * makes Search on unchanged filters still refetch, and because Svelte batches these three writes
+   * into one effect run, a changed query costs one request rather than two. */
+  function applySearch() {
+    clearTimeout(searchDebounce);
+    filterQuery = searchText;
+    currentOffset = 0;
+    reloadNonce += 1;
+  }
 
-    // Skip if query hasn't changed
-    if (query === previousQuery) {
-      return;
-    }
-
-    // Increment sequence to handle race conditions
-    const currentSequence = ++searchSequence;
-
-    // Set new timer to trigger search after 250ms
-    const currentTimer = setTimeout(() => {
-      // Only proceed if this is still the latest search request
-      if (sessionId && currentSequence === searchSequence) {
-        previousQuery = query;
-        currentOffset = 0;
-        loadCodes();
-      }
-    }, 250);
-
-    // Cleanup: capture timer in closure to clear the correct timer
-    return () => {
-      clearTimeout(currentTimer);
-    };
-  });
-
-  onMount(async () => {
+  onMount(() => {
     if (!sessionId) {
-      isLoading = false;
+      eventLoaded = true;
+      codesLoaded = true;
       error = 'Your session has expired. Please sign in again.';
       return;
     }
 
-    await loadData();
+    void loadData();
+  });
+
+  // A debounce still pending when the page goes away would apply a query to a destroyed component.
+  $effect(() => () => clearTimeout(searchDebounce));
+
+  // The only thing that fetches codes. Handlers change state and stop there; they used to call
+  // `loadCodes()` themselves as well, which is how a search could go out twice.
+  $effect(() => {
+    void reloadNonce; // read so a generate, a delete or Search can ask for the same page again
+    const session = sessionId;
+    if (!session) {
+      codesLoaded = true;
+      return;
+    }
+    void loadCodes({
+      sessionId: session,
+      eventId,
+      voterType: filterVoterType,
+      hasVoted: filterHasVoted,
+      q: filterQuery.trim(),
+      offset: currentOffset
+    });
   });
 
   async function loadData() {
     if (!sessionId) return;
 
-    isLoading = true;
     error = null;
 
     // Load event and summary in parallel
@@ -108,8 +129,9 @@
       adminApi.getCodeSummary(sessionId, eventId)
     ]);
 
+    eventLoaded = true;
+
     if (eventResponse.errors) {
-      isLoading = false;
       if (eventResponse.status === 401) {
         await invalidateAll();
         await goto(urls.voteAdminLogin);
@@ -121,35 +143,42 @@
 
     event = eventResponse.data || null;
     summary = summaryResponse.data || null;
-
-    await loadCodes(true);
-    initialLoadComplete = true;
   }
 
-  async function loadCodes(isInitialLoad = false) {
-    if (!sessionId) return;
+  /** Everything a codes fetch depends on, captured when the effect decided to run. Passing it in
+   * rather than reading the state inside `loadCodes` keeps the effect's dependency set explicit,
+   * instead of it being whatever state `loadCodes` happened to read before its first `await`. */
+  type CodesRequest = {
+    sessionId: string;
+    eventId: string;
+    voterType: VoterType | '';
+    hasVoted: boolean | '';
+    q: string;
+    offset: number;
+  };
+
+  async function loadCodes(request: CodesRequest) {
+    const requestId = ++latestRequestId;
 
     // A stale banner from an earlier failed search must not survive a successful one.
     error = null;
-
-    // Use isLoading for initial load, isSearching for subsequent loads
-    if (isInitialLoad) {
-      isLoading = true;
-    } else {
-      isSearching = true;
-    }
+    isSearching = true;
 
     const params: { voter_type?: VoterType; has_voted?: boolean; q?: string; limit?: number; offset?: number } = {
       limit: PAGE_SIZE + 1, // Fetch one extra to check if there are more
-      offset: currentOffset
+      offset: request.offset
     };
-    if (filterVoterType) params.voter_type = filterVoterType;
-    if (filterHasVoted !== '') params.has_voted = filterHasVoted;
-    if (filterQuery.trim()) params.q = filterQuery.trim();
+    if (request.voterType) params.voter_type = request.voterType;
+    if (request.hasVoted !== '') params.has_voted = request.hasVoted;
+    if (request.q) params.q = request.q;
 
-    const codesResponse = await adminApi.getCodes(sessionId, eventId, params);
+    const codesResponse = await adminApi.getCodes(request.sessionId, request.eventId, params);
 
-    isLoading = false;
+    // A superseded response paints nothing, raises no banner, and leaves the spinner alone: the
+    // request that overtook it is still running and owns all three.
+    if (requestId !== latestRequestId) return;
+
+    codesLoaded = true;
     isSearching = false;
 
     if (codesResponse.errors) {
@@ -176,17 +205,14 @@
 
   function nextPage() {
     currentOffset += PAGE_SIZE;
-    loadCodes();
   }
 
   function prevPage() {
     currentOffset = Math.max(0, currentOffset - PAGE_SIZE);
-    loadCodes();
   }
 
   function resetPagination() {
     currentOffset = 0;
-    loadCodes();
   }
 
   async function handleGenerateCodes(evt: SubmitEvent) {
@@ -212,7 +238,7 @@
     // Reload summary and codes
     const summaryResponse = await adminApi.getCodeSummary(sessionId, eventId);
     summary = summaryResponse.data || null;
-    await loadCodes();
+    reloadNonce += 1;
   }
 
   async function deleteCode(codeId: string) {
@@ -235,7 +261,7 @@
     // so the next page skipped an entry.
     const summaryResponse = await adminApi.getCodeSummary(sessionId, eventId);
     summary = summaryResponse.data || null;
-    await loadCodes();
+    reloadNonce += 1;
   }
 
   /**
@@ -443,8 +469,9 @@
           <input
             type="text"
             id="filter-search"
-            bind:value={filterQuery}
-            onkeydown={(e) => e.key === 'Enter' && resetPagination()}
+            bind:value={searchText}
+            oninput={onSearchInput}
+            onkeydown={(e) => e.key === 'Enter' && applySearch()}
             placeholder="Search codes..."
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
           />
@@ -478,7 +505,7 @@
         </div>
         <button
           type="button"
-          onclick={() => resetPagination()}
+          onclick={applySearch}
           class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition-colors"
         >
           Search
