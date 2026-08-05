@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import Spinner from '$lib/components/Spinner.svelte';
   import { goto } from '$app/navigation';
   import { urls } from '$lib/urls';
   import { voteApi, type Event } from '$lib/api/client';
@@ -45,10 +46,7 @@
     <!-- Loading state -->
     <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto text-center">
       <div class="inline-flex items-center gap-3 text-gray-600">
-        <svg class="animate-spin h-6 w-6" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-          <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
+        <Spinner size="md" />
         Loading events...
       </div>
     </div>

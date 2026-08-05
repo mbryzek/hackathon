@@ -7,6 +7,7 @@
   import { MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
   import { VOTER_TYPE_OPTIONS, voterTypeBadgeClass, voterTypeLabel } from '$lib/utils/eventDisplay';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
+  import Spinner from '$lib/components/Spinner.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -297,10 +298,7 @@
 
   {#if isLoading}
     <div class="flex items-center justify-center py-12">
-      <svg class="animate-spin h-8 w-8 text-gray-600" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-      </svg>
+      <Spinner size="lg" label="Loading" class="text-gray-600" />
     </div>
   {:else}
     <!-- Stats -->
@@ -397,10 +395,7 @@
             class="inline-flex items-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {#if isExporting}
-              <svg class="animate-spin w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
+              <Spinner class="mr-2" />
               Exporting...
             {:else}
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -422,10 +417,7 @@
             title="Print cards for distribution"
           >
             {#if isExportingPdf}
-              <svg class="animate-spin w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
+              <Spinner class="mr-2" />
               Exporting...
             {:else}
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -498,10 +490,7 @@
     <div class="relative">
       {#if isSearching}
         <div class="absolute inset-0 bg-white/70 flex items-center justify-center z-10 rounded-xl">
-          <svg class="animate-spin h-8 w-8 text-gray-600" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-            <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-          </svg>
+          <Spinner size="lg" label="Searching" class="text-gray-600" />
         </div>
       {/if}
       {#if codes.length === 0}
@@ -568,10 +557,7 @@
                         title={code.has_voted ? 'Cannot delete used code' : 'Delete'}
                       >
                         {#if deletingCodeId === code.id}
-                          <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-                            <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                          </svg>
+                          <Spinner />
                         {:else}
                           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path

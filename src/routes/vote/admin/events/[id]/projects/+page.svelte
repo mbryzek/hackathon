@@ -5,6 +5,7 @@
   import { urls } from '$lib/urls';
   import { adminApi, type VoteEvent, type Project } from '$lib/api/client';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
+  import Spinner from '$lib/components/Spinner.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -162,10 +163,7 @@
 
   {#if isLoading}
     <div class="flex items-center justify-center py-12">
-      <svg class="animate-spin h-8 w-8 text-gray-600" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-      </svg>
+      <Spinner size="lg" label="Loading" class="text-gray-600" />
     </div>
   {:else}
     <!-- Add project button/form -->
@@ -341,10 +339,7 @@
                     aria-label="Delete project {project.name}"
                   >
                     {#if deletingProjectId === project.id}
-                      <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                      </svg>
+                      <Spinner />
                     {:else}
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path

@@ -6,6 +6,7 @@
   import { adminApi, type VoteEvent, type EventResults, type ProjectTally } from '$lib/api/client';
   import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
+  import Spinner from '$lib/components/Spinner.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -145,10 +146,7 @@
 
   {#if isLoading}
     <div class="flex items-center justify-center py-12">
-      <svg class="animate-spin h-8 w-8 {isPresentationMode ? 'text-white' : 'text-gray-600'}" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-      </svg>
+      <Spinner size="lg" label="Loading" class={isPresentationMode ? 'text-white' : 'text-gray-600'} />
     </div>
   {:else if results}
     <!-- Controls -->
