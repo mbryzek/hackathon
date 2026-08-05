@@ -4,7 +4,9 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { urls } from '$lib/urls';
   import { adminApi, type VoteEvent } from '$lib/api/client';
+  import { eventStatusBadgeClass, eventStatusLabel, formatDateTime } from '$lib/utils/eventDisplay';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
+  import Modal from '$lib/components/Modal.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -24,6 +26,8 @@
 
   onMount(async () => {
     if (!sessionId) {
+      isLoading = false;
+      error = 'Your session has expired. Please sign in again.';
       return;
     }
 
@@ -67,27 +71,6 @@
 
     await goto(urls.voteAdmin);
   }
-
-  function getStatusBadgeClass(status: string): string {
-    switch (status) {
-      case 'open':
-        return 'bg-green-100 text-green-800';
-      case 'closed':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-yellow-100 text-yellow-800';
-    }
-  }
-
-  function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
 </script>
 
 <div class="animate-fade-in">
@@ -130,8 +113,8 @@
         <div class="py-4 first:pt-0">
           <dt class="text-sm font-medium text-gray-500">Status</dt>
           <dd class="mt-1">
-            <span class="px-3 py-1 text-sm font-medium rounded-full {getStatusBadgeClass(event.status)}">
-              {event.status}
+            <span class="px-3 py-1 text-sm font-medium rounded-full {eventStatusBadgeClass(event.status)}">
+              {eventStatusLabel(event.status)}
             </span>
           </dd>
         </div>
@@ -142,18 +125,18 @@
         <div class="py-4">
           <dt class="text-sm font-medium text-gray-500">Voting URL</dt>
           <dd class="mt-1">
-            <a href={votingUrl} class="text-blue-600 hover:text-blue-800 underline break-all" target="_blank">
+            <a href={votingUrl} class="text-blue-600 hover:text-blue-800 underline break-all" target="_blank" rel="noopener noreferrer">
               {votingUrl}
             </a>
           </dd>
         </div>
         <div class="py-4">
           <dt class="text-sm font-medium text-gray-500">Created</dt>
-          <dd class="mt-1 text-gray-900">{formatDate(event.created_at)}</dd>
+          <dd class="mt-1 text-gray-900">{formatDateTime(event.created_at)}</dd>
         </div>
         <div class="py-4 last:pb-0">
           <dt class="text-sm font-medium text-gray-500">Last Updated</dt>
-          <dd class="mt-1 text-gray-900">{formatDate(event.updated_at)}</dd>
+          <dd class="mt-1 text-gray-900">{formatDateTime(event.updated_at)}</dd>
         </div>
       </dl>
     </div>
@@ -177,41 +160,32 @@
 </div>
 
 <!-- Delete confirmation modal -->
-{#if showDeleteConfirm}
-  <div class="fixed inset-0 z-50 flex items-center justify-center">
-    <div
-      class="absolute inset-0 bg-black bg-opacity-50"
-      onclick={() => (showDeleteConfirm = false)}
-      role="button"
-      tabindex="-1"
-      onkeydown={(e) => e.key === 'Escape' && (showDeleteConfirm = false)}
-    ></div>
-    <div class="relative bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Delete Event</h2>
-      <p class="text-gray-600 mb-6">
-        Are you sure you want to delete this event? This action cannot be undone and will delete all associated projects, codes, and votes.
-      </p>
-      <div class="flex gap-3 justify-end">
-        <button
-          type="button"
-          onclick={() => (showDeleteConfirm = false)}
-          class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onclick={handleDelete}
-          disabled={isDeleting}
-          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
-        >
-          {#if isDeleting}
-            Deleting...
-          {:else}
-            Delete Event
-          {/if}
-        </button>
-      </div>
+<Modal open={showDeleteConfirm} onclose={() => (showDeleteConfirm = false)} size="md">
+  <div class="bg-white rounded-xl shadow-xl p-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-4">Delete Event</h2>
+    <p class="text-gray-600 mb-6">
+      Are you sure you want to delete this event? This action cannot be undone and will delete all associated projects, codes, and votes.
+    </p>
+    <div class="flex gap-3 justify-end">
+      <button
+        type="button"
+        onclick={() => (showDeleteConfirm = false)}
+        class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        onclick={handleDelete}
+        disabled={isDeleting}
+        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+      >
+        {#if isDeleting}
+          Deleting...
+        {:else}
+          Delete Event
+        {/if}
+      </button>
     </div>
   </div>
-{/if}
+</Modal>

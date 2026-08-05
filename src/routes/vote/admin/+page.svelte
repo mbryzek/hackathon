@@ -2,7 +2,8 @@
   import { onMount } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import { urls } from '$lib/urls';
-  import { adminApi, type VoteEvent, type EventStatus } from '$lib/api/client';
+  import { adminApi, type VoteEvent } from '$lib/api/client';
+  import { eventStatusBadgeClass, eventStatusLabel, formatDate } from '$lib/utils/eventDisplay';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -15,6 +16,8 @@
     // Session is validated by the layout, so we know we have a session here
     const sessionId = data.adminSession?.id;
     if (!sessionId) {
+      isLoading = false;
+      error = 'Your session has expired. Please sign in again.';
       return;
     }
 
@@ -35,25 +38,6 @@
 
     events = response.data || [];
   });
-
-  function getStatusBadgeClass(status: EventStatus): string {
-    switch (status) {
-      case 'open':
-        return 'bg-green-100 text-green-800';
-      case 'closed':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-yellow-100 text-yellow-800';
-    }
-  }
-
-  function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  }
 </script>
 
 <div class="animate-fade-in">
@@ -117,22 +101,21 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             {#each events as event (event.id)}
-              <tr
-                class="hover:bg-gray-50 transition-colors cursor-pointer"
-                onclick={() => goto(urls.voteAdminEvent(event.id))}
-                onkeydown={(e) => e.key === 'Enter' && goto(urls.voteAdminEvent(event.id))}
-                tabindex="0"
-                role="link"
-              >
+              <tr class="hover:bg-gray-50 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="font-medium text-gray-900">{event.name}</div>
+                  <a
+                    href={urls.voteAdminEvent(event.id)}
+                    class="font-medium text-gray-900 hover:text-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
+                  >
+                    {event.name}
+                  </a>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <code class="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">{event.key}</code>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="px-2 py-1 text-xs font-medium rounded-full {getStatusBadgeClass(event.status)}">
-                    {event.status}
+                  <span class="px-2 py-1 text-xs font-medium rounded-full {eventStatusBadgeClass(event.status)}">
+                    {eventStatusLabel(event.status)}
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

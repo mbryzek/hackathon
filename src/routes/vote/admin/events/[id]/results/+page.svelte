@@ -21,31 +21,30 @@
   let isLoading = $state(true);
   let isPresentationMode = $state(false);
   let autoRefresh = $state(false);
-  let refreshInterval: ReturnType<typeof setInterval> | null = null;
 
   onMount(() => {
     if (!sessionId) {
+      isLoading = false;
+      error = 'Your session has expired. Please sign in again.';
       return;
     }
 
     loadData();
-
-    return () => {
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-      }
-    };
   });
 
+  // The effect's own teardown owns the timer. Assigning to an outer variable leaked an
+  // interval every time the effect re-ran with autoRefresh still on (sessionId changes on
+  // invalidateAll), leaving two pollers hitting the results endpoint.
   $effect(() => {
-    if (autoRefresh && sessionId) {
-      refreshInterval = setInterval(() => {
-        loadData();
-      }, RESULTS_REFRESH_INTERVAL_MS);
-    } else if (refreshInterval) {
-      clearInterval(refreshInterval);
-      refreshInterval = null;
+    if (!autoRefresh || !sessionId) {
+      return;
     }
+
+    const interval = setInterval(() => {
+      loadData();
+    }, RESULTS_REFRESH_INTERVAL_MS);
+
+    return () => clearInterval(interval);
   });
 
   async function loadData() {
