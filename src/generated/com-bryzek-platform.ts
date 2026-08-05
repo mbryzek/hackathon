@@ -877,7 +877,7 @@ export class ApiClient {
   }
 
   async updateEmailVerificationByToken(token: string, options?: UpdateEmailVerificationByTokenOptions): Promise<void> {
-    const url = `${this.baseUrl}/email/verifications/${token}`;
+    const url = `${this.baseUrl}/email/verifications/${encodeURIComponent(token)}`;
 
       const response = await fetch(url, {
       method: 'PUT',
@@ -983,7 +983,7 @@ export class ApiClient {
   }
 
   async updatePersonPhotoById(params: UpdatePersonPhotoByIdOptions): Promise<Person> {
-    const url = `${this.baseUrl}/people/${params.id}/photo`;
+    const url = `${this.baseUrl}/people/${encodeURIComponent(params.id)}/photo`;
 
       const response = await fetch(url, {
       method: 'PUT',
@@ -1016,7 +1016,7 @@ export class ApiClient {
   }
 
   async createPhoneOptinAndResendById(id: string, options?: CreatePhoneOptinAndResendByIdOptions): Promise<SmsOptinRequestResult> {
-    const url = `${this.baseUrl}/phones/${id}/optin/resend`;
+    const url = `${this.baseUrl}/phones/${encodeURIComponent(id)}/optin/resend`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1048,7 +1048,7 @@ export class ApiClient {
   }
 
   async getTenant(id: string, options?: GetTenantOptions): Promise<Tenant> {
-    const url = `${this.baseUrl}/tenant/${id}`;
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(id)}`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -1072,7 +1072,7 @@ export class ApiClient {
   }
 
   async getTenantHierarchyNodes(tenantId: string, options?: GetTenantHierarchyNodesOptions): Promise<TenantHierarchyNode[]> {
-    const url = `${this.baseUrl}/tenant/${tenantId}/hierarchy`;
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(tenantId)}/hierarchy`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -1096,7 +1096,7 @@ export class ApiClient {
   }
 
   async getTenantSession(tenantId: string, options?: GetTenantSessionOptions): Promise<TenantSession> {
-    const url = `${this.baseUrl}/tenant/${tenantId}/session`;
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(tenantId)}/session`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -1124,7 +1124,7 @@ export class ApiClient {
   }
 
   async createTenantSessionLogins(params: CreateTenantSessionLoginsOptions): Promise<SessionState> {
-    const url = `${this.baseUrl}/tenant/${params.tenantId}/session/logins`;
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(params.tenantId)}/session/logins`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1149,7 +1149,7 @@ export class ApiClient {
   }
 
   async createTenantSessionSignups(params: CreateTenantSessionSignupsOptions): Promise<SessionState> {
-    const url = `${this.baseUrl}/tenant/${params.tenantId}/session/signups`;
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(params.tenantId)}/session/signups`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1174,7 +1174,7 @@ export class ApiClient {
   }
 
   async createTenantSessionPasswordAndChanges(params: CreateTenantSessionPasswordAndChangesOptions): Promise<SessionState> {
-    const url = `${this.baseUrl}/tenant/${params.tenantId}/session/password/changes`;
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(params.tenantId)}/session/password/changes`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1199,7 +1199,7 @@ export class ApiClient {
   }
 
   async createTenantSessionPasswordAndResets(params: CreateTenantSessionPasswordAndResetsOptions): Promise<void> {
-    const url = `${this.baseUrl}/tenant/${params.tenantId}/session/password/resets`;
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(params.tenantId)}/session/password/resets`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1223,7 +1223,7 @@ export class ApiClient {
   }
 
   async createTenantSessionLoginAndLinkAndRequests(params: CreateTenantSessionLoginAndLinkAndRequestsOptions): Promise<void> {
-    const url = `${this.baseUrl}/tenant/${params.tenantId}/session/login/link/requests`;
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(params.tenantId)}/session/login/link/requests`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1247,7 +1247,7 @@ export class ApiClient {
   }
 
   async createTenantSessionLoginAndPhoneAndRequests(params: CreateTenantSessionLoginAndPhoneAndRequestsOptions): Promise<void> {
-    const url = `${this.baseUrl}/tenant/${params.tenantId}/session/login/phone/requests`;
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(params.tenantId)}/session/login/phone/requests`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1271,7 +1271,7 @@ export class ApiClient {
   }
 
   async createTenantSessionLoginAndPhoneAndVerifications(params: CreateTenantSessionLoginAndPhoneAndVerificationsOptions): Promise<SessionState> {
-    const url = `${this.baseUrl}/tenant/${params.tenantId}/session/login/phone/verifications`;
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(params.tenantId)}/session/login/phone/verifications`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1296,7 +1296,7 @@ export class ApiClient {
   }
 
   async deleteTenantSession(tenantId: string, options?: DeleteTenantSessionOptions): Promise<void> {
-    const url = `${this.baseUrl}/tenant/${tenantId}/session`;
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(tenantId)}/session`;
 
       const response = await fetch(url, {
       method: 'DELETE',
@@ -1323,7 +1323,7 @@ export class ApiClient {
     queryParts.push(`limit=${encodeURIComponent(String(params.limit))}`);
     queryParts.push(`offset=${encodeURIComponent(String(params.offset))}`);
     const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
-    const url = `${this.baseUrl}/tokens/users/${params.userId}${queryString}`;
+    const url = `${this.baseUrl}/tokens/users/${encodeURIComponent(params.userId)}${queryString}`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -1376,7 +1376,7 @@ export class ApiClient {
   }
 
   async getTokenCleartextById(id: string, options?: GetTokenCleartextByIdOptions): Promise<CleartextToken> {
-    const url = `${this.baseUrl}/tokens/${id}/cleartext`;
+    const url = `${this.baseUrl}/tokens/${encodeURIComponent(id)}/cleartext`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -1404,7 +1404,7 @@ export class ApiClient {
   }
 
   async deleteTokenById(id: string, options?: DeleteTokenByIdOptions): Promise<void> {
-    const url = `${this.baseUrl}/tokens/${id}`;
+    const url = `${this.baseUrl}/tokens/${encodeURIComponent(id)}`;
 
       const response = await fetch(url, {
       method: 'DELETE',
@@ -1481,7 +1481,7 @@ export class ApiClient {
   }
 
   async getUserById(id: string, options?: GetUserByIdOptions): Promise<User> {
-    const url = `${this.baseUrl}/users/${id}`;
+    const url = `${this.baseUrl}/users/${encodeURIComponent(id)}`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -1509,7 +1509,7 @@ export class ApiClient {
   }
 
   async createUserTenantByTenantId(params: CreateUserTenantByTenantIdOptions): Promise<User> {
-    const url = `${this.baseUrl}/users/tenant/${params.tenantId}`;
+    const url = `${this.baseUrl}/users/tenant/${encodeURIComponent(params.tenantId)}`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1538,7 +1538,7 @@ export class ApiClient {
   }
 
   async updateUserById(params: UpdateUserByIdOptions): Promise<User> {
-    const url = `${this.baseUrl}/users/${params.id}`;
+    const url = `${this.baseUrl}/users/${encodeURIComponent(params.id)}`;
 
       const response = await fetch(url, {
       method: 'PUT',
@@ -1571,7 +1571,7 @@ export class ApiClient {
   }
 
   async updateUserSecondaryById(params: UpdateUserSecondaryByIdOptions): Promise<User> {
-    const url = `${this.baseUrl}/users/${params.id}/secondary`;
+    const url = `${this.baseUrl}/users/${encodeURIComponent(params.id)}/secondary`;
 
       const response = await fetch(url, {
       method: 'PUT',
@@ -1604,7 +1604,7 @@ export class ApiClient {
   }
 
   async updateUserPrimaryById(params: UpdateUserPrimaryByIdOptions): Promise<User> {
-    const url = `${this.baseUrl}/users/${params.id}/primary`;
+    const url = `${this.baseUrl}/users/${encodeURIComponent(params.id)}/primary`;
 
       const response = await fetch(url, {
       method: 'PUT',
@@ -1637,7 +1637,7 @@ export class ApiClient {
   }
 
   async updateActiveUserById(id: string, options?: UpdateActiveUserByIdOptions): Promise<User> {
-    const url = `${this.baseUrl}/users/${id}/active`;
+    const url = `${this.baseUrl}/users/${encodeURIComponent(id)}/active`;
 
       const response = await fetch(url, {
       method: 'PUT',
@@ -1669,7 +1669,7 @@ export class ApiClient {
   }
 
   async updateInactiveUserById(id: string, options?: UpdateInactiveUserByIdOptions): Promise<User> {
-    const url = `${this.baseUrl}/users/${id}/inactive`;
+    const url = `${this.baseUrl}/users/${encodeURIComponent(id)}/inactive`;
 
       const response = await fetch(url, {
       method: 'PUT',
@@ -1701,7 +1701,7 @@ export class ApiClient {
   }
 
   async updateUserRoleByIdAndRole(params: UpdateUserRoleByIdAndRoleOptions): Promise<User> {
-    const url = `${this.baseUrl}/users/${params.id}/role/${String(params.role)}`;
+    const url = `${this.baseUrl}/users/${encodeURIComponent(params.id)}/role/${encodeURIComponent(String(params.role))}`;
 
       const response = await fetch(url, {
       method: 'PUT',
@@ -1733,7 +1733,7 @@ export class ApiClient {
   }
 
   async updateUserPasswordById(params: UpdateUserPasswordByIdOptions): Promise<void> {
-    const url = `${this.baseUrl}/users/${params.id}/password`;
+    const url = `${this.baseUrl}/users/${encodeURIComponent(params.id)}/password`;
 
       const response = await fetch(url, {
       method: 'PUT',
@@ -1765,7 +1765,7 @@ export class ApiClient {
   }
 
   async createUserPasswordAndResetsById(id: string, options?: CreateUserPasswordAndResetsByIdOptions): Promise<void> {
-    const url = `${this.baseUrl}/users/${id}/password/resets`;
+    const url = `${this.baseUrl}/users/${encodeURIComponent(id)}/password/resets`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1816,7 +1816,7 @@ export class ApiClient {
   }
 
   async createUserEmailAndVerificationsById(id: string, options?: CreateUserEmailAndVerificationsByIdOptions): Promise<void> {
-    const url = `${this.baseUrl}/users/${id}/email/verifications`;
+    const url = `${this.baseUrl}/users/${encodeURIComponent(id)}/email/verifications`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1847,7 +1847,7 @@ export class ApiClient {
   }
 
   async getUserActivationByToken(token: string, options?: GetUserActivationByTokenOptions): Promise<UserActivation> {
-    const url = `${this.baseUrl}/activations/${token}`;
+    const url = `${this.baseUrl}/activations/${encodeURIComponent(token)}`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -1871,7 +1871,7 @@ export class ApiClient {
   }
 
   async createUserActivationPasswordByToken(params: CreateUserActivationPasswordByTokenOptions): Promise<SessionState> {
-    const url = `${this.baseUrl}/activations/${params.token}/password`;
+    const url = `${this.baseUrl}/activations/${encodeURIComponent(params.token)}/password`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1900,7 +1900,7 @@ export class ApiClient {
   }
 
   async getUserPreferences(params: GetUserPreferencesOptions): Promise<UserPreferences> {
-    const url = `${this.baseUrl}/${params.tenantId}/users/${params.userId}/preferences`;
+    const url = `${this.baseUrl}/${encodeURIComponent(params.tenantId)}/users/${encodeURIComponent(params.userId)}/preferences`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -1928,7 +1928,7 @@ export class ApiClient {
   }
 
   async createUserPreferencesNotifications(params: CreateUserPreferencesNotificationsOptions): Promise<UserPreferences> {
-    const url = `${this.baseUrl}/${params.tenantId}/users/${params.userId}/preferences/notifications`;
+    const url = `${this.baseUrl}/${encodeURIComponent(params.tenantId)}/users/${encodeURIComponent(params.userId)}/preferences/notifications`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -1961,7 +1961,7 @@ export class ApiClient {
   }
 
   async createUserPreferencesCalendar(params: CreateUserPreferencesCalendarOptions): Promise<UserPreferences> {
-    const url = `${this.baseUrl}/${params.tenantId}/users/${params.userId}/preferences/calendar`;
+    const url = `${this.baseUrl}/${encodeURIComponent(params.tenantId)}/users/${encodeURIComponent(params.userId)}/preferences/calendar`;
 
       const response = await fetch(url, {
       method: 'POST',

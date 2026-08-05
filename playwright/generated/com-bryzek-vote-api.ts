@@ -145,7 +145,7 @@ export class ApiClient {
   }
 
   async createVoteCodeAndVerifications(params: CreateVoteCodeAndVerificationsOptions): Promise<Vote> {
-    const url = `${this.baseUrl}/vote/events/${params.eventKey}/code/verifications`;
+    const url = `${this.baseUrl}/vote/events/${encodeURIComponent(params.eventKey)}/code/verifications`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -174,7 +174,7 @@ export class ApiClient {
   }
 
   async createVote(params: CreateVoteOptions): Promise<Vote> {
-    const url = `${this.baseUrl}/vote/events/${params.eventKey}`;
+    const url = `${this.baseUrl}/vote/events/${encodeURIComponent(params.eventKey)}`;
 
       const response = await fetch(url, {
       method: 'POST',
