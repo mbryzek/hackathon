@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { urls } from '$lib/urls';
   import { voteApi, type Event } from '$lib/api/client';
@@ -7,8 +8,9 @@
   let isLoading = $state(true);
   let error = $state<string | null>(null);
 
-  // Fetch open events on mount
-  $effect(() => {
+  // onMount, not $effect: this writes the same $state it would otherwise be tracking, and
+  // an added read before the first await would turn it into a self-retriggering fetch loop.
+  onMount(() => {
     fetchOpenEvents();
   });
 
@@ -50,7 +52,7 @@
         Loading events...
       </div>
     </div>
-  {:else if error && events.length === 0}
+  {:else if error}
     <!-- Error state -->
     <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto text-center">
       <div class="text-red-600 mb-4">
