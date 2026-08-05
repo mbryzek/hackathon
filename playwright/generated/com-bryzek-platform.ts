@@ -64,6 +64,7 @@ export enum PlaybookFeature {
   Checklist = 'checklist',
   LocationComparison = 'location_comparison',
   Executions = 'executions',
+  Chat = 'chat',
 }
 
 export enum RallydNotificationType {
@@ -823,6 +824,10 @@ export interface UpdateUserRoleByIdAndRoleOptions {
 export interface UpdateUserPasswordByIdOptions {
   id: string;
   body: UserPasswordForm;
+  headers?: Record<string, string>;
+}
+
+export interface CreateUserPasswordAndResetsByIdOptions {
   headers?: Record<string, string>;
 }
 
@@ -1737,6 +1742,37 @@ export class ApiClient {
         ...(params.headers || {}),
       },
       body: JSON.stringify(params.body),
+    });
+
+    if (response.status === 204) {
+      return;
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+
+  }
+
+  async createUserPasswordAndResetsById(id: string, options?: CreateUserPasswordAndResetsByIdOptions): Promise<void> {
+    const url = `${this.baseUrl}/users/${id}/password/resets`;
+
+      const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.headers || {}),
+      },
     });
 
     if (response.status === 204) {
