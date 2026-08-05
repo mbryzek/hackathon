@@ -335,7 +335,7 @@ export class ApiClient {
     queryParts.push(`limit=${encodeURIComponent(String(params.limit))}`);
     queryParts.push(`offset=${encodeURIComponent(String(params.offset))}`);
     const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
-    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/codes${queryString}`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/codes${queryString}`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -367,7 +367,7 @@ export class ApiClient {
   }
 
   async getCodeSummary(eventId: string, options?: GetCodeSummaryOptions): Promise<CodeSummary> {
-    const url = `${this.baseUrl}/vote/admin/events/${eventId}/codes/summary`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(eventId)}/codes/summary`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -395,7 +395,7 @@ export class ApiClient {
   }
 
   async createCodeGenerate(params: CreateCodeGenerateOptions): Promise<void> {
-    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/codes/generate`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/codes/generate`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -427,7 +427,7 @@ export class ApiClient {
   }
 
   async createCodeExports(params: CreateCodeExportsOptions): Promise<File> {
-    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/codes/exports`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/codes/exports`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -460,7 +460,7 @@ export class ApiClient {
   }
 
   async deleteCodeById(params: DeleteCodeByIdOptions): Promise<void> {
-    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/codes/${params.id}`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/codes/${encodeURIComponent(params.id)}`;
 
       const response = await fetch(url, {
       method: 'DELETE',
@@ -529,7 +529,7 @@ export class ApiClient {
   }
 
   async getEventById(id: string, options?: GetEventByIdOptions): Promise<Event> {
-    const url = `${this.baseUrl}/vote/admin/events/${id}`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(id)}`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -586,7 +586,7 @@ export class ApiClient {
   }
 
   async updateEventById(params: UpdateEventByIdOptions): Promise<Event> {
-    const url = `${this.baseUrl}/vote/admin/events/${params.id}`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.id)}`;
 
       const response = await fetch(url, {
       method: 'PUT',
@@ -619,7 +619,7 @@ export class ApiClient {
   }
 
   async deleteEventById(id: string, options?: DeleteEventByIdOptions): Promise<void> {
-    const url = `${this.baseUrl}/vote/admin/events/${id}`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(id)}`;
 
       const response = await fetch(url, {
       method: 'DELETE',
@@ -650,7 +650,7 @@ export class ApiClient {
     queryParts.push(`limit=${encodeURIComponent(String(params.limit))}`);
     queryParts.push(`offset=${encodeURIComponent(String(params.offset))}`);
     const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
-    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects${queryString}`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects${queryString}`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -678,7 +678,7 @@ export class ApiClient {
   }
 
   async getProjectById(params: GetProjectByIdOptions): Promise<Project> {
-    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects/${params.id}`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects/${encodeURIComponent(params.id)}`;
 
       const response = await fetch(url, {
       method: 'GET',
@@ -706,7 +706,7 @@ export class ApiClient {
   }
 
   async createProject(params: CreateProjectOptions): Promise<Project> {
-    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -739,7 +739,7 @@ export class ApiClient {
   }
 
   async createProjectCsv(params: CreateProjectCsvOptions): Promise<void> {
-    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects/csv`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects/csv`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -771,7 +771,7 @@ export class ApiClient {
   }
 
   async updateProjectById(params: UpdateProjectByIdOptions): Promise<Project> {
-    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects/${params.id}`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects/${encodeURIComponent(params.id)}`;
 
       const response = await fetch(url, {
       method: 'PUT',
@@ -804,7 +804,7 @@ export class ApiClient {
   }
 
   async deleteProjectById(params: DeleteProjectByIdOptions): Promise<void> {
-    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects/${params.id}`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects/${encodeURIComponent(params.id)}`;
 
       const response = await fetch(url, {
       method: 'DELETE',
@@ -831,7 +831,7 @@ export class ApiClient {
   }
 
   async createProjectReorder(params: CreateProjectReorderOptions): Promise<void> {
-    const url = `${this.baseUrl}/vote/admin/events/${params.eventId}/projects/reorder`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects/reorder`;
 
       const response = await fetch(url, {
       method: 'POST',
@@ -863,7 +863,7 @@ export class ApiClient {
   }
 
   async getEventResults(eventId: string, options?: GetEventResultsOptions): Promise<EventResults> {
-    const url = `${this.baseUrl}/vote/admin/events/${eventId}/results`;
+    const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(eventId)}/results`;
 
       const response = await fetch(url, {
       method: 'GET',

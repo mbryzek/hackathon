@@ -49,7 +49,7 @@ export class ApiClient {
   }
 
   async createPlaywrightVoteEvents(params: CreatePlaywrightVoteEventsOptions): Promise<TestEvent> {
-    const url = `${this.baseUrl}/${params.tenantId}/playwright/events`;
+    const url = `${this.baseUrl}/${encodeURIComponent(params.tenantId)}/playwright/events`;
 
       const response = await fetch(url, {
       method: 'POST',
