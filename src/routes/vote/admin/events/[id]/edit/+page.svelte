@@ -1,88 +1,24 @@
 <script lang="ts">
   import Spinner from '$lib/components/Spinner.svelte';
-  import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { enhance } from '$app/forms';
   import { urls } from '$lib/urls';
-  import { adminApi, type VoteEvent, EventStatus } from '$lib/api/client';
   import { EVENT_STATUS_OPTIONS } from '$lib/utils/eventDisplay';
-  import type { PageData } from './$types';
+  import type { ActionData, PageData } from './$types';
 
-  let { data }: { data: PageData } = $props();
+  let { data, form }: { data: PageData; form: ActionData } = $props();
 
   const eventId = $derived(page.params.id ?? '');
+  const event = $derived(data.event);
+  const error = $derived(form?.error ?? data.error);
 
-  // Get session ID from server-provided data
-  const sessionId = $derived(data.adminSession?.id);
+  // A rejected submit's values win over the loaded event's, so the admin gets back what they
+  // typed rather than having the form silently reset under the error.
+  const name = $derived(form?.name ?? event?.name ?? '');
+  const key = $derived(form?.key ?? event?.key ?? '');
+  const status = $derived(form?.status ?? event?.status);
 
-  let event = $state<VoteEvent | null>(null);
-  let name = $state('');
-  let key = $state('');
-  let status = $state<EventStatus>(EventStatus.Draft);
-  let error = $state<string | null>(null);
-  let isLoading = $state(true);
   let isSubmitting = $state(false);
-
-  onMount(async () => {
-    if (!sessionId) {
-      isLoading = false;
-      error = 'Your session has expired. Please sign in again.';
-      return;
-    }
-
-    const response = await adminApi.getEvent(sessionId, eventId);
-
-    isLoading = false;
-
-    if (response.errors) {
-      if (response.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
-      if (response.status === 404) {
-        error = 'Event not found';
-        return;
-      }
-      error = response.errors[0]?.message || 'Failed to load event';
-      return;
-    }
-
-    if (response.data) {
-      event = response.data;
-      name = response.data.name;
-      key = response.data.key;
-      status = response.data.status;
-    }
-  });
-
-  async function handleSubmit(evt: SubmitEvent) {
-    evt.preventDefault();
-    error = null;
-
-    if (!name.trim() || !key.trim() || !sessionId) {
-      error = 'Please fill in all required fields';
-      return;
-    }
-
-    isSubmitting = true;
-
-    const response = await adminApi.updateEvent(sessionId, eventId, {
-      name: name.trim(),
-      key: key.trim(),
-      status
-    });
-
-    isSubmitting = false;
-
-    if (response.errors) {
-      error = response.errors[0]?.message || 'Failed to update event';
-      return;
-    }
-
-    // Redirect back to event detail page
-    await goto(urls.voteAdminEvent(eventId));
-  }
 </script>
 
 <div class="animate-fade-in max-w-2xl mx-auto">
@@ -96,19 +32,26 @@
     <h1 class="text-2xl font-bold text-gray-900 mt-4">Edit Event</h1>
   </div>
 
-  {#if isLoading}
-    <div class="flex items-center justify-center py-12">
-      <Spinner size="lg" label="Loading" class="text-gray-600" />
-    </div>
-  {:else if event}
+  {#if event}
     <div class="bg-white shadow rounded-xl p-6">
-      <form onsubmit={handleSubmit} class="space-y-6">
+      <form
+        method="POST"
+        use:enhance={() => {
+          isSubmitting = true;
+          return async ({ update }) => {
+            await update();
+            isSubmitting = false;
+          };
+        }}
+        class="space-y-6"
+      >
         <div>
           <label for="name" class="block text-sm font-medium text-gray-700 mb-2"> Event Name </label>
           <input
             type="text"
             id="name"
-            bind:value={name}
+            name="name"
+            value={name}
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
             disabled={isSubmitting}
           />
@@ -119,7 +62,8 @@
           <input
             type="text"
             id="key"
-            bind:value={key}
+            name="key"
+            value={key}
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors font-mono"
             disabled={isSubmitting}
           />
@@ -132,7 +76,8 @@
           <label for="status" class="block text-sm font-medium text-gray-700 mb-2"> Status </label>
           <select
             id="status"
-            bind:value={status}
+            name="status"
+            value={status}
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
             disabled={isSubmitting}
           >
@@ -151,7 +96,7 @@
         <div class="flex gap-4">
           <button
             type="submit"
-            disabled={isSubmitting || !name.trim() || !key.trim()}
+            disabled={isSubmitting}
             class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {#if isSubmitting}

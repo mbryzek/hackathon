@@ -1,87 +1,28 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { enhance } from '$app/forms';
   import { urls } from '$lib/urls';
-  import { adminApi, type VoteEvent } from '$lib/api/client';
   import { eventStatusBadgeClass, eventStatusLabel, formatDateTime } from '$lib/utils/eventDisplay';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
   import Modal from '$lib/components/Modal.svelte';
-  import Spinner from '$lib/components/Spinner.svelte';
-  import type { PageData } from './$types';
+  import type { ActionData, PageData } from './$types';
 
-  let { data }: { data: PageData } = $props();
+  let { data, form }: { data: PageData; form: ActionData } = $props();
 
   const eventId = $derived(page.params.id ?? '');
+  const event = $derived(data.event);
+  const error = $derived(form?.error ?? data.error);
 
-  // Get session ID from server-provided data
-  const sessionId = $derived(data.adminSession?.id);
-
-  let event = $state<VoteEvent | null>(null);
-  let error = $state<string | null>(null);
-  let isLoading = $state(true);
   let isDeleting = $state(false);
   let showDeleteConfirm = $state(false);
 
   const votingUrl = $derived(event ? `${page.url.origin}/vote/${event.key}` : '');
-
-  onMount(async () => {
-    if (!sessionId) {
-      isLoading = false;
-      error = 'Your session has expired. Please sign in again.';
-      return;
-    }
-
-    const response = await adminApi.getEvent(sessionId, eventId);
-
-    isLoading = false;
-
-    if (response.errors) {
-      if (response.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
-      if (response.status === 404) {
-        error = 'Event not found';
-        return;
-      }
-      error = response.errors[0]?.message || 'Failed to load event';
-      return;
-    }
-
-    if (response.data) {
-      event = response.data;
-    }
-  });
-
-  async function handleDelete() {
-    if (!sessionId) return;
-
-    isDeleting = true;
-
-    const response = await adminApi.deleteEvent(sessionId, eventId);
-
-    isDeleting = false;
-
-    if (response.errors) {
-      error = response.errors[0]?.message || 'Failed to delete event';
-      showDeleteConfirm = false;
-      return;
-    }
-
-    await goto(urls.voteAdmin);
-  }
 </script>
 
 <div class="animate-fade-in">
   <EventAdminTabs {eventId} eventName={event?.name} activeTab="event" />
 
-  {#if isLoading}
-    <div class="flex items-center justify-center py-12">
-      <Spinner size="lg" label="Loading" class="text-gray-600" />
-    </div>
-  {:else if event}
+  {#if event}
     {#if error}
       <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
         {error}
@@ -172,18 +113,30 @@
       >
         Cancel
       </button>
-      <button
-        type="button"
-        onclick={handleDelete}
-        disabled={isDeleting}
-        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+      <form
+        method="POST"
+        action="?/delete"
+        use:enhance={() => {
+          isDeleting = true;
+          return async ({ update }) => {
+            await update();
+            isDeleting = false;
+            showDeleteConfirm = false;
+          };
+        }}
       >
-        {#if isDeleting}
-          Deleting...
-        {:else}
-          Delete Event
-        {/if}
-      </button>
+        <button
+          type="submit"
+          disabled={isDeleting}
+          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+        >
+          {#if isDeleting}
+            Deleting...
+          {:else}
+            Delete Event
+          {/if}
+        </button>
+      </form>
     </div>
   </div>
 </Modal>

@@ -9,9 +9,10 @@ declare global {
   namespace App {
     // interface Error {}
     interface Locals {
-      adminSession?: AdminSession | undefined;
-    }
-    interface PageData {
+      /**
+       * The admin session id from the httpOnly cookie. Server-side only, and never returned
+       * as page data — see `$lib/server/adminSession` and ISS-788.
+       */
       adminSession?: AdminSession | undefined;
     }
   }
