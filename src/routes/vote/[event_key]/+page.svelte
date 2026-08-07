@@ -128,6 +128,18 @@
   );
 
   const eventName = $derived(verification?.event.name ?? data.event?.name ?? 'Project Voting');
+
+  let ballotHeading = $state<HTMLElement | null>(null);
+
+  // Verifying swaps the whole code-entry form — including the button that had focus — for the
+  // ballot. That is an in-page content swap, not a navigation, so SvelteKit's focus reset does
+  // not apply and focus falls back to <body>: a keyboard or screen-reader voter is given no
+  // indication that a new screen appeared and has to re-explore from the top of the document.
+  $effect(() => {
+    if (codeVerified && ballotHeading) {
+      ballotHeading.focus();
+    }
+  });
 </script>
 
 <svelte:head>
@@ -164,7 +176,7 @@
         </div>
 
         {#if error}
-          <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center">
+          <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center" role="alert">
             {error}
           </div>
         {/if}
@@ -192,7 +204,9 @@
       <div class="bg-white shadow-lg rounded-xl p-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">
+            <!-- tabindex="-1" so focus can be moved here when the ballot replaces the code form.
+                 It is not a tab stop; -1 only makes it programmatically focusable. -->
+            <h1 class="text-2xl font-bold text-gray-900 focus:outline-none" bind:this={ballotHeading} tabindex="-1">
               {verification.event.name}
             </h1>
             <p class="text-gray-600 mt-1">
@@ -211,13 +225,18 @@
       </div>
 
       {#if error}
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg" role="alert">
           {error}
         </div>
       {/if}
 
-      <!-- Projects list -->
-      <div class="space-y-4">
+      <!-- Projects list. `role="group"` + the instructions as its accessible name is what tells a
+           screen-reader voter these choices belong together and how many they get — reading the
+           cards one by one conveys neither. Deliberately NOT role="radiogroup"/role="radio": that
+           contract also promises arrow-key navigation between options, which these plain buttons
+           do not implement, and claiming it without honouring it misleads more than it helps.
+           Native inputs are the real fix and are filed separately. -->
+      <div class="space-y-4" role="group" aria-label={voteInstructions}>
         {#each verification.projects as pv (pv.project.id)}
           {@const isSelected = selectedProjectIds.has(pv.project.id)}
           {@const isDisabled = !isSelected && selectedProjectIds.size >= verification.max_votes}

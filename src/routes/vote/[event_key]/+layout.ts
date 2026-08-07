@@ -12,9 +12,17 @@ export const ssr = false;
 
 export const load: LayoutLoad = async ({ params }) => {
   const response = await voteApi.getOpenEvents();
-  const event = response.data?.find((e) => e.key === params.event_key) ?? null;
+
+  // A failed call and a genuinely closed event are not the same thing, and `response.data`
+  // is undefined for both. Collapsing them into `event = null` told a voter whose request
+  // had just failed that the event was "not currently open, check back later" — for an event
+  // running in the room they were standing in — with no retry short of reloading the page.
+  if (response.errors || !response.data) {
+    return { event: null, loadFailed: true };
+  }
 
   return {
-    event
+    event: response.data.find((e) => e.key === params.event_key) ?? null,
+    loadFailed: false
   };
 };
