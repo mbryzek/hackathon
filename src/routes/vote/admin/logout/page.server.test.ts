@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SESSION_COOKIE } from '$lib/config';
 import { urls } from '$lib/urls';
 
-/** Only `adminApi.logout` is reached by the action; nothing else in the client is needed. */
+/** Only `adminApi.logout` is reached by the action; nothing else in the admin API is needed. */
 const logout = vi.fn();
-vi.mock('$lib/api/client', () => ({ adminApi: { logout: (sessionId: string) => logout(sessionId) } }));
+vi.mock('$lib/server/adminApi', () => ({ adminApi: { logout: (sessionId: string) => logout(sessionId) } }));
 
 const { actions, load } = await import('./+page.server');
 
