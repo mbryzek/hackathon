@@ -51,8 +51,9 @@
       </div>
     </div>
   {:else if error}
-    <!-- Error state -->
-    <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto text-center">
+    <!-- Error state. `role="alert"` so a screen-reader voter is told the fetch failed; without it
+         the card swaps in silently and the flow just appears to do nothing. -->
+    <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto text-center" role="alert">
       <div class="text-red-600 mb-4">
         <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
