@@ -3,6 +3,7 @@
   import { invalidateAll } from '$app/navigation';
   import { type ProjectTally } from '$lib/api/client';
   import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
+  import { visibilityAwareInterval } from '$lib/utils/polling';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
   import type { PageData } from './$types';
 
@@ -19,16 +20,21 @@
   // Refreshing means re-running the page's `load`, which fetches with the session id the server
   // holds; the browser never sees it. The effect's own teardown owns the timer — assigning to an
   // outer variable leaked an interval on every re-run, leaving two pollers on the endpoint.
+  //
+  // visibilityAwareInterval, not a bare setInterval: results are left up on a projector for the
+  // length of an event, and an admin who switches tabs with auto-refresh on would otherwise keep
+  // hitting the endpoint every 5s for hours with nobody looking at the answer.
+  //
+  // This effect reads `autoRefresh` and nothing else. That matters: the poll calls
+  // `invalidateAll()`, which replaces `data` — if the effect read `data` (or anything derived from
+  // it) the refresh would re-run the effect, which polls once immediately on start, and the page
+  // would spin in a refresh loop instead of waiting out the interval.
   $effect(() => {
     if (!autoRefresh) {
       return;
     }
 
-    const interval = setInterval(() => {
-      void invalidateAll();
-    }, RESULTS_REFRESH_INTERVAL_MS);
-
-    return () => clearInterval(interval);
+    return visibilityAwareInterval(() => invalidateAll(), RESULTS_REFRESH_INTERVAL_MS);
   });
 
   function togglePresentationMode() {
@@ -49,14 +55,15 @@
     results?.parent.projects.slice().sort((a: ProjectTally, b: ProjectTally) => b.vote_count - a.vote_count) || []
   );
 
-  // Calculate max votes for bar width (across both categories)
-  const maxVotes = $derived(() => {
-    const allProjects = [...sortedStudentProjects, ...sortedParentProjects];
-    return allProjects.length > 0 ? Math.max(...allProjects.map((p: ProjectTally) => p.vote_count), 1) : 1;
-  });
+  // Max votes for bar width (across both categories). A value, not a function: as
+  // `$derived(() => …)` this was a getter that rescanned every project on each call, and
+  // `getBarWidth` calls it once per bar — so a 40-project event walked the list 40 times per
+  // render, and again on every 5s auto-refresh. `$derived` already caches, so the whole scan
+  // now runs once per change to the tallies.
+  const maxVotes = $derived(Math.max(...[...sortedStudentProjects, ...sortedParentProjects].map((p: ProjectTally) => p.vote_count), 1));
 
   function getBarWidth(voteCount: number): string {
-    return `${(voteCount / maxVotes()) * 100}%`;
+    return `${(voteCount / maxVotes) * 100}%`;
   }
 
   function getRankBadgeClass(rank: number): string {
