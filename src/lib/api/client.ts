@@ -75,13 +75,21 @@ function getAuthHeaders(sessionId?: string): Record<string, string> {
   return {};
 }
 
-// Helper to handle API errors and convert to ApiResponse format
-async function handleApiCall<T>(apiCall: () => Promise<T>, successStatus: number = 200): Promise<ApiResponse<T>> {
-  try {
-    const data = await apiCall();
-    return { data, status: successStatus };
-  } catch (error) {
-    if (error instanceof ValidationErrorsResponse) {
+const SERVER_ERROR: ValidationError[] = [{ code: 'server_error', message: 'Server error' }];
+
+/**
+ * Flattens every failure mode of an API call into an `ApiResponse`.
+ *
+ * Callers depend on these wrappers NEVER rejecting: a page clears its spinner on the returned
+ * response, not in a `catch`, so a rejected promise leaves the spinner up forever. That contract
+ * used to have a hole — `error.validationErrors()` parses the body with a `must*` parser that
+ * throws on an unexpected shape, so a 422 produced by a gateway or WAF rather than by the API
+ * escaped this function as a rejection and stranded whatever was loading. Hence the inner catch:
+ * an error response we cannot parse is still an error response.
+ */
+async function toErrorResponse(error: unknown): Promise<ApiResponse<never>> {
+  if (error instanceof ValidationErrorsResponse) {
+    try {
       const validationErrors = await error.validationErrors();
       return {
         errors: validationErrors.map((e) => ({
@@ -91,26 +99,28 @@ async function handleApiCall<T>(apiCall: () => Promise<T>, successStatus: number
         })),
         status: error.response.status
       };
+    } catch {
+      return { errors: SERVER_ERROR, status: error.response.status };
     }
+  }
 
-    if (error instanceof UnauthorizedErrorResponse) {
-      return {
-        errors: [{ code: 'unauthorized', message: 'Unauthorized' }],
-        status: 401
-      };
-    }
+  if (error instanceof UnauthorizedErrorResponse) {
+    return { errors: [{ code: 'unauthorized', message: 'Unauthorized' }], status: 401 };
+  }
 
-    if (error instanceof VoidResponse) {
-      return {
-        errors: [{ code: 'not_found', message: 'Not found' }],
-        status: 404
-      };
-    }
+  if (error instanceof VoidResponse) {
+    return { errors: [{ code: 'not_found', message: 'Not found' }], status: 404 };
+  }
 
-    return {
-      errors: [{ code: 'server_error', message: 'Server error' }],
-      status: 500
-    };
+  return { errors: SERVER_ERROR, status: 500 };
+}
+
+// Helper to handle API errors and convert to ApiResponse format
+async function handleApiCall<T>(apiCall: () => Promise<T>, successStatus: number = 200): Promise<ApiResponse<T>> {
+  try {
+    return { data: await apiCall(), status: successStatus };
+  } catch (error) {
+    return toErrorResponse(error);
   }
 }
 
@@ -120,36 +130,7 @@ async function handleVoidApiCall(apiCall: () => Promise<void>, successStatus: nu
     await apiCall();
     return { status: successStatus };
   } catch (error) {
-    if (error instanceof ValidationErrorsResponse) {
-      const validationErrors = await error.validationErrors();
-      return {
-        errors: validationErrors.map((e) => ({
-          discriminator: e.discriminator,
-          message: e.message,
-          field: e.field
-        })),
-        status: error.response.status
-      };
-    }
-
-    if (error instanceof UnauthorizedErrorResponse) {
-      return {
-        errors: [{ code: 'unauthorized', message: 'Unauthorized' }],
-        status: 401
-      };
-    }
-
-    if (error instanceof VoidResponse) {
-      return {
-        errors: [{ code: 'not_found', message: 'Not found' }],
-        status: 404
-      };
-    }
-
-    return {
-      errors: [{ code: 'server_error', message: 'Server error' }],
-      status: 500
-    };
+    return toErrorResponse(error);
   }
 }
 

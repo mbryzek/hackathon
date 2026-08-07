@@ -222,6 +222,9 @@
     isGenerating = false;
 
     if (response.errors) {
+      // These two handlers were the copies the 401 block never got added to, so a session that
+      // expired between page load and clicking Generate showed a raw error instead of the login page.
+      if (await redirectIfUnauthorized(response)) return;
       error = response.errors[0]?.message || 'Failed to generate codes';
       return;
     }
@@ -244,6 +247,7 @@
     deletingCodeId = null;
 
     if (response.errors) {
+      if (await redirectIfUnauthorized(response)) return;
       error = response.errors[0]?.message || 'Failed to delete code';
       return;
     }

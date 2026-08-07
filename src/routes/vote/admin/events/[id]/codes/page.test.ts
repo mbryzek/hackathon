@@ -4,6 +4,7 @@ import { mount, unmount, flushSync } from 'svelte';
 import type * as ApiClientModule from '$lib/api/client';
 import type { Code, CodeSummary, VoteEvent } from '$lib/api/client';
 import { VoterType } from '$lib/api/client';
+import { SEARCH_DEBOUNCE_MS } from '$lib/utils/constants';
 import CodesPage from './+page.svelte';
 import type { PageData } from './$types';
 
@@ -140,7 +141,7 @@ describe('codes page fetching', () => {
     // Nothing is applied until the debounce fires, so keystrokes cost no requests at all.
     expect(getCodes).toHaveBeenCalledTimes(2);
 
-    vi.advanceTimersByTime(250);
+    vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
     await settle();
     expect(getCodes).toHaveBeenCalledTimes(3);
     expect(queries()).toBe('abc');
@@ -157,7 +158,7 @@ describe('codes page fetching', () => {
     expect(queries()).toBe('abc');
 
     // The debounce Enter cancelled must not fire the same search a second time.
-    vi.advanceTimersByTime(250);
+    vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
     await settle();
     expect(getCodes).toHaveBeenCalledTimes(2);
   });
