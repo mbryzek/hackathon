@@ -44,8 +44,13 @@
     aria-modal="true"
     tabindex="-1"
   >
-    <!-- Modal content -->
-    <div class="{sizeClasses[size]} w-full mx-4 animate-scale-in">
+    <!-- Modal content. `relative` is load-bearing: it makes this the containing block for the
+         absolutely-positioned close button below. Without it the nearest positioned ancestor is
+         the `fixed inset-0` backdrop, so the button lands in the corner of the VIEWPORT instead
+         of the corner of this card — and because `animate-scale-in` applies a transform (which
+         does establish a containing block) for only 0.2s with no fill-mode, the button started
+         in the right place and then jumped away as the animation ended. -->
+    <div class="{sizeClasses[size]} relative w-full mx-4 animate-scale-in">
       <!-- Close button -->
       <button
         type="button"
