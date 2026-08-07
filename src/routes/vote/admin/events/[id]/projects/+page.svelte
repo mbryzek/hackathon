@@ -1,7 +1,8 @@
 <script lang="ts">
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { EXPIRED_SESSION_MESSAGE, redirectIfUnauthorized } from '$lib/utils/adminSession';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { goto, invalidateAll } from '$app/navigation';
   import { urls } from '$lib/urls';
   import { adminApi, type VoteEvent, type Project } from '$lib/api/client';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
@@ -37,6 +38,9 @@
 
   onMount(async () => {
     if (!sessionId) {
+      // Returning without clearing isLoading left a spinner up forever with no way out.
+      isLoading = false;
+      error = EXPIRED_SESSION_MESSAGE;
       return;
     }
 
@@ -57,11 +61,7 @@
     isLoading = false;
 
     if (eventResponse.errors || projectsResponse.errors) {
-      if (eventResponse.status === 401 || projectsResponse.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
+      if (await redirectIfUnauthorized(eventResponse, projectsResponse)) return;
       error = eventResponse.errors?.[0]?.message || projectsResponse.errors?.[0]?.message || 'Failed to load data';
       return;
     }
@@ -156,9 +156,7 @@
   <EventAdminTabs {eventId} eventName={event?.name} activeTab="projects" />
 
   {#if error}
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-      {error}
-    </div>
+    <ErrorBanner message={error} class="mb-6" />
   {/if}
 
   {#if isLoading}

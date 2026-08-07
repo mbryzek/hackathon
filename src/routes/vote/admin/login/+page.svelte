@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import { enhance } from '$app/forms';
   import { urls } from '$lib/urls';
@@ -70,9 +71,7 @@
         </div>
 
         {#if error}
-          <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {error}
-          </div>
+          <ErrorBanner message={error} />
         {/if}
 
         <button

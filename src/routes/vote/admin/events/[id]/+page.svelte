@@ -1,7 +1,9 @@
 <script lang="ts">
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { EXPIRED_SESSION_MESSAGE, redirectIfUnauthorized } from '$lib/utils/adminSession';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { goto } from '$app/navigation';
   import { urls } from '$lib/urls';
   import { adminApi, type VoteEvent } from '$lib/api/client';
   import { eventStatusBadgeClass, eventStatusLabel, formatDateTime } from '$lib/utils/eventDisplay';
@@ -28,7 +30,7 @@
   onMount(async () => {
     if (!sessionId) {
       isLoading = false;
-      error = 'Your session has expired. Please sign in again.';
+      error = EXPIRED_SESSION_MESSAGE;
       return;
     }
 
@@ -37,11 +39,7 @@
     isLoading = false;
 
     if (response.errors) {
-      if (response.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
+      if (await redirectIfUnauthorized(response)) return;
       if (response.status === 404) {
         error = 'Event not found';
         return;
@@ -83,9 +81,7 @@
     </div>
   {:else if event}
     {#if error}
-      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-        {error}
-      </div>
+      <ErrorBanner message={error} class="mb-6" />
     {/if}
 
     <!-- Event Details -->
@@ -151,9 +147,7 @@
       </button>
     </div>
   {:else}
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-      {error || 'Event not found'}
-    </div>
+    <ErrorBanner message={error || 'Event not found'} />
   {/if}
 </div>
 

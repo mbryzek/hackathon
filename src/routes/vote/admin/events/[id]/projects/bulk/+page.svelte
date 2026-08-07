@@ -1,6 +1,8 @@
 <script lang="ts">
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { EXPIRED_SESSION_MESSAGE, redirectIfUnauthorized } from '$lib/utils/adminSession';
   import { page } from '$app/state';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { goto } from '$app/navigation';
   import { urls } from '$lib/urls';
   import { adminApi, type VoteEvent } from '$lib/api/client';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
@@ -29,7 +31,12 @@ Code Helper,AI-powered coding assistant`;
   $effect(() => {
     if (sessionId) {
       loadEvent();
+      return;
     }
+
+    // No session: the effect body used to no-op, leaving isLoading true forever.
+    isLoading = false;
+    error = EXPIRED_SESSION_MESSAGE;
   });
 
   async function loadEvent() {
@@ -43,11 +50,7 @@ Code Helper,AI-powered coding assistant`;
     isLoading = false;
 
     if (response.errors) {
-      if (response.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
+      if (await redirectIfUnauthorized(response)) return;
       error = response.errors[0]?.message || 'Failed to load event';
       return;
     }
@@ -67,11 +70,7 @@ Code Helper,AI-powered coding assistant`;
     isSubmitting = false;
 
     if (response.errors) {
-      if (response.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
+      if (await redirectIfUnauthorized(response)) return;
       error = response.errors[0]?.message || 'Failed to create projects';
       return;
     }
@@ -85,9 +84,7 @@ Code Helper,AI-powered coding assistant`;
   <EventAdminTabs {eventId} eventName={event?.name} activeTab="projects" />
 
   {#if error}
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-      {error}
-    </div>
+    <ErrorBanner message={error} class="mb-6" />
   {/if}
 
   {#if isLoading}

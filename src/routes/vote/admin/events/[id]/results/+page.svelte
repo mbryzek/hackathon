@@ -1,8 +1,8 @@
 <script lang="ts">
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { EXPIRED_SESSION_MESSAGE, redirectIfUnauthorized } from '$lib/utils/adminSession';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { goto, invalidateAll } from '$app/navigation';
-  import { urls } from '$lib/urls';
   import { adminApi, type VoteEvent, type EventResults, type ProjectTally } from '$lib/api/client';
   import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
@@ -26,7 +26,7 @@
   onMount(() => {
     if (!sessionId) {
       isLoading = false;
-      error = 'Your session has expired. Please sign in again.';
+      error = EXPIRED_SESSION_MESSAGE;
       return;
     }
 
@@ -63,11 +63,7 @@
     if (showLoading) isLoading = false;
 
     if (eventResponse.errors || resultsResponse.errors) {
-      if (eventResponse.status === 401 || resultsResponse.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
+      if (await redirectIfUnauthorized(eventResponse, resultsResponse)) return;
       error = eventResponse.errors?.[0]?.message || resultsResponse.errors?.[0]?.message || 'Failed to load data';
       return;
     }
@@ -139,9 +135,7 @@
   {/if}
 
   {#if error}
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-      {error}
-    </div>
+    <ErrorBanner message={error} class="mb-6" />
   {/if}
 
   {#if isLoading}

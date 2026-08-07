@@ -1,8 +1,8 @@
 <script lang="ts">
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { EXPIRED_SESSION_MESSAGE, redirectIfUnauthorized } from '$lib/utils/adminSession';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { goto, invalidateAll } from '$app/navigation';
-  import { urls } from '$lib/urls';
   import { adminApi, type VoteEvent, type Code, type CodeSummary, FileType, VoterType } from '$lib/api/client';
   import { MAX_CODES_TO_GENERATE, SEARCH_DEBOUNCE_MS } from '$lib/utils/constants';
   import { VOTER_TYPE_OPTIONS, voterTypeBadgeClass, voterTypeLabel } from '$lib/utils/eventDisplay';
@@ -89,7 +89,7 @@
     if (!sessionId) {
       eventLoaded = true;
       codesLoaded = true;
-      error = 'Your session has expired. Please sign in again.';
+      error = EXPIRED_SESSION_MESSAGE;
       return;
     }
 
@@ -132,11 +132,7 @@
     eventLoaded = true;
 
     if (eventResponse.errors) {
-      if (eventResponse.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
+      if (await redirectIfUnauthorized(eventResponse)) return;
       error = eventResponse.errors[0]?.message || 'Failed to load event';
       return;
     }
@@ -182,11 +178,7 @@
     isSearching = false;
 
     if (codesResponse.errors) {
-      if (codesResponse.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
+      if (await redirectIfUnauthorized(codesResponse)) return;
       error = codesResponse.errors[0]?.message || 'Failed to load codes';
       return;
     }
@@ -282,11 +274,7 @@
     });
 
     if (response.errors || !response.data) {
-      if (response.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
+      if (await redirectIfUnauthorized(response)) return;
       error = response.errors?.[0]?.message || failureMessage;
       return;
     }
@@ -317,9 +305,7 @@
   <EventAdminTabs {eventId} eventName={event?.name} activeTab="codes" />
 
   {#if error}
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-      {error}
-    </div>
+    <ErrorBanner message={error} class="mb-6" />
   {/if}
 
   {#if isLoading}

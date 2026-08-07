@@ -1,7 +1,8 @@
 <script lang="ts">
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { EXPIRED_SESSION_MESSAGE, redirectIfUnauthorized } from '$lib/utils/adminSession';
   import Spinner from '$lib/components/Spinner.svelte';
   import { onMount } from 'svelte';
-  import { goto, invalidateAll } from '$app/navigation';
   import { urls } from '$lib/urls';
   import { adminApi, type VoteEvent } from '$lib/api/client';
   import { eventStatusBadgeClass, eventStatusLabel, formatDate } from '$lib/utils/eventDisplay';
@@ -18,7 +19,7 @@
     const sessionId = data.adminSession?.id;
     if (!sessionId) {
       isLoading = false;
-      error = 'Your session has expired. Please sign in again.';
+      error = EXPIRED_SESSION_MESSAGE;
       return;
     }
 
@@ -28,11 +29,7 @@
 
     if (response.errors) {
       // If unauthorized, redirect to login
-      if (response.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
+      if (await redirectIfUnauthorized(response)) return;
       error = response.errors[0]?.message || 'Failed to load events';
       return;
     }
@@ -63,9 +60,7 @@
       <Spinner size="lg" label="Loading" class="text-gray-600" />
     </div>
   {:else if error}
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-      {error}
-    </div>
+    <ErrorBanner message={error} />
   {:else if events.length === 0}
     <div class="bg-white shadow rounded-xl p-12 text-center">
       <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
