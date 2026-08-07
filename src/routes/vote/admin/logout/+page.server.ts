@@ -22,9 +22,8 @@ export const actions = {
 
     // Deleting the cookie only makes THIS browser forget the session id; the session itself
     // stays valid on the API until it expires (8 hours, per the login action's maxAge). Any
-    // copy of the id that got out — a proxy or access log, a shared machine, the value the
-    // admin pages read from `data.adminSession.id` in client-side JS — would keep working
-    // after a logout that only cleared the cookie. Delete the session server-side too.
+    // copy of the id that got out — a proxy or access log, a shared machine — would keep
+    // working after a logout that only cleared the cookie. Delete the session server-side too.
     //
     // The result is deliberately ignored rather than surfaced: the admin asked to leave, and
     // an API hiccup must not strand them in a logged-in-looking state. `adminApi.logout`
