@@ -1,0 +1,14 @@
+# Cloudflare Pages headers for everything Pages serves directly: the prerendered
+# marketing pages and the files in static/. Responses the SvelteKit worker renders
+# (/vote, /vote/admin, /_internal_/version) do NOT pass through this file — Pages
+# applies _headers to static assets only — so src/hooks.server.ts sets the same
+# headers on those. Keep the two in sync; src/lib/security-headers.test.ts fails if
+# they drift.
+#
+# Lives in the project root, not in static/: adapter-cloudflare fails the build on a
+# static/_headers, copies this one into the build output, and appends its own cache
+# rules for /_app/* after it.
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

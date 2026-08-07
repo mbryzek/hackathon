@@ -1,28 +1,33 @@
 /**
  * SvelteKit server hooks
- * Handles session management for vote admin
+ *
+ * Sets the security headers on every response the worker renders, and threads the admin
+ * session cookie through to /vote/admin pages. Prerendered pages and static assets never
+ * reach this hook — see `$lib/security-headers` for how they are covered.
  */
 
 import type { Handle } from '@sveltejs/kit';
 import { SESSION_COOKIE } from '$lib/config';
+import { SECURITY_HEADERS } from '$lib/security-headers';
 
 export const handle: Handle = async ({ event, resolve }) => {
-  // Only handle admin routes
-  if (!event.url.pathname.startsWith('/vote/admin')) {
-    return resolve(event);
+  if (event.url.pathname.startsWith('/vote/admin')) {
+    // Store the session ID in locals - pages will use it for API calls.
+    // We don't validate here; let the API calls handle auth.
+    const sessionId = event.cookies.get(SESSION_COOKIE);
+
+    if (sessionId) {
+      event.locals.adminSession = {
+        id: sessionId
+      };
+    }
   }
 
-  // Get session ID from cookie and pass it through to pages
-  // The actual API calls will validate the session
-  const sessionId = event.cookies.get(SESSION_COOKIE);
+  const response = await resolve(event);
 
-  if (sessionId) {
-    // Store session ID in locals - pages will use it for API calls
-    // We don't validate here; let the API calls handle auth
-    event.locals.adminSession = {
-      id: sessionId
-    };
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(name, value);
   }
 
-  return resolve(event);
+  return response;
 };
