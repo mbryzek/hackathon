@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { page } from '$app/state';
   import { goto, invalidateAll } from '$app/navigation';
   import { urls } from '$lib/urls';
   import { adminApi, type VoteEvent, type EventResults, type ProjectTally } from '$lib/api/client';
   import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
+  import { visibilityAwareInterval } from '$lib/utils/polling';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import type { PageData } from './$types';
@@ -36,16 +37,21 @@
   // The effect's own teardown owns the timer. Assigning to an outer variable leaked an
   // interval every time the effect re-ran with autoRefresh still on (sessionId changes on
   // invalidateAll), leaving two pollers hitting the results endpoint.
+  //
+  // visibilityAwareInterval, not a bare setInterval: an admin who leaves auto-refresh on and
+  // switches tabs would otherwise keep hitting the results endpoint every 5s forever.
+  //
+  // untrack matters here. Unlike a bare setInterval, visibilityAwareInterval polls once
+  // immediately, and that call runs synchronously inside the effect — so loadData's reads of
+  // `results`/`event` would register as effect dependencies, loadData's own writes would
+  // re-run the effect, and each poll would immediately queue another. Only the guard above
+  // (autoRefresh, sessionId) should re-run this.
   $effect(() => {
     if (!autoRefresh || !sessionId) {
       return;
     }
 
-    const interval = setInterval(() => {
-      loadData();
-    }, RESULTS_REFRESH_INTERVAL_MS);
-
-    return () => clearInterval(interval);
+    return untrack(() => visibilityAwareInterval(() => loadData(), RESULTS_REFRESH_INTERVAL_MS));
   });
 
   async function loadData() {
@@ -94,14 +100,13 @@
     results?.parent.projects.slice().sort((a: ProjectTally, b: ProjectTally) => b.vote_count - a.vote_count) || []
   );
 
-  // Calculate max votes for bar width (across both categories)
-  const maxVotes = $derived(() => {
-    const allProjects = [...sortedStudentProjects, ...sortedParentProjects];
-    return allProjects.length > 0 ? Math.max(...allProjects.map((p: ProjectTally) => p.vote_count), 1) : 1;
-  });
+  // Max votes for bar width, across both categories so the two charts share one scale.
+  // An expression, not a function: as `$derived(() => ...)` called per bar, the concat and the
+  // Math.max re-ran once for every row rendered instead of memoizing once per results change.
+  const maxVotes = $derived(Math.max(...[...sortedStudentProjects, ...sortedParentProjects].map((p: ProjectTally) => p.vote_count), 1));
 
   function getBarWidth(voteCount: number): string {
-    return `${(voteCount / maxVotes()) * 100}%`;
+    return `${(voteCount / maxVotes) * 100}%`;
   }
 
   function getRankBadgeClass(rank: number): string {
