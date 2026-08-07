@@ -1,44 +1,12 @@
 <script lang="ts">
-  import Spinner from '$lib/components/Spinner.svelte';
-  import { onMount } from 'svelte';
-  import { goto, invalidateAll } from '$app/navigation';
   import { urls } from '$lib/urls';
-  import { adminApi, type VoteEvent } from '$lib/api/client';
   import { eventStatusBadgeClass, eventStatusLabel, formatDate } from '$lib/utils/eventDisplay';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
-  let events = $state<VoteEvent[]>([]);
-  let isLoading = $state(true);
-  let error = $state<string | null>(null);
-
-  onMount(async () => {
-    // Session is validated by the layout, so we know we have a session here
-    const sessionId = data.adminSession?.id;
-    if (!sessionId) {
-      isLoading = false;
-      error = 'Your session has expired. Please sign in again.';
-      return;
-    }
-
-    const response = await adminApi.getEvents(sessionId);
-
-    isLoading = false;
-
-    if (response.errors) {
-      // If unauthorized, redirect to login
-      if (response.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
-      error = response.errors[0]?.message || 'Failed to load events';
-      return;
-    }
-
-    events = response.data || [];
-  });
+  const events = $derived(data.events);
+  const error = $derived(data.error);
 </script>
 
 <div class="animate-fade-in">
@@ -58,11 +26,7 @@
     </a>
   </div>
 
-  {#if isLoading}
-    <div class="flex items-center justify-center py-12">
-      <Spinner size="lg" label="Loading" class="text-gray-600" />
-    </div>
-  {:else if error}
+  {#if error}
     <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
       {error}
     </div>

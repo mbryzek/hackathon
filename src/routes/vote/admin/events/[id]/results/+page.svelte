@@ -1,80 +1,35 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { goto, invalidateAll } from '$app/navigation';
-  import { urls } from '$lib/urls';
-  import { adminApi, type VoteEvent, type EventResults, type ProjectTally } from '$lib/api/client';
+  import { invalidateAll } from '$app/navigation';
+  import { type ProjectTally } from '$lib/api/client';
   import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
-  import Spinner from '$lib/components/Spinner.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
   const eventId = $derived(page.params.id ?? '');
+  const event = $derived(data.event);
+  const results = $derived(data.results);
+  const error = $derived(data.error);
 
-  // Get session ID from server-provided data
-  const sessionId = $derived(data.adminSession?.id);
-
-  let event = $state<VoteEvent | null>(null);
-  let results = $state<EventResults | null>(null);
-  let error = $state<string | null>(null);
-  let isLoading = $state(true);
   let isPresentationMode = $state(false);
   let autoRefresh = $state(false);
 
-  onMount(() => {
-    if (!sessionId) {
-      isLoading = false;
-      error = 'Your session has expired. Please sign in again.';
-      return;
-    }
-
-    loadData();
-  });
-
-  // The effect's own teardown owns the timer. Assigning to an outer variable leaked an
-  // interval every time the effect re-ran with autoRefresh still on (sessionId changes on
-  // invalidateAll), leaving two pollers hitting the results endpoint.
+  // Refreshing means re-running the page's `load`, which fetches with the session id the server
+  // holds; the browser never sees it. The effect's own teardown owns the timer — assigning to an
+  // outer variable leaked an interval on every re-run, leaving two pollers on the endpoint.
   $effect(() => {
-    if (!autoRefresh || !sessionId) {
+    if (!autoRefresh) {
       return;
     }
 
     const interval = setInterval(() => {
-      loadData();
+      void invalidateAll();
     }, RESULTS_REFRESH_INTERVAL_MS);
 
     return () => clearInterval(interval);
   });
-
-  async function loadData() {
-    if (!sessionId) return;
-
-    const showLoading = !results;
-    if (showLoading) isLoading = true;
-    error = null;
-
-    const [eventResponse, resultsResponse] = await Promise.all([
-      event ? Promise.resolve({ data: event, status: 200, errors: undefined }) : adminApi.getEvent(sessionId, eventId),
-      adminApi.getResults(sessionId, eventId)
-    ]);
-
-    if (showLoading) isLoading = false;
-
-    if (eventResponse.errors || resultsResponse.errors) {
-      if (eventResponse.status === 401 || resultsResponse.status === 401) {
-        await invalidateAll();
-        await goto(urls.voteAdminLogin);
-        return;
-      }
-      error = eventResponse.errors?.[0]?.message || resultsResponse.errors?.[0]?.message || 'Failed to load data';
-      return;
-    }
-
-    event = eventResponse.data || null;
-    results = resultsResponse.data || null;
-  }
 
   function togglePresentationMode() {
     isPresentationMode = !isPresentationMode;
@@ -144,11 +99,7 @@
     </div>
   {/if}
 
-  {#if isLoading}
-    <div class="flex items-center justify-center py-12">
-      <Spinner size="lg" label="Loading" class={isPresentationMode ? 'text-white' : 'text-gray-600'} />
-    </div>
-  {:else if results}
+  {#if results}
     <!-- Controls -->
     <div class="{isPresentationMode ? 'absolute top-4 right-4 z-10' : 'mb-6'} flex gap-4">
       <button

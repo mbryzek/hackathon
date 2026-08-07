@@ -9,7 +9,6 @@ import {
   VoterType
 } from '../../generated/com-bryzek-vote-api';
 import {
-  ApiClient as VoteAdminClient,
   type AdminSession,
   type Code,
   type CodeSummary,
@@ -63,93 +62,55 @@ export interface ApiResponse<T> {
   status: number;
 }
 
-// Create API clients
+/**
+ * The admin half of the API lives in `$lib/server/adminApi` and is deliberately not
+ * reachable from here: every admin call needs the session id out of the httpOnly cookie,
+ * and SvelteKit refuses to bundle a `$lib/server` module into browser code. Only the
+ * public vote endpoints below — which take no credentials — run in the browser.
+ */
 const voteApiClient = new VoteApiClient(config.apiBaseUrl);
-const voteAdminClient = new VoteAdminClient(config.apiBaseUrl);
 
-// Helper to create authorization header
-function getAuthHeaders(sessionId?: string): Record<string, string> {
-  if (sessionId) {
-    return { session_id: sessionId };
+/** The `ApiResponse` shape for a thrown generated-client error, whatever kind it is. */
+async function toErrorResponse(error: unknown): Promise<{ errors: ValidationError[]; status: number }> {
+  if (error instanceof ValidationErrorsResponse) {
+    const validationErrors = await error.validationErrors();
+    return {
+      errors: validationErrors.map((e) => ({
+        discriminator: e.discriminator,
+        message: e.message,
+        field: e.field
+      })),
+      status: error.response.status
+    };
   }
-  return {};
+
+  if (error instanceof UnauthorizedErrorResponse) {
+    return { errors: [{ code: 'unauthorized', message: 'Unauthorized' }], status: 401 };
+  }
+
+  if (error instanceof VoidResponse) {
+    return { errors: [{ code: 'not_found', message: 'Not found' }], status: 404 };
+  }
+
+  return { errors: [{ code: 'server_error', message: 'Server error' }], status: 500 };
 }
 
 // Helper to handle API errors and convert to ApiResponse format
-async function handleApiCall<T>(apiCall: () => Promise<T>, successStatus: number = 200): Promise<ApiResponse<T>> {
+export async function handleApiCall<T>(apiCall: () => Promise<T>, successStatus: number = 200): Promise<ApiResponse<T>> {
   try {
-    const data = await apiCall();
-    return { data, status: successStatus };
+    return { data: await apiCall(), status: successStatus };
   } catch (error) {
-    if (error instanceof ValidationErrorsResponse) {
-      const validationErrors = await error.validationErrors();
-      return {
-        errors: validationErrors.map((e) => ({
-          discriminator: e.discriminator,
-          message: e.message,
-          field: e.field
-        })),
-        status: error.response.status
-      };
-    }
-
-    if (error instanceof UnauthorizedErrorResponse) {
-      return {
-        errors: [{ code: 'unauthorized', message: 'Unauthorized' }],
-        status: 401
-      };
-    }
-
-    if (error instanceof VoidResponse) {
-      return {
-        errors: [{ code: 'not_found', message: 'Not found' }],
-        status: 404
-      };
-    }
-
-    return {
-      errors: [{ code: 'server_error', message: 'Server error' }],
-      status: 500
-    };
+    return toErrorResponse(error);
   }
 }
 
 // Helper for void responses
-async function handleVoidApiCall(apiCall: () => Promise<void>, successStatus: number = 204): Promise<ApiResponse<void>> {
+export async function handleVoidApiCall(apiCall: () => Promise<void>, successStatus: number = 204): Promise<ApiResponse<void>> {
   try {
     await apiCall();
     return { status: successStatus };
   } catch (error) {
-    if (error instanceof ValidationErrorsResponse) {
-      const validationErrors = await error.validationErrors();
-      return {
-        errors: validationErrors.map((e) => ({
-          discriminator: e.discriminator,
-          message: e.message,
-          field: e.field
-        })),
-        status: error.response.status
-      };
-    }
-
-    if (error instanceof UnauthorizedErrorResponse) {
-      return {
-        errors: [{ code: 'unauthorized', message: 'Unauthorized' }],
-        status: 401
-      };
-    }
-
-    if (error instanceof VoidResponse) {
-      return {
-        errors: [{ code: 'not_found', message: 'Not found' }],
-        status: 404
-      };
-    }
-
-    return {
-      errors: [{ code: 'server_error', message: 'Server error' }],
-      status: 500
-    };
+    return toErrorResponse(error);
   }
 }
 
@@ -173,227 +134,6 @@ export const voteApi = {
       voteApiClient.createVote({
         eventKey,
         body: { code, project_ids: projectIds }
-      })
-    );
-  }
-};
-
-// Admin API client
-export const adminApi = {
-  // Session
-  async login(email: string, password: string): Promise<ApiResponse<AdminSession>> {
-    return handleApiCall(
-      () =>
-        voteAdminClient.createAdminSessionSessionsAndLogins({
-          body: { email, password }
-        }),
-      201
-    );
-  },
-
-  async getSession(sessionId: string): Promise<ApiResponse<AdminSession>> {
-    return handleApiCall(() =>
-      voteAdminClient.getAdminSessionSession({
-        headers: getAuthHeaders(sessionId)
-      })
-    );
-  },
-
-  async logout(sessionId: string): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
-      voteAdminClient.deleteAdminSessionSession({
-        headers: getAuthHeaders(sessionId)
-      })
-    );
-  },
-
-  // Events
-  async getEvents(sessionId: string, params?: { status?: EventStatus[]; limit?: number; offset?: number }): Promise<ApiResponse<Event[]>> {
-    return handleApiCall(() =>
-      voteAdminClient.getEvents({
-        headers: getAuthHeaders(sessionId),
-        status: params?.status,
-        limit: params?.limit ?? 100,
-        offset: params?.offset ?? 0
-      })
-    );
-  },
-
-  async getEvent(sessionId: string, id: string): Promise<ApiResponse<Event>> {
-    return handleApiCall(() =>
-      voteAdminClient.getEventById(id, {
-        headers: getAuthHeaders(sessionId)
-      })
-    );
-  },
-
-  async createEvent(sessionId: string, form: { key: string; name: string; status?: EventStatus }): Promise<ApiResponse<Event>> {
-    return handleApiCall(
-      () =>
-        voteAdminClient.createEvent({
-          headers: getAuthHeaders(sessionId),
-          body: form
-        }),
-      201
-    );
-  },
-
-  async updateEvent(sessionId: string, id: string, form: { key: string; name: string; status?: EventStatus }): Promise<ApiResponse<Event>> {
-    return handleApiCall(() =>
-      voteAdminClient.updateEventById({
-        headers: getAuthHeaders(sessionId),
-        id,
-        body: form
-      })
-    );
-  },
-
-  async deleteEvent(sessionId: string, id: string): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
-      voteAdminClient.deleteEventById(id, {
-        headers: getAuthHeaders(sessionId)
-      })
-    );
-  },
-
-  // Projects
-  async getProjects(sessionId: string, eventId: string, params?: { limit?: number; offset?: number }): Promise<ApiResponse<Project[]>> {
-    return handleApiCall(() =>
-      voteAdminClient.getProjects({
-        headers: getAuthHeaders(sessionId),
-        eventId,
-        limit: params?.limit ?? 100,
-        offset: params?.offset ?? 0
-      })
-    );
-  },
-
-  async createProject(sessionId: string, eventId: string, form: { name: string; description?: string }): Promise<ApiResponse<Project>> {
-    return handleApiCall(
-      () =>
-        voteAdminClient.createProject({
-          headers: getAuthHeaders(sessionId),
-          eventId,
-          body: form
-        }),
-      201
-    );
-  },
-
-  async updateProject(
-    sessionId: string,
-    eventId: string,
-    id: string,
-    form: { name: string; description?: string }
-  ): Promise<ApiResponse<Project>> {
-    return handleApiCall(() =>
-      voteAdminClient.updateProjectById({
-        headers: getAuthHeaders(sessionId),
-        eventId,
-        id,
-        body: form
-      })
-    );
-  },
-
-  async deleteProject(sessionId: string, eventId: string, id: string): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
-      voteAdminClient.deleteProjectById({
-        headers: getAuthHeaders(sessionId),
-        eventId,
-        id
-      })
-    );
-  },
-
-  async reorderProjects(sessionId: string, eventId: string, projectIds: string[]): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
-      voteAdminClient.createProjectReorder({
-        headers: getAuthHeaders(sessionId),
-        eventId,
-        body: { project_ids: projectIds }
-      })
-    );
-  },
-
-  async createProjectCsv(sessionId: string, eventId: string, data: string, deleteAllProjects: boolean): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
-      voteAdminClient.createProjectCsv({
-        headers: getAuthHeaders(sessionId),
-        eventId,
-        body: { data, delete_all_projects: deleteAllProjects }
-      })
-    );
-  },
-
-  // Codes
-  async getCodes(
-    sessionId: string,
-    eventId: string,
-    params?: { voter_type?: VoterType; has_voted?: boolean; q?: string; limit?: number; offset?: number }
-  ): Promise<ApiResponse<Code[]>> {
-    return handleApiCall(() =>
-      voteAdminClient.getCodes({
-        headers: getAuthHeaders(sessionId),
-        eventId,
-        voterType: params?.voter_type,
-        hasVoted: params?.has_voted,
-        q: params?.q,
-        limit: params?.limit ?? 100,
-        offset: params?.offset ?? 0
-      })
-    );
-  },
-
-  async getCodeSummary(sessionId: string, eventId: string): Promise<ApiResponse<CodeSummary>> {
-    return handleApiCall(() =>
-      voteAdminClient.getCodeSummary(eventId, {
-        headers: getAuthHeaders(sessionId)
-      })
-    );
-  },
-
-  async generateCodes(sessionId: string, eventId: string, form: { voter_type: VoterType; count: number }): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
-      voteAdminClient.createCodeGenerate({
-        headers: getAuthHeaders(sessionId),
-        eventId,
-        body: form
-      })
-    );
-  },
-
-  async deleteCode(sessionId: string, eventId: string, id: string): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
-      voteAdminClient.deleteCodeById({
-        headers: getAuthHeaders(sessionId),
-        eventId,
-        id
-      })
-    );
-  },
-
-  /**
-   * Builds an export of this event's codes and returns the stored file. The file's `url` is
-   * signed and expiring, so the browser can follow it directly with no session header.
-   */
-  async exportCodes(sessionId: string, eventId: string, form: CodeExportForm): Promise<ApiResponse<File>> {
-    return handleApiCall(
-      () =>
-        voteAdminClient.createCodeExports({
-          headers: getAuthHeaders(sessionId),
-          eventId,
-          body: form
-        }),
-      201
-    );
-  },
-
-  // Results
-  async getResults(sessionId: string, eventId: string): Promise<ApiResponse<EventResults>> {
-    return handleApiCall(() =>
-      voteAdminClient.getEventResults(eventId, {
-        headers: getAuthHeaders(sessionId)
       })
     );
   }

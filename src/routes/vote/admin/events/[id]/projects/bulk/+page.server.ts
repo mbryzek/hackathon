@@ -1,0 +1,36 @@
+import { fail, redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+import { adminApi } from '$lib/server/adminApi';
+import { firstError, requireSessionId } from '$lib/server/adminSession';
+import { checked, trimmed } from '$lib/server/fields';
+import { urls } from '$lib/urls';
+
+export const load: PageServerLoad = async (event) => {
+  const response = await adminApi.getEvent(requireSessionId(event), event.params.id);
+
+  return {
+    event: response.data ?? null,
+    error: firstError(event, [response], 'Event not found')
+  };
+};
+
+export const actions = {
+  default: async (event) => {
+    const form = await event.request.formData();
+    const csvData = trimmed(form.get('data'));
+    const deleteAllProjects = checked(form.get('delete_all_projects'));
+
+    if (!csvData) {
+      return fail(400, { data: csvData, deleteAllProjects, error: 'Please paste some CSV data' });
+    }
+
+    const response = await adminApi.createProjectCsv(requireSessionId(event), event.params.id, csvData, deleteAllProjects);
+    const error = firstError(event, [response], 'Event not found');
+
+    if (error) {
+      return fail(response.status, { data: csvData, deleteAllProjects, error });
+    }
+
+    throw redirect(303, urls.voteAdminEventProjects(event.params.id));
+  }
+} satisfies Actions;

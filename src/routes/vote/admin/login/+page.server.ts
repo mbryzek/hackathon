@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { SESSION_COOKIE, config } from '$lib/config';
-import { adminApi } from '$lib/api/client';
+import { adminApi } from '$lib/server/adminApi';
 
 export const load: PageServerLoad = async ({ locals }) => {
   // If already logged in, redirect to admin dashboard

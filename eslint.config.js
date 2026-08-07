@@ -59,9 +59,11 @@ export default [
     }
   },
 
-  // Svelte TypeScript files (.svelte.ts) - Svelte runes
+  // Svelte TypeScript files (.svelte.ts) - Svelte runes. `*.svelte.test.ts` is here too: the
+  // Svelte compiler treats it as a runes module, so a component test may use $state to drive
+  // props, and without this block it lints as plain TypeScript and every rune is undefined.
   {
-    files: ['**/*.svelte.ts'],
+    files: ['**/*.svelte.ts', '**/*.svelte.test.ts'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {

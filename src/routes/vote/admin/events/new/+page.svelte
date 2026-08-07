@@ -1,21 +1,23 @@
 <script lang="ts">
   import Spinner from '$lib/components/Spinner.svelte';
-  import { goto } from '$app/navigation';
+  import { enhance } from '$app/forms';
   import { urls } from '$lib/urls';
-  import { adminApi, EventStatus } from '$lib/api/client';
+  import { EventStatus } from '$lib/api/client';
   import { EVENT_STATUS_OPTIONS } from '$lib/utils/eventDisplay';
-  import type { PageData } from './$types';
+  import type { ActionData } from './$types';
 
-  let { data }: { data: PageData } = $props();
+  let { form }: { form: ActionData } = $props();
 
-  let name = $state('');
-  let key = $state('');
-  let status = $state<EventStatus>(EventStatus.Draft);
-  let error = $state<string | null>(null);
+  // Seeded from the last rejected submit so a form that comes back with an error still holds
+  // what was typed, with or without JavaScript. The action owns validation; these only drive
+  // the key/name mirroring below.
+  // svelte-ignore state_referenced_locally
+  let name = $state(form?.name ?? '');
+  // svelte-ignore state_referenced_locally
+  let key = $state(form?.key ?? '');
   let isSubmitting = $state(false);
 
-  // Get session ID from server-provided data
-  const sessionId = $derived(data.adminSession?.id);
+  const status = $derived(form?.status ?? EventStatus.Draft);
 
   // Auto-generate key from name
   function handleNameChange() {
@@ -32,44 +34,6 @@
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
   }
-
-  async function handleSubmit(event: Event) {
-    event.preventDefault();
-    error = null;
-
-    if (!name.trim()) {
-      error = 'Please enter an event name';
-      return;
-    }
-
-    if (!key.trim()) {
-      error = 'Please enter an event key';
-      return;
-    }
-
-    if (!sessionId) {
-      return;
-    }
-
-    isSubmitting = true;
-
-    const response = await adminApi.createEvent(sessionId, {
-      name: name.trim(),
-      key: key.trim(),
-      status
-    });
-
-    isSubmitting = false;
-
-    if (response.errors) {
-      error = response.errors[0]?.message || 'Failed to create event';
-      return;
-    }
-
-    if (response.data) {
-      await goto(urls.voteAdminEvent(response.data.id));
-    }
-  }
 </script>
 
 <div class="animate-fade-in max-w-2xl mx-auto">
@@ -84,12 +48,23 @@
   </div>
 
   <div class="bg-white shadow rounded-xl p-6">
-    <form onsubmit={handleSubmit} class="space-y-6">
+    <form
+      method="POST"
+      use:enhance={() => {
+        isSubmitting = true;
+        return async ({ update }) => {
+          await update();
+          isSubmitting = false;
+        };
+      }}
+      class="space-y-6"
+    >
       <div>
         <label for="name" class="block text-sm font-medium text-gray-700 mb-2"> Event Name </label>
         <input
           type="text"
           id="name"
+          name="name"
           bind:value={name}
           oninput={handleNameChange}
           placeholder="e.g., Hackathon 2025"
@@ -103,6 +78,7 @@
         <input
           type="text"
           id="key"
+          name="key"
           bind:value={key}
           placeholder="e.g., hackathon-2025"
           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors font-mono"
@@ -117,7 +93,8 @@
         <label for="status" class="block text-sm font-medium text-gray-700 mb-2"> Status </label>
         <select
           id="status"
-          bind:value={status}
+          name="status"
+          value={status}
           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
           disabled={isSubmitting}
         >
@@ -128,16 +105,16 @@
         <p class="mt-2 text-sm text-gray-500">Set to "Open" when ready to accept votes.</p>
       </div>
 
-      {#if error}
+      {#if form?.error}
         <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {error}
+          {form.error}
         </div>
       {/if}
 
       <div class="flex gap-4">
         <button
           type="submit"
-          disabled={isSubmitting || !name.trim() || !key.trim()}
+          disabled={isSubmitting}
           class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {#if isSubmitting}
