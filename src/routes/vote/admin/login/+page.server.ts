@@ -3,6 +3,12 @@ import type { Actions, PageServerLoad } from './$types';
 import { SESSION_COOKIE, config } from '$lib/config';
 import { adminApi } from '$lib/server/adminApi';
 
+/**
+ * `locals.adminSession` is set only for a session the API confirmed (see `src/hooks.server.ts`),
+ * which is what makes this redirect safe. When it was set from the cookie's mere presence, a
+ * cookie that outlived its session made this page unreachable — it sent the admin to
+ * `/vote/admin`, and nothing on that path cleared the cookie that caused it (ISS-792).
+ */
 export const load: PageServerLoad = async ({ locals }) => {
   // If already logged in, redirect to admin dashboard
   if (locals.adminSession) {
