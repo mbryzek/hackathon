@@ -1,32 +1,61 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Handle } from '@sveltejs/kit';
 import { handle } from './hooks.server';
 import { SECURITY_HEADERS } from '$lib/security-headers';
 import { SESSION_COOKIE } from '$lib/config';
+import type { ApiResponse } from '$lib/api/client';
 
 type HandleInput = Parameters<Handle>[0];
 
 /**
- * The hook reads only `url.pathname`, `cookies.get` and `locals`, so the event is faked
- * down to those three. `locals` is handed back because the hook mutates it in place.
+ * The hook decides on the status alone and never looks at the body, so these answers carry
+ * no `data` — a full `AdminSession` here would only be scenery.
+ */
+type SessionResponse = Promise<ApiResponse<unknown>>;
+
+const getSession = vi.fn<(sessionId: string) => SessionResponse>();
+
+vi.mock('$lib/server/adminApi', () => ({
+  adminApi: {
+    getSession: (sessionId: string) => getSession(sessionId)
+  }
+}));
+
+const confirmed: SessionResponse = Promise.resolve({ status: 200 });
+const rejected: SessionResponse = Promise.resolve({ errors: [{ code: 'unauthorized', message: 'Unauthorized' }], status: 401 });
+const unavailable: SessionResponse = Promise.resolve({ errors: [{ code: 'server_error', message: 'Server error' }], status: 500 });
+
+beforeEach(() => {
+  getSession.mockReset();
+  getSession.mockImplementation(() => confirmed);
+});
+
+/**
+ * The hook reads only `url.pathname`, the session cookie and `locals`, so the event is faked
+ * down to those. `locals` and the cookies it deleted are handed back because the hook works
+ * through side effects on both.
  */
 async function invoke(
   pathname: string,
   options: { cookies?: Record<string, string>; response?: Response } = {}
-): Promise<{ response: Response; locals: App.Locals }> {
+): Promise<{ response: Response; locals: App.Locals; deletedCookies: string[] }> {
   const cookies = options.cookies ?? {};
   const locals: App.Locals = {};
+  const deletedCookies: string[] = [];
 
   const input = {
     event: {
       url: new URL(`https://hackathon.bergen.tech${pathname}`),
-      cookies: { get: (name: string): string | undefined => cookies[name] },
+      cookies: {
+        get: (name: string): string | undefined => cookies[name],
+        delete: (name: string): void => void deletedCookies.push(name)
+      },
       locals
     },
     resolve: (): Response => options.response ?? new Response('ok')
   } as unknown as HandleInput;
 
-  return { response: await handle(input), locals };
+  return { response: await handle(input), locals, deletedCookies };
 }
 
 /** A header the hook failed to set reads back as `null`, so a miss names itself in the diff. */
@@ -56,21 +85,59 @@ describe('handle', () => {
     expect(headersOf(response)).toEqual({ ...SECURITY_HEADERS });
   });
 
-  it('threads the session cookie into locals on admin routes', async () => {
-    const { locals } = await invoke('/vote/admin/events', { cookies: { [SESSION_COOKIE]: 'sess-1' } });
+  it('puts a session the API confirmed into locals on admin routes', async () => {
+    const { locals, deletedCookies } = await invoke('/vote/admin/events', { cookies: { [SESSION_COOKIE]: 'sess-1' } });
 
+    expect(getSession).toHaveBeenCalledWith('sess-1');
     expect(locals.adminSession).toEqual({ id: 'sess-1' });
+    expect(deletedCookies).toEqual([]);
   });
 
-  it('leaves the session out of locals when the cookie is absent', async () => {
+  it('leaves the session out of locals when the cookie is absent, without asking the API', async () => {
     const { locals } = await invoke('/vote/admin/events');
 
+    expect(getSession).not.toHaveBeenCalled();
     expect(locals.adminSession).toBeUndefined();
   });
 
   it('ignores the session cookie outside admin routes', async () => {
     const { locals } = await invoke('/vote', { cookies: { [SESSION_COOKIE]: 'sess-1' } });
 
+    expect(getSession).not.toHaveBeenCalled();
     expect(locals.adminSession).toBeUndefined();
+  });
+
+  /**
+   * The cycle this closes (ISS-792): a cookie whose session the API no longer knows used to
+   * set `locals.adminSession` anyway, and the login page redirects to /vote/admin whenever
+   * that is set. Deleting the cookie here is what makes the login page reachable again on
+   * the very next request.
+   */
+  it('deletes a cookie the API rejects and leaves the session unset', async () => {
+    getSession.mockImplementation(() => rejected);
+
+    const { locals, deletedCookies } = await invoke('/vote/admin', { cookies: { [SESSION_COOKIE]: 'stale' } });
+
+    expect(locals.adminSession).toBeUndefined();
+    expect(deletedCookies).toEqual([SESSION_COOKIE]);
+  });
+
+  it('deletes a rejected cookie on the login page too, so the form renders instead of redirecting', async () => {
+    getSession.mockImplementation(() => rejected);
+
+    const { locals, deletedCookies } = await invoke('/vote/admin/login', { cookies: { [SESSION_COOKIE]: 'stale' } });
+
+    expect(locals.adminSession).toBeUndefined();
+    expect(deletedCookies).toEqual([SESSION_COOKIE]);
+  });
+
+  /** A platform blip must not sign every admin out — only a 401 does that. */
+  it('keeps the session when the API fails for any reason other than 401', async () => {
+    getSession.mockImplementation(() => unavailable);
+
+    const { locals, deletedCookies } = await invoke('/vote/admin', { cookies: { [SESSION_COOKIE]: 'sess-1' } });
+
+    expect(locals.adminSession).toEqual({ id: 'sess-1' });
+    expect(deletedCookies).toEqual([]);
   });
 });
