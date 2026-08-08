@@ -127,6 +127,12 @@
     verification?.max_votes === 1 ? 'Select 1 project' : `Select up to ${verification?.max_votes} projects`
   );
 
+  // One vote is a radio group (picking one un-picks the other); several votes are independent
+  // checkboxes. Rendering the matching native input is what makes handleProjectSelect's two
+  // branches audible — the browser announces the role, the group and "3 of 5", and gives radios
+  // arrow-key navigation, none of which a <button aria-pressed> conveys.
+  const inputType = $derived(verification?.max_votes === 1 ? 'radio' : 'checkbox');
+
   const eventName = $derived(verification?.event.name ?? data.event?.name ?? 'Project Voting');
 
   let ballotHeading = $state<HTMLElement | null>(null);
@@ -214,7 +220,9 @@
             </p>
           </div>
           <div class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-center">
-            <span class="font-semibold">{voteInstructions}</span>
+            <!-- The same string is also the ballot's <legend>, so a bare text match now finds two
+                 elements. The testid names the visible badge specifically. -->
+            <span class="font-semibold" data-testid="vote-instructions">{voteInstructions}</span>
             <br />
             <span class="text-sm">
               {selectedProjectIds.size} of {verification.max_votes}
@@ -230,68 +238,91 @@
         </div>
       {/if}
 
-      <!-- Projects list. `role="group"` + the instructions as its accessible name is what tells a
-           screen-reader voter these choices belong together and how many they get — reading the
-           cards one by one conveys neither. Deliberately NOT role="radiogroup"/role="radio": that
-           contract also promises arrow-key navigation between options, which these plain buttons
-           do not implement, and claiming it without honouring it misleads more than it helps.
-           Native inputs are the real fix and are filed separately. -->
-      <div class="space-y-4" role="group" aria-label={voteInstructions}>
-        {#each verification.projects as pv (pv.project.id)}
-          {@const isSelected = selectedProjectIds.has(pv.project.id)}
-          {@const isDisabled = !isSelected && selectedProjectIds.size >= verification.max_votes}
-          <button
-            type="button"
-            onclick={() => handleProjectSelect(pv.project.id)}
-            aria-pressed={isSelected}
-            disabled={isDisabled && verification.max_votes > 1}
-            class="w-full text-left bg-white shadow rounded-xl p-6 transition-all duration-200
+      <!-- Projects list. A <fieldset> named by its <legend> is the native form of the grouping
+           `role="group"` used to assert by hand, and the inputs inside it carry the rest: the
+           browser announces "radio"/"checkbox", checked state, and position within the group, and
+           gives a radio group arrow-key navigation. That is the whole reason there is no ARIA left
+           on this list — the semantics are now the markup rather than a claim layered over it.
+           The visible card is the sibling of a visually hidden input, so `peer-focus-visible`
+           is what draws the keyboard focus ring; the input's own ring would be 1px and unseeable.
+           `min-w-0` overrides the UA's `min-inline-size: min-content` on a fieldset, so a long
+           project name cannot push the ballot wider than its container on a phone. -->
+      <fieldset class="min-w-0">
+        <legend class="sr-only">{voteInstructions}</legend>
+        <div class="space-y-4">
+          {#each verification.projects as pv (pv.project.id)}
+            {@const isSelected = selectedProjectIds.has(pv.project.id)}
+            {@const isDisabled = verification.max_votes > 1 && !isSelected && selectedProjectIds.size >= verification.max_votes}
+            <!-- `relative` is load-bearing, not cosmetic: `sr-only` positions the input absolutely,
+                 so without it the input is placed against whatever distant ancestor happens to be
+                 positioned, and the browser scrolling the focused control into view jumps somewhere
+                 other than the card the voter is on. Scoping it to the label keeps the two together. -->
+            <label class="relative block {isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}">
+              <input
+                class="peer sr-only"
+                type={inputType}
+                name="project-vote"
+                value={pv.project.id}
+                checked={isSelected}
+                disabled={isDisabled}
+                onchange={() => handleProjectSelect(pv.project.id)}
+              />
+              <!-- Everything under the <label> is a <span>, not the <div>/<h3>/<p> the card used as
+                   a <button>: a label may only contain phrasing content. The project name stops
+                   being an <h3> for the same reason, and loses nothing — it is now the accessible
+                   name of the control itself, which is a better landmark than a heading was. -->
+              <span
+                class="block bg-white shadow rounded-xl p-6 transition-all duration-200
+							peer-focus-visible:ring-2 peer-focus-visible:ring-gray-900 peer-focus-visible:ring-offset-2
 							{isSelected ? 'ring-2 ring-yellow-400 bg-yellow-50' : 'hover:shadow-lg'}
-							{isDisabled && verification.max_votes > 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
-          >
-            <div class="flex items-start gap-4">
-              <!-- Selection indicator -->
-              <div class="flex-shrink-0 mt-1">
-                {#if verification.max_votes === 1}
-                  <!-- Radio style -->
-                  <div
-                    class="w-6 h-6 rounded-full border-2 flex items-center justify-center
-										{isSelected ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'}"
-                  >
-                    {#if isSelected}
-                      <div class="w-3 h-3 rounded-full bg-white"></div>
+							{isDisabled ? 'opacity-50' : ''}"
+              >
+                <span class="flex items-start gap-4">
+                  <!-- Selection indicator. aria-hidden: the input already announces checked state,
+                       so exposing this too would say it twice. -->
+                  <span class="flex-shrink-0 mt-1" aria-hidden="true">
+                    {#if verification.max_votes === 1}
+                      <!-- Radio style -->
+                      <span
+                        class="w-6 h-6 rounded-full border-2 flex items-center justify-center
+											{isSelected ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'}"
+                      >
+                        {#if isSelected}
+                          <span class="block w-3 h-3 rounded-full bg-white"></span>
+                        {/if}
+                      </span>
+                    {:else}
+                      <!-- Checkbox style -->
+                      <span
+                        class="w-6 h-6 rounded border-2 flex items-center justify-center
+											{isSelected ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'}"
+                      >
+                        {#if isSelected}
+                          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                          </svg>
+                        {/if}
+                      </span>
                     {/if}
-                  </div>
-                {:else}
-                  <!-- Checkbox style -->
-                  <div
-                    class="w-6 h-6 rounded border-2 flex items-center justify-center
-										{isSelected ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'}"
-                  >
-                    {#if isSelected}
-                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                    {/if}
-                  </div>
-                {/if}
-              </div>
+                  </span>
 
-              <!-- Project info -->
-              <div class="flex-grow">
-                <h3 class="text-lg font-semibold text-gray-900">
-                  {pv.project.name}
-                </h3>
-                {#if pv.project.description}
-                  <p class="text-gray-600 mt-1">
-                    {pv.project.description}
-                  </p>
-                {/if}
-              </div>
-            </div>
-          </button>
-        {/each}
-      </div>
+                  <!-- Project info -->
+                  <span class="flex-grow">
+                    <span class="block text-lg font-semibold text-gray-900">
+                      {pv.project.name}
+                    </span>
+                    {#if pv.project.description}
+                      <span class="block text-gray-600 mt-1">
+                        {pv.project.description}
+                      </span>
+                    {/if}
+                  </span>
+                </span>
+              </span>
+            </label>
+          {/each}
+        </div>
+      </fieldset>
 
       <!-- Submit button -->
       <div class="bg-white shadow-lg rounded-xl p-6">
