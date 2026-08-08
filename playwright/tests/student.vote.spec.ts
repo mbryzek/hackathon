@@ -22,12 +22,19 @@ test.describe('Student Voting', () => {
     await expect(page.locator('text=Student')).toBeVisible();
 
     // Verify instruction shows "Select 1 project" (students can only vote for 1)
-    await expect(page.locator('text=Select 1 project')).toBeVisible();
+    await expect(page.getByTestId('vote-instructions')).toHaveText('Select 1 project');
+
+    // A student gets one vote, so the ballot must be a real radio group: a <fieldset> named by its
+    // <legend>, holding radios rather than checkboxes. Asserting the roles is asserting that a
+    // screen-reader voter is told the options are mutually exclusive and how many they get — none
+    // of which the <button aria-pressed> cards this replaced ever conveyed.
+    await expect(page.getByRole('group', { name: 'Select 1 project' })).toBeVisible();
 
     // Find and click on Team 1 project
-    const team1Button = page.locator('button', { hasText: 'Team 1' });
-    await expect(team1Button).toBeVisible();
-    await team1Button.click();
+    const team1 = helpers.projectOption(page, 'Team 1', 'radio');
+    await expect(team1).toBeVisible();
+    await helpers.selectProject(page, 'Team 1', 'radio');
+    await expect(team1).toBeChecked();
 
     // Verify Team 1 is selected (should show 1 of 1 selected)
     await expect(page.locator('text=1 of 1 selected')).toBeVisible();
@@ -54,10 +61,18 @@ test.describe('Student Voting', () => {
     await helpers.safeClick(page, 'Change My Vote');
 
     // Team 1 should be pre-selected since we voted for it
-    // Now select Team 2 instead (this should deselect Team 1 since students can only vote for 1)
-    const team2Button = page.locator('button', { hasText: 'Team 2' });
-    await expect(team2Button).toBeVisible();
-    await team2Button.click();
+    const team1Again = helpers.projectOption(page, 'Team 1', 'radio');
+    await expect(team1Again).toBeChecked();
+
+    // Now select Team 2 instead (this should deselect Team 1 since students can only vote for 1).
+    // Team 1 going unchecked without being clicked is the exclusivity the radio group promises,
+    // and it is now the browser enforcing it rather than handleProjectSelect alone.
+    const team2 = helpers.projectOption(page, 'Team 2', 'radio');
+    await expect(team2).toBeVisible();
+    await helpers.selectProject(page, 'Team 2', 'radio');
+    await expect(team2).toBeChecked();
+    await expect(team1Again).not.toBeChecked();
+    await expect(page.locator('text=1 of 1 selected')).toBeVisible();
 
     // Submit the changed vote
     await helpers.safeClick(page, 'Submit Vote');

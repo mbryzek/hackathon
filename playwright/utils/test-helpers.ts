@@ -5,7 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { config } from '../config';
 import type { WaitForElementOptions, ContextOrPage } from '../types';
 import { ApiClient, TestEvent, TestEventForm } from '../generated/com-bryzek-playwright-vote';
@@ -235,6 +235,39 @@ export async function checkForErrors(page: Page): Promise<string[]> {
   }
 
   return [];
+}
+
+/**
+ * Which control the ballot renders a project as. A voter with one vote gets a radio group
+ * (picking one un-picks the other); a voter with several gets independent checkboxes.
+ */
+export type BallotRole = 'radio' | 'checkbox';
+
+/**
+ * Locate a project's ballot control by name.
+ *
+ * Asking for a role is the point, not incidental precision: it is what asserts the ballot told
+ * assistive technology which of the two behaviours it has. `<button aria-pressed>` announced
+ * "toggle button" for both, so a student was never told that picking one project drops another.
+ * Use this to assert state (`toBeChecked`, `toBeDisabled`); use `selectProject` to click.
+ */
+export function projectOption(page: Page, projectName: string, role: BallotRole): Locator {
+  return page.getByRole(role, { name: projectName, exact: true });
+}
+
+/**
+ * Click a project's card to toggle its vote.
+ *
+ * The control itself is visually hidden and the <label> around it draws the card, so the card is
+ * what a voter clicks and what a test has to click too — clicking the 1px input directly is not
+ * something Playwright can do reliably. Going through the label also exercises the label/input
+ * association the accessible markup depends on: if that association ever broke, this would fail.
+ */
+export async function selectProject(page: Page, projectName: string, role: BallotRole): Promise<void> {
+  await page
+    .locator('label')
+    .filter({ has: projectOption(page, projectName, role) })
+    .click();
 }
 
 /**

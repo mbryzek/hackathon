@@ -23,12 +23,18 @@ test.describe('Parent Voting', () => {
     await expect(page.locator('text=Parent')).toBeVisible();
 
     // Verify instruction shows "Select up to 3 projects" (parents can vote for up to 3)
-    await expect(page.locator('text=Select up to 3 projects')).toBeVisible();
+    await expect(page.getByTestId('vote-instructions')).toHaveText('Select up to 3 projects');
+
+    // A parent gets several independent votes, so the same cards must be CHECKBOXES here, inside a
+    // group named by the limit. The student ballot asserts radios for the identical markup; the two
+    // together are what prove the page distinguishes the cases at all, which is the whole defect.
+    await expect(page.getByRole('group', { name: 'Select up to 3 projects' })).toBeVisible();
 
     // Find and click on Team 1 project
-    const team1Button = page.locator('button', { hasText: 'Team 1' });
-    await expect(team1Button).toBeVisible();
-    await team1Button.click();
+    const team1 = helpers.projectOption(page, 'Team 1', 'checkbox');
+    await expect(team1).toBeVisible();
+    await helpers.selectProject(page, 'Team 1', 'checkbox');
+    await expect(team1).toBeChecked();
 
     // Verify Team 1 is selected (should show 1 of 3 selected)
     await expect(page.locator('text=1 of 3 selected')).toBeVisible();
@@ -62,21 +68,32 @@ test.describe('Parent Voting', () => {
     // Verify Team 1 is still selected
     await expect(page.locator('text=1 of 3 selected')).toBeVisible();
 
-    // Now also select Team 2 (parents can vote for multiple projects)
-    const team2Button = page.locator('button', { hasText: 'Team 2' });
-    await expect(team2Button).toBeVisible();
-    await team2Button.click();
+    // Now also select Team 2 (parents can vote for multiple projects). Team 1 staying checked is
+    // the independence a checkbox promises — the opposite of what the student ballot asserts.
+    const team1Again = helpers.projectOption(page, 'Team 1', 'checkbox');
+    const team2 = helpers.projectOption(page, 'Team 2', 'checkbox');
+    await expect(team2).toBeVisible();
+    await helpers.selectProject(page, 'Team 2', 'checkbox');
+    await expect(team2).toBeChecked();
+    await expect(team1Again).toBeChecked();
 
     // Verify 2 projects are now selected
     await expect(page.locator('text=2 of 3 selected')).toBeVisible();
 
     // Now also select Team 3
-    const team3Button = page.locator('button', { hasText: 'Team 3' });
-    await expect(team3Button).toBeVisible();
-    await team3Button.click();
+    const team3 = helpers.projectOption(page, 'Team 3', 'checkbox');
+    await expect(team3).toBeVisible();
+    await helpers.selectProject(page, 'Team 3', 'checkbox');
+    await expect(team3).toBeChecked();
 
     // Verify all 3 projects are now selected
     await expect(page.locator('text=3 of 3 selected')).toBeVisible();
+
+    // At the limit, the unpicked option is disabled rather than silently ignored — and a native
+    // checkbox is what lets a screen reader say so before the voter tries. The fixture creates a
+    // fourth project precisely so there is one left over at 3 of 3.
+    await expect(helpers.projectOption(page, 'Team 4', 'checkbox')).toBeDisabled();
+    await expect(team1Again).toBeEnabled();
 
     // Submit the changed vote with all 3 teams selected
     await helpers.safeClick(page, 'Submit Vote');
