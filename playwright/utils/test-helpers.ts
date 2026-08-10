@@ -98,7 +98,7 @@ export async function safeClick(page: Page, buttonLabel: string): Promise<boolea
         throw new Error(`Button or link with text '${buttonLabel}' not found`);
       }
       await page.waitForTimeout(250);
-    } catch (error) {
+    } catch {
       if (i === retries - 1) {
         console.error(`❌ Button or link with text '${buttonLabel}' not found after ${retries} attempts`);
         await takeScreenshot(page, 'click-failed');
@@ -189,7 +189,7 @@ export async function clickAndWaitForUrl(page: Page, buttonLabel: string, urlPat
       });
       selector = linkSelector;
     }
-  } catch (error) {
+  } catch {
     await takeScreenshot(page, 'button-not-found');
     throw new Error(`Button or link with text '${buttonLabel}' not found`);
   }
@@ -283,7 +283,7 @@ export async function createTestEvent(options: Partial<TestEventForm> = {}): Pro
       project_names,
       number_parents,
       number_students,
-      ...(status !== undefined ? { status } : {})
+      ...(status !== undefined ? { status: status } : {})
     }
   });
 }
@@ -384,7 +384,7 @@ export async function loadUrl(page: Page, path: string): Promise<void> {
     if ((await loadingText.count()) > 0) {
       await loadingText.waitFor({ state: 'hidden', timeout: 3000 });
     }
-  } catch (e) {
+  } catch {
     // Ignore timeout errors - loading text may not be present
   }
 }

@@ -78,6 +78,12 @@ export const test = base.extend<TestFixtures>({
    * API helpers fixture
    * Provides access to all helper functions for test data creation and cleanup
    */
+  // Playwright reads the fixtures this one depends on out of `fn.toString()`, and rejects a first
+  // argument that is not a literal `{...}` pattern ("First argument must use the object
+  // destructuring pattern"). This fixture depends on nothing, so the pattern has to be empty:
+  // naming the parameter `_fixtures` instead satisfies both the linter and the type checker, and
+  // then fails collection of the entire suite at runtime.
+  // eslint-disable-next-line no-empty-pattern
   apiHelpers: async ({}, use) => {
     await use(helpers);
   }

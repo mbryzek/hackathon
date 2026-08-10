@@ -6,6 +6,7 @@
  */
 
 import { test, expect } from '../fixtures';
+import type { Page } from '../fixtures';
 import * as helpers from '../utils/test-helpers';
 import { EventStatus } from '../generated/com-bryzek-vote-api';
 import type { TestEvent } from '../generated/com-bryzek-playwright-vote';
@@ -15,7 +16,7 @@ const NOT_AVAILABLE = '[data-testid="vote-not-available"]';
 // verification because the layout guard blocks first.
 const UNVERIFIED_CODE = 'SU3999';
 
-async function expectNotAvailable(page: import('@playwright/test').Page) {
+async function expectNotAvailable(page: Page) {
   await expect(page.locator(NOT_AVAILABLE)).toBeVisible();
   // Voting UI markers should not appear.
   await expect(page.locator('text="Enter your code"')).toHaveCount(0);
