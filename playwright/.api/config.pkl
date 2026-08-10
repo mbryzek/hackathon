@@ -4,7 +4,16 @@ org = "bryzek"
 
 local tsSrc = "./generated"
 
+local fileFilter = new Filter { types { "file" } }
+
 applications = new Listing<AppGroup> {
+  // platform's and vote-admin's specs reference platform-storage's `file` (and the
+  // `file_type` reachable through it), so the typescript generator emits an import
+  // for them here exactly as it does in src/. A nested root generates only from ITS
+  // config, so platform-storage has to be listed here too - without it the import
+  // resolves to a file nothing writes, and the tree breaks the first time anything
+  // wipes generated/ before regenerating (ISS-1519).
+  new { names { "platform-storage" }; generators = module.singleGenerator("typescript", tsSrc); filter = fileFilter }
   new { names { "platform-error"; "platform"; "vote-api"; "vote-admin"; "playwright-vote" }
         generators = module.singleGenerator("typescript", tsSrc) }
 }
