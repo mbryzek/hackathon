@@ -7,8 +7,9 @@ import fs from 'fs';
 import path from 'path';
 import type { Locator, Page } from '@playwright/test';
 import { config } from '../config';
-import type { WaitForElementOptions, ContextOrPage } from '../types';
-import { ApiClient, TestEvent, TestEventForm } from '../generated/com-bryzek-playwright-vote';
+import type { WaitForElementOptions } from '../types';
+import { ApiClient } from '../generated/com-bryzek-playwright-vote';
+import type { TestEvent, TestEventForm } from '../generated/com-bryzek-playwright-vote';
 
 /**
  * Generated API client instance for playwright endpoints
