@@ -51,6 +51,32 @@ async function submitCode(): Promise<void> {
   await settle();
 }
 
+/**
+ * The ballot group. ISS-791 made it a native `<fieldset>` named by its `<legend>`, replacing the
+ * hand-rolled `role="group"` + `aria-label` this file used to look for.
+ *
+ * These throw rather than returning null for the same reason `checkbox()` does in the results
+ * page's test: an assertion made through `?.` on an element that is not there compares `undefined`
+ * and reports the value it wanted, never the element that went missing — which is exactly how the
+ * markup and this test drifted apart unnoticed (ISS-1596).
+ */
+function ballot(): HTMLFieldSetElement {
+  const found = target.querySelector<HTMLFieldSetElement>('fieldset');
+  if (!found) throw new Error('No ballot <fieldset> rendered');
+  return found;
+}
+
+function ballotLegend(): HTMLLegendElement {
+  const found = ballot().querySelector('legend');
+  if (!found) throw new Error('Ballot <fieldset> has no <legend> to name it');
+  return found;
+}
+
+/** Every ballot control's input type, in render order — 'radio' or 'checkbox' per ISS-791. */
+function ballotInputTypes(): string[] {
+  return [...ballot().querySelectorAll('input')].map((input) => input.type);
+}
+
 beforeEach(() => verifyCode.mockReset());
 
 afterEach(() => {
@@ -88,8 +114,25 @@ describe('vote page accessibility', () => {
 
     await submitCode();
 
-    const group = target.querySelector('[role="group"]');
-    expect(group?.getAttribute('aria-label')).toBe('Select up to 3 projects');
-    expect(group?.querySelectorAll('button').length).toBe(2);
+    // The group's accessible name comes from the <legend>'s text, not from an attribute.
+    expect(ballotLegend().textContent?.trim()).toBe('Select up to 3 projects');
+    // sr-only: the visible copy of the same string is the badge, so an announced-only legend is
+    // what keeps the instructions from being rendered twice on screen.
+    expect(ballotLegend().className).toContain('sr-only');
+    // Several votes are independent choices, so each project is its own checkbox.
+    expect(ballotInputTypes()).toEqual(['checkbox', 'checkbox']);
+  });
+
+  it('makes a single-vote ballot one radio group', async () => {
+    verifyCode.mockResolvedValue({ data: vote(1), status: 200 });
+    await render();
+
+    await submitCode();
+
+    expect(ballotLegend().textContent?.trim()).toBe('Select 1 project');
+    // Radios, not checkboxes: picking one has to un-pick the other, and the browser only does
+    // that — and only gives arrow-key navigation — when they share a name inside the group.
+    expect(ballotInputTypes()).toEqual(['radio', 'radio']);
+    expect(new Set([...ballot().querySelectorAll('input')].map((input) => input.name)).size).toBe(1);
   });
 });
