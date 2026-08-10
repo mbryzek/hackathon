@@ -9,6 +9,11 @@ TypeScript-based end-to-end tests for the Private Dinkers application using [@pl
 - **Custom fixtures** for common test scenarios
 - **Comprehensive test helpers** for API interactions and UI testing
 
+This code is held to the same standards as `src/`. `npm run check` type-checks it
+(`check:e2e`), loads it (`check:e2e:collect`), lints it (`lint`), and format-checks it
+(`format:check`) — see [Static checks](#static-checks) below. Only `playwright/generated/` is
+exempt, because it is generated.
+
 ## Getting Started
 
 ### Prerequisites
@@ -43,6 +48,25 @@ npx playwright test --grep "password"
 # View HTML report
 npm run test:e2e:report
 ```
+
+### Static checks
+
+Running the suite needs a frontend and a backend up. The static checks do not, so they are the
+gate this code is normally held to — all four run under `npm run check`:
+
+```bash
+npm run check:e2e          # tsc --noEmit against playwright/tsconfig.json
+npm run check:e2e:collect  # playwright test --list: load every spec and resolve every fixture
+npm run lint               # eslint, including playwright/ and playwright.config.ts
+npm run format:check       # prettier
+```
+
+`check:e2e:collect` is there because type-checking and linting cannot see how Playwright wires
+fixtures together. Playwright reads a fixture's dependencies out of `fn.toString()` and rejects a
+first argument that is not a literal `{...}` destructuring pattern — so renaming `({}, use)` to
+`(_fixtures, use)` compiles, lints, and then fails collection of the _entire_ suite. `--list`
+loads every spec and resolves every fixture without starting a browser or needing a server, in
+well under a second, and is the only one of the four that catches it.
 
 ## Environment Variables
 
