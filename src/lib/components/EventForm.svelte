@@ -8,6 +8,7 @@
    * An edit that silently rewrote a live event's key would break every outstanding /vote/<key> link.
    */
   import Spinner from '$lib/components/Spinner.svelte';
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import { enhance } from '$app/forms';
   import type { EventStatus } from '$lib/api/client';
   import { EVENT_STATUS_OPTIONS } from '$lib/utils/eventDisplay';
@@ -89,9 +90,7 @@
   </div>
 
   {#if error}
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-      {error}
-    </div>
+    <ErrorBanner {error} />
   {/if}
 
   <div class="flex gap-4">
