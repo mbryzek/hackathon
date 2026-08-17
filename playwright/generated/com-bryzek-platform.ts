@@ -65,6 +65,7 @@ export enum PlaybookFeature {
   LocationComparison = 'location_comparison',
   Executions = 'executions',
   Chat = 'chat',
+  ChecklistMeasurement = 'checklist_measurement',
 }
 
 export enum RallydNotificationType {
@@ -189,10 +190,11 @@ export interface BirthInfoForm {
 }
 
 /**
- * The cleartext value of a token, returned exactly once after creation.
+ * A newly minted token together with its cleartext value. This is the ONLY response that ever carries the cleartext: only a digest of it is stored, so a value not saved now cannot be recovered from anywhere -- delete the token and mint another.
  */
-export interface CleartextToken {
-  token: string;
+export interface CreatedToken {
+  token: Token;
+  cleartext: string;
 }
 
 /**
@@ -470,11 +472,15 @@ export interface Token {
   masked_token: string;
   description?: string;
   created_at: ISODateTimeString;
+  /** When this token stops authenticating. Absent is a durable token, which is what every token minted without expires_in_seconds is. A token that carries one is a leaf credential: it is refused on every operation of this resource. */
+  expires_at?: ISODateTimeString;
 }
 
 export interface TokenForm {
   user_id: string;
   description?: string;
+  /** How long the minted token authenticates for. A LIFETIME and not a deadline on purpose: the server stamps expires_at from its own clock, so a caller whose clock is skewed from the platform's cannot mint a credential that is already expired or one that outlives what it asked for. Absent mints a durable token that authenticates until the row is deleted. Maximum 30 days -- a bound on the shape rather than a security boundary, since a durable token is already the wider option. */
+  expires_in_seconds?: number;
 }
 
 export interface User {
@@ -756,10 +762,6 @@ export interface GetTokensUsersByUserIdOptions {
 
 export interface CreateTokenOptions {
   body: TokenForm;
-  headers?: Record<string, string>;
-}
-
-export interface GetTokenCleartextByIdOptions {
   headers?: Record<string, string>;
 }
 
@@ -1346,7 +1348,7 @@ export class ApiClient {
 
   }
 
-  async createToken(params: CreateTokenOptions): Promise<Token> {
+  async createToken(params: CreateTokenOptions): Promise<CreatedToken> {
     const url = `${this.baseUrl}/tokens`;
 
       const response = await fetch(url, {
@@ -1369,34 +1371,6 @@ export class ApiClient {
 
     if (response.status === 422) {
       throw new ValidationErrorsResponse(response);
-    }
-
-    throw new ApiException(response, `Request failed with status ${response.status}`);
-
-  }
-
-  async getTokenCleartextById(id: string, options?: GetTokenCleartextByIdOptions): Promise<CleartextToken> {
-    const url = `${this.baseUrl}/tokens/${encodeURIComponent(id)}/cleartext`;
-
-      const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
-    });
-
-    if (response.status === 200) {
-      const data = await response.json();
-      return data;
-    }
-
-    if (response.status === 401) {
-      throw new UnauthorizedErrorResponse(response);
-    }
-
-    if (response.status === 404) {
-      throw new VoidResponse(response);
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
