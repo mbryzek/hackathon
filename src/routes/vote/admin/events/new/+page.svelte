@@ -4,6 +4,7 @@
   import { urls } from '$lib/urls';
   import { EventStatus } from '$lib/api/client';
   import { EVENT_STATUS_OPTIONS } from '$lib/utils/eventDisplay';
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import type { ActionData } from './$types';
 
   let { form }: { form: ActionData } = $props();
@@ -106,9 +107,7 @@
       </div>
 
       {#if form?.error}
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {form.error}
-        </div>
+        <ErrorBanner error={form.error} />
       {/if}
 
       <div class="flex gap-4">
