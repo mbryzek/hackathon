@@ -1,6 +1,7 @@
 <script lang="ts">
   import Shell from '$lib/components/Shell.svelte';
   import Button from '$lib/components/Button.svelte';
+  import { urls } from '$lib/urls';
 </script>
 
 <Shell title="2024 Hackathon Event Summary">
@@ -11,11 +12,7 @@
     </p>
 
     <div class="text-center">
-      <Button
-        href="https://raw.githubusercontent.com/mbryzek/hackathon-static/refs/heads/main/2024/2024-Event-Summary.pdf"
-        label="Download our 2024 event summary"
-        external
-      />
+      <Button href={urls.y24EventSummary} label="Download our 2024 event summary" external />
     </div>
 
     <p class="text-gray-800 font-light">
@@ -50,11 +47,7 @@
         <li class="pl-2 text-gray-800 font-light">~20 volunteers</li>
         <li class="pl-2 text-gray-800 font-light">5 industry speakers</li>
       </ul>
-      <img
-        class="mt-4"
-        src="https://github.com/mbryzek/hackathon-static/blob/main/2024/jumping.jpg?raw=true"
-        alt="Students jumping in celebration at the 2024 hackathon"
-      />
+      <img class="mt-4" src={urls.y24GroupPhoto} alt="Students jumping in celebration at the 2024 hackathon" />
     </div>
   </div>
 </Shell>

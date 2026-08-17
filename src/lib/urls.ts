@@ -1,10 +1,16 @@
+import { staticAsset, staticFile } from '$lib/staticAssets';
+
 export const urls = {
   index: '/',
   signup: 'https://signup.bthackathon.com',
   y24Index: '/Y24/',
+  y24EventSummary: staticFile(2024, '2024-Event-Summary.pdf'),
+  y24GroupPhoto: staticAsset(2024, 'jumping.jpg'),
   y24Photos: '/Y24/photos',
   y24Sponsors: '/Y24/sponsors',
   y25Index: '/Y25/',
+  y25EventSummary: staticFile(2025, '2025-Event-Summary.pdf'),
+  y25GroupPhoto: staticAsset(2025, 'everybody.w640.jpg'),
   y25Demos: '/Y25/demos',
   y25Photos: '/Y25/photos',
   y25Sponsors: '/Y25/sponsors',
@@ -17,7 +23,7 @@ export const urls = {
   y26Sponsors: '/Y26/sponsors',
   y26Photos: '/Y26/photos',
   y26ProgramAd: '/Y26/program/ad',
-  y26EventSummary: 'https://raw.githubusercontent.com/mbryzek/hackathon-static/refs/heads/main/2026/2026-BTCSP-Hackathon-Event-Summary.pdf',
+  y26EventSummary: staticFile(2026, '2026-BTCSP-Hackathon-Event-Summary.pdf'),
   mission: '/mission',
   donate: '/donate',
   press: '/press',

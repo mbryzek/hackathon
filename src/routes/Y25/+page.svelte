@@ -3,6 +3,7 @@
   import CalloutBox from '$lib/components/CalloutBox.svelte';
   import Button from '$lib/components/Button.svelte';
   import StatCard from '$lib/components/StatCard.svelte';
+  import { urls } from '$lib/urls';
 
   const stats = [
     { value: '100+', label: 'Students' },
@@ -38,12 +39,7 @@
     <div class="flex flex-wrap items-center gap-3">
       <Button href="/Y25/demos" label="Watch the demos" size="sm" />
       <Button href="/Y25/photos" label="View the photos" size="sm" />
-      <Button
-        href="https://raw.githubusercontent.com/mbryzek/hackathon-static/refs/heads/main/2025/2025-Event-Summary.pdf"
-        label="Event summary"
-        size="sm"
-        external
-      />
+      <Button href={urls.y25EventSummary} label="Event summary" size="sm" external />
     </div>
 
     <p class="text-gray-800 font-light">
@@ -124,11 +120,7 @@
 
     <!-- Group Photo -->
     <div class="mt-8">
-      <img
-        class="w-full rounded-lg shadow-lg"
-        src="https://github.com/mbryzek/hackathon-static/blob/main/2025/everybody.w640.jpg?raw=true"
-        alt="All participants gathered together at the 2025 hackathon"
-      />
+      <img class="w-full rounded-lg shadow-lg" src={urls.y25GroupPhoto} alt="All participants gathered together at the 2025 hackathon" />
     </div>
   </div>
 </Shell>
