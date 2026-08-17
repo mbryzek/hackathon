@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount, unmount, flushSync } from 'svelte';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type * as ApiClientModule from '$lib/api/client';
-import { VoterType, type Vote } from '$lib/api/client';
+import { aVote } from '$lib/test/fixtures';
+import { mountComponent, settle } from '$lib/test/mount';
 import VotePage from './+page.svelte';
 import type { PageData } from './$types';
 
@@ -18,31 +18,10 @@ vi.mock('$lib/api/client', async (importOriginal) => {
   return { ...actual, voteApi: { verifyCode: () => verifyCode() } };
 });
 
-function vote(maxVotes: number): Vote {
-  return {
-    event: { name: 'Hack Night' },
-    voter_type: VoterType.Student,
-    max_votes: maxVotes,
-    projects: [
-      { project: { id: 'p1', name: 'Team 1' }, selected: false },
-      { project: { id: 'p2', name: 'Team 2' }, selected: false }
-    ]
-  } as unknown as Vote;
-}
-
-async function settle(): Promise<void> {
-  flushSync();
-  for (let i = 0; i < 4; i += 1) await Promise.resolve();
-  flushSync();
-}
-
-let mounted: Record<string, unknown> | null = null;
 let target: HTMLElement;
 
 async function render(): Promise<void> {
-  target = document.createElement('div');
-  document.body.appendChild(target);
-  mounted = mount(VotePage, { target, props: { data: { event: null } as unknown as PageData } });
+  target = mountComponent(VotePage, { data: { event: null } as unknown as PageData }).target;
   await settle();
 }
 
@@ -79,12 +58,6 @@ function ballotInputTypes(): string[] {
 
 beforeEach(() => verifyCode.mockReset());
 
-afterEach(() => {
-  if (mounted) unmount(mounted);
-  mounted = null;
-  target?.remove();
-});
-
 describe('vote page accessibility', () => {
   it('announces a rejected code instead of swapping it in silently', async () => {
     verifyCode.mockResolvedValue({ errors: [{ message: 'Invalid code' }], status: 422 });
@@ -97,7 +70,7 @@ describe('vote page accessibility', () => {
   });
 
   it('moves focus to the ballot heading when the code form is replaced', async () => {
-    verifyCode.mockResolvedValue({ data: vote(1), status: 200 });
+    verifyCode.mockResolvedValue({ data: aVote({ max_votes: 1 }), status: 200 });
     await render();
 
     await submitCode();
@@ -109,7 +82,7 @@ describe('vote page accessibility', () => {
   });
 
   it('groups the projects and names the group with the vote instructions', async () => {
-    verifyCode.mockResolvedValue({ data: vote(3), status: 200 });
+    verifyCode.mockResolvedValue({ data: aVote({ max_votes: 3 }), status: 200 });
     await render();
 
     await submitCode();
@@ -124,7 +97,7 @@ describe('vote page accessibility', () => {
   });
 
   it('makes a single-vote ballot one radio group', async () => {
-    verifyCode.mockResolvedValue({ data: vote(1), status: 200 });
+    verifyCode.mockResolvedValue({ data: aVote({ max_votes: 1 }), status: 200 });
     await render();
 
     await submitCode();

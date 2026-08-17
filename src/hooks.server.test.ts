@@ -3,7 +3,8 @@ import type { Handle } from '@sveltejs/kit';
 import { handle } from './hooks.server';
 import { SECURITY_HEADERS } from '$lib/security-headers';
 import { SESSION_COOKIE } from '$lib/config';
-import type { ApiResponse } from '$lib/api/client';
+import type { AdminSession, ApiResponse } from '$lib/api/client';
+import { fakeCookies, type DeletedCookie } from '$lib/test/requestEvent';
 
 type HandleInput = Parameters<Handle>[0];
 
@@ -11,15 +12,14 @@ type HandleInput = Parameters<Handle>[0];
  * The hook decides on the status alone and never looks at the body, so these answers carry
  * no `data` — a full `AdminSession` here would only be scenery.
  */
-type SessionResponse = Promise<ApiResponse<unknown>>;
+type SessionResponse = Promise<ApiResponse<AdminSession>>;
 
 const getSession = vi.fn<(sessionId: string) => SessionResponse>();
 
-vi.mock('$lib/server/adminApi', () => ({
-  adminApi: {
-    getSession: (sessionId: string) => getSession(sessionId)
-  }
-}));
+vi.mock('$lib/server/adminApi', async () => {
+  const { mockAdminApi } = await import('$lib/test/adminApiMock');
+  return mockAdminApi({ getSession: (sessionId: string) => getSession(sessionId) });
+});
 
 const confirmed: SessionResponse = Promise.resolve({ status: 200 });
 const rejected: SessionResponse = Promise.resolve({ errors: [{ code: 'unauthorized', message: 'Unauthorized' }], status: 401 });
@@ -38,24 +38,20 @@ beforeEach(() => {
 async function invoke(
   pathname: string,
   options: { cookies?: Record<string, string>; response?: Response } = {}
-): Promise<{ response: Response; locals: App.Locals; deletedCookies: string[] }> {
-  const cookies = options.cookies ?? {};
+): Promise<{ response: Response; locals: App.Locals; deletedCookies: DeletedCookie[] }> {
+  const cookies = fakeCookies(options.cookies ?? {});
   const locals: App.Locals = {};
-  const deletedCookies: string[] = [];
 
   const input = {
     event: {
       url: new URL(`https://hackathon.bergen.tech${pathname}`),
-      cookies: {
-        get: (name: string): string | undefined => cookies[name],
-        delete: (name: string): void => void deletedCookies.push(name)
-      },
+      cookies,
       locals
     },
     resolve: (): Response => options.response ?? new Response('ok')
   } as unknown as HandleInput;
 
-  return { response: await handle(input), locals, deletedCookies };
+  return { response: await handle(input), locals, deletedCookies: cookies.deleted };
 }
 
 /** A header the hook failed to set reads back as `null`, so a miss names itself in the diff. */
@@ -119,7 +115,7 @@ describe('handle', () => {
     const { locals, deletedCookies } = await invoke('/vote/admin', { cookies: { [SESSION_COOKIE]: 'stale' } });
 
     expect(locals.adminSession).toBeUndefined();
-    expect(deletedCookies).toEqual([SESSION_COOKIE]);
+    expect(deletedCookies).toEqual([{ name: SESSION_COOKIE, path: '/' }]);
   });
 
   it('deletes a rejected cookie on the login page too, so the form renders instead of redirecting', async () => {
@@ -128,7 +124,7 @@ describe('handle', () => {
     const { locals, deletedCookies } = await invoke('/vote/admin/login', { cookies: { [SESSION_COOKIE]: 'stale' } });
 
     expect(locals.adminSession).toBeUndefined();
-    expect(deletedCookies).toEqual([SESSION_COOKIE]);
+    expect(deletedCookies).toEqual([{ name: SESSION_COOKIE, path: '/' }]);
   });
 
   /** A platform blip must not sign every admin out — only a 401 does that. */

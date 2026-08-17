@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Event } from '$lib/api/client';
+import { anEvent } from '$lib/test/fixtures';
 
 const getOpenEvents = vi.fn();
 vi.mock('$lib/api/client', () => ({ voteApi: { getOpenEvents: () => getOpenEvents() } }));
@@ -10,7 +11,7 @@ function run(eventKey: string) {
   return load({ params: { event_key: eventKey } } as never) as Promise<{ event: Event | null; loadFailed: boolean }>;
 }
 
-const openEvent = { id: 'evt-1', key: 'hack-2026', name: 'Hack Night' } as Event;
+const openEvent = anEvent({ key: 'hack-2026' });
 
 beforeEach(() => getOpenEvents.mockReset());
 

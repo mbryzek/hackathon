@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount, unmount, flushSync } from 'svelte';
-import type { EventResults, ProjectTally, VoteEvent } from '$lib/api/client';
 import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
+import { anEvent, anEventResults } from '$lib/test/fixtures';
+import { mountComponent, settle } from '$lib/test/mount';
 import ResultsPage from './+page.svelte';
 import type { PageData } from './$types';
 
@@ -15,38 +15,15 @@ const invalidateAll = vi.fn(() => Promise.resolve());
 vi.mock('$app/navigation', () => ({ invalidateAll: () => invalidateAll() }));
 vi.mock('$app/state', () => ({ page: { params: { id: 'evt-1' } } }));
 
-function tallies(...counts: number[]): ProjectTally[] {
-  return counts.map(
-    (vote_count, index) => ({ project: { id: `p-${index}-${vote_count}`, name: `Project ${index}` }, vote_count }) as ProjectTally
-  );
-}
-
 /** Student projects deliberately out-scale the parent ones, so a per-category max would differ. */
 function pageData(student: number[] = [4, 2], parent: number[] = [1]): PageData {
-  return {
-    event: { name: 'Hack Night' } as VoteEvent,
-    results: {
-      student: { total_votes: student.reduce((a, b) => a + b, 0), projects: tallies(...student) },
-      parent: { total_votes: parent.reduce((a, b) => a + b, 0), projects: tallies(...parent) }
-    } as EventResults,
-    error: null
-  } as PageData;
+  return { event: anEvent(), results: anEventResults(student, parent), error: null } as PageData;
 }
 
-/** Runs pending effects, lets any promises settle, then runs the effects that produced. */
-async function settle(): Promise<void> {
-  flushSync();
-  for (let i = 0; i < 4; i += 1) await Promise.resolve();
-  flushSync();
-}
-
-let mounted: Record<string, unknown> | null = null;
 let target: HTMLElement;
 
 async function render(data: PageData = pageData()): Promise<void> {
-  target = document.createElement('div');
-  document.body.appendChild(target);
-  mounted = mount(ResultsPage, { target, props: { data } });
+  target = mountComponent(ResultsPage, { data }).target;
   await settle();
 }
 
@@ -79,9 +56,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  if (mounted) unmount(mounted);
-  mounted = null;
-  target?.remove();
   setHidden(false);
   vi.useRealTimers();
   vi.restoreAllMocks();

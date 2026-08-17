@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mount, unmount, flushSync } from 'svelte';
-import { VoterType, type Code, type CodeSummary, type VoteEvent } from '$lib/api/client';
+import { flushSync } from 'svelte';
+import { VoterType } from '$lib/api/client';
 import { SEARCH_DEBOUNCE_MS } from '$lib/utils/constants';
+import { aCode, aCodeSummary, anEvent } from '$lib/test/fixtures';
+import { mountComponent } from '$lib/test/mount';
 import CodesPage from './+page.svelte';
 import type { PageData } from './$types';
 
@@ -29,9 +31,9 @@ function pageData(overrides: Partial<PageData> = {}): PageData {
     offset: 0,
     hasMore: false,
     error: null,
-    event: { name: 'Hack Night' } as VoteEvent,
-    summary: { total: 3, student: { codes: 2, votes: 1 }, parent: { codes: 1, votes: 0 } } as CodeSummary,
-    codes: [{ id: 'c-1', code: 'AAAA', voter_type: VoterType.Student, has_voted: false } as Code],
+    event: anEvent(),
+    summary: aCodeSummary(),
+    codes: [aCode({ id: 'c-1' })],
     ...overrides
   } as PageData;
 }
@@ -46,17 +48,15 @@ function captureSubmit(event: Event) {
   submissions.push(new URLSearchParams(new FormData(form) as unknown as Record<string, string>).toString());
 }
 
-let mounted: Record<string, unknown> | null = null;
-let target: HTMLElement;
-
 /** The page's props, reactive, so a test can replace `data` the way a navigation does. */
 const props: { data: PageData; form: null } = $state({ data: pageData(), form: null });
 
+let target: HTMLElement;
+let unmountPage: () => void;
+
 function render(data: PageData = pageData()) {
-  target = document.createElement('div');
-  document.body.appendChild(target);
   props.data = data;
-  mounted = mount(CodesPage, { target, props });
+  ({ target, unmount: unmountPage } = mountComponent(CodesPage, props));
   flushSync();
 }
 
@@ -98,9 +98,6 @@ beforeEach(() => {
 
 afterEach(() => {
   document.removeEventListener('submit', captureSubmit, true);
-  if (mounted) unmount(mounted);
-  mounted = null;
-  target?.remove();
   vi.useRealTimers();
 });
 
@@ -153,8 +150,7 @@ describe('codes page search', () => {
     render();
     type('abc');
 
-    if (mounted) unmount(mounted);
-    mounted = null;
+    unmountPage();
     vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
 
     expect(submissions).toEqual([]);
