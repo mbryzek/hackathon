@@ -1,25 +1,18 @@
 // @vitest-environment jsdom
-import { describe, it, expect, afterEach } from 'vitest';
-import { createRawSnippet, mount, unmount } from 'svelte';
+import { describe, it, expect } from 'vitest';
+import { createRawSnippet } from 'svelte';
+import { mountComponent } from '$lib/test/mount';
 import Modal from './Modal.svelte';
 
 const POSITIONED = ['relative', 'absolute', 'fixed', 'sticky'];
 
-let mounted: Record<string, unknown> | null = null;
-let target: HTMLElement;
-
-function render(size: 'sm' | 'md' | 'lg' = 'md'): void {
-  target = document.createElement('div');
-  document.body.appendChild(target);
-  mounted = mount(Modal, {
-    target,
-    props: {
-      open: true,
-      onclose: () => {},
-      size,
-      children: createRawSnippet(() => ({ render: () => '<div>Body</div>' }))
-    }
-  });
+function render(size: 'sm' | 'md' | 'lg' = 'md'): HTMLElement {
+  return mountComponent(Modal, {
+    open: true,
+    onclose: () => {},
+    size,
+    children: createRawSnippet(() => ({ render: () => '<div>Body</div>' }))
+  }).target;
 }
 
 /**
@@ -35,15 +28,9 @@ function nearestPositionedAncestor(el: HTMLElement): HTMLElement {
   throw new Error('No positioned ancestor found.');
 }
 
-afterEach(() => {
-  if (mounted) unmount(mounted);
-  mounted = null;
-  target?.remove();
-});
-
 describe('Modal close button placement', () => {
   it('resolves against the modal card, not the full-viewport backdrop', () => {
-    render('md');
+    const target = render('md');
 
     const close = target.querySelector('button[aria-label="Close modal"]') as HTMLElement;
     expect(close.classList.contains('absolute')).toBe(true);
@@ -58,11 +45,9 @@ describe('Modal close button placement', () => {
 
   it('keeps the card positioned at every size', () => {
     for (const size of ['sm', 'md', 'lg'] as const) {
-      render(size);
+      const target = render(size);
       const card = target.querySelector(`.max-w-${size}`) as HTMLElement;
       expect(card.classList.contains('relative')).toBe(true);
-      if (mounted) unmount(mounted);
-      target.remove();
     }
   });
 });

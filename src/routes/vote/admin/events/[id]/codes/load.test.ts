@@ -1,7 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import type { Cookies } from '@sveltejs/kit';
 import { VoterType, type ApiResponse, type Code } from '$lib/api/client';
 import { CODES_PAGE_SIZE } from '$lib/utils/constants';
+import { ok } from '$lib/test/adminApiMock';
+import { aCode } from '$lib/test/fixtures';
+import { loadEvent } from '$lib/test/requestEvent';
 
 /**
  * The codes list is fetched here rather than from the browser (ISS-788), which moved the filters
@@ -11,15 +13,10 @@ import { CODES_PAGE_SIZE } from '$lib/utils/constants';
 
 const getCodes = vi.fn();
 
-const ok = <T>(data: T): Promise<ApiResponse<T>> => Promise.resolve({ data, status: 200 });
-
-vi.mock('$lib/server/adminApi', () => ({
-  adminApi: {
-    getEvent: () => ok({ id: 'evt-1', key: 'hack', name: 'Hack Night', status: 'draft' }),
-    getCodeSummary: () => ok({ total: 3, student: { codes: 2, votes: 1 }, parent: { codes: 1, votes: 0 } }),
-    getCodes: (...args: unknown[]) => getCodes(...args)
-  }
-}));
+vi.mock('$lib/server/adminApi', async () => {
+  const { mockAdminApi } = await import('$lib/test/adminApiMock');
+  return mockAdminApi({ getCodes: (...args: Parameters<typeof getCodes>) => getCodes(...args) });
+});
 
 const modules = import.meta.glob('./+page.server.ts');
 
@@ -30,12 +27,7 @@ async function runLoad(query: string): Promise<any> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { load } = (await importer()) as { load: (event: any) => Promise<any> };
 
-  return load({
-    locals: { adminSession: { id: 'sess-1' } },
-    cookies: { delete: () => {} } as unknown as Cookies,
-    params: { id: 'evt-1' },
-    url: new URL(`http://localhost/vote/admin/events/evt-1/codes${query}`)
-  });
+  return load(loadEvent({ url: `http://localhost/vote/admin/events/evt-1/codes${query}` }));
 }
 
 /** What the third argument to `getCodes` was — the filters, as the API client sees them. */
@@ -44,13 +36,7 @@ function requestedParams(): Record<string, unknown> {
 }
 
 function codes(count: number): Promise<ApiResponse<Code[]>> {
-  const rows = Array.from({ length: count }, (_, i) => ({
-    id: `code-${i}`,
-    code: `CODE${i}`,
-    voter_type: VoterType.Student,
-    has_voted: false
-  })) as Code[];
-  return ok(rows);
+  return ok(Array.from({ length: count }, (_, i) => aCode({ id: `code-${i}`, code: `CODE${i}` })));
 }
 
 beforeEach(() => {
