@@ -4,6 +4,7 @@
   import { enhance } from '$app/forms';
   import { urls } from '$lib/urls';
   import { EVENT_STATUS_OPTIONS } from '$lib/utils/eventDisplay';
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -88,9 +89,7 @@
         </div>
 
         {#if error}
-          <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {error}
-          </div>
+          <ErrorBanner {error} />
         {/if}
 
         <div class="flex gap-4">
@@ -118,8 +117,6 @@
       </form>
     </div>
   {:else}
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-      {error || 'Event not found'}
-    </div>
+    <ErrorBanner error={error || 'Event not found'} />
   {/if}
 </div>

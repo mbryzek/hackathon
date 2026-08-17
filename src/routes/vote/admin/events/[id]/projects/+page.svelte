@@ -2,6 +2,7 @@
   import { page } from '$app/state';
   import { enhance } from '$app/forms';
   import { urls } from '$lib/urls';
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import type { Project } from '$lib/api/client';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
@@ -35,9 +36,7 @@
   <EventAdminTabs {eventId} eventName={event?.name} activeTab="projects" />
 
   {#if error}
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-      {error}
-    </div>
+    <ErrorBanner {error} class="mb-6" />
   {/if}
 
   <!-- Add project button/form -->
