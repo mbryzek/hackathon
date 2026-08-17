@@ -1,4 +1,4 @@
-const baseUrl = 'https://github.com/mbryzek/hackathon-static/blob/main/2026/ambiance/';
+import { staticAssets } from '$lib/staticAssets';
 
 const filenames = [
   '1000019817.jpg',
@@ -68,4 +68,4 @@ const filenames = [
   'img_5972.jpg'
 ];
 
-export const photosY26 = filenames.map((filename) => `${baseUrl}${filename}?raw=true`);
+export const photosY26 = staticAssets(2026, 'ambiance', filenames);

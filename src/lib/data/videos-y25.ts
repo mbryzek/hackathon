@@ -1,6 +1,5 @@
 import type { VideoInfo } from '$lib/components/VideoGallery.svelte';
-
-const baseUrl = 'https://github.com/mbryzek/hackathon-static/blob/main/2025/demos/';
+import { staticAsset } from '$lib/staticAssets';
 
 const videos: { title: string; filename: string }[] = [
   { title: 'Team 5: Net Reaper', filename: 'team5.mov' },
@@ -11,5 +10,5 @@ const videos: { title: string; filename: string }[] = [
 
 export const videosY25: VideoInfo[] = videos.map((v) => ({
   title: v.title,
-  url: `${baseUrl}${v.filename}?raw=true`
+  url: staticAsset(2025, `demos/${v.filename}`)
 }));
