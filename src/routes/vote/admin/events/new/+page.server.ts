@@ -1,27 +1,17 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
-import { EventStatus } from '$lib/api/client';
 import { adminApi } from '$lib/server/adminApi';
 import { firstError, requireSessionId } from '$lib/server/adminSession';
-import { oneOf, trimmed } from '$lib/server/fields';
+import { parseEventForm } from '$lib/server/eventForm';
 import { urls } from '$lib/urls';
-
-const EVENT_STATUSES = Object.values(EventStatus);
 
 export const actions = {
   default: async (event) => {
     const form = await event.request.formData();
-    const submitted = {
-      name: trimmed(form.get('name')),
-      key: trimmed(form.get('key')),
-      status: oneOf(form.get('status'), EVENT_STATUSES) ?? EventStatus.Draft
-    };
+    const { value: submitted, error: invalid } = parseEventForm(form);
 
-    if (!submitted.name) {
-      return fail(400, { ...submitted, error: 'Please enter an event name' });
-    }
-    if (!submitted.key) {
-      return fail(400, { ...submitted, error: 'Please enter an event key' });
+    if (invalid !== null) {
+      return fail(400, { ...submitted, error: invalid });
     }
 
     const response = await adminApi.createEvent(requireSessionId(event), submitted);
