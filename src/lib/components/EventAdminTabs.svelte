@@ -3,7 +3,10 @@
 
   interface Props {
     eventId: string;
-    eventName?: string;
+    // `| undefined` because every call site passes `event?.name`, which is
+    // exactly "may be explicitly undefined" — a distinct thing from an absent
+    // key under `exactOptionalPropertyTypes`.
+    eventName?: string | undefined;
     activeTab: 'event' | 'projects' | 'codes' | 'results';
   }
 

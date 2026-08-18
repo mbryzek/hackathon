@@ -9,16 +9,37 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "strict": true,
     "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+
+    // ===== STRICT TYPE CHECKING =====
+    // Master strict flag (enables: strictNullChecks, strictFunctionTypes,
+    // strictBindCallApply, strictPropertyInitialization, noImplicitAny,
+    // noImplicitThis, alwaysStrict, useUnknownInCatchVariables)
+    "strict": true,
+
+    // Additional strict null/undefined checks
+    "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+
+    // Control flow and exhaustiveness
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+
+    // Class and inheritance
     "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
+
+    // Unused code detection
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true
+    "noUnusedParameters": true
   }
+  // Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
+  // except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
+  //
+  // To make changes to top-level options such as include and exclude, we recommend extending
+  // the generated config; see https://svelte.dev/docs/kit/configuration#typescript
 }
