@@ -29,6 +29,42 @@ set -euo pipefail
 
 echo "building ${CI_REPO:-hackathon} @ ${CI_SHA:-working tree} (${CI_EVENT:-local}, clean=${CI_CLEAN_BUILD:-?})"
 
+# SAY WHAT THIS BUILD COVERED (ISS-2175). Two verbs, `covered` and `not-run`;
+# each becomes a clause on the `ci` status and a line in this log. The echo is
+# for the log and the append is what reaches the status, so the two cannot come
+# to say different things. An unset CI_COVERAGE_FILE means nobody is collecting
+# — this script run by hand — and this shape both survives `set -u` and always
+# exits 0, which `set -e` requires of the last command in a function.
+ci_report() {                    # ci_report covered|not-run "<short phrase>"
+  local line="ci-$1: $2"
+  echo "$line"
+  [ -z "${CI_COVERAGE_FILE:-}" ] || printf '%s\n' "$line" >>"$CI_COVERAGE_FILE"
+}
+
+# A HAND-WRITTEN CALL THE GENERATOR ALREADY EMITS FAILS THIS BUILD (ISS-3921).
+# A generated client method and a hand-written `fetch` to the same operation are
+# one wire contract expressed twice, and only the generated copy moves when the
+# spec does — the second drifts silently into a request the backend no longer
+# serves. Three repos hand-rolled the same data_url upload that way, each with a
+# comment claiming no generated method existed (ISS-3884).
+#
+# EXIT CODES ARE THE VERDICT: 0 clean, 1 findings, 2 the lint could not look.
+# Under `set -e` the last two both fail the build, and that is deliberate — "I
+# could not check" must never be reported as "I checked and it is fine". A call
+# the generated method genuinely cannot make is suppressed AT THE SITE with a
+# `codegen-lint-ignore: <reason>` comment, never by dropping this step.
+#
+# IT RUNS BEFORE `npm ci` because it is hermetic and takes about a second: it
+# reads only committed files — this repo's generated clients and its
+# `.api/config.pkl` — so it opens no network connection, needs nothing `npm ci`
+# installs, and adds nothing to `# ci-needs:`. `pkl` is the one binary it shells
+# out to, and every runner already has it for `api`. The directory is `$PWD` by
+# default, which is what makes it correct in a CI checkout whose directory is
+# named for the SLUG and names no app.
+dev codegen lint-consumers
+
+ci_report covered "dev codegen lint-consumers"
+
 # `npm ci` rather than `npm install`: the lockfile is the contract, and a build
 # that silently resolved a different tree than the one committed is a green
 # measured on something nobody is merging. It is fast here regardless — the
