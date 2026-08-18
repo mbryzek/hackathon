@@ -58,7 +58,15 @@ npm run check
 # nothing deployed.
 npm run build
 
-# Deliberately NOT `npm run test:e2e`. Playwright needs a live backend here, so
-# it cannot produce a verdict in CI — and a suite that is red for an
-# infrastructure reason is worse than no suite, because the lane cannot tell it
-# apart from a real failure.
+# Deliberately NOT `npm run test:e2e`, and the reason has CHANGED (ISS-4028).
+#
+# It used to be that Playwright could not produce a verdict here at all: it needs a live
+# `platform`, and the released image would not serve one. That is fixed — `ci/e2e.sh` beside this
+# file runs the browser suite against a real backend, and it runs today.
+#
+# What keeps it out of THIS file is the gate. This script produces the `ci` status the merge lane
+# refuses to merge without; `ci/e2e.sh` produces `e2e`, which the lane does not read. These suites
+# had never run unattended before, so their flake rate is unmeasured, and an unmeasured flake
+# source inside `ci` parks pull requests that did nothing wrong. Moving them in here is a decision
+# earned by measured flake data (ISS-2180) — see "The browser suites are the second context" in
+# devops/docs/ci.md — and not something to do because the suite has looked fine.
