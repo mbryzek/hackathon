@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
-import { isApiError } from '$lib/api/client';
+import { isApiError, safeErrorStatus } from '$lib/api/client';
 import { adminApi } from '$lib/server/adminApi';
 import { firstError, requireSessionId } from '$lib/server/adminSession';
 import { parseEventForm } from '$lib/server/eventForm';
@@ -19,7 +19,7 @@ export const actions = {
     const error = firstError(event, [response]);
 
     if (error !== null) {
-      return fail(response.status, { ...submitted, error });
+      return fail(safeErrorStatus(response.status), { ...submitted, error });
     }
     if (isApiError(response)) {
       return fail(500, { ...submitted, error: 'Failed to create event' });

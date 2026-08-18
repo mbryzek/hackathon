@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { dataOr } from '$lib/api/client';
+import { dataOr, safeErrorStatus } from '$lib/api/client';
 import { adminApi } from '$lib/server/adminApi';
 import { firstError, requireSessionId } from '$lib/server/adminSession';
 import { checked, trimmed } from '$lib/server/fields';
@@ -29,7 +29,7 @@ export const actions = {
     const error = firstError(event, [response], 'Event not found');
 
     if (error) {
-      return fail(response.status, { data: csvData, deleteAllProjects, error });
+      return fail(safeErrorStatus(response.status), { data: csvData, deleteAllProjects, error });
     }
 
     throw redirect(303, urls.voteAdminEventProjects(event.params.id));

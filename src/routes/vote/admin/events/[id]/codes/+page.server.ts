@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { FileType, VoterType } from '$lib/api/client';
-import { dataOr, isApiError } from '$lib/api/client';
+import { dataOr, isApiError, safeErrorStatus } from '$lib/api/client';
 import { adminApi } from '$lib/server/adminApi';
 import { firstError, requireSessionId } from '$lib/server/adminSession';
 import { integer, oneOf, optionalBoolean, optionalText, trimmed } from '$lib/server/fields';
@@ -70,7 +70,7 @@ export const actions = {
     });
     const error = firstError(event, [response], 'Event not found');
 
-    return error === null ? undefined : fail(response.status, { error });
+    return error === null ? undefined : fail(safeErrorStatus(response.status), { error });
   },
 
   delete: async (event) => {
@@ -78,7 +78,7 @@ export const actions = {
     const response = await adminApi.deleteCode(requireSessionId(event), event.params.id, trimmed(form.get('id')));
     const error = firstError(event, [response], 'Code not found');
 
-    return error === null ? undefined : fail(response.status, { error });
+    return error === null ? undefined : fail(safeErrorStatus(response.status), { error });
   },
 
   /**
@@ -103,7 +103,7 @@ export const actions = {
     const error = firstError(event, [response], 'Event not found');
 
     if (error !== null) {
-      return fail(response.status, { error });
+      return fail(safeErrorStatus(response.status), { error });
     }
     if (isApiError(response)) {
       return fail(500, { error: 'Failed to build the export' });

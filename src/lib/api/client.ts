@@ -67,6 +67,19 @@ export function dataOr<T, F>(response: ApiResponse<T>, fallback: F): T | F {
 }
 
 /**
+ * `status` if SvelteKit's `fail` will take it, and 503 otherwise.
+ *
+ * `handleApiCall` reports the server never answering as status 0, and `fail(0, …)` is not
+ * an HTTP failure: on the no-JS form post path SvelteKit renders the page with that status,
+ * and the `Response` constructor throws a RangeError on anything outside 200-599. So a
+ * backend that is down would answer an admin's form submission with a crash instead of the
+ * banner the action built for it. 503 is what "the server did not answer" means on the wire.
+ */
+export function safeErrorStatus(status: number): number {
+  return Number.isInteger(status) && status >= 400 && status <= 599 ? status : 503;
+}
+
+/**
  * The admin half of the API lives in `$lib/server/adminApi` and is deliberately not
  * reachable from here: every admin call needs the session id out of the httpOnly cookie,
  * and SvelteKit refuses to bundle a `$lib/server` module into browser code. Only the

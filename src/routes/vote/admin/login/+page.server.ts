@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { SESSION_COOKIE, config } from '$lib/config';
-import { isApiError } from '$lib/api/client';
+import { isApiError, safeErrorStatus } from '$lib/api/client';
 import { adminApi } from '$lib/server/adminApi';
 
 /**
@@ -41,7 +41,7 @@ export const actions = {
     const response = await adminApi.login(email, password);
 
     if (isApiError(response)) {
-      return fail(response.status, {
+      return fail(safeErrorStatus(response.status), {
         errors: response.errors.map((e) => ({ message: e.message || 'Login failed' })),
         email
       });
