@@ -34,13 +34,7 @@ export default [
   // `playwright.config.ts` and `playwright/config.ts` — hand-written test code. The build tooling
   // lints clean anyway, so the exemption bought nothing and hid two files. Lint everything.
   {
-    ignores: [
-      '.svelte-kit/**',
-      'build/**',
-      'node_modules/**',
-      'src/generated/**',
-      'playwright/generated/**'
-    ]
+    ignores: ['.svelte-kit/**', 'build/**', 'node_modules/**', 'src/generated/**', 'playwright/generated/**']
   },
 
   // Base ESLint recommended rules
