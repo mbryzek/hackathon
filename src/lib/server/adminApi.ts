@@ -11,7 +11,6 @@
 import { config } from '$lib/config';
 import {
   handleApiCall,
-  handleVoidApiCall,
   type ApiResponse,
   type AdminSession,
   type Code,
@@ -26,7 +25,7 @@ import {
 } from '$lib/api/client';
 import { ApiClient as VoteAdminClient } from '../../generated/com-bryzek-vote-admin';
 
-const voteAdminClient = new VoteAdminClient(config.apiBaseUrl);
+const voteAdminClient = new VoteAdminClient({ baseUrl: config.apiBaseUrl });
 
 // Helper to create authorization header
 function getAuthHeaders(sessionId?: string): Record<string, string> {
@@ -39,12 +38,10 @@ function getAuthHeaders(sessionId?: string): Record<string, string> {
 export const adminApi = {
   // Session
   async login(email: string, password: string): Promise<ApiResponse<AdminSession>> {
-    return handleApiCall(
-      () =>
-        voteAdminClient.createAdminSessionSessionsAndLogins({
-          body: { email, password }
-        }),
-      201
+    return handleApiCall(() =>
+      voteAdminClient.createAdminSessionSessionsAndLogins({
+        body: { email, password }
+      })
     );
   },
 
@@ -57,7 +54,7 @@ export const adminApi = {
   },
 
   async logout(sessionId: string): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
+    return handleApiCall(() =>
       voteAdminClient.deleteAdminSessionSession({
         headers: getAuthHeaders(sessionId)
       })
@@ -85,13 +82,11 @@ export const adminApi = {
   },
 
   async createEvent(sessionId: string, form: { key: string; name: string; status?: EventStatus }): Promise<ApiResponse<Event>> {
-    return handleApiCall(
-      () =>
-        voteAdminClient.createEvent({
-          headers: getAuthHeaders(sessionId),
-          body: form
-        }),
-      201
+    return handleApiCall(() =>
+      voteAdminClient.createEvent({
+        headers: getAuthHeaders(sessionId),
+        body: form
+      })
     );
   },
 
@@ -106,7 +101,7 @@ export const adminApi = {
   },
 
   async deleteEvent(sessionId: string, id: string): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
+    return handleApiCall(() =>
       voteAdminClient.deleteEventById(id, {
         headers: getAuthHeaders(sessionId)
       })
@@ -126,14 +121,12 @@ export const adminApi = {
   },
 
   async createProject(sessionId: string, eventId: string, form: { name: string; description?: string }): Promise<ApiResponse<Project>> {
-    return handleApiCall(
-      () =>
-        voteAdminClient.createProject({
-          headers: getAuthHeaders(sessionId),
-          eventId,
-          body: form
-        }),
-      201
+    return handleApiCall(() =>
+      voteAdminClient.createProject({
+        headers: getAuthHeaders(sessionId),
+        eventId,
+        body: form
+      })
     );
   },
 
@@ -154,7 +147,7 @@ export const adminApi = {
   },
 
   async deleteProject(sessionId: string, eventId: string, id: string): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
+    return handleApiCall(() =>
       voteAdminClient.deleteProjectById({
         headers: getAuthHeaders(sessionId),
         eventId,
@@ -164,7 +157,7 @@ export const adminApi = {
   },
 
   async reorderProjects(sessionId: string, eventId: string, projectIds: string[]): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
+    return handleApiCall(() =>
       voteAdminClient.createProjectReorder({
         headers: getAuthHeaders(sessionId),
         eventId,
@@ -174,7 +167,7 @@ export const adminApi = {
   },
 
   async createProjectCsv(sessionId: string, eventId: string, data: string, deleteAllProjects: boolean): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
+    return handleApiCall(() =>
       voteAdminClient.createProjectCsv({
         headers: getAuthHeaders(sessionId),
         eventId,
@@ -211,7 +204,7 @@ export const adminApi = {
   },
 
   async generateCodes(sessionId: string, eventId: string, form: { voter_type: VoterType; count: number }): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
+    return handleApiCall(() =>
       voteAdminClient.createCodeGenerate({
         headers: getAuthHeaders(sessionId),
         eventId,
@@ -221,7 +214,7 @@ export const adminApi = {
   },
 
   async deleteCode(sessionId: string, eventId: string, id: string): Promise<ApiResponse<void>> {
-    return handleVoidApiCall(() =>
+    return handleApiCall(() =>
       voteAdminClient.deleteCodeById({
         headers: getAuthHeaders(sessionId),
         eventId,
@@ -235,14 +228,12 @@ export const adminApi = {
    * signed and expiring, so the browser can follow it directly with no session header.
    */
   async exportCodes(sessionId: string, eventId: string, form: CodeExportForm): Promise<ApiResponse<File>> {
-    return handleApiCall(
-      () =>
-        voteAdminClient.createCodeExports({
-          headers: getAuthHeaders(sessionId),
-          eventId,
-          body: form
-        }),
-      201
+    return handleApiCall(() =>
+      voteAdminClient.createCodeExports({
+        headers: getAuthHeaders(sessionId),
+        eventId,
+        body: form
+      })
     );
   },
 

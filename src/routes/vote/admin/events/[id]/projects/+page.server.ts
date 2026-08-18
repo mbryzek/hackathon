@@ -1,5 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { dataOr } from '$lib/api/client';
 import { adminApi } from '$lib/server/adminApi';
 import { firstError, requireSessionId } from '$lib/server/adminSession';
 import { optionalText, trimmed } from '$lib/server/fields';
@@ -12,8 +13,8 @@ export const load: PageServerLoad = async (event) => {
   ]);
 
   return {
-    event: eventResponse.data ?? null,
-    projects: projectsResponse.data ?? [],
+    event: dataOr(eventResponse, null),
+    projects: dataOr(projectsResponse, []),
     error: firstError(event, [eventResponse, projectsResponse], 'Event not found')
   };
 };

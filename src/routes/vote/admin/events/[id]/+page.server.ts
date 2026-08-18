@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { dataOr } from '$lib/api/client';
 import { adminApi } from '$lib/server/adminApi';
 import { firstError, requireSessionId } from '$lib/server/adminSession';
 import { urls } from '$lib/urls';
@@ -8,7 +9,7 @@ export const load: PageServerLoad = async (event) => {
   const response = await adminApi.getEvent(requireSessionId(event), event.params.id);
 
   return {
-    event: response.data ?? null,
+    event: dataOr(response, null),
     error: firstError(event, [response], 'Event not found')
   };
 };

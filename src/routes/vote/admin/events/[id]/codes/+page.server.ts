@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { FileType, VoterType } from '$lib/api/client';
+import { dataOr, isApiError } from '$lib/api/client';
 import { adminApi } from '$lib/server/adminApi';
 import { firstError, requireSessionId } from '$lib/server/adminSession';
 import { integer, oneOf, optionalBoolean, optionalText, trimmed } from '$lib/server/fields';
@@ -41,12 +42,12 @@ export const load: PageServerLoad = async (event) => {
     })
   ]);
 
-  const batch = codesResponse.data ?? [];
+  const batch = dataOr(codesResponse, []);
 
   return {
     ...filters,
-    event: eventResponse.data ?? null,
-    summary: summaryResponse.data ?? null,
+    event: dataOr(eventResponse, null),
+    summary: dataOr(summaryResponse, null),
     codes: batch.slice(0, CODES_PAGE_SIZE),
     hasMore: batch.length > CODES_PAGE_SIZE,
     error: firstError(event, [eventResponse, summaryResponse, codesResponse], 'Event not found')
@@ -104,7 +105,7 @@ export const actions = {
     if (error !== null) {
       return fail(response.status, { error });
     }
-    if (!response.data) {
+    if (isApiError(response)) {
       return fail(500, { error: 'Failed to build the export' });
     }
 

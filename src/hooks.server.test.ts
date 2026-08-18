@@ -4,6 +4,7 @@ import { handle } from './hooks.server';
 import { SECURITY_HEADERS } from '$lib/security-headers';
 import { SESSION_COOKIE } from '$lib/config';
 import type { AdminSession, ApiResponse } from '$lib/api/client';
+import { okStatus } from '$lib/test/adminApiMock';
 import { fakeCookies, type DeletedCookie } from '$lib/test/requestEvent';
 
 type HandleInput = Parameters<Handle>[0];
@@ -21,9 +22,9 @@ vi.mock('$lib/server/adminApi', async () => {
   return mockAdminApi({ getSession: (sessionId: string) => getSession(sessionId) });
 });
 
-const confirmed: SessionResponse = Promise.resolve({ status: 200 });
-const rejected: SessionResponse = Promise.resolve({ errors: [{ code: 'unauthorized', message: 'Unauthorized' }], status: 401 });
-const unavailable: SessionResponse = Promise.resolve({ errors: [{ code: 'server_error', message: 'Server error' }], status: 500 });
+const confirmed: SessionResponse = okStatus<AdminSession>(200);
+const rejected: SessionResponse = Promise.resolve({ errors: [{ message: 'Unauthorized' }], status: 401 });
+const unavailable: SessionResponse = Promise.resolve({ errors: [{ message: 'Server error' }], status: 500 });
 
 beforeEach(() => {
   getSession.mockReset();
