@@ -49,11 +49,15 @@ export { EventStatus, FileType, VoterType };
 // Alias Event as VoteEvent for backward compatibility
 export type VoteEvent = Event;
 
+// `?: T | undefined` rather than `?: T`: under `exactOptionalPropertyTypes` those
+// mean different things, and every producer of this shape — the generated
+// client's error bodies, the test doubles — maps a field that is genuinely
+// `T | undefined` straight onto it rather than omitting the key.
 export interface ValidationError {
-  discriminator?: string;
-  code?: string;
+  discriminator?: string | undefined;
+  code?: string | undefined;
   message: string;
-  field?: string;
+  field?: string | undefined;
 }
 
 export interface ApiResponse<T> {
