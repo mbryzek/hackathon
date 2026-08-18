@@ -37,7 +37,10 @@ echo "building ${CI_REPO:-hackathon} @ ${CI_SHA:-working tree} (${CI_EVENT:-loca
 npm ci
 
 # svelte-check + the Playwright tsconfig typecheck + `playwright test --list` +
-# eslint + prettier --check.
+# eslint --max-warnings 0 + prettier --check + vitest. `npm run check` is the whole
+# gate in every SvelteKit repo in this fleet (ISS-3885), so there is deliberately no
+# second test step below — running the unit suite twice would double the slowest
+# part of this build for the same verdict.
 #
 # `check:e2e:collect` inside there COLLECTS the Playwright suite without running
 # it — it loads playwright.config.ts and every spec, so a spec that fails to
@@ -45,8 +48,6 @@ npm ci
 # browser and starts no `webServer`. That is what makes it safe in CI while
 # `npm run test:e2e` below is not.
 npm run check
-
-npm run test:unit
 
 # THE BUILD IS A VERDICT `npm run check` CANNOT GIVE (ISS-868). SvelteKit's
 # "$lib/server imported into browser code" guard is a vite BUILD plugin, so

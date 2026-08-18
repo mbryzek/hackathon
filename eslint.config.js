@@ -171,6 +171,10 @@ export default [
     },
     rules: {
       ...sveltePlugin.configs.recommended.rules,
+      // KEY RULE: {@html} is the only XSS sink in a Svelte app, and the values that reach our
+      // components (names, scraped data, model output) are user-set. Every use must be an
+      // explicit, justified exemption naming why the string is app-authored - never a default.
+      'svelte/no-at-html-tags': 'error',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': noUnusedVars,
       '@typescript-eslint/no-explicit-any': 'error',
