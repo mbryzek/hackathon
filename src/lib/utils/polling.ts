@@ -6,8 +6,8 @@
  * This is the one poller in this repo. Do not hand-roll `setInterval` + `visibilitychange`,
  * and do not add a second helper for the pause-predicate case — that is `isPaused` below.
  *
- * The same helper lives in playbook-admin and rallyd. Nothing enforces that they agree, so
- * port a change to all three rather than asserting they are identical.
+ * The same helper lives in playbook-admin, playbook-app and rallyd. Nothing enforces that
+ * they agree, so port a change to all four rather than asserting they are identical.
  *
  * Returns a cleanup function — call it (or return it from a `$effect`) to stop.
  */
@@ -45,12 +45,23 @@ export function visibilityAwareInterval(
 
   const isOnline = () => (typeof navigator !== 'undefined' ? navigator.onLine : true);
 
+  // One tick at a time. A callback slower than its own interval would otherwise have a second
+  // request in flight before the first answered, and two responses can land in either order — so
+  // a tick is SKIPPED while the previous one is unsettled rather than queued behind it. Only an
+  // async callback can be in flight; a synchronous one has already returned.
+  let inflight = false;
+
   function safeCallback() {
     try {
-      if (isPaused?.()) return;
+      if (inflight || isPaused?.()) return;
       const result = callback();
       if (result && typeof result.catch === 'function') {
-        result.catch((e) => console.debug('Polling callback error:', e));
+        inflight = true;
+        result
+          .catch((e) => console.debug('Polling callback error:', e))
+          .finally(() => {
+            inflight = false;
+          });
       }
     } catch (e) {
       console.debug('Polling callback error:', e);
