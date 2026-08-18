@@ -47,3 +47,250 @@ export class Util {
     }
   }
 }
+
+// ============================================================================
+// Client configuration
+// ============================================================================
+
+/**
+ * Options accepted by every generated `ApiClient` constructor.
+ *
+ * `headers` are merged into every request the client makes, under any headers the
+ * individual call passes. `timeoutMs` aborts the underlying request - the fetch is
+ * cancelled, not abandoned - and surfaces as status 504 through `handleApiCall`.
+ * `fetch` replaces the global implementation (SvelteKit's per-request `fetch`, a test
+ * double).
+ */
+export interface ApiClientOptions {
+  baseUrl: string;
+  headers?: Record<string, string>;
+  timeoutMs?: number;
+  fetch?: typeof fetch;
+}
+
+// ============================================================================
+// Response envelope
+// ============================================================================
+
+/** A single API error, with the form field it belongs to when there is one. */
+export interface ApiError {
+  message: string;
+  field?: string;
+}
+
+export interface ApiResponseSuccess<T> {
+  data: T;
+  status: number;
+}
+
+export interface ApiResponseError {
+  errors: ApiError[];
+  status: number;
+}
+
+/** Every call handled by `handleApiCall` resolves to one of these two. */
+export type ApiResponse<T> = ApiResponseSuccess<T> | ApiResponseError;
+
+export function isApiError<T>(response: ApiResponse<T>): response is ApiResponseError {
+  return 'errors' in response;
+}
+
+export function isApiSuccess<T>(response: ApiResponse<T>): response is ApiResponseSuccess<T> {
+  return 'data' in response;
+}
+
+export interface ApiCallOptions {
+  /** Called before the error is returned, when the server answered 401. */
+  onUnauthorized?: () => void;
+  /** Called for every non-2xx answer - analytics, logging. Never for a network failure. */
+  onError?: (info: { status: number; url: string; errors: ApiError[] }) => void;
+}
+
+const NETWORK_ERROR_MESSAGE =
+  'Unable to connect to the server. Please check your internet connection and try again.';
+
+const TIMEOUT_ERROR_MESSAGE = 'Request timed out. Please try again.';
+
+/**
+ * The message shown when the server answered with a status and no usable body.
+ * One table, so the same backend answer does not read differently in two apps.
+ */
+export function statusMessage(status: number): string {
+  switch (status) {
+    case 400:
+      return 'Invalid request';
+    case 401:
+      return 'Unauthorized';
+    case 403:
+      return 'Forbidden';
+    case 404:
+      return 'Not found';
+    case 409:
+      return 'Conflict';
+    case 429:
+      return 'Too many requests. Please try again shortly.';
+    default:
+      return status >= 500
+        ? 'The server encountered an error. Please try again.'
+        : `Request failed (${status})`;
+  }
+}
+
+function isResponseCarrier(error: unknown): error is { response: Response } {
+  if (typeof error !== 'object' || error === null || !('response' in error)) {
+    return false;
+  }
+  const response = (error as { response: unknown }).response;
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    typeof (response as { status?: unknown }).status === 'number'
+  );
+}
+
+function toApiError(value: unknown): ApiError | undefined {
+  if (typeof value === 'string') {
+    return { message: value };
+  }
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const record = value as { message?: unknown; field?: unknown };
+  if (typeof record.message !== 'string') {
+    return undefined;
+  }
+  return typeof record.field === 'string'
+    ? { message: record.message, field: record.field }
+    : { message: record.message };
+}
+
+function decodeErrors(body: unknown, status: number): ApiError[] {
+  if (Array.isArray(body)) {
+    const errors = body.map(toApiError).filter((e): e is ApiError => e !== undefined);
+    if (errors.length > 0) {
+      return errors;
+    }
+  } else if (typeof body === 'object' && body !== null) {
+    const nested = (body as { errors?: unknown }).errors;
+    if (Array.isArray(nested)) {
+      const errors = nested.map(toApiError).filter((e): e is ApiError => e !== undefined);
+      if (errors.length > 0) {
+        return errors;
+      }
+    }
+    const single = toApiError(body);
+    if (single !== undefined) {
+      return [single];
+    }
+  }
+  return [{ message: statusMessage(status) }];
+}
+
+async function readJsonBody(response: Response): Promise<unknown> {
+  try {
+    const text = await response.text();
+    if (text.trim() === '') {
+      return undefined;
+    }
+    return JSON.parse(text) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+function isAbort(error: unknown): boolean {
+  return error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError');
+}
+
+function networkMessage(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return NETWORK_ERROR_MESSAGE;
+  }
+  const message = error.message.toLowerCase();
+  if (message.includes('timeout')) {
+    return TIMEOUT_ERROR_MESSAGE;
+  }
+  if (
+    message.includes('fetch failed') ||
+    message.includes('failed to fetch') ||
+    message.includes('network')
+  ) {
+    return NETWORK_ERROR_MESSAGE;
+  }
+  return error.message;
+}
+
+/**
+ * Run a generated client call and convert whatever it throws into an `ApiResponse`.
+ *
+ * The generated clients signal every non-success status by throwing, so the four
+ * outcomes a caller has to tell apart - data, field errors, a status with no body,
+ * and the server not answering at all - are collapsed here into one discriminated
+ * union. Status 0 means the request never reached the server; 504 means it was
+ * cancelled by a timeout.
+ *
+ * This consumes the error response's body. Do not also call the thrown wrapper's
+ * own accessor (`validationErrors()`, `unauthorizedError()`) on the same error - a
+ * `Response` body can only be read once.
+ *
+ * @example
+ * const result = await handleApiCall(() => client.getUsers({ headers }));
+ * if (isApiError(result)) {
+ *   // result.errors: field-specific when the server sent them
+ * }
+ */
+export async function handleApiCall<T>(
+  apiCall: () => Promise<T>,
+  options?: ApiCallOptions
+): Promise<ApiResponse<T>> {
+  try {
+    const data = await apiCall();
+    return { status: 200, data };
+  } catch (error) {
+    if (isResponseCarrier(error)) {
+      const response = error.response;
+      const status = response.status;
+      if (status >= 200 && status < 300) {
+        // A success the client models as a throw (a `void` response declared as an
+        // error type). There is no body to decode and nothing failed.
+        return { status, data: undefined as T };
+      }
+      const errors = decodeErrors(await readJsonBody(response), status);
+      if (status === 401 && options?.onUnauthorized) {
+        options.onUnauthorized();
+      }
+      if (options?.onError) {
+        options.onError({ status, url: response.url, errors });
+      }
+      return { status, errors };
+    }
+    if (isAbort(error)) {
+      return { status: 504, errors: [{ message: TIMEOUT_ERROR_MESSAGE }] };
+    }
+    return { status: 0, errors: [{ message: networkMessage(error) }] };
+  }
+}
+
+/**
+ * Bound a call that cannot be given a signal. Prefer `new ApiClient({ baseUrl,
+ * timeoutMs })`, which aborts the request itself; this races a timer instead and
+ * ABANDONS the in-flight request, so the server finishes the work regardless.
+ */
+export async function handleApiCallWithTimeout<T>(
+  apiCall: () => Promise<T>,
+  timeoutMs: number,
+  options?: ApiCallOptions
+): Promise<ApiResponse<T>> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<ApiResponse<T>>((resolve) => {
+    timer = setTimeout(
+      () => resolve({ status: 504, errors: [{ message: TIMEOUT_ERROR_MESSAGE }] }),
+      timeoutMs
+    );
+  });
+  try {
+    return await Promise.race([handleApiCall(apiCall, options), timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
