@@ -31,29 +31,29 @@
 </script>
 
 <div class="animate-fade-in">
-  <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto text-center">
+  <div class="mx-auto max-w-md rounded-xl bg-white p-8 text-center shadow-lg">
     <!-- Success icon -->
-    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-      <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+      <svg class="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
       </svg>
     </div>
 
-    <h1 class="text-2xl font-bold text-gray-900 mb-4">Thank You!</h1>
+    <h1 class="mb-4 text-2xl font-bold text-gray-900">Thank You!</h1>
 
-    <p class="text-gray-600 mb-6">Your vote has been recorded successfully.</p>
+    <p class="mb-6 text-gray-600">Your vote has been recorded successfully.</p>
 
     {#if isLoading}
-      <div class="flex items-center justify-center py-4 mb-6">
+      <div class="mb-6 flex items-center justify-center py-4">
         <Spinner size="md" label="Loading" class="text-gray-400" />
       </div>
     {:else if selectedProjects.length > 0}
-      <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 text-left">
-        <p class="text-sm font-medium text-green-800 mb-2">You voted for:</p>
+      <div class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-left">
+        <p class="mb-2 text-sm font-medium text-green-800">You voted for:</p>
         <ul class="space-y-1">
           {#each selectedProjects as project (project.id)}
             <li class="flex items-center gap-2 text-green-700">
-              <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
               </svg>
               <span class="font-medium">{project.name}</span>
@@ -63,14 +63,14 @@
       </div>
     {/if}
 
-    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+    <div class="mb-6 rounded-lg bg-gray-50 p-4">
       <p class="text-sm text-gray-500">Want to change your vote? You can update your selection as long as voting is still open.</p>
     </div>
 
     {#if isParent}
-      <div class="border-t border-gray-200 pt-6 mb-6">
-        <h2 class="text-xl font-bold text-gray-900 mb-2">We need your help for next year</h2>
-        <p class="text-gray-600 mb-5">
+      <div class="mb-6 border-t border-gray-200 pt-6">
+        <h2 class="mb-2 text-xl font-bold text-gray-900">We need your help for next year</h2>
+        <p class="mb-5 text-gray-600">
           The hackathon only happens because parents step up. Please consider joining the organizing team for 2027 — or supporting this
           year's event with a donation.
         </p>
@@ -81,7 +81,7 @@
             target="_blank"
             rel="noopener noreferrer"
             data-testid="organizer-cta"
-            class="block w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors"
+            class="block w-full rounded-lg bg-yellow-400 px-6 py-3 font-bold text-gray-900 transition-colors hover:bg-yellow-500"
           >
             Learn more
             <span class="sr-only">(opens in a new tab)</span>
@@ -92,7 +92,7 @@
             target="_blank"
             rel="noopener noreferrer"
             data-testid="donate-cta"
-            class="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+            class="block w-full rounded-lg bg-green-600 px-6 py-3 font-bold text-white transition-colors hover:bg-green-700"
           >
             Donate to support the hackathon
             <span class="sr-only">(opens in a new tab)</span>
@@ -104,14 +104,14 @@
     <div class="space-y-3">
       <a
         href={changeVoteUrl}
-        class="block w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-6 rounded-lg border border-gray-300 transition-colors"
+        class="block w-full rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
       >
         Change My Vote
       </a>
 
       <a
         href={urls.index}
-        class="block w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors"
+        class="block w-full rounded-lg bg-gray-200 px-6 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-300"
       >
         Return to Hackathon Site
       </a>

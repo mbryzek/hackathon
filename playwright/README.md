@@ -394,22 +394,18 @@ Install the [Playwright Test for VSCode](https://marketplace.visualstudio.com/it
 - Set breakpoints
 - View test results inline
 
-## CI/CD Integration
+## CI
 
-Tests are configured for CI environments:
+`ci/e2e.sh` runs this suite post-merge on `main` (ISS-4028). `dev e2e run` pulls the newest
+released `platform` image, boots it in `Mode.Test` against a throwaway session database, hands the
+suite its URLs, and removes both afterwards; the result posts as the `e2e` commit status.
 
-- Automatic retry on failure (2 retries)
-- Serial execution on CI
-- JSON and HTML reports generated
+`e2e` is NOT what the merge lane reads. That is `ci`, produced by `ci/build.sh`, which deliberately
+omits `npm run test:e2e` — so a red browser suite files an issue rather than parking every pull
+request in this repo. `devops/docs/ci.md` carries the three-step rollout that is the first step of.
 
-```yaml
-# Example GitHub Actions workflow
-- name: Run Playwright tests
-  run: npm run test:e2e
-  env:
-    CI: true
-    HEADLESS: true
-```
+The `CI` branches in `playwright.config.ts` are for that run: two retries and a single worker,
+because the backend is an emulated amd64 JVM sharing a runner with other builds.
 
 ## Migration Notes
 

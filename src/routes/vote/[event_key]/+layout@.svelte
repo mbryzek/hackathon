@@ -37,9 +37,9 @@
     <!-- Distinct from the gate below: the event may well be open, we just could not find out.
          `role="alert"` so this is announced rather than silently swapped in. -->
     <div class="animate-fade-in">
-      <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto text-center" data-testid="vote-load-failed" role="alert">
-        <div class="text-red-600 mb-4">
-          <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="mx-auto max-w-md rounded-xl bg-white p-8 text-center shadow-lg" data-testid="vote-load-failed" role="alert">
+        <div class="mb-4 text-red-600">
+          <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -48,13 +48,13 @@
             ></path>
           </svg>
         </div>
-        <h2 class="text-xl font-bold text-gray-900 mb-2">Couldn't load this event</h2>
+        <h2 class="mb-2 text-xl font-bold text-gray-900">Couldn't load this event</h2>
         <p class="text-gray-600">Check your connection and try again.</p>
         <button
           type="button"
           onclick={retry}
           disabled={isRetrying}
-          class="mt-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="mt-4 rounded-lg bg-yellow-400 px-4 py-2 font-semibold text-gray-900 transition-colors hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isRetrying ? 'Retrying...' : 'Try Again'}
         </button>
@@ -62,9 +62,9 @@
     </div>
   {:else}
     <div class="animate-fade-in">
-      <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto text-center" data-testid="vote-not-available">
-        <div class="text-gray-400 mb-4">
-          <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="mx-auto max-w-md rounded-xl bg-white p-8 text-center shadow-lg" data-testid="vote-not-available">
+        <div class="mb-4 text-gray-400">
+          <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -73,7 +73,7 @@
             ></path>
           </svg>
         </div>
-        <h2 class="text-xl font-bold text-gray-900 mb-2">Voting Not Available</h2>
+        <h2 class="mb-2 text-xl font-bold text-gray-900">Voting Not Available</h2>
         <p class="text-gray-600">This voting event is not currently open. Please check back later.</p>
       </div>
     </div>

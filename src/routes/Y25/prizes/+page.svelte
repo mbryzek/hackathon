@@ -5,9 +5,9 @@
 </script>
 
 <Shell title="2025 Prizes">
-  <div class="flex flex-col gap-y-8 max-w-4xl mx-auto">
+  <div class="mx-auto flex max-w-4xl flex-col gap-y-8">
     <!-- Introduction -->
-    <p class="text-gray-800 font-light text-lg">
+    <p class="text-lg font-light text-gray-800">
       This year we are trying a new format for the awards - there will still be a ton of cash prizes across two broad themes and specific
       individual awards. As teams register, they must indicate their theme and any individual awards for which the team would like to be
       considered.
@@ -17,8 +17,8 @@
     <Card variant="elevated">
       {#snippet header()}
         <div class="flex items-center gap-3">
-          <div class="p-2 bg-yellow-100 rounded-lg">
-            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="rounded-lg bg-yellow-100 p-2">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -33,14 +33,14 @@
 
       <div class="grid gap-4 sm:grid-cols-2">
         {#each overallPrizes as prize}
-          <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-yellow-500 hover:bg-gray-100 transition-colors duration-200">
-            <div class="flex items-start justify-between gap-2 mb-2">
+          <div class="rounded-lg border-l-4 border-yellow-500 bg-gray-50 p-4 transition-colors duration-200 hover:bg-gray-100">
+            <div class="mb-2 flex items-start justify-between gap-2">
               <h3 class="text-lg font-bold text-gray-900">{prize.title}</h3>
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700 whitespace-nowrap">
+              <span class="inline-flex items-center whitespace-nowrap rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-700">
                 {prize.amount}
               </span>
             </div>
-            <p class="text-gray-600 text-sm">{prize.description}</p>
+            <p class="text-sm text-gray-600">{prize.description}</p>
           </div>
         {/each}
       </div>
@@ -50,8 +50,8 @@
     <Card variant="elevated">
       {#snippet header()}
         <div class="flex items-center gap-3">
-          <div class="p-2 bg-blue-100 rounded-lg">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="rounded-lg bg-blue-100 p-2">
+            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -66,14 +66,14 @@
 
       <div class="grid gap-4 sm:grid-cols-2">
         {#each additionalPrizes as prize}
-          <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500 hover:bg-gray-100 transition-colors duration-200">
-            <div class="flex items-start justify-between gap-2 mb-2">
+          <div class="rounded-lg border-l-4 border-blue-500 bg-gray-50 p-4 transition-colors duration-200 hover:bg-gray-100">
+            <div class="mb-2 flex items-start justify-between gap-2">
               <h3 class="text-lg font-bold text-gray-900">{prize.title}</h3>
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700 whitespace-nowrap">
+              <span class="inline-flex items-center whitespace-nowrap rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-700">
                 {prize.amount}
               </span>
             </div>
-            <p class="text-gray-600 text-sm">{prize.description}</p>
+            <p class="text-sm text-gray-600">{prize.description}</p>
           </div>
         {/each}
       </div>

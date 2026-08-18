@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { visibilityAwareInterval } from './polling';
+// dry-copy: sveltekit/visibility-aware-interval-test — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
 
 const INTERVAL = 1000;
 
@@ -168,6 +169,69 @@ describe('visibilityAwareInterval', () => {
     });
   });
 
+  /**
+   * A tick slower than its own interval. Stacking a second request on top of the first is not
+   * merely wasteful: the two responses can land in either order, so the state the page ends up
+   * showing is whichever request happened to answer last, not the newer one.
+   */
+  describe('one tick at a time', () => {
+    it('skips every interval while an async tick is still unsettled', async () => {
+      let settle: (() => void) | undefined;
+      const tick = vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            settle = resolve;
+          })
+      );
+      poller(tick, { immediate: false });
+
+      await vi.advanceTimersByTimeAsync(INTERVAL);
+      expect(tick).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(INTERVAL * 5);
+      expect(tick).toHaveBeenCalledTimes(1);
+
+      settle?.();
+      await vi.advanceTimersByTimeAsync(INTERVAL);
+      expect(tick).toHaveBeenCalledTimes(2);
+    });
+
+    it('skips the resume tick while one is still unsettled', async () => {
+      let settle: (() => void) | undefined;
+      const tick = vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            settle = resolve;
+          })
+      );
+      poller(tick);
+      expect(tick).toHaveBeenCalledTimes(1);
+
+      setHidden(true);
+      setHidden(false);
+      expect(tick).toHaveBeenCalledTimes(1);
+
+      settle?.();
+      await vi.advanceTimersByTimeAsync(INTERVAL);
+      expect(tick).toHaveBeenCalledTimes(2);
+    });
+
+    it('releases the guard when the tick rejects, so polling continues', async () => {
+      vi.spyOn(console, 'debug').mockImplementation(() => {});
+      const tick = vi.fn(() => Promise.reject(new Error('boom')));
+      poller(tick);
+      await vi.advanceTimersByTimeAsync(INTERVAL * 2);
+      expect(tick).toHaveBeenCalledTimes(3);
+    });
+
+    it('never guards a synchronous callback, which has already returned', () => {
+      const tick = vi.fn();
+      poller(tick);
+      vi.advanceTimersByTime(INTERVAL * 3);
+      expect(tick).toHaveBeenCalledTimes(4);
+    });
+  });
+
   describe('errors', () => {
     beforeEach(() => {
       vi.spyOn(console, 'debug').mockImplementation(() => {});
@@ -212,3 +276,4 @@ describe('visibilityAwareInterval', () => {
     });
   });
 });
+// dry-copy-end

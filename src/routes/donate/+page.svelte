@@ -40,22 +40,22 @@
 </script>
 
 <Shell title="Support the Hackathon">
-  <div class="max-w-5xl mx-auto px-4 py-8 space-y-12">
+  <div class="mx-auto max-w-5xl space-y-12 px-4 py-8">
     <!-- Introduction -->
-    <div class="text-center max-w-2xl mx-auto">
-      <p class="text-xl text-gray-800 font-light">
+    <div class="mx-auto max-w-2xl text-center">
+      <p class="text-xl font-light text-gray-800">
         The Bergen Tech Hackathon is only possible thanks to the generosity of our sponsors and donors. If you would like to support our
         mission of empowering the next generation of tech leaders, please consider donating to our cause.
       </p>
-      <p class="mt-4 text-lg text-gray-600 font-medium">Thank you for your support!</p>
+      <p class="mt-4 text-lg font-medium text-gray-600">Thank you for your support!</p>
     </div>
 
     <!-- Individual Donors Section -->
     <Card variant="elevated">
       {#snippet header()}
         <div class="flex items-center gap-3">
-          <div class="p-2 bg-red-100 rounded-lg">
-            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="rounded-lg bg-red-100 p-2">
+            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -69,11 +69,11 @@
       {/snippet}
 
       <div class="space-y-4">
-        <p class="text-gray-800 font-light">
+        <p class="font-light text-gray-800">
           Every contribution, big or small, makes a difference. Let's come together to inspire and nurture the next generation of tech
           wizards at Bergen Tech!
         </p>
-        <p class="text-gray-800 font-light">
+        <p class="font-light text-gray-800">
           We are also looking for donations for the event and raffle - eg. food, drink, and small prizes that the students will enjoy. Last
           year's raffle included gift certificates to local restaurants, subscriptions to online coding platforms, and more.
         </p>
@@ -85,12 +85,12 @@
 
     <!-- Corporate Sponsorship Section -->
     <div>
-      <div class="text-center mb-8">
+      <div class="mb-8 text-center">
         <h2 class="text-3xl font-bold text-gray-900">Corporate Sponsorship Levels</h2>
         <p class="mt-2 text-gray-600">Choose the sponsorship tier that's right for your organization</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+      <div class="relative grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {#each sponsorshipTiers as tier}
           <PricingTier
             name={tier.name}
@@ -106,7 +106,7 @@
 
     <!-- Tax Deductible Notice -->
     <div class="text-center">
-      <p class="text-gray-600 font-light text-sm bg-gray-50 rounded-lg p-4 inline-block">
+      <p class="inline-block rounded-lg bg-gray-50 p-4 text-sm font-light text-gray-600">
         <span class="font-medium">Tax Deductible:</span> Bergen Youth Enrichment is a registered 501(c)(3) public charity. All donations are tax
         deductible.
       </p>

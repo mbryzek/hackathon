@@ -61,7 +61,7 @@ async function checkServer(check: ServerCheck): Promise<boolean> {
  */
 export default async function globalSetup() {
   // Allow skipping dependency check via environment variable
-  if (process.env.SKIP_DEPENDENCY_CHECK === 'true') {
+  if (process.env['SKIP_DEPENDENCY_CHECK'] === 'true') {
     console.log('\n⚠️  Skipping server dependency check (SKIP_DEPENDENCY_CHECK=true)\n');
     return;
   }

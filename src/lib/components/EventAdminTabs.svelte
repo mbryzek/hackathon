@@ -3,7 +3,10 @@
 
   interface Props {
     eventId: string;
-    eventName?: string;
+    // `| undefined` because every call site passes `event?.name`, which is
+    // exactly "may be explicitly undefined" — a distinct thing from an absent
+    // key under `exactOptionalPropertyTypes`.
+    eventName?: string | undefined;
     activeTab: 'event' | 'projects' | 'codes' | 'results';
   }
 
@@ -18,9 +21,9 @@
 </script>
 
 <div class="mb-6">
-  <div class="flex items-center justify-between mb-4">
-    <a href={urls.voteAdmin} class="text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 transition-colors">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <div class="mb-4 flex items-center justify-between">
+    <a href={urls.voteAdmin} class="inline-flex items-center gap-1 text-gray-600 transition-colors hover:text-gray-900">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
       </svg>
       Back to Events
@@ -31,12 +34,12 @@
   </div>
 
   <div class="border-b border-gray-200">
-    <nav class="flex -mb-px" aria-label="Tabs">
+    <nav class="-mb-px flex" aria-label="Tabs">
       {#each tabs as tab (tab.id)}
         <a
           href={tab.href}
-          class="px-6 py-3 text-sm font-medium border-b-2 transition-colors
-						{activeTab === tab.id ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+          class="border-b-2 px-6 py-3 text-sm font-medium transition-colors
+						{activeTab === tab.id ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
         >
           {tab.label}
         </a>

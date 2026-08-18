@@ -20,7 +20,7 @@ export const load: PageServerLoad = async (event) => {
 };
 
 /** The name/description every project form submits, plus the row an edit or a delete names. */
-async function projectForm(request: Request): Promise<{ id: string; name: string; description?: string }> {
+async function projectForm(request: Request): Promise<{ id: string; name: string; description?: string | undefined }> {
   const form = await request.formData();
   return {
     id: trimmed(form.get('id')),

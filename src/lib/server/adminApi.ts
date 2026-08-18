@@ -27,6 +27,23 @@ import { ApiClient as VoteAdminClient } from '../../generated/com-bryzek-vote-ad
 
 const voteAdminClient = new VoteAdminClient({ baseUrl: config.apiBaseUrl });
 
+/** Every optional key of `T`, with `undefined` removed from what it may hold. */
+type Defined<T> = { [K in keyof T]?: Exclude<T[K], undefined> };
+
+/**
+ * `value` without the keys whose value is `undefined`.
+ *
+ * The generated client spells an optional field `k?: T`, which under
+ * `exactOptionalPropertyTypes` refuses an explicit `undefined` — and every
+ * optional field crossing this boundary arrives as `T | undefined`, because it
+ * came from a query string or a form post that may not have carried it.
+ * Omitting the key is what "absent" means on the wire, so do it here once
+ * rather than spreading a conditional at each of the calls below.
+ */
+function defined<T extends object>(value: T): Defined<T> {
+  return Object.fromEntries(Object.entries(value).filter(([, held]) => held !== undefined)) as Defined<T>;
+}
+
 // Helper to create authorization header
 function getAuthHeaders(sessionId?: string): Record<string, string> {
   if (sessionId) {
@@ -62,11 +79,14 @@ export const adminApi = {
   },
 
   // Events
-  async getEvents(sessionId: string, params?: { status?: EventStatus[]; limit?: number; offset?: number }): Promise<ApiResponse<Event[]>> {
+  async getEvents(
+    sessionId: string,
+    params?: { status?: EventStatus[] | undefined; limit?: number | undefined; offset?: number | undefined }
+  ): Promise<ApiResponse<Event[]>> {
     return handleApiCall(() =>
       voteAdminClient.getEvents({
         headers: getAuthHeaders(sessionId),
-        status: params?.status,
+        ...defined({ status: params?.status }),
         limit: params?.limit ?? 100,
         offset: params?.offset ?? 0
       })
@@ -120,12 +140,16 @@ export const adminApi = {
     );
   },
 
-  async createProject(sessionId: string, eventId: string, form: { name: string; description?: string }): Promise<ApiResponse<Project>> {
+  async createProject(
+    sessionId: string,
+    eventId: string,
+    form: { name: string; description?: string | undefined }
+  ): Promise<ApiResponse<Project>> {
     return handleApiCall(() =>
       voteAdminClient.createProject({
         headers: getAuthHeaders(sessionId),
         eventId,
-        body: form
+        body: { name: form.name, ...defined({ description: form.description }) }
       })
     );
   },
@@ -134,14 +158,14 @@ export const adminApi = {
     sessionId: string,
     eventId: string,
     id: string,
-    form: { name: string; description?: string }
+    form: { name: string; description?: string | undefined }
   ): Promise<ApiResponse<Project>> {
     return handleApiCall(() =>
       voteAdminClient.updateProjectById({
         headers: getAuthHeaders(sessionId),
         eventId,
         id,
-        body: form
+        body: { name: form.name, ...defined({ description: form.description }) }
       })
     );
   },
@@ -180,15 +204,19 @@ export const adminApi = {
   async getCodes(
     sessionId: string,
     eventId: string,
-    params?: { voter_type?: VoterType; has_voted?: boolean; q?: string; limit?: number; offset?: number }
+    params?: {
+      voter_type?: VoterType | undefined;
+      has_voted?: boolean | undefined;
+      q?: string | undefined;
+      limit?: number | undefined;
+      offset?: number | undefined;
+    }
   ): Promise<ApiResponse<Code[]>> {
     return handleApiCall(() =>
       voteAdminClient.getCodes({
         headers: getAuthHeaders(sessionId),
         eventId,
-        voterType: params?.voter_type,
-        hasVoted: params?.has_voted,
-        q: params?.q,
+        ...defined({ voterType: params?.voter_type, hasVoted: params?.has_voted, q: params?.q }),
         limit: params?.limit ?? 100,
         offset: params?.offset ?? 0
       })
@@ -227,12 +255,28 @@ export const adminApi = {
    * Builds an export of this event's codes and returns the stored file. The file's `url` is
    * signed and expiring, so the browser can follow it directly with no session header.
    */
-  async exportCodes(sessionId: string, eventId: string, form: CodeExportForm): Promise<ApiResponse<File>> {
+  async exportCodes(
+    sessionId: string,
+    eventId: string,
+    // Spelled off `CodeExportForm` field by field rather than taken whole: an
+    // optional field there is `k?: T`, which under `exactOptionalPropertyTypes`
+    // refuses the explicit `undefined` a missing form value produces. Indexed
+    // access keeps each field tracking the generated spec regardless.
+    form: {
+      format: CodeExportForm['format'];
+      voter_type?: CodeExportForm['voter_type'];
+      has_voted?: CodeExportForm['has_voted'];
+      q?: CodeExportForm['q'];
+    }
+  ): Promise<ApiResponse<File>> {
     return handleApiCall(() =>
       voteAdminClient.createCodeExports({
         headers: getAuthHeaders(sessionId),
         eventId,
-        body: form
+        body: {
+          format: form.format,
+          ...defined({ voter_type: form.voter_type, has_voted: form.has_voted, q: form.q })
+        }
       })
     );
   },

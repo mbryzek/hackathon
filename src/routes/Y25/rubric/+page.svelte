@@ -54,37 +54,37 @@
 
 <Shell title="2025 Rubric">
   <div class="flex flex-col gap-y-8">
-    <p class="text-gray-800 font-light">
+    <p class="font-light text-gray-800">
       This year's evaluation format will be similar to a science fair. Towards the end of the evening, all teams will stop working on their
       projects and shift to presenting their projects to the audience. Judges, parents, and students are encouraged to visit each project to
       see what other teams have built.
     </p>
 
-    <p class="text-gray-800 font-light">
+    <p class="font-light text-gray-800">
       During this period, judges will evaluate each team's work against the rubric below. As we announce the prizes, we'll invite the first
       place team in each theme to demo their work for the full audience.
     </p>
 
-    <p class="text-gray-800 font-light">
+    <p class="font-light text-gray-800">
       The maximum score from a single judge is 8 points (4 points each for Execution and Ambition). Each team's final score will be averaged
       across all judges. Judges with children on a team will be excused from evaluating that team.
     </p>
 
-    <p class="text-gray-800 font-light">
+    <p class="font-light text-gray-800">
       The criteria are intended to be applied equally to all teams - team backgrounds and skill levels should not influence scoring.
     </p>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
       <!-- Execution -->
-      <div class="rounded-lg border border-gray-200 overflow-hidden">
-        <div class="bg-gray-100 px-6 py-4 border-b border-gray-200">
+      <div class="overflow-hidden rounded-lg border border-gray-200">
+        <div class="border-b border-gray-200 bg-gray-100 px-6 py-4">
           <h3 class="text-lg font-semibold text-yellow-600">Execution</h3>
         </div>
         <div class="px-6 py-4">
           <div class="flex flex-col gap-y-4">
             {#each executionRubric as item}
               <div class="flex gap-x-4">
-                <div class="font-bold min-w-[2rem] text-yellow-600">{item.score}</div>
+                <div class="min-w-[2rem] font-bold text-yellow-600">{item.score}</div>
                 <div>{item.description}</div>
               </div>
             {/each}
@@ -93,15 +93,15 @@
       </div>
 
       <!-- Ambition -->
-      <div class="rounded-lg border border-gray-200 overflow-hidden">
-        <div class="bg-gray-100 px-6 py-4 border-b border-gray-200">
+      <div class="overflow-hidden rounded-lg border border-gray-200">
+        <div class="border-b border-gray-200 bg-gray-100 px-6 py-4">
           <h3 class="text-lg font-semibold text-yellow-600">Ambition</h3>
         </div>
         <div class="px-6 py-4">
           <div class="flex flex-col gap-y-4">
             {#each ambitionRubric as item}
               <div class="flex gap-x-4">
-                <div class="font-bold min-w-[2rem] text-yellow-600">{item.score}</div>
+                <div class="min-w-[2rem] font-bold text-yellow-600">{item.score}</div>
                 <div>{item.description}</div>
               </div>
             {/each}

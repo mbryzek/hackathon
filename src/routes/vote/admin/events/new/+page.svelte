@@ -36,18 +36,18 @@
   }
 </script>
 
-<div class="animate-fade-in max-w-2xl mx-auto">
+<div class="animate-fade-in mx-auto max-w-2xl">
   <div class="mb-8">
-    <a href={urls.voteAdmin} class="text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 transition-colors">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <a href={urls.voteAdmin} class="inline-flex items-center gap-1 text-gray-600 transition-colors hover:text-gray-900">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
       </svg>
       Back to Events
     </a>
-    <h1 class="text-2xl font-bold text-gray-900 mt-4">Create New Event</h1>
+    <h1 class="mt-4 text-2xl font-bold text-gray-900">Create New Event</h1>
   </div>
 
-  <div class="bg-white shadow rounded-xl p-6">
+  <div class="rounded-xl bg-white p-6 shadow">
     <EventForm
       {name}
       {key}

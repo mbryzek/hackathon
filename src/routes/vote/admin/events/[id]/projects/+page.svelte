@@ -42,8 +42,8 @@
   <!-- Add project button/form -->
   <div class="mb-6">
     {#if showAddForm}
-      <div class="bg-white shadow rounded-xl p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Project</h3>
+      <div class="rounded-xl bg-white p-6 shadow">
+        <h3 class="mb-4 text-lg font-semibold text-gray-900">Add New Project</h3>
         <form
           method="POST"
           action="?/create"
@@ -58,38 +58,38 @@
           class="space-y-4"
         >
           <div>
-            <label for="project-name" class="block text-sm font-medium text-gray-700 mb-2"> Project Name </label>
+            <label for="project-name" class="mb-2 block text-sm font-medium text-gray-700"> Project Name </label>
             <input
               type="text"
               id="project-name"
               name="name"
               placeholder="e.g., Team Alpha's Project"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+              class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
               disabled={isAddingProject}
             />
           </div>
           <div>
-            <label for="project-description" class="block text-sm font-medium text-gray-700 mb-2"> Description (optional) </label>
+            <label for="project-description" class="mb-2 block text-sm font-medium text-gray-700"> Description (optional) </label>
             <textarea
               id="project-description"
               name="description"
               placeholder="Brief description of the project"
               rows="2"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+              class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
               disabled={isAddingProject}></textarea>
           </div>
           <div class="flex gap-3">
             <button
               type="submit"
               disabled={isAddingProject}
-              class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+              class="rounded-lg bg-yellow-400 px-4 py-2 font-bold text-gray-900 transition-colors hover:bg-yellow-500 disabled:opacity-50"
             >
               {isAddingProject ? 'Adding...' : 'Add Project'}
             </button>
             <button
               type="button"
               onclick={() => (showAddForm = false)}
-              class="text-gray-600 hover:text-gray-900 py-2 px-4 transition-colors"
+              class="px-4 py-2 text-gray-600 transition-colors hover:text-gray-900"
             >
               Cancel
             </button>
@@ -101,18 +101,18 @@
         <button
           type="button"
           onclick={() => (showAddForm = true)}
-          class="inline-flex items-center bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors"
+          class="inline-flex items-center rounded-lg bg-yellow-400 px-6 py-3 font-bold text-gray-900 transition-colors hover:bg-yellow-500"
         >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
           Add Project
         </button>
         <a
           href={urls.voteAdminEventProjectsBulk(eventId)}
-          class="inline-flex items-center bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors"
+          class="inline-flex items-center rounded-lg bg-gray-100 px-6 py-3 font-bold text-gray-900 transition-colors hover:bg-gray-200"
         >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -128,8 +128,8 @@
 
   <!-- Projects list -->
   {#if projects.length === 0}
-    <div class="bg-white shadow rounded-xl p-12 text-center">
-      <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="rounded-xl bg-white p-12 text-center shadow">
+      <svg class="mx-auto mb-4 h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -137,13 +137,13 @@
           d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
         ></path>
       </svg>
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">No projects yet</h3>
+      <h3 class="mb-2 text-lg font-semibold text-gray-900">No projects yet</h3>
       <p class="text-gray-600">Add projects that voters can select.</p>
     </div>
   {:else}
     <div class="space-y-4">
       {#each projects as project, index (project.id)}
-        <div class="bg-white shadow rounded-xl p-6">
+        <div class="rounded-xl bg-white p-6 shadow">
           {#if editingProjectId === project.id}
             <!-- Edit mode -->
             <form
@@ -166,7 +166,7 @@
                   name="name"
                   value={project.name}
                   aria-label="Project name"
-                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+                  class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
                   disabled={savingProjectId === project.id}
                 />
               </div>
@@ -177,18 +177,18 @@
                   placeholder="Description (optional)"
                   aria-label="Project description"
                   rows="2"
-                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+                  class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
                   disabled={savingProjectId === project.id}></textarea>
               </div>
               <div class="flex gap-3">
                 <button
                   type="submit"
                   disabled={savingProjectId === project.id}
-                  class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+                  class="rounded-lg bg-yellow-400 px-4 py-2 font-bold text-gray-900 transition-colors hover:bg-yellow-500 disabled:opacity-50"
                 >
                   {savingProjectId === project.id ? 'Saving...' : 'Save'}
                 </button>
-                <button type="button" onclick={cancelEdit} class="text-gray-600 hover:text-gray-900 py-2 px-4 transition-colors">
+                <button type="button" onclick={cancelEdit} class="px-4 py-2 text-gray-600 transition-colors hover:text-gray-900">
                   Cancel
                 </button>
               </div>
@@ -198,22 +198,22 @@
             <div class="flex items-start justify-between gap-4">
               <div class="flex-grow">
                 <div class="flex items-center gap-3">
-                  <span class="text-gray-400 text-sm font-mono">#{index + 1}</span>
+                  <span class="font-mono text-sm text-gray-400">#{index + 1}</span>
                   <h3 class="text-lg font-semibold text-gray-900">{project.name}</h3>
                 </div>
                 {#if project.description}
-                  <p class="text-gray-600 mt-1 ml-8">{project.description}</p>
+                  <p class="ml-8 mt-1 text-gray-600">{project.description}</p>
                 {/if}
               </div>
               <div class="flex items-center gap-2">
                 <button
                   type="button"
                   onclick={() => startEdit(project)}
-                  class="text-gray-600 hover:text-gray-900 p-2 transition-colors"
+                  class="p-2 text-gray-600 transition-colors hover:text-gray-900"
                   title="Edit project"
                   aria-label="Edit project {project.name}"
                 >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -237,14 +237,14 @@
                   <button
                     type="submit"
                     disabled={deletingProjectId === project.id}
-                    class="text-red-600 hover:text-red-700 p-2 transition-colors disabled:opacity-50"
+                    class="p-2 text-red-600 transition-colors hover:text-red-700 disabled:opacity-50"
                     title="Delete project"
                     aria-label="Delete project {project.name}"
                   >
                     {#if deletingProjectId === project.id}
                       <Spinner />
                     {:else}
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"

@@ -44,7 +44,7 @@
 <div class="animate-fade-in">
   {#if isLoading}
     <!-- Loading state -->
-    <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto text-center">
+    <div class="mx-auto max-w-md rounded-xl bg-white p-8 text-center shadow-lg">
       <div class="inline-flex items-center gap-3 text-gray-600">
         <Spinner size="md" />
         Loading events...
@@ -53,9 +53,9 @@
   {:else if error}
     <!-- Error state. `role="alert"` so a screen-reader voter is told the fetch failed; without it
          the card swaps in silently and the flow just appears to do nothing. -->
-    <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto text-center" role="alert">
-      <div class="text-red-600 mb-4">
-        <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mx-auto max-w-md rounded-xl bg-white p-8 text-center shadow-lg" role="alert">
+      <div class="mb-4 text-red-600">
+        <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -64,20 +64,20 @@
           ></path>
         </svg>
       </div>
-      <h2 class="text-xl font-bold text-gray-900 mb-2">Error</h2>
+      <h2 class="mb-2 text-xl font-bold text-gray-900">Error</h2>
       <p class="text-gray-600">{error}</p>
       <button
         onclick={() => fetchOpenEvents()}
-        class="mt-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold py-2 px-4 rounded-lg transition-colors"
+        class="mt-4 rounded-lg bg-yellow-400 px-4 py-2 font-semibold text-gray-900 transition-colors hover:bg-yellow-500"
       >
         Try Again
       </button>
     </div>
   {:else if events.length === 0}
     <!-- No events -->
-    <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto text-center">
-      <div class="text-gray-400 mb-4">
-        <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mx-auto max-w-md rounded-xl bg-white p-8 text-center shadow-lg">
+      <div class="mb-4 text-gray-400">
+        <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -86,14 +86,14 @@
           ></path>
         </svg>
       </div>
-      <h2 class="text-xl font-bold text-gray-900 mb-2">No Active Events</h2>
+      <h2 class="mb-2 text-xl font-bold text-gray-900">No Active Events</h2>
       <p class="text-gray-600">There are no voting events open at this time. Please check back later.</p>
     </div>
   {:else}
     <!-- Event selection -->
-    <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto">
-      <div class="text-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Select an Event</h1>
+    <div class="mx-auto max-w-md rounded-xl bg-white p-8 shadow-lg">
+      <div class="mb-6 text-center">
+        <h1 class="mb-2 text-2xl font-bold text-gray-900">Select an Event</h1>
         <p class="text-gray-600">Choose the event you want to vote in.</p>
       </div>
 
@@ -101,7 +101,7 @@
         {#each events as event (event.id)}
           <button
             onclick={() => selectEvent(event)}
-            class="w-full text-left bg-gray-50 hover:bg-yellow-50 border border-gray-200 hover:border-yellow-400 rounded-lg p-4 transition-all duration-200"
+            class="w-full rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition-all duration-200 hover:border-yellow-400 hover:bg-yellow-50"
           >
             <h3 class="font-semibold text-gray-900">{event.name}</h3>
           </button>

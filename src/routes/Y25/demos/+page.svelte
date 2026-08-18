@@ -5,7 +5,7 @@
 </script>
 
 <Shell title="2025 Demos">
-  <p class="text-gray-800 font-light mb-6">
+  <p class="mb-6 font-light text-gray-800">
     In 2025, we had ~30 teams participate in the Hackathon and build amazing projects. View screen recordings from the teams who chose to
     share their demos online.
   </p>
