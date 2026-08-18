@@ -6,10 +6,12 @@
  * This is the one poller in this repo. Do not hand-roll `setInterval` + `visibilitychange`,
  * and do not add a second helper for the pause-predicate case — that is `isPaused` below.
  *
- * The same helper lives in playbook-admin and rallyd. Nothing enforces that they agree, so
- * port a change to all three rather than asserting they are identical.
+ * The same helper lives in playbook-admin, playbook-app and rallyd. The `dry-copy` markers
+ * below declare that, and `dev repo copies` checks it every few hours — so a change here that
+ * does not reach the other three is reported rather than merely regretted (ISS-3894).
  *
  * Returns a cleanup function — call it (or return it from a `$effect`) to stop.
+ * dry-copy: sveltekit/visibility-aware-interval — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
  */
 export interface PollingOptions {
   /**
@@ -45,12 +47,23 @@ export function visibilityAwareInterval(
 
   const isOnline = () => (typeof navigator !== 'undefined' ? navigator.onLine : true);
 
+  // One tick at a time. A callback slower than its own interval would otherwise have a second
+  // request in flight before the first answered, and two responses can land in either order — so
+  // a tick is SKIPPED while the previous one is unsettled rather than queued behind it. Only an
+  // async callback can be in flight; a synchronous one has already returned.
+  let inflight = false;
+
   function safeCallback() {
     try {
-      if (isPaused?.()) return;
+      if (inflight || isPaused?.()) return;
       const result = callback();
       if (result && typeof result.catch === 'function') {
-        result.catch((e) => console.debug('Polling callback error:', e));
+        inflight = true;
+        result
+          .catch((e) => console.debug('Polling callback error:', e))
+          .finally(() => {
+            inflight = false;
+          });
       }
     } catch (e) {
       console.debug('Polling callback error:', e);
@@ -112,3 +125,4 @@ export function visibilityAwareInterval(
     window.removeEventListener('offline', handleOffline);
   };
 }
+// dry-copy-end

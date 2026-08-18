@@ -8,9 +8,9 @@ import { defineConfig, devices } from '@playwright/test';
  */
 
 // Support both FRONTEND_BASE_URL and legacy BASE_URL
-const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || process.env.BASE_URL || 'http://localhost:5173';
-const HEADLESS = process.env.HEADLESS === 'true';
-const TEST_RUN_DIR = process.env.TEST_RUN_DIR || '/tmp/playwright-screenshots';
+const FRONTEND_BASE_URL = process.env['FRONTEND_BASE_URL'] || process.env['BASE_URL'] || 'http://localhost:5173';
+const HEADLESS = process.env['HEADLESS'] === 'true';
+const TEST_RUN_DIR = process.env['TEST_RUN_DIR'] || '/tmp/playwright-screenshots';
 
 /**
  * The port CI told this build to serve the frontend on (`dev e2e run`, ISS-2193).
@@ -46,13 +46,15 @@ export default defineConfig({
   fullyParallel: true,
 
   // Fail the build on CI if you accidentally left test.only in the source code
-  forbidOnly: !!process.env.CI,
+  forbidOnly: !!process.env['CI'],
 
   // Retry on CI only
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env['CI'] ? 2 : 0,
 
-  // Opt out of parallel tests on CI
-  workers: process.env.CI ? 1 : undefined,
+  // Opt out of parallel tests on CI. Spread rather than `: undefined`, because
+  // under `exactOptionalPropertyTypes` an explicit `undefined` is not the same
+  // as an absent key — and absent is what asks Playwright for its own default.
+  ...(process.env['CI'] ? { workers: 1 } : {}),
 
   // Reporter configuration
   reporter: [

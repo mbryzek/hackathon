@@ -113,7 +113,12 @@ describe('results auto-refresh', () => {
 
     // Exactly one refresh per tick. The immediate poll runs inside the $effect, so the effect must
     // not read anything invalidateAll replaces — otherwise each refresh re-runs it and re-polls.
-    vi.advanceTimersByTime(RESULTS_REFRESH_INTERVAL_MS * 2);
+    //
+    // Advanced asynchronously so the microtask queue drains between the two interval callbacks, as
+    // it does under real timers. The synchronous `advanceTimersByTime` runs both in one burst with
+    // no checkpoint in between, which leaves the first refresh's promise unsettled — and the
+    // poller's in-flight guard then skips the second tick rather than stacking a refresh on it.
+    await vi.advanceTimersByTimeAsync(RESULTS_REFRESH_INTERVAL_MS * 2);
     await settle();
     expect(invalidateAll).toHaveBeenCalledTimes(2);
   });

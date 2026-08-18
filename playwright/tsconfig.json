@@ -12,9 +12,10 @@
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
-    // Deliberately NOT noPropertyAccessFromIndexSignature: unlike src/, the test
-    // suite reads its configuration straight off process.env, and dotted access
-    // there is the shape every file already uses.
+    "noPropertyAccessFromIndexSignature": true,
+    "exactOptionalPropertyTypes": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "resolveJsonModule": true,
