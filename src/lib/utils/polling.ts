@@ -1,21 +1,53 @@
 /**
  * Repeating poll that pauses while the tab is hidden or the browser is offline and
- * resumes (with an immediate tick) when visible/online again. Ported verbatim from rallyd's
- * `src/lib/utils/polling.ts` per rules/sveltekit.data.loading.mdc, which says to port it rather
- * than hand-roll `setInterval` + `visibilitychange` listeners. Kept byte-identical to the rallyd
- * and playbook-admin copies so the three stay diffable — change all of them or none.
+ * resumes (with an immediate tick) when visible/online again. Ported from rallyd's
+ * `src/lib/utils/polling.ts` per rules/sveltekit.data.loading.mdc.
+ *
+ * This is the one poller in this repo. Do not hand-roll `setInterval` + `visibilitychange`,
+ * and do not add a second helper for the pause-predicate case — that is `isPaused` below.
+ *
+ * The same helper lives in playbook-admin and rallyd. Nothing enforces that they agree, so
+ * port a change to all three rather than asserting they are identical.
  *
  * Returns a cleanup function — call it (or return it from a `$effect`) to stop.
  */
-export function visibilityAwareInterval(callback: () => void | Promise<void>, intervalMs: number): () => void {
+export interface PollingOptions {
+  /**
+   * Checked on every tick, and the tick is skipped while it returns true. For a condition
+   * nothing notifies us about — a terminal status, a collapsed panel, an idle user — which is
+   * why the timer keeps running rather than being cleared: the predicate can go false at any
+   * moment and there is no event to restart on.
+   *
+   * Visibility and network state are NOT this: those have events, so they clear the timer.
+   */
+  isPaused?: () => boolean;
+  /**
+   * Whether to fire one tick as soon as polling starts. Default true. Pass false when the page
+   * already has the data — an SSR `load`, or a fetch the component runs on mount — so the poll
+   * does not duplicate that first request.
+   *
+   * Resuming from hidden/offline always fires a tick regardless: the data went stale while the
+   * timer was stopped, which is the whole reason to resume.
+   */
+  immediate?: boolean;
+}
+
+export function visibilityAwareInterval(
+  callback: () => void | Promise<void>,
+  intervalMs: number,
+  options: PollingOptions = {}
+): () => void {
   if (typeof document === 'undefined' || typeof window === 'undefined') {
     return () => {};
   }
+
+  const { isPaused, immediate = true } = options;
 
   const isOnline = () => (typeof navigator !== 'undefined' ? navigator.onLine : true);
 
   function safeCallback() {
     try {
+      if (isPaused?.()) return;
       const result = callback();
       if (result && typeof result.catch === 'function') {
         result.catch((e) => console.debug('Polling callback error:', e));
@@ -26,12 +58,14 @@ export function visibilityAwareInterval(callback: () => void | Promise<void>, in
   }
 
   let intervalId: ReturnType<typeof setInterval> | undefined;
-  let paused = false;
+  // Suspended by visibility or network state — distinct from `isPaused()`, which skips a tick
+  // without stopping the timer.
+  let suspended = false;
 
-  function start() {
+  function start(fireNow: boolean) {
     if (intervalId) return;
-    paused = false;
-    safeCallback();
+    suspended = false;
+    if (fireNow) safeCallback();
     intervalId = setInterval(safeCallback, intervalMs);
   }
 
@@ -40,20 +74,20 @@ export function visibilityAwareInterval(callback: () => void | Promise<void>, in
       clearInterval(intervalId);
       intervalId = undefined;
     }
-    paused = true;
+    suspended = true;
   }
 
   function handleVisibilityChange() {
     if (document.hidden) {
       stop();
-    } else if (paused && isOnline()) {
-      start();
+    } else if (suspended && isOnline()) {
+      start(true);
     }
   }
 
   function handleOnline() {
-    if (!document.hidden && paused) {
-      start();
+    if (!document.hidden && suspended) {
+      start(true);
     }
   }
 
@@ -61,17 +95,14 @@ export function visibilityAwareInterval(callback: () => void | Promise<void>, in
     stop();
   }
 
-  if (!document.hidden && isOnline()) {
-    safeCallback();
-  }
-  intervalId = setInterval(safeCallback, intervalMs);
-
   document.addEventListener('visibilitychange', handleVisibilityChange);
   window.addEventListener('online', handleOnline);
   window.addEventListener('offline', handleOffline);
 
   if (document.hidden || !isOnline()) {
-    stop();
+    suspended = true;
+  } else {
+    start(immediate);
   }
 
   return () => {

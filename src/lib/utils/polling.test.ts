@@ -1,185 +1,214 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { visibilityAwareInterval } from './polling';
 
+const INTERVAL = 1000;
+
+let hidden = false;
+let online = true;
+
+/**
+ * Every poller started by a test is stopped after it, because jsdom's `document` and `window`
+ * outlive the test: a poller left running keeps its listeners attached and fires again on the
+ * next test's visibility/network events.
+ */
+const running: Array<() => void> = [];
+
+function poller(callback: () => void | Promise<void>, options?: Parameters<typeof visibilityAwareInterval>[2]): () => void {
+  const stop = visibilityAwareInterval(callback, INTERVAL, options);
+  running.push(stop);
+  return stop;
+}
+
+function setHidden(next: boolean): void {
+  hidden = next;
+  document.dispatchEvent(new Event('visibilitychange'));
+}
+
+function setOnline(next: boolean): void {
+  online = next;
+  window.dispatchEvent(new Event(next ? 'online' : 'offline'));
+}
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  hidden = false;
+  online = true;
+  vi.spyOn(document, 'hidden', 'get').mockImplementation(() => hidden);
+  vi.spyOn(navigator, 'onLine', 'get').mockImplementation(() => online);
+});
+
+afterEach(() => {
+  while (running.length) running.pop()?.();
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
+
 describe('visibilityAwareInterval', () => {
-  let docListeners: Record<string, EventListener>;
-  let winListeners: Record<string, EventListener>;
-  let hidden: boolean;
-  let onLine: boolean;
-
-  beforeEach(() => {
-    vi.useFakeTimers();
-    docListeners = {};
-    winListeners = {};
-    hidden = false;
-    onLine = true;
-
-    vi.stubGlobal('document', {
-      get hidden() {
-        return hidden;
-      },
-      addEventListener: (event: string, handler: EventListener) => {
-        docListeners[event] = handler;
-      },
-      removeEventListener: (event: string) => {
-        delete docListeners[event];
-      }
-    });
-
-    vi.stubGlobal('navigator', {
-      get onLine() {
-        return onLine;
-      }
-    });
-
-    vi.stubGlobal('window', {
-      addEventListener: (event: string, handler: EventListener) => {
-        winListeners[event] = handler;
-      },
-      removeEventListener: (event: string) => {
-        delete winListeners[event];
-      }
-    });
+  it('fires immediately and then on every interval', () => {
+    const tick = vi.fn();
+    poller(tick);
+    expect(tick).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(INTERVAL * 3);
+    expect(tick).toHaveBeenCalledTimes(4);
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.unstubAllGlobals();
+  it('skips the first tick when immediate is false, but keeps the interval', () => {
+    const tick = vi.fn();
+    poller(tick, { immediate: false });
+    expect(tick).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(INTERVAL);
+    expect(tick).toHaveBeenCalledTimes(1);
   });
 
-  function hide(): void {
+  it('stops the timer while the tab is hidden and re-fires on return', () => {
+    const tick = vi.fn();
+    poller(tick);
+    tick.mockClear();
+
+    setHidden(true);
+    vi.advanceTimersByTime(INTERVAL * 5);
+    expect(tick).not.toHaveBeenCalled();
+
+    setHidden(false);
+    expect(tick).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(INTERVAL);
+    expect(tick).toHaveBeenCalledTimes(2);
+  });
+
+  /**
+   * The behaviour the two pollers disagreed about (ISS-3820): a page on the losing helper kept
+   * hitting an unreachable endpoint every interval for as long as the laptop was off the network.
+   */
+  it('stops the timer while the browser is offline and re-fires when it comes back', () => {
+    const tick = vi.fn();
+    poller(tick);
+    tick.mockClear();
+
+    setOnline(false);
+    vi.advanceTimersByTime(INTERVAL * 5);
+    expect(tick).not.toHaveBeenCalled();
+
+    setOnline(true);
+    expect(tick).toHaveBeenCalledTimes(1);
+  });
+
+  it('resumes on return only once both conditions are met', () => {
+    const tick = vi.fn();
+    poller(tick);
+    tick.mockClear();
+
+    setHidden(true);
+    setOnline(false);
+
+    // Coming back online while still hidden must not restart the timer.
+    setOnline(true);
+    vi.advanceTimersByTime(INTERVAL * 2);
+    expect(tick).not.toHaveBeenCalled();
+
+    setHidden(false);
+    expect(tick).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not start while hidden at mount, and starts on the first return', () => {
     hidden = true;
-    docListeners['visibilitychange']?.(new Event('visibilitychange'));
-  }
+    const tick = vi.fn();
+    poller(tick);
+    vi.advanceTimersByTime(INTERVAL * 3);
+    expect(tick).not.toHaveBeenCalled();
 
-  function show(): void {
-    hidden = false;
-    docListeners['visibilitychange']?.(new Event('visibilitychange'));
-  }
-
-  function goOffline(): void {
-    onLine = false;
-    winListeners['offline']?.(new Event('offline'));
-  }
-
-  function goOnline(): void {
-    onLine = true;
-    winListeners['online']?.(new Event('online'));
-  }
-
-  it('fires immediately and then on the interval when visible and online', () => {
-    const callback = vi.fn();
-    visibilityAwareInterval(callback, 1000);
-
-    expect(callback).toHaveBeenCalledTimes(1);
-
-    vi.advanceTimersByTime(3000);
-    expect(callback).toHaveBeenCalledTimes(4);
+    setHidden(false);
+    expect(tick).toHaveBeenCalledTimes(1);
   });
 
-  it('stops calling when the tab becomes hidden', () => {
-    const callback = vi.fn();
-    visibilityAwareInterval(callback, 1000);
-    callback.mockClear();
+  it('does not start while offline at mount', () => {
+    online = false;
+    const tick = vi.fn();
+    poller(tick, { immediate: false });
+    vi.advanceTimersByTime(INTERVAL * 3);
+    expect(tick).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(2000);
-    expect(callback).toHaveBeenCalledTimes(2);
-
-    hide();
-
-    vi.advanceTimersByTime(3000);
-    expect(callback).toHaveBeenCalledTimes(2);
+    setOnline(true);
+    expect(tick).toHaveBeenCalledTimes(1);
   });
 
-  it('resumes with an immediate callback when the tab becomes visible', () => {
-    const callback = vi.fn();
-    visibilityAwareInterval(callback, 1000);
-    callback.mockClear();
+  describe('isPaused', () => {
+    it('skips ticks while the predicate is true and resumes without any event', () => {
+      let paused = true;
+      const tick = vi.fn();
+      poller(tick, { isPaused: () => paused });
 
-    hide();
-    vi.advanceTimersByTime(5000);
-    expect(callback).not.toHaveBeenCalled();
+      expect(tick).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(INTERVAL * 3);
+      expect(tick).not.toHaveBeenCalled();
 
-    show();
-    expect(callback).toHaveBeenCalledTimes(1);
-
-    vi.advanceTimersByTime(1000);
-    expect(callback).toHaveBeenCalledTimes(2);
-  });
-
-  it('stops when offline and resumes when online', () => {
-    const callback = vi.fn();
-    visibilityAwareInterval(callback, 1000);
-    callback.mockClear();
-
-    goOffline();
-    vi.advanceTimersByTime(3000);
-    expect(callback).not.toHaveBeenCalled();
-
-    goOnline();
-    expect(callback).toHaveBeenCalledTimes(1);
-
-    vi.advanceTimersByTime(1000);
-    expect(callback).toHaveBeenCalledTimes(2);
-  });
-
-  it('cleanup clears the interval and removes every listener', () => {
-    const callback = vi.fn();
-    const cleanup = visibilityAwareInterval(callback, 1000);
-    callback.mockClear();
-
-    cleanup();
-
-    vi.advanceTimersByTime(3000);
-    expect(callback).not.toHaveBeenCalled();
-    expect(docListeners['visibilitychange']).toBeUndefined();
-    expect(winListeners['online']).toBeUndefined();
-    expect(winListeners['offline']).toBeUndefined();
-  });
-
-  it('never starts when the tab is already hidden at creation time', () => {
-    hidden = true;
-    const callback = vi.fn();
-    visibilityAwareInterval(callback, 1000);
-
-    vi.advanceTimersByTime(5000);
-    expect(callback).not.toHaveBeenCalled();
-  });
-
-  it('does not resume on `online` while the tab is still hidden', () => {
-    const callback = vi.fn();
-    visibilityAwareInterval(callback, 1000);
-    callback.mockClear();
-
-    hide();
-    goOffline();
-    goOnline();
-
-    vi.advanceTimersByTime(5000);
-    expect(callback).not.toHaveBeenCalled();
-  });
-
-  it('does not resume on `visibilitychange` while still offline', () => {
-    const callback = vi.fn();
-    visibilityAwareInterval(callback, 1000);
-    callback.mockClear();
-
-    goOffline();
-    hide();
-    show();
-
-    vi.advanceTimersByTime(5000);
-    expect(callback).not.toHaveBeenCalled();
-  });
-
-  it('keeps polling when the callback throws', () => {
-    const callback = vi.fn(() => {
-      throw new Error('boom');
+      paused = false;
+      vi.advanceTimersByTime(INTERVAL);
+      expect(tick).toHaveBeenCalledTimes(1);
     });
-    visibilityAwareInterval(callback, 1000);
-    callback.mockClear();
 
-    vi.advanceTimersByTime(2000);
-    expect(callback).toHaveBeenCalledTimes(2);
+    it('is re-read on every tick, so a run going terminal stops the polling', () => {
+      let done = false;
+      const tick = vi.fn(() => {
+        done = true;
+      });
+      poller(tick, { isPaused: () => done });
+
+      expect(tick).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(INTERVAL * 5);
+      expect(tick).toHaveBeenCalledTimes(1);
+    });
+
+    it('suppresses the resume tick too', () => {
+      const tick = vi.fn();
+      poller(tick, { isPaused: () => true });
+      setHidden(true);
+      setHidden(false);
+      expect(tick).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('errors', () => {
+    beforeEach(() => {
+      vi.spyOn(console, 'debug').mockImplementation(() => {});
+    });
+
+    it('keeps polling after the callback throws', () => {
+      const tick = vi.fn(() => {
+        throw new Error('boom');
+      });
+      poller(tick);
+      expect(() => vi.advanceTimersByTime(INTERVAL * 2)).not.toThrow();
+      expect(tick).toHaveBeenCalledTimes(3);
+      expect(console.debug).toHaveBeenCalledTimes(3);
+    });
+
+    it('swallows a rejected promise from an async callback', async () => {
+      const tick = vi.fn(() => Promise.reject(new Error('boom')));
+      poller(tick);
+      await vi.advanceTimersByTimeAsync(INTERVAL);
+      expect(tick).toHaveBeenCalledTimes(2);
+      expect(console.debug).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('cleanup', () => {
+    it('clears the timer and detaches every listener', () => {
+      const tick = vi.fn();
+      const stop = poller(tick);
+      tick.mockClear();
+
+      stop();
+      vi.advanceTimersByTime(INTERVAL * 5);
+      expect(tick).not.toHaveBeenCalled();
+
+      // A visibility or network event after cleanup must not restart it.
+      setHidden(true);
+      setHidden(false);
+      setOnline(false);
+      setOnline(true);
+      vi.advanceTimersByTime(INTERVAL * 5);
+      expect(tick).not.toHaveBeenCalled();
+    });
   });
 });
