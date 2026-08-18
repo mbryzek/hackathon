@@ -6,10 +6,12 @@
  * This is the one poller in this repo. Do not hand-roll `setInterval` + `visibilitychange`,
  * and do not add a second helper for the pause-predicate case — that is `isPaused` below.
  *
- * The same helper lives in playbook-admin and rallyd. Nothing enforces that they agree, so
- * port a change to all three rather than asserting they are identical.
+ * The same helper lives in playbook-admin and rallyd. The `dry-copy` markers below
+ * declare that, and `dev repo copies` checks it every few hours — so a change here that
+ * does not reach the other two is reported rather than merely regretted (ISS-3894).
  *
  * Returns a cleanup function — call it (or return it from a `$effect`) to stop.
+ * dry-copy: sveltekit/visibility-aware-interval — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
  */
 export interface PollingOptions {
   /**
@@ -112,3 +114,4 @@ export function visibilityAwareInterval(
     window.removeEventListener('offline', handleOffline);
   };
 }
+// dry-copy-end
