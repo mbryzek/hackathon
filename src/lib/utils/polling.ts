@@ -6,9 +6,11 @@
  * This is the one poller in this repo. Do not hand-roll `setInterval` + `visibilitychange`,
  * and do not add a second helper for the pause-predicate case — that is `isPaused` below.
  *
- * The same helper lives in playbook-admin, playbook-app and rallyd. The `dry-copy` markers
- * below declare that, and `dev repo copies` checks it every few hours — so a change here that
- * does not reach the other three is reported rather than merely regretted (ISS-3894).
+ * This helper is copied verbatim into the other SvelteKit repos. The `dry-copy` markers below
+ * are the declaration — `dev repo copies` enumerates every copy carrying them and reports one
+ * that has drifted, so a change here that does not reach the others is caught rather than
+ * merely regretted (ISS-3894). Which repos those are is the marker's answer, not this
+ * comment's: a hand-written list here is one more copy to keep true, and nothing checks it.
  *
  * Returns a cleanup function — call it (or return it from a `$effect`) to stop.
  * dry-copy: sveltekit/visibility-aware-interval — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
