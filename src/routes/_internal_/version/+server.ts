@@ -6,8 +6,10 @@ import type { RequestHandler } from './$types';
 // by release-sveltekit (stamped from ~/.devops/versions/<app>.env) and baked
 // in here at build time. Dev builds fall back to the empty defaults in .env.
 export const GET: RequestHandler = async () => {
+  // dry-copy: sveltekit/version-endpoint-payload — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
   return json({
     version: PUBLIC_VERSION || null,
     released_at: PUBLIC_RELEASED_AT || null
   });
+  // dry-copy-end
 };
