@@ -10,7 +10,7 @@
  */
 
 import { redirect, type Cookies } from '@sveltejs/kit';
-import type { ApiResponse } from '$lib/api/client';
+import { isApiError, type ApiResponse } from '$lib/api/client';
 import { SESSION_COOKIE } from '$lib/config';
 import { urls } from '$lib/urls';
 
@@ -46,7 +46,7 @@ function sessionExpired(cookies: Cookies): never {
  */
 export function firstError(event: SessionEvent, responses: ApiResponse<unknown>[], notFoundMessage: string = 'Not found'): string | null {
   for (const response of responses) {
-    if (!response.errors) continue;
+    if (!isApiError(response)) continue;
     if (response.status === 401) sessionExpired(event.cookies);
     if (response.status === 404) return notFoundMessage;
     return response.errors[0]?.message || 'Something went wrong. Please try again.';

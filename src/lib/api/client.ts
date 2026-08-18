@@ -21,9 +21,8 @@ import {
   type ProjectTally
 } from '../../generated/com-bryzek-vote-admin';
 import { type File, FileType } from '../../generated/com-bryzek-platform-storage';
-import { ValidationErrorsResponse } from '../../generated/generated-error-validation-errors-response';
-import { UnauthorizedErrorResponse } from '../../generated/generated-error-unauthorized-error-response';
-import { VoidResponse } from '../../generated/generated-error-void-response';
+import { handleApiCall, isApiSuccess } from '$generated/generated-util';
+import type { ApiResponse } from '$generated/generated-util';
 
 // Re-export types for use in components
 export type {
@@ -49,21 +48,35 @@ export { EventStatus, FileType, VoterType };
 // Alias Event as VoteEvent for backward compatibility
 export type VoteEvent = Event;
 
-// `?: T | undefined` rather than `?: T`: under `exactOptionalPropertyTypes` those
-// mean different things, and every producer of this shape — the generated
-// client's error bodies, the test doubles — maps a field that is genuinely
-// `T | undefined` straight onto it rather than omitting the key.
-export interface ValidationError {
-  discriminator?: string | undefined;
-  code?: string | undefined;
-  message: string;
-  field?: string | undefined;
+/**
+ * The response envelope, the status→message table and the decoding of whatever a generated
+ * client throws all live in `$generated/generated-util`, emitted by the apibuilder
+ * TypeScript generator into every repo that consumes these APIs. They are re-exported here
+ * because this module is the API surface the rest of the app imports.
+ *
+ * `ApiResponse<T>` is a discriminated union — a response carries `data` or `errors`, never
+ * both — so read it through `isApiSuccess`/`isApiError` (or `dataOr` below) rather than by
+ * testing for a property.
+ */
+export { handleApiCall, isApiError, isApiSuccess, statusMessage } from '$generated/generated-util';
+export type { ApiCallOptions, ApiError, ApiResponse, ApiResponseError, ApiResponseSuccess } from '$generated/generated-util';
+
+/** The data from a successful call, or `fallback` when the call failed. */
+export function dataOr<T, F>(response: ApiResponse<T>, fallback: F): T | F {
+  return isApiSuccess(response) ? response.data : fallback;
 }
 
-export interface ApiResponse<T> {
-  data?: T;
-  errors?: ValidationError[];
-  status: number;
+/**
+ * `status` if SvelteKit's `fail` will take it, and 503 otherwise.
+ *
+ * `handleApiCall` reports the server never answering as status 0, and `fail(0, …)` is not
+ * an HTTP failure: on the no-JS form post path SvelteKit renders the page with that status,
+ * and the `Response` constructor throws a RangeError on anything outside 200-599. So a
+ * backend that is down would answer an admin's form submission with a crash instead of the
+ * banner the action built for it. 503 is what "the server did not answer" means on the wire.
+ */
+export function safeErrorStatus(status: number): number {
+  return Number.isInteger(status) && status >= 400 && status <= 599 ? status : 503;
 }
 
 /**
@@ -72,51 +85,7 @@ export interface ApiResponse<T> {
  * and SvelteKit refuses to bundle a `$lib/server` module into browser code. Only the
  * public vote endpoints below — which take no credentials — run in the browser.
  */
-const voteApiClient = new VoteApiClient(config.apiBaseUrl);
-
-/** The `ApiResponse` shape for a thrown generated-client error, whatever kind it is. */
-async function toErrorResponse(error: unknown): Promise<{ errors: ValidationError[]; status: number }> {
-  if (error instanceof ValidationErrorsResponse) {
-    const validationErrors = await error.validationErrors();
-    return {
-      errors: validationErrors.map((e) => ({
-        discriminator: e.discriminator,
-        message: e.message,
-        field: e.field
-      })),
-      status: error.response.status
-    };
-  }
-
-  if (error instanceof UnauthorizedErrorResponse) {
-    return { errors: [{ code: 'unauthorized', message: 'Unauthorized' }], status: 401 };
-  }
-
-  if (error instanceof VoidResponse) {
-    return { errors: [{ code: 'not_found', message: 'Not found' }], status: 404 };
-  }
-
-  return { errors: [{ code: 'server_error', message: 'Server error' }], status: 500 };
-}
-
-// Helper to handle API errors and convert to ApiResponse format
-export async function handleApiCall<T>(apiCall: () => Promise<T>, successStatus: number = 200): Promise<ApiResponse<T>> {
-  try {
-    return { data: await apiCall(), status: successStatus };
-  } catch (error) {
-    return toErrorResponse(error);
-  }
-}
-
-// Helper for void responses
-export async function handleVoidApiCall(apiCall: () => Promise<void>, successStatus: number = 204): Promise<ApiResponse<void>> {
-  try {
-    await apiCall();
-    return { status: successStatus };
-  } catch (error) {
-    return toErrorResponse(error);
-  }
-}
+const voteApiClient = new VoteApiClient({ baseUrl: config.apiBaseUrl });
 
 // Public API client
 export const voteApi = {

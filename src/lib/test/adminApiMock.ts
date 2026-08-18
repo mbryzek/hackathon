@@ -15,7 +15,7 @@
  *     });
  */
 
-import type { ApiResponse } from '$lib/api/client';
+import type { AdminSession, ApiResponse } from '$lib/api/client';
 import type { adminApi } from '$lib/server/adminApi';
 import { aCode, aCodeSummary, aFile, anEvent, anEventResults, aProject } from './fixtures';
 
@@ -25,18 +25,24 @@ export type AdminApi = typeof adminApi;
 export const ok = <T>(data: T): Promise<ApiResponse<T>> => Promise.resolve({ data, status: 200 });
 
 /** A failed answer, in the shape `$lib/api/client` turns every client error into. */
-export const apiError = (status: number, message: string, code?: string): Promise<ApiResponse<never>> =>
-  Promise.resolve({ errors: [{ code, message }], status });
+export const apiError = (status: number, message: string): Promise<ApiResponse<never>> =>
+  Promise.resolve({ errors: [{ message }], status });
+
+/**
+ * A success whose body no caller reads. `handleApiCall` types `data` as `T` even for a
+ * body-less 2xx, so a test deciding on the status alone still has to name something, and
+ * `undefined` is what such a response actually carries at runtime.
+ */
+export const okStatus = <T>(status: number): Promise<ApiResponse<T>> => Promise.resolve({ status, data: undefined as T });
 
 /** What the API answers a call that succeeds and returns nothing. */
-const noContent = (): Promise<ApiResponse<void>> => Promise.resolve({ status: 204 });
+const noContent = (): Promise<ApiResponse<void>> => okStatus<void>(204);
 
 /**
  * The session body is a deep `AdminSession` (a user, a person, a tenant) and no test reads it —
- * every caller here decides on the status alone — so these answer with a status and no data,
- * which is what `ApiResponse` says a body-less success looks like.
+ * every caller here decides on the status alone.
  */
-const session = (status: number): Promise<ApiResponse<never>> => Promise.resolve({ status });
+const session = (status: number): Promise<ApiResponse<AdminSession>> => okStatus<AdminSession>(status);
 
 function defaultAdminApi(): AdminApi {
   return {

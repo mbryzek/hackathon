@@ -3,7 +3,7 @@
   import Spinner from '$lib/components/Spinner.svelte';
   import { goto } from '$app/navigation';
   import { urls } from '$lib/urls';
-  import { voteApi, type Event } from '$lib/api/client';
+  import { isApiError, voteApi, type Event } from '$lib/api/client';
 
   let events = $state<Event[]>([]);
   let isLoading = $state(true);
@@ -23,12 +23,12 @@
 
     isLoading = false;
 
-    if (response.errors) {
+    if (isApiError(response)) {
       error = response.errors[0]?.message || 'Failed to load events';
       return;
     }
 
-    events = response.data || [];
+    events = response.data;
 
     // If exactly one event, redirect directly
     if (events.length === 1 && events[0]) {

@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { FileType, VoterType } from '$lib/api/client';
+import { dataOr, isApiError, safeErrorStatus } from '$lib/api/client';
 import { adminApi } from '$lib/server/adminApi';
 import { firstError, requireSessionId } from '$lib/server/adminSession';
 import { integer, oneOf, optionalBoolean, optionalText, trimmed } from '$lib/server/fields';
@@ -41,12 +42,12 @@ export const load: PageServerLoad = async (event) => {
     })
   ]);
 
-  const batch = codesResponse.data ?? [];
+  const batch = dataOr(codesResponse, []);
 
   return {
     ...filters,
-    event: eventResponse.data ?? null,
-    summary: summaryResponse.data ?? null,
+    event: dataOr(eventResponse, null),
+    summary: dataOr(summaryResponse, null),
     codes: batch.slice(0, CODES_PAGE_SIZE),
     hasMore: batch.length > CODES_PAGE_SIZE,
     error: firstError(event, [eventResponse, summaryResponse, codesResponse], 'Event not found')
@@ -69,7 +70,7 @@ export const actions = {
     });
     const error = firstError(event, [response], 'Event not found');
 
-    return error === null ? undefined : fail(response.status, { error });
+    return error === null ? undefined : fail(safeErrorStatus(response.status), { error });
   },
 
   delete: async (event) => {
@@ -77,7 +78,7 @@ export const actions = {
     const response = await adminApi.deleteCode(requireSessionId(event), event.params.id, trimmed(form.get('id')));
     const error = firstError(event, [response], 'Code not found');
 
-    return error === null ? undefined : fail(response.status, { error });
+    return error === null ? undefined : fail(safeErrorStatus(response.status), { error });
   },
 
   /**
@@ -102,9 +103,9 @@ export const actions = {
     const error = firstError(event, [response], 'Event not found');
 
     if (error !== null) {
-      return fail(response.status, { error });
+      return fail(safeErrorStatus(response.status), { error });
     }
-    if (!response.data) {
+    if (isApiError(response)) {
       return fail(500, { error: 'Failed to build the export' });
     }
 

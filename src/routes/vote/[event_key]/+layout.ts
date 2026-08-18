@@ -1,5 +1,5 @@
 import type { LayoutLoad } from './$types';
-import { voteApi } from '$lib/api/client';
+import { isApiError, voteApi } from '$lib/api/client';
 
 // Dynamic routes cannot be prerendered
 export const prerender = false;
@@ -13,11 +13,15 @@ export const ssr = false;
 export const load: LayoutLoad = async ({ params }) => {
   const response = await voteApi.getOpenEvents();
 
-  // A failed call and a genuinely closed event are not the same thing, and `response.data`
-  // is undefined for both. Collapsing them into `event = null` told a voter whose request
-  // had just failed that the event was "not currently open, check back later" — for an event
-  // running in the room they were standing in — with no retry short of reloading the page.
-  if (response.errors || !response.data) {
+  // A failed call and a genuinely closed event are not the same thing. Collapsing them
+  // into `event = null` told a voter whose request had just failed that the event was
+  // "not currently open, check back later" — for an event running in the room they were
+  // standing in — with no retry short of reloading the page.
+  //
+  // `data` is also checked, and the type says it cannot be missing: `handleApiCall` reports
+  // a body-less 2xx as `data: undefined` cast to the success type, so a success with no body
+  // type-checks and would crash the `.find` below.
+  if (isApiError(response) || !response.data) {
     return { event: null, loadFailed: true };
   }
 

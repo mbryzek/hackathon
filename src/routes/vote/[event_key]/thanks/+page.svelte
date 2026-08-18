@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { urls } from '$lib/urls';
-  import { voteApi, VoterType, type Project } from '$lib/api/client';
+  import { isApiSuccess, voteApi, VoterType, type Project } from '$lib/api/client';
 
   const ORGANIZER_FORM_URL = 'https://forms.gle/zh6AKeEaa415QdTp8';
   const DONATION_URL = 'https://donorbox.org/2026-bt-hackathon';
@@ -21,7 +21,7 @@
   onMount(async () => {
     if (code && eventKey) {
       const response = await voteApi.verifyCode(eventKey, code);
-      if (response.data) {
+      if (isApiSuccess(response)) {
         voterType = response.data.voter_type;
         selectedProjects = response.data.projects.filter((pv) => pv.selected).map((pv) => pv.project);
       }

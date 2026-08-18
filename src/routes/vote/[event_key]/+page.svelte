@@ -4,7 +4,7 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { urls } from '$lib/urls';
-  import { voteApi, VoterType, type Vote } from '$lib/api/client';
+  import { isApiError, voteApi, VoterType, type Vote } from '$lib/api/client';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import type { PageData } from './$types';
 
@@ -38,26 +38,24 @@
 
     isVerifying = false;
 
-    if (response.errors) {
+    if (isApiError(response)) {
       error = response.errors[0]?.message || 'Invalid code';
       verification = null;
       codeVerified = false;
       return;
     }
 
-    if (response.data) {
-      verification = response.data;
-      codeVerified = true;
+    verification = response.data;
+    codeVerified = true;
 
-      // Pre-select already voted projects
-      const preSelected = new Set<string>();
-      for (const pv of verification.projects) {
-        if (pv.selected) {
-          preSelected.add(pv.project.id);
-        }
+    // Pre-select already voted projects
+    const preSelected = new Set<string>();
+    for (const pv of verification.projects) {
+      if (pv.selected) {
+        preSelected.add(pv.project.id);
       }
-      selectedProjectIds = preSelected;
     }
+    selectedProjectIds = preSelected;
   }
 
   function handleProjectSelect(projectId: string) {
@@ -99,7 +97,7 @@
 
     isSubmitting = false;
 
-    if (response.errors) {
+    if (isApiError(response)) {
       error = response.errors[0]?.message || 'Failed to submit vote';
       return;
     }
