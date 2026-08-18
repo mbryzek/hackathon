@@ -9,8 +9,8 @@
   let { title, children }: Props = $props();
 </script>
 
-<div class="bg-slate-700 rounded-lg p-6 mt-4 border-l-4 border-yellow-500 shadow-lg">
-  <div class="text-yellow-500 text-sm uppercase tracking-wide font-bold mb-1">
+<div class="mt-4 rounded-lg border-l-4 border-yellow-500 bg-slate-700 p-6 shadow-lg">
+  <div class="mb-1 text-sm font-bold uppercase tracking-wide text-yellow-500">
     {title}
   </div>
   <div class="text-2xl font-bold text-white">

@@ -38,7 +38,7 @@
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in"
+    class="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
     onclick={handleBackdropClick}
     role="dialog"
     aria-modal="true"
@@ -50,15 +50,15 @@
          of the corner of this card — and because `animate-scale-in` applies a transform (which
          does establish a containing block) for only 0.2s with no fill-mode, the button started
          in the right place and then jumped away as the animation ended. -->
-    <div class="{sizeClasses[size]} relative w-full mx-4 animate-scale-in">
+    <div class="{sizeClasses[size]} animate-scale-in relative mx-4 w-full">
       <!-- Close button -->
       <button
         type="button"
-        class="absolute top-4 right-4 z-10 p-2 text-white/80 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white"
+        class="absolute right-4 top-4 z-10 rounded-full bg-black/30 p-2 text-white/80 transition-all duration-200 hover:bg-black/50 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
         onclick={onclose}
         aria-label="Close modal"
       >
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>

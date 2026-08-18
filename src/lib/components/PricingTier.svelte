@@ -27,9 +27,9 @@
   const checkClasses = $derived(featured ? 'text-white' : 'text-green-500');
 </script>
 
-<div class="relative rounded-xl p-6 {cardClasses} shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
+<div class="relative rounded-xl p-6 {cardClasses} flex h-full flex-col shadow-lg transition-shadow duration-300 hover:shadow-xl">
   <!-- Header -->
-  <div class="text-center mb-6">
+  <div class="mb-6 text-center">
     <h3 class="text-xl font-bold {titleClasses}">{name}</h3>
     <div class="mt-2">
       <span class="text-4xl font-bold {costClasses}">{cost}</span>
@@ -37,10 +37,10 @@
   </div>
 
   <!-- Benefits -->
-  <ul class="space-y-3 flex-grow mb-6">
+  <ul class="mb-6 flex-grow space-y-3">
     {#each benefits as benefit}
       <li class="flex items-start gap-3">
-        <svg class="w-5 h-5 {checkClasses} mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="h-5 w-5 {checkClasses} mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
         </svg>
         <span class="{benefitTextClasses} text-sm">{benefit}</span>

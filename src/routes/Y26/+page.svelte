@@ -31,9 +31,9 @@
 </script>
 
 <Shell title="2026 Hackathon Event Summary">
-  <div class="max-w-3xl mx-auto px-4 py-8 space-y-6 text-lg leading-relaxed">
+  <div class="mx-auto max-w-3xl space-y-6 px-4 py-8 text-lg leading-relaxed">
     <!-- Callout Boxes - responsive stack on mobile -->
-    <div class="flex flex-col sm:flex-row gap-4">
+    <div class="flex flex-col gap-4 sm:flex-row">
       <CalloutBox title="Date & Time">
         <div class="flex flex-col gap-y-2">
           <div>April 18, 2026</div>
@@ -57,30 +57,30 @@
       <Button href={urls.y26Sponsors} label="Our sponsors" size="sm" variant="secondary" />
     </div>
 
-    <p class="text-gray-800 font-light">
+    <p class="font-light text-gray-800">
       The 2026 Bergen Tech Hackathon was our best year yet! We want to thank you — our sponsors, donors, speakers, judges, mentors, teachers
       and families — for making it possible. Not one piece of this event happens without you.
     </p>
 
-    <p class="text-gray-800 font-light">
+    <p class="font-light text-gray-800">
       This year the event grew again, with 130 high school students from both the Teterboro and Paramus campuses registering to compete.
       Students formed 39 teams for a 12-hour "Build" themed sprint — going from a blank screen to a working demo in a single day. From idea
       generation, to building, to final presentations in front of industry judges, the creativity and ambition on display was genuinely
       extraordinary.
     </p>
 
-    <p class="text-gray-800 font-light">
+    <p class="font-light text-gray-800">
       We awarded $4,500 in prizes across 13 categories, recognizing everything from best use of AI and most technically ambitious build to
       social impact, design, and rookie team of the year.
     </p>
 
     <!-- Projects Section -->
     <div class="mt-4">
-      <h3 class="text-xl font-semibold mb-4 text-gray-800">A few example projects</h3>
+      <h3 class="mb-4 text-xl font-semibold text-gray-800">A few example projects</h3>
       <ul class="space-y-3">
         {#each projects as project}
-          <li class="flex items-start gap-3 text-gray-800 font-light">
-            <span class="text-yellow-500 mt-1">&#9679;</span>
+          <li class="flex items-start gap-3 font-light text-gray-800">
+            <span class="mt-1 text-yellow-500">&#9679;</span>
             {project}
           </li>
         {/each}
@@ -89,8 +89,8 @@
 
     <!-- By the Numbers Section -->
     <div class="mt-8">
-      <h2 class="text-2xl font-semibold mb-6 text-gray-800">By the Numbers</h2>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <h2 class="mb-6 text-2xl font-semibold text-gray-800">By the Numbers</h2>
+      <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
         {#each stats as stat, i}
           <StatCard value={stat.value} label={stat.label} highlight={i === 0} />
         {/each}

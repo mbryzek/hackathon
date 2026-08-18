@@ -156,9 +156,9 @@
 <div class="animate-fade-in">
   {#if !codeVerified}
     <!-- Code entry form -->
-    <div class="bg-white shadow-lg rounded-xl p-8 max-w-md mx-auto">
-      <div class="text-center mb-8">
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">Enter your code</h1>
+    <div class="mx-auto max-w-md rounded-xl bg-white p-8 shadow-lg">
+      <div class="mb-8 text-center">
+        <h1 class="mb-2 text-2xl font-bold text-gray-900">Enter your code</h1>
       </div>
 
       <form
@@ -176,7 +176,7 @@
             value={code}
             oninput={handleCodeInput}
             placeholder="AB1234"
-            class="w-full px-4 py-3 text-2xl text-center font-mono tracking-widest border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
+            class="w-full rounded-lg border border-gray-300 px-4 py-3 text-center font-mono text-2xl tracking-widest transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
             autocomplete="off"
             disabled={isVerifying}
           />
@@ -189,7 +189,7 @@
         <button
           type="submit"
           disabled={isVerifying}
-          class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+          class="w-full rounded-lg bg-yellow-400 px-6 py-4 text-lg font-bold text-gray-900 transition-colors hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {#if isVerifying}
             <span class="inline-flex items-center justify-center gap-2">
@@ -206,19 +206,19 @@
     <!-- Voting interface -->
     <div class="space-y-6">
       <!-- Header -->
-      <div class="bg-white shadow-lg rounded-xl p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="rounded-xl bg-white p-6 shadow-lg">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <!-- tabindex="-1" so focus can be moved here when the ballot replaces the code form.
                  It is not a tab stop; -1 only makes it programmatically focusable. -->
             <h1 class="text-2xl font-bold text-gray-900 focus:outline-none" bind:this={ballotHeading} tabindex="-1">
               {verification.event.name}
             </h1>
-            <p class="text-gray-600 mt-1">
+            <p class="mt-1 text-gray-600">
               Voting as: <span class="font-semibold">{voterTypeLabel}</span>
             </p>
           </div>
-          <div class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-center">
+          <div class="rounded-lg bg-yellow-100 px-4 py-2 text-center text-yellow-800">
             <!-- The same string is also the ballot's <legend>, so a bare text match now finds two
                  elements. The testid names the visible badge specifically. -->
             <span class="font-semibold" data-testid="vote-instructions">{voteInstructions}</span>
@@ -269,33 +269,33 @@
                    being an <h3> for the same reason, and loses nothing — it is now the accessible
                    name of the control itself, which is a better landmark than a heading was. -->
               <span
-                class="block bg-white shadow rounded-xl p-6 transition-all duration-200
+                class="block rounded-xl bg-white p-6 shadow transition-all duration-200
 							peer-focus-visible:ring-2 peer-focus-visible:ring-gray-900 peer-focus-visible:ring-offset-2
-							{isSelected ? 'ring-2 ring-yellow-400 bg-yellow-50' : 'hover:shadow-lg'}
+							{isSelected ? 'bg-yellow-50 ring-2 ring-yellow-400' : 'hover:shadow-lg'}
 							{isDisabled ? 'opacity-50' : ''}"
               >
                 <span class="flex items-start gap-4">
                   <!-- Selection indicator. aria-hidden: the input already announces checked state,
                        so exposing this too would say it twice. -->
-                  <span class="flex-shrink-0 mt-1" aria-hidden="true">
+                  <span class="mt-1 flex-shrink-0" aria-hidden="true">
                     {#if verification.max_votes === 1}
                       <!-- Radio style -->
                       <span
-                        class="w-6 h-6 rounded-full border-2 flex items-center justify-center
+                        class="flex h-6 w-6 items-center justify-center rounded-full border-2
 											{isSelected ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'}"
                       >
                         {#if isSelected}
-                          <span class="block w-3 h-3 rounded-full bg-white"></span>
+                          <span class="block h-3 w-3 rounded-full bg-white"></span>
                         {/if}
                       </span>
                     {:else}
                       <!-- Checkbox style -->
                       <span
-                        class="w-6 h-6 rounded border-2 flex items-center justify-center
+                        class="flex h-6 w-6 items-center justify-center rounded border-2
 											{isSelected ? 'border-yellow-500 bg-yellow-500' : 'border-gray-300'}"
                       >
                         {#if isSelected}
-                          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                           </svg>
                         {/if}
@@ -309,7 +309,7 @@
                       {pv.project.name}
                     </span>
                     {#if pv.project.description}
-                      <span class="block text-gray-600 mt-1">
+                      <span class="mt-1 block text-gray-600">
                         {pv.project.description}
                       </span>
                     {/if}
@@ -322,12 +322,12 @@
       </fieldset>
 
       <!-- Submit button -->
-      <div class="bg-white shadow-lg rounded-xl p-6">
+      <div class="rounded-xl bg-white p-6 shadow-lg">
         <button
           type="button"
           onclick={handleSubmit}
           disabled={!canSubmit || isSubmitting}
-          class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg shadow-md"
+          class="w-full rounded-lg bg-yellow-400 px-6 py-4 text-lg font-bold text-gray-900 shadow-md transition-colors hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {#if isSubmitting}
             <span class="inline-flex items-center justify-center gap-2">

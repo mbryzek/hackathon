@@ -34,7 +34,7 @@
 
 <div class={cardClasses}>
   {#if header}
-    <div class="border-b border-gray-100 px-6 py-4 bg-gray-50">
+    <div class="border-b border-gray-100 bg-gray-50 px-6 py-4">
       {@render header()}
     </div>
   {/if}
@@ -44,7 +44,7 @@
   </div>
 
   {#if footer}
-    <div class="border-t border-gray-100 px-6 py-4 bg-gray-50">
+    <div class="border-t border-gray-100 bg-gray-50 px-6 py-4">
       {@render footer()}
     </div>
   {/if}

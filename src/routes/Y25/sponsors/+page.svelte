@@ -5,6 +5,6 @@
 </script>
 
 <Shell title="2025 Sponsors">
-  <p class="text-gray-800 font-light mb-6">A huge thank you to our sponsors who made our 2025 Hackathon possible!</p>
+  <p class="mb-6 font-light text-gray-800">A huge thank you to our sponsors who made our 2025 Hackathon possible!</p>
   <PhotoGallery photos={sponsorsY25} />
 </Shell>

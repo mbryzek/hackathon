@@ -120,8 +120,8 @@
   <div class="flex flex-col gap-y-8">
     <!-- Judging Format -->
     <div>
-      <h2 class="text-xl font-semibold text-gray-800 mb-3">Judging Format</h2>
-      <div class="space-y-3 text-gray-800 font-light">
+      <h2 class="mb-3 text-xl font-semibold text-gray-800">Judging Format</h2>
+      <div class="space-y-3 font-light text-gray-800">
         <p>
           This year's evaluation format will continue as a science fair. Towards the end of the evening, all teams will stop working on
           their projects and shift to presenting their projects to the audience. Judges, parents, and students are encouraged to visit each
@@ -141,12 +141,12 @@
 
     <!-- Scoring Summary -->
     <div>
-      <h2 class="text-xl font-semibold text-gray-800 mb-3">Scoring Summary</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <h2 class="mb-3 text-xl font-semibold text-gray-800">Scoring Summary</h2>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {#each rubricSections as section}
           <div class="rounded-lg border border-gray-200 px-4 py-3 text-center">
             <div class="text-sm font-semibold text-gray-800">{section.title}</div>
-            <div class="text-yellow-600 font-bold mt-1">{section.subtitle}</div>
+            <div class="mt-1 font-bold text-yellow-600">{section.subtitle}</div>
           </div>
         {/each}
       </div>
@@ -154,21 +154,21 @@
 
     <!-- Rubric Details -->
     <div>
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">Judging Rubric</h2>
+      <h2 class="mb-4 text-xl font-semibold text-gray-800">Judging Rubric</h2>
       <div class="flex flex-col gap-y-6">
         {#each rubricSections as section}
-          <div class="rounded-lg border border-gray-200 overflow-hidden">
-            <div class="bg-gray-100 px-6 py-4 border-b border-gray-200">
+          <div class="overflow-hidden rounded-lg border border-gray-200">
+            <div class="border-b border-gray-200 bg-gray-100 px-6 py-4">
               <h3 class="text-lg font-semibold text-yellow-600">
                 {section.title}
-                <span class="text-sm font-normal text-gray-500 ml-2">({section.subtitle})</span>
+                <span class="ml-2 text-sm font-normal text-gray-500">({section.subtitle})</span>
               </h3>
             </div>
             <div class="px-6 py-4">
               <div class="flex flex-col gap-y-4">
                 {#each section.items as item}
                   <div class="flex gap-x-4">
-                    <div class="font-bold min-w-[2.5rem] text-yellow-600">{item.score}</div>
+                    <div class="min-w-[2.5rem] font-bold text-yellow-600">{item.score}</div>
                     <div class="text-gray-800">{item.description}</div>
                   </div>
                 {/each}
@@ -181,7 +181,7 @@
 
     <!-- AI Rubric Note -->
     <div class="rounded-lg border border-blue-200 bg-blue-50 px-6 py-4">
-      <h3 class="font-semibold text-blue-800 mb-2">About the AI Rubric</h3>
+      <h3 class="mb-2 font-semibold text-blue-800">About the AI Rubric</h3>
       <p class="text-sm text-blue-700">
         AI has become a powerful tool and we encourage interested teams to use AI to build their projects. However, we want to also
         encourage teams to understand what the AI is doing. We also want to create a level rubric for our No AI Teams - thus, the AI rubric

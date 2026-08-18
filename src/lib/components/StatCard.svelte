@@ -19,10 +19,10 @@
   const labelClasses = $derived(highlight ? 'text-white/90' : 'text-gray-600');
 </script>
 
-<div class="rounded-xl p-6 {cardClasses} shadow-sm hover:shadow-md transition-shadow duration-300">
+<div class="rounded-xl p-6 {cardClasses} shadow-sm transition-shadow duration-300 hover:shadow-md">
   <div class="flex items-start justify-between">
     <div>
-      <p class="text-3xl md:text-4xl font-bold {valueClasses}">
+      <p class="text-3xl font-bold md:text-4xl {valueClasses}">
         {value}
       </p>
       <p class="mt-1 text-sm font-medium {labelClasses}">
@@ -30,7 +30,7 @@
       </p>
     </div>
     {#if icon}
-      <div class="p-2 rounded-lg {highlight ? 'bg-white/20' : 'bg-gray-100'}">
+      <div class="rounded-lg p-2 {highlight ? 'bg-white/20' : 'bg-gray-100'}">
         {@render icon()}
       </div>
     {/if}
