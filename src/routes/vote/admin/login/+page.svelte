@@ -22,13 +22,13 @@
   let error = $derived(form?.errors?.[0]?.message || null);
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full">
-    <div class="bg-white shadow-lg rounded-xl p-8">
-      <div class="text-center mb-8">
-        <img class="h-16 w-auto mx-auto mb-4" src="/assets/bt-cs-logo.png" alt="Bergen Tech Hackathon" />
+<div class="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
+  <div class="w-full max-w-md">
+    <div class="rounded-xl bg-white p-8 shadow-lg">
+      <div class="mb-8 text-center">
+        <img class="mx-auto mb-4 h-16 w-auto" src="/assets/bt-cs-logo.png" alt="Bergen Tech Hackathon" />
         <h1 class="text-2xl font-bold text-gray-900">Vote Admin Login</h1>
-        <p class="text-gray-600 mt-2">Sign in to manage voting events</p>
+        <p class="mt-2 text-gray-600">Sign in to manage voting events</p>
       </div>
 
       <form
@@ -43,28 +43,28 @@
         class="space-y-6"
       >
         <div>
-          <label for="email" class="block text-sm font-medium text-gray-700 mb-2"> Email </label>
+          <label for="email" class="mb-2 block text-sm font-medium text-gray-700"> Email </label>
           <input
             type="email"
             id="email"
             name="email"
             bind:value={email}
             placeholder="admin@example.com"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
+            class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
             autocomplete="email"
             disabled={isSubmitting}
           />
         </div>
 
         <div>
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-2"> Password </label>
+          <label for="password" class="mb-2 block text-sm font-medium text-gray-700"> Password </label>
           <input
             type="password"
             id="password"
             name="password"
             bind:value={password}
             placeholder="Enter your password"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors"
+            class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
             autocomplete="current-password"
             disabled={isSubmitting}
           />
@@ -77,7 +77,7 @@
         <button
           type="submit"
           disabled={isSubmitting || !email.trim() || !password}
-          class="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full rounded-lg bg-gray-900 px-6 py-3 font-bold text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {#if isSubmitting}
             <span class="inline-flex items-center justify-center gap-2">
@@ -91,8 +91,8 @@
       </form>
     </div>
 
-    <p class="text-center text-gray-500 text-sm mt-6">
-      <a href={urls.index} class="hover:text-gray-700 transition-colors"> Return to Hackathon Site </a>
+    <p class="mt-6 text-center text-sm text-gray-500">
+      <a href={urls.index} class="transition-colors hover:text-gray-700"> Return to Hackathon Site </a>
     </p>
   </div>
 </div>

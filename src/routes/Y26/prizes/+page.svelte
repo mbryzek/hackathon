@@ -79,26 +79,26 @@
 <Shell title="2026 Prizes">
   <div class="flex flex-col gap-y-8">
     <div>
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">Awards</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <h2 class="mb-4 text-xl font-semibold text-gray-800">Awards</h2>
+      <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {#each topAwards as award}
           <div class="rounded-lg border border-yellow-300 bg-yellow-50 px-5 py-4">
-            <div class="flex items-baseline justify-between mb-1">
+            <div class="mb-1 flex items-baseline justify-between">
               <h3 class="font-semibold text-gray-800">{award.title}</h3>
-              <span class="text-yellow-600 font-bold">{award.prize}</span>
+              <span class="font-bold text-yellow-600">{award.prize}</span>
             </div>
             <p class="text-sm text-gray-600">{award.description}</p>
           </div>
         {/each}
       </div>
 
-      <h3 class="text-lg font-semibold text-gray-800 mb-3">Additional Awards</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <h3 class="mb-3 text-lg font-semibold text-gray-800">Additional Awards</h3>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {#each additionalAwards as award}
           <div class="rounded-lg border border-gray-200 px-5 py-4">
-            <div class="flex items-baseline justify-between mb-1">
+            <div class="mb-1 flex items-baseline justify-between">
               <h3 class="font-semibold text-gray-800">{award.title}</h3>
-              <span class="text-yellow-600 font-bold">{award.prize}</span>
+              <span class="font-bold text-yellow-600">{award.prize}</span>
             </div>
             <p class="text-sm text-gray-600">{award.description}</p>
           </div>

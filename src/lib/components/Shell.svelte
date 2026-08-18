@@ -91,7 +91,7 @@
 
 <!-- Overlay for mobile menu -->
 {#if mobileMenuOpen}
-  <button class="fixed inset-0 bg-black/30 z-30 md:hidden transition-opacity duration-300" onclick={closeMobileMenu} aria-label="Close menu"
+  <button class="fixed inset-0 z-30 bg-black/30 transition-opacity duration-300 md:hidden" onclick={closeMobileMenu} aria-label="Close menu"
   ></button>
 {/if}
 
@@ -102,13 +102,13 @@
         <div class="flex items-center">
           <!-- Logo -->
           <div class="shrink-0">
-            <a href={urls.index} class="focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded">
+            <a href={urls.index} class="rounded focus:outline-none focus:ring-2 focus:ring-yellow-400">
               <img class="h-12 w-36 cursor-pointer" src="/assets/bt-cs-logo.png" alt="Bergen Tech Hackathon" />
             </a>
           </div>
 
           <!-- Desktop Navigation -->
-          <div class="md:block hidden">
+          <div class="hidden md:block">
             <div class="ml-10 flex items-baseline space-x-4">
               {#each sections as section}
                 {@const active = isActive(section) || hasActiveChild(section)}
@@ -124,7 +124,7 @@
                   >
                     {section.name}
                     {#if isExternal(section.href)}
-                      <svg class="inline-block w-3 h-3 ml-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="ml-1 inline-block h-3 w-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"
@@ -135,17 +135,17 @@
                     {/if}
                   </a>
                 {:else}
-                  <div class="relative group z-50">
+                  <div class="group relative z-50">
                     <a
                       href={section.href}
-                      class="rounded-md px-3 py-2 text-sm font-medium flex items-center gap-1 transition-colors duration-150 {active
+                      class="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150 {active
                         ? 'bg-gray-900 text-white'
                         : 'text-gray-300 hover:bg-gray-700 hover:text-white'}"
                     >
                       {section.name}
                       <!-- Dropdown chevron -->
                       <svg
-                        class="w-4 h-4 transition-transform duration-200 group-hover:rotate-180"
+                        class="h-4 w-4 transition-transform duration-200 group-hover:rotate-180"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -155,9 +155,9 @@
                     </a>
                     <!-- Dropdown menu with smooth transition -->
                     <div
-                      class="absolute left-0 top-full w-48 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out"
+                      class="invisible absolute left-0 top-full w-48 pt-2 opacity-0 transition-all duration-200 ease-out group-hover:visible group-hover:opacity-100"
                     >
-                      <div class="bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
+                      <div class="overflow-hidden rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
                         {#each section.children as child, i}
                           {@const childActive = page.url.pathname === child.href}
                           <a
@@ -185,7 +185,7 @@
         <div class="-mr-2 flex md:hidden">
           <button
             type="button"
-            class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-150"
+            class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 transition-colors duration-150 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
             aria-controls="mobile-menu"
             aria-expanded={mobileMenuOpen}
             onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
@@ -194,20 +194,20 @@
             <span class="sr-only">{mobileMenuOpen ? 'Close menu' : 'Open menu'}</span>
 
             <!-- Animated hamburger/close icon -->
-            <div class="relative w-6 h-6">
+            <div class="relative h-6 w-6">
               <span
-                class="absolute left-0 top-1 w-6 h-0.5 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
-                  ? 'rotate-45 translate-y-1.5'
+                class="absolute left-0 top-1 h-0.5 w-6 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
+                  ? 'translate-y-1.5 rotate-45'
                   : ''}"
               ></span>
               <span
-                class="absolute left-0 top-3 w-6 h-0.5 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
+                class="absolute left-0 top-3 h-0.5 w-6 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
                   ? 'opacity-0'
                   : ''}"
               ></span>
               <span
-                class="absolute left-0 top-5 w-6 h-0.5 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
-                  ? '-rotate-45 -translate-y-1.5'
+                class="absolute left-0 top-5 h-0.5 w-6 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
+                  ? '-translate-y-1.5 -rotate-45'
                   : ''}"
               ></span>
             </div>
@@ -219,11 +219,11 @@
     <!-- Mobile menu with slide animation -->
     <div
       id="mobile-menu"
-      class="md:hidden overflow-hidden transition-all duration-300 ease-in-out {mobileMenuOpen
+      class="overflow-hidden transition-all duration-300 ease-in-out md:hidden {mobileMenuOpen
         ? 'max-h-screen opacity-100'
         : 'max-h-0 opacity-0'}"
     >
-      <div class="px-2 pt-2 pb-3 space-y-1 bg-gray-800 border-t border-gray-700">
+      <div class="space-y-1 border-t border-gray-700 bg-gray-800 px-2 pb-3 pt-2">
         {#each sections as section}
           {@const active = isActive(section) || hasActiveChild(section)}
           <div>
@@ -238,7 +238,7 @@
             >
               {section.name}
               {#if isExternal(section.href)}
-                <svg class="inline-block w-3 h-3 ml-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="ml-1 inline-block h-3 w-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -249,7 +249,7 @@
               {/if}
             </a>
             {#if section.children.length > 0}
-              <div class="pl-4 mt-1 space-y-1">
+              <div class="mt-1 space-y-1 pl-4">
                 {#each section.children as child}
                   {@const childActive = page.url.pathname === child.href}
                   <a
@@ -272,7 +272,7 @@
 
   <header class="bg-white shadow-sm">
     <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-      <h1 class="text-gray-800 text-lg/6 font-semibold">{title}</h1>
+      <h1 class="text-lg/6 font-semibold text-gray-800">{title}</h1>
     </div>
   </header>
 

@@ -47,17 +47,17 @@
   }
 </script>
 
-<div class="bg-white px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-  <div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2 max-w-none mx-auto">
+<div class="mx-auto max-w-7xl bg-white px-4 sm:px-6 lg:px-8">
+  <div class="mx-auto mt-6 grid max-w-none grid-cols-1 gap-8 md:grid-cols-2">
     {#each displayVideos as video, index}
-      <div class="group video-container">
-        <div class="relative w-full overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-all duration-300 bg-gray-900">
+      <div class="video-container group">
+        <div class="relative w-full overflow-hidden rounded-xl bg-gray-900 shadow-md transition-all duration-300 hover:shadow-xl">
           <!-- Video element -->
           <video
             controls
             preload="metadata"
             poster={video.poster}
-            class="w-full aspect-video object-cover"
+            class="aspect-video w-full object-cover"
             onplay={() => handlePlay(index)}
             onpause={() => handlePause(index)}
             onloadstart={() => handleLoadStart(index)}
@@ -71,20 +71,20 @@
           {#if !playingVideos.has(index)}
             <button
               type="button"
-              class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-100 group-hover:bg-black/40 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:ring-offset-2"
+              class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/30 opacity-100 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:ring-offset-2 group-hover:bg-black/40"
               onclick={playVideo}
               aria-label="Play video: {video.title}"
             >
               <!-- Play button circle -->
               <div
-                class="w-20 h-20 rounded-full bg-white/90 group-hover:bg-white group-hover:scale-110 transition-all duration-300 flex items-center justify-center shadow-lg"
+                class="flex h-20 w-20 items-center justify-center rounded-full bg-white/90 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:bg-white"
               >
                 {#if loadingVideos.has(index)}
                   <!-- Loading spinner -->
-                  <div class="w-8 h-8 border-4 border-gray-300 border-t-yellow-500 rounded-full animate-spin"></div>
+                  <div class="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-yellow-500"></div>
                 {:else}
                   <!-- Play icon -->
-                  <svg class="w-10 h-10 text-gray-900 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                  <svg class="ml-1 h-10 w-10 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 {/if}
@@ -95,8 +95,8 @@
 
         <!-- Video title -->
         <div class="mt-3 flex items-center gap-2">
-          <div class="p-1.5 bg-yellow-100 rounded-lg">
-            <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="rounded-lg bg-yellow-100 p-1.5">
+            <svg class="h-4 w-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"

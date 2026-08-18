@@ -26,16 +26,16 @@
         <div class="flex h-16 items-center justify-between">
           <div class="flex items-center gap-8">
             <a href={urls.index} class="flex items-center">
-              <img class="h-10 w-30" src="/assets/bt-cs-logo.png" alt="Bergen Tech Hackathon" />
+              <img class="w-30 h-10" src="/assets/bt-cs-logo.png" alt="Bergen Tech Hackathon" />
             </a>
-            <span class="text-white font-semibold">Vote Admin</span>
+            <span class="font-semibold text-white">Vote Admin</span>
           </div>
           <div class="flex items-center gap-4">
-            <a href={urls.voteAdmin} class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+            <a href={urls.voteAdmin} class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white">
               Events
             </a>
             <form method="POST" action={urls.voteAdminLogout}>
-              <button type="submit" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              <button type="submit" class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:text-white">
                 Logout
               </button>
             </form>
