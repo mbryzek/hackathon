@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { visibilityAwareInterval } from './polling';
+// dry-copy: sveltekit/visibility-aware-interval-test — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
 
 const INTERVAL = 1000;
 
@@ -275,3 +276,4 @@ describe('visibilityAwareInterval', () => {
     });
   });
 });
+// dry-copy-end
