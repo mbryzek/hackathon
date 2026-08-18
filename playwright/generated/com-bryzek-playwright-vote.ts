@@ -34,31 +34,75 @@ export interface TestEventForm {
 
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
 import { ApiException } from "./generated-util.ts";
+import type { ApiClientOptions } from "./generated-util.ts";
 
 export interface CreatePlaywrightVoteEventsOptions {
   tenantId: string;
   body: TestEventForm;
   headers?: Record<string, string>;
+  signal?: AbortSignal;
 }
 
 export class ApiClient {
   private baseUrl: string;
+  private defaultHeaders: Record<string, string>;
+  private timeoutMs: number | undefined;
+  private fetchImpl: typeof fetch;
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+  /**
+   * Accepts a bare base URL for backwards compatibility, or an options object carrying
+   * the headers every call should send, a request timeout, and a fetch implementation.
+   */
+  constructor(options: string | ApiClientOptions) {
+    const resolved: ApiClientOptions = typeof options === 'string' ? { baseUrl: options } : options;
+    this.baseUrl = resolved.baseUrl;
+    this.defaultHeaders = resolved.headers ?? {};
+    this.timeoutMs = resolved.timeoutMs;
+    const fetchImpl = resolved.fetch;
+    this.fetchImpl = fetchImpl ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
+  }
+
+  private async request(
+    url: string,
+    init: Omit<RequestInit, 'headers' | 'signal'>,
+    contentType: string,
+    headers: Record<string, string>,
+    signal?: AbortSignal
+  ): Promise<Response> {
+    const requestInit: RequestInit = {
+      ...init,
+      headers: { 'Content-Type': contentType, ...this.defaultHeaders, ...headers },
+    };
+    if (this.timeoutMs === undefined) {
+      return this.fetchImpl(url, { ...requestInit, signal: signal ?? null });
+    }
+    const controller = new AbortController();
+    const abort = () => controller.abort();
+    if (signal !== undefined) {
+      if (signal.aborted) {
+        controller.abort();
+      } else {
+        signal.addEventListener('abort', abort, { once: true });
+      }
+    }
+    const timer = setTimeout(abort, this.timeoutMs);
+    try {
+      return await this.fetchImpl(url, { ...requestInit, signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+      if (signal !== undefined) {
+        signal.removeEventListener('abort', abort);
+      }
+    }
   }
 
   async createPlaywrightVoteEvents(params: CreatePlaywrightVoteEventsOptions): Promise<TestEvent> {
     const url = `${this.baseUrl}/${encodeURIComponent(params.tenantId)}/playwright/events`;
 
-      const response = await fetch(url, {
+      const response = await this.request(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(params.headers || {}),
-      },
       body: JSON.stringify(params.body),
-    });
+    }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 201) {
       const data = await response.json();
