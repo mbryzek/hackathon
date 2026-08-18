@@ -174,12 +174,12 @@ export class ApiClient {
     }
   }
 
-  async getAllEventsOpen(params: GetAllEventsOpenOptions): Promise<Event[]> {
+  async getAllEventsOpen(params?: GetAllEventsOpenOptions): Promise<Event[]> {
     const url = `${this.baseUrl}/vote/events/all/open`;
 
       const response = await this.request(url, {
       method: 'GET',
-    }, 'application/json', params.headers || {}, params.signal);
+    }, 'application/json', params?.headers || {}, params?.signal);
 
     if (response.status === 200) {
       const data = await response.json();
