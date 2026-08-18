@@ -18,8 +18,7 @@ function isGenerated(path) {
 function groupOf(path) {
   if (isGenerated(path)) return '4. Generated';
   if (/\.json$/.test(path)) return '1. Specs & JSON';
-  if (/(^|\/)tests?\//i.test(path) || /(^|\/)playwright\//i.test(path) || /\.(test|spec)\.[jt]s$/.test(path))
-    return '3. Tests';
+  if (/(^|\/)tests?\//i.test(path) || /(^|\/)playwright\//i.test(path) || /\.(test|spec)\.[jt]s$/.test(path)) return '3. Tests';
   return '2. Source';
 }
 
