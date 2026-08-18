@@ -39,9 +39,7 @@ export default [
       'build/**',
       'node_modules/**',
       'src/generated/**',
-      'playwright/generated/**',
-      // Reviewable evaluates this as a function body with `review` in scope, not as a module.
-      '.reviewable/**'
+      'playwright/generated/**'
     ]
   },
 
