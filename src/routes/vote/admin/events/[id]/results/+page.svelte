@@ -96,7 +96,7 @@
   }
 </script>
 
-<div class="animate-fade-in {isPresentationMode ? 'fixed inset-0 bg-gray-900 z-50 overflow-auto' : ''}">
+<div class="animate-fade-in {isPresentationMode ? 'fixed inset-0 z-50 overflow-auto bg-gray-900' : ''}">
   {#if !isPresentationMode}
     <EventAdminTabs {eventId} eventName={event?.name} activeTab="results" />
   {/if}
@@ -107,15 +107,15 @@
 
   {#if results}
     <!-- Controls -->
-    <div class="{isPresentationMode ? 'absolute top-4 right-4 z-10' : 'mb-6'} flex gap-4">
+    <div class="{isPresentationMode ? 'absolute right-4 top-4 z-10' : 'mb-6'} flex gap-4">
       <button
         type="button"
         onclick={togglePresentationMode}
         class="{isPresentationMode
-          ? 'bg-white/10 hover:bg-white/20 text-white'
-          : 'bg-gray-200 hover:bg-gray-300 text-gray-700'} font-semibold py-2 px-4 rounded-lg transition-colors inline-flex items-center gap-2"
+          ? 'bg-white/10 text-white hover:bg-white/20'
+          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} inline-flex items-center gap-2 rounded-lg px-4 py-2 font-semibold transition-colors"
       >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           {#if isPresentationMode}
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           {:else}
@@ -138,19 +138,19 @@
     <!-- Results display -->
     <div class={isPresentationMode ? 'p-8' : ''}>
       {#if isPresentationMode}
-        <h1 class="text-5xl font-bold text-white text-center mb-2">{event?.name}</h1>
-        <p class="text-2xl text-gray-400 text-center mb-8">Voting Results</p>
+        <h1 class="mb-2 text-center text-5xl font-bold text-white">{event?.name}</h1>
+        <p class="mb-8 text-center text-2xl text-gray-400">Voting Results</p>
       {/if}
 
       <!-- Vote counts by type -->
-      <div class={isPresentationMode ? 'flex justify-center gap-16 mb-12' : 'grid grid-cols-2 gap-4 mb-6'}>
-        <div class={isPresentationMode ? 'text-center' : 'bg-white shadow rounded-xl p-6 text-center'}>
+      <div class={isPresentationMode ? 'mb-12 flex justify-center gap-16' : 'mb-6 grid grid-cols-2 gap-4'}>
+        <div class={isPresentationMode ? 'text-center' : 'rounded-xl bg-white p-6 text-center shadow'}>
           <div class={isPresentationMode ? 'text-5xl font-bold text-yellow-400' : 'text-3xl font-bold text-blue-600'}>
             {results.student.total_votes}
           </div>
           <div class={isPresentationMode ? 'text-xl text-gray-400' : 'text-gray-600'}>Student Votes</div>
         </div>
-        <div class={isPresentationMode ? 'text-center' : 'bg-white shadow rounded-xl p-6 text-center'}>
+        <div class={isPresentationMode ? 'text-center' : 'rounded-xl bg-white p-6 text-center shadow'}>
           <div class={isPresentationMode ? 'text-5xl font-bold text-blue-400' : 'text-3xl font-bold text-purple-600'}>
             {results.parent.total_votes}
           </div>
@@ -160,12 +160,12 @@
 
       <!-- Student Results -->
       <div class="mb-8">
-        <h2 class={isPresentationMode ? 'text-3xl font-bold text-white mb-4' : 'text-xl font-bold text-gray-900 mb-4'}>Student Votes</h2>
+        <h2 class={isPresentationMode ? 'mb-4 text-3xl font-bold text-white' : 'mb-4 text-xl font-bold text-gray-900'}>Student Votes</h2>
         {#if sortedStudentProjects.length === 0}
           <div
             class={isPresentationMode
-              ? 'text-center text-white/60 text-xl py-8'
-              : 'bg-white shadow rounded-xl p-8 text-center text-gray-500'}
+              ? 'py-8 text-center text-xl text-white/60'
+              : 'rounded-xl bg-white p-8 text-center text-gray-500 shadow'}
           >
             No student votes yet.
           </div>
@@ -173,17 +173,17 @@
           <div class="space-y-{isPresentationMode ? '6' : '4'}">
             {#each sortedStudentProjects as projectTally, index (projectTally.project.id)}
               {@const rank = getRank(sortedStudentProjects, index)}
-              <div class={isPresentationMode ? 'bg-white/10 backdrop-blur rounded-xl p-6' : 'bg-white shadow rounded-xl p-6'}>
+              <div class={isPresentationMode ? 'rounded-xl bg-white/10 p-6 backdrop-blur' : 'rounded-xl bg-white p-6 shadow'}>
                 <div class="flex items-center gap-4">
                   <div
-                    class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg {getRankBadgeClass(
+                    class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold {getRankBadgeClass(
                       rank
                     )}"
                   >
                     {rank}
                   </div>
                   <div class="flex-grow">
-                    <div class="flex items-center justify-between mb-2">
+                    <div class="mb-2 flex items-center justify-between">
                       <h3 class={isPresentationMode ? 'text-2xl font-bold text-white' : 'text-lg font-semibold text-gray-900'}>
                         {projectTally.project.name}
                       </h3>
@@ -191,7 +191,7 @@
                         {projectTally.vote_count}
                       </span>
                     </div>
-                    <div class="{isPresentationMode ? 'h-4 bg-white/10' : 'h-3 bg-gray-100'} rounded-full overflow-hidden">
+                    <div class="{isPresentationMode ? 'h-4 bg-white/10' : 'h-3 bg-gray-100'} overflow-hidden rounded-full">
                       <div
                         class="h-full {rank === 1
                           ? 'bg-yellow-400'
@@ -213,12 +213,12 @@
 
       <!-- Parent Results -->
       <div>
-        <h2 class={isPresentationMode ? 'text-3xl font-bold text-white mb-4' : 'text-xl font-bold text-gray-900 mb-4'}>Parent Votes</h2>
+        <h2 class={isPresentationMode ? 'mb-4 text-3xl font-bold text-white' : 'mb-4 text-xl font-bold text-gray-900'}>Parent Votes</h2>
         {#if sortedParentProjects.length === 0}
           <div
             class={isPresentationMode
-              ? 'text-center text-white/60 text-xl py-8'
-              : 'bg-white shadow rounded-xl p-8 text-center text-gray-500'}
+              ? 'py-8 text-center text-xl text-white/60'
+              : 'rounded-xl bg-white p-8 text-center text-gray-500 shadow'}
           >
             No parent votes yet.
           </div>
@@ -226,17 +226,17 @@
           <div class="space-y-{isPresentationMode ? '6' : '4'}">
             {#each sortedParentProjects as projectTally, index (projectTally.project.id)}
               {@const rank = getRank(sortedParentProjects, index)}
-              <div class={isPresentationMode ? 'bg-white/10 backdrop-blur rounded-xl p-6' : 'bg-white shadow rounded-xl p-6'}>
+              <div class={isPresentationMode ? 'rounded-xl bg-white/10 p-6 backdrop-blur' : 'rounded-xl bg-white p-6 shadow'}>
                 <div class="flex items-center gap-4">
                   <div
-                    class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg {getRankBadgeClass(
+                    class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold {getRankBadgeClass(
                       rank
                     )}"
                   >
                     {rank}
                   </div>
                   <div class="flex-grow">
-                    <div class="flex items-center justify-between mb-2">
+                    <div class="mb-2 flex items-center justify-between">
                       <h3 class={isPresentationMode ? 'text-2xl font-bold text-white' : 'text-lg font-semibold text-gray-900'}>
                         {projectTally.project.name}
                       </h3>
@@ -244,7 +244,7 @@
                         {projectTally.vote_count}
                       </span>
                     </div>
-                    <div class="{isPresentationMode ? 'h-4 bg-white/10' : 'h-3 bg-gray-100'} rounded-full overflow-hidden">
+                    <div class="{isPresentationMode ? 'h-4 bg-white/10' : 'h-3 bg-gray-100'} overflow-hidden rounded-full">
                       <div
                         class="h-full {rank === 1
                           ? 'bg-blue-400'

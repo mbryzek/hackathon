@@ -4,19 +4,19 @@
 </script>
 
 <Shell title="Press">
-  <div class="max-w-3xl mx-auto space-y-8">
+  <div class="mx-auto max-w-3xl space-y-8">
     {#each pressReleases as release}
-      <article class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <time datetime={release.dateIso} class="text-sm text-gray-500">{release.date}</time>
         <h2 class="mt-1 text-xl font-semibold text-gray-900">{release.title}</h2>
-        <p class="mt-3 text-gray-700 leading-relaxed">{release.summary}</p>
+        <p class="mt-3 leading-relaxed text-gray-700">{release.summary}</p>
         <a
           href={release.pdfUrl}
           target="_blank"
           rel="noopener noreferrer"
           class="mt-4 inline-flex items-center gap-2 text-sm font-medium text-yellow-700 hover:text-yellow-800"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -28,7 +28,7 @@
         </a>
       </article>
     {:else}
-      <p class="text-gray-500 text-center py-12">No press releases available.</p>
+      <p class="py-12 text-center text-gray-500">No press releases available.</p>
     {/each}
   </div>
 </Shell>

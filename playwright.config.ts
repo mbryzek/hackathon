@@ -12,6 +12,21 @@ const FRONTEND_BASE_URL = process.env['FRONTEND_BASE_URL'] || process.env['BASE_
 const HEADLESS = process.env['HEADLESS'] === 'true';
 const TEST_RUN_DIR = process.env['TEST_RUN_DIR'] || '/tmp/playwright-screenshots';
 
+/**
+ * The port CI told this build to serve the frontend on (`dev e2e run`, ISS-2193).
+ *
+ * ONLY SET IN CI, and the `webServer` below keys off that rather than off `CI`, so a developer's
+ * workflow is untouched: you start `npm run dev` yourself, this stays undefined, and playwright
+ * manages no server — exactly as before.
+ *
+ * `strictPort` IS THE LOAD-BEARING WORD. A runner executes several builds at once behind nothing
+ * but a per-repo flock (ISS-2066), and vite silently auto-increments a taken port. Without
+ * `--strictPort` the collision is not a bind error: this suite attaches to the NEIGHBOURING
+ * build's dev server and reports on that repo's frontend against this one's backend, which is a
+ * red (or worse, a green) that nothing in the log explains.
+ */
+const E2E_WEB_PORT = process.env['E2E_WEB_PORT'];
+
 export default defineConfig({
   testDir: './playwright/tests',
 
@@ -113,12 +128,25 @@ export default defineConfig({
     //   name: 'Mobile Safari',
     //   use: { ...devices['iPhone 12'] },
     // },
-  ]
-
-  // Run your local dev server before starting the tests
-  // webServer: {
-  //   command: 'npm run dev',
-  //   url: FRONTEND_BASE_URL,
-  //   reuseExistingServer: !process.env['CI'],
-  // },
+  ],
+  ...(E2E_WEB_PORT
+    ? {
+        webServer: {
+          // `npm run dev` rather than a build + preview: these specs were written against the dev
+          // server a developer runs, and the point of enrolling them is to run THAT suite rather
+          // than a differently-served approximation of it. VITE_API_BASE_URL reaches it from this
+          // process's environment, where `dev e2e run` put it — vite gives a `VITE_`-prefixed
+          // process variable precedence over the committed `.env`.
+          command: `npm run dev -- --port ${E2E_WEB_PORT} --strictPort`,
+          url: FRONTEND_BASE_URL,
+          // NEVER reuse. A server already on this port is by definition not ours — the port was
+          // allocated to this build seconds ago — so reusing it is the ISS-2066 collision wearing
+          // a friendlier face.
+          reuseExistingServer: false,
+          timeout: 120_000,
+          stdout: 'pipe',
+          stderr: 'pipe'
+        }
+      }
+    : {})
 });

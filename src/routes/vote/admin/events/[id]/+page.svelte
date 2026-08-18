@@ -29,14 +29,14 @@
     {/if}
 
     <!-- Event Details -->
-    <div class="bg-white shadow rounded-xl p-6 mb-6">
-      <div class="flex items-center justify-between mb-4">
+    <div class="mb-6 rounded-xl bg-white p-6 shadow">
+      <div class="mb-4 flex items-center justify-between">
         <h2 class="text-lg font-semibold text-gray-900">Event Details</h2>
         <a
           href="{urls.voteAdminEvent(eventId)}/edit"
-          class="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors"
+          class="inline-flex items-center gap-2 rounded-lg bg-gray-200 px-4 py-2 font-semibold text-gray-700 transition-colors hover:bg-gray-300"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -51,19 +51,19 @@
         <div class="py-4 first:pt-0">
           <dt class="text-sm font-medium text-gray-500">Status</dt>
           <dd class="mt-1">
-            <span class="px-3 py-1 text-sm font-medium rounded-full {eventStatusBadgeClass(event.status)}">
+            <span class="rounded-full px-3 py-1 text-sm font-medium {eventStatusBadgeClass(event.status)}">
               {eventStatusLabel(event.status)}
             </span>
           </dd>
         </div>
         <div class="py-4">
           <dt class="text-sm font-medium text-gray-500">Event Key</dt>
-          <dd class="mt-1 text-gray-900 font-mono">{event.key}</dd>
+          <dd class="mt-1 font-mono text-gray-900">{event.key}</dd>
         </div>
         <div class="py-4">
           <dt class="text-sm font-medium text-gray-500">Voting URL</dt>
           <dd class="mt-1">
-            <a href={votingUrl} class="text-blue-600 hover:text-blue-800 underline break-all" target="_blank" rel="noopener noreferrer">
+            <a href={votingUrl} class="break-all text-blue-600 underline hover:text-blue-800" target="_blank" rel="noopener noreferrer">
               {votingUrl}
             </a>
           </dd>
@@ -80,12 +80,12 @@
     </div>
 
     <!-- Danger Zone -->
-    <div class="bg-white shadow rounded-xl p-6">
-      <h2 class="text-lg font-semibold text-red-600 mb-4">Danger Zone</h2>
+    <div class="rounded-xl bg-white p-6 shadow">
+      <h2 class="mb-4 text-lg font-semibold text-red-600">Danger Zone</h2>
       <button
         type="button"
         onclick={() => (showDeleteConfirm = true)}
-        class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 px-4 rounded-lg transition-colors"
+        class="rounded-lg bg-red-100 px-4 py-2 font-semibold text-red-700 transition-colors hover:bg-red-200"
       >
         Delete Event
       </button>
@@ -97,16 +97,16 @@
 
 <!-- Delete confirmation modal -->
 <Modal open={showDeleteConfirm} onclose={() => (showDeleteConfirm = false)} size="md">
-  <div class="bg-white rounded-xl shadow-xl p-6">
-    <h2 class="text-xl font-bold text-gray-900 mb-4">Delete Event</h2>
-    <p class="text-gray-600 mb-6">
+  <div class="rounded-xl bg-white p-6 shadow-xl">
+    <h2 class="mb-4 text-xl font-bold text-gray-900">Delete Event</h2>
+    <p class="mb-6 text-gray-600">
       Are you sure you want to delete this event? This action cannot be undone and will delete all associated projects, codes, and votes.
     </p>
-    <div class="flex gap-3 justify-end">
+    <div class="flex justify-end gap-3">
       <button
         type="button"
         onclick={() => (showDeleteConfirm = false)}
-        class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+        class="rounded-lg px-4 py-2 text-gray-600 transition-colors hover:bg-gray-100"
       >
         Cancel
       </button>
@@ -125,7 +125,7 @@
         <button
           type="submit"
           disabled={isDeleting}
-          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+          class="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
         >
           {#if isDeleting}
             Deleting...

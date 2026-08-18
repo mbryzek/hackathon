@@ -106,21 +106,21 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<div class="bg-white px-4 sm:px-6 lg:px-12 max-w-8xl mx-auto">
+<div class="max-w-8xl mx-auto bg-white px-4 sm:px-6 lg:px-12">
   <div
-    class="mt-6 grid grid-cols-1 gap-y-8 gap-x-4 sm:gap-8 md:gap-10 lg:gap-12 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 max-w-sm sm:max-w-none mx-auto"
+    class="xs:grid-cols-2 mx-auto mt-6 grid max-w-sm grid-cols-1 gap-x-4 gap-y-8 sm:max-w-none sm:grid-cols-2 sm:gap-8 md:grid-cols-3 md:gap-10 lg:grid-cols-3 lg:gap-12 xl:grid-cols-4 2xl:grid-cols-5"
   >
     {#each displayPhotos as photo, index}
       <div class="group relative">
         <button
           type="button"
-          class="w-full overflow-hidden rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
+          class="w-full cursor-pointer overflow-hidden rounded-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
           onclick={() => openLightbox(index)}
           aria-label="View photo in lightbox"
         >
           <!-- Skeleton loader -->
           {#if !loadedImages.has(index)}
-            <div class="absolute inset-0 bg-gray-200 animate-pulse rounded-lg"></div>
+            <div class="absolute inset-0 animate-pulse rounded-lg bg-gray-200"></div>
           {/if}
           <img
             src={photo}
@@ -130,9 +130,9 @@
             onload={() => handleImageLoad(index)}
           />
           <!-- Hover overlay -->
-          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+          <div class="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/10">
             <svg
-              class="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg"
+              class="h-10 w-10 text-white opacity-0 drop-shadow-lg transition-opacity duration-300 group-hover:opacity-100"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -154,7 +154,7 @@
 <!-- Lightbox Modal -->
 <Modal open={lightboxOpen} onclose={closeLightbox} size="full">
   <div
-    class="relative flex items-center justify-center min-h-[50vh]"
+    class="relative flex min-h-[50vh] items-center justify-center"
     role="group"
     aria-label="Photo viewer, swipe to navigate"
     ontouchstart={handleTouchStart}
@@ -165,38 +165,38 @@
     {#if displayPhotos.length > 1}
       <button
         type="button"
-        class="absolute left-2 md:left-4 z-10 p-3 text-white/80 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white"
+        class="absolute left-2 z-10 rounded-full bg-black/30 p-3 text-white/80 transition-all duration-200 hover:bg-black/50 hover:text-white focus:outline-none focus:ring-2 focus:ring-white md:left-4"
         onclick={prevPhoto}
         aria-label="Previous photo"
       >
-        <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="h-6 w-6 md:h-8 md:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
 
       <button
         type="button"
-        class="absolute right-2 md:right-4 z-10 p-3 text-white/80 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white"
+        class="absolute right-2 z-10 rounded-full bg-black/30 p-3 text-white/80 transition-all duration-200 hover:bg-black/50 hover:text-white focus:outline-none focus:ring-2 focus:ring-white md:right-4"
         onclick={nextPhoto}
         aria-label="Next photo"
       >
-        <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="h-6 w-6 md:h-8 md:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
       </button>
     {/if}
 
     <!-- Image container -->
-    <div class="flex items-center justify-center w-full max-h-[85vh]">
+    <div class="flex max-h-[85vh] w-full items-center justify-center">
       {#if imageLoading}
         <div class="absolute inset-0 flex items-center justify-center">
-          <div class="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <div class="h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-white"></div>
         </div>
       {/if}
 
       {#if imageError}
-        <div class="text-white text-center p-8">
-          <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="p-8 text-center text-white">
+          <svg class="mx-auto mb-4 h-16 w-16 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -210,7 +210,7 @@
         <img
           src={currentPhoto}
           alt=""
-          class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl transition-opacity duration-300 {imageLoading
+          class="max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl transition-opacity duration-300 {imageLoading
             ? 'opacity-0'
             : 'opacity-100'}"
           onload={handleLightboxImageLoad}
@@ -221,7 +221,7 @@
 
     <!-- Photo counter -->
     {#if displayPhotos.length > 1}
-      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 text-white text-sm rounded-full">
+      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-4 py-2 text-sm text-white">
         {currentIndex + 1} / {displayPhotos.length}
       </div>
     {/if}
