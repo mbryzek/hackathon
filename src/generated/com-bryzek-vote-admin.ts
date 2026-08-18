@@ -124,6 +124,12 @@ export interface Tally {
  * out of here cannot follow the spec when it changes, and the drift is silent until a request
  * is rejected. Only parameters that declare a bound appear.
  *
+ * The shape says what is bounded. `{ minimum, maximum }` bounds the VALUE the parameter may
+ * take. `{ length: { minimum, maximum } }` bounds how many elements an array may carry, or
+ * how many characters a string may hold, and says nothing about any one of them -- so
+ * `id: { length: { maximum: 100 } }` means "send at most 100 ids", never "send an id no
+ * greater than 100".
+ *
  * A bound is what the CONTRACT promises to accept. The server is still the authority on any
  * one request, so a rejection is read from the response, not predicted from here.
  *
@@ -131,7 +137,7 @@ export interface Tally {
  */
 export const parameterBounds = {
   getCodes: { limit: { minimum: 1, maximum: 101 }, offset: { minimum: 0 } },
-  getEvents: { id: { minimum: 0, maximum: 100 }, status: { minimum: 0, maximum: 10 }, limit: { minimum: 1, maximum: 101 }, offset: { minimum: 0 } },
+  getEvents: { id: { length: { minimum: 0, maximum: 100 } }, status: { length: { minimum: 0, maximum: 10 } }, limit: { minimum: 1, maximum: 101 }, offset: { minimum: 0 } },
   getProjects: { limit: { minimum: 1, maximum: 101 }, offset: { minimum: 0 } },
 } as const;
 
