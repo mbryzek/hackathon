@@ -25,7 +25,7 @@ const TEST_RUN_DIR = process.env['TEST_RUN_DIR'] || '/tmp/playwright-screenshots
  * build's dev server and reports on that repo's frontend against this one's backend, which is a
  * red (or worse, a green) that nothing in the log explains.
  */
-const E2E_WEB_PORT = process.env.E2E_WEB_PORT;
+const E2E_WEB_PORT = process.env['E2E_WEB_PORT'];
 
 export default defineConfig({
   testDir: './playwright/tests',
