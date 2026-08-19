@@ -32,6 +32,27 @@ function barWidths(): string[] {
   return [...target.querySelectorAll<HTMLElement>('[style*="width"]')].map((el) => el.style.width);
 }
 
+/** Every bar's classes, in the same order — the fill carries the category's accent. */
+function barClasses(): string[] {
+  return [...target.querySelectorAll<HTMLElement>('[style*="width"]')].map((el) => el.className);
+}
+
+/** The rank badge on each row, in render order across both lists. */
+function ranks(): string[] {
+  return [...target.querySelectorAll('[class*="h-12"]')].map((el) => el.textContent?.trim() ?? '');
+}
+
+function headings(): string[] {
+  return [...target.querySelectorAll('h2')].map((el) => el.textContent?.trim() ?? '');
+}
+
+/** The vote total on the tile whose accent is `accentClass`. */
+function tileTotal(accentClass: string): string {
+  const found = target.querySelector(`[class*="${accentClass}"]`);
+  if (!found) throw new Error(`No tile rendered with ${accentClass}`);
+  return found.textContent?.trim() ?? '';
+}
+
 function checkbox(): HTMLInputElement {
   const found = target.querySelector<HTMLInputElement>('input[type="checkbox"]');
   if (!found) throw new Error('No auto-refresh checkbox rendered');
@@ -84,6 +105,40 @@ describe('results chart scale', () => {
     // re-ran for each of the five bars; as `$derived(expr)` it memoizes.
     expect(barWidths()).toHaveLength(5);
     expect(max).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('per-voter-type tally lists', () => {
+  it('renders one list per voter type, each keeping its own accent', async () => {
+    await render(pageData([4, 2], [1]));
+
+    // Both lists come from one definition now; the accent is the parameter that still differs, so
+    // a collapse of the two into one colour is what this asserts against.
+    expect(headings()).toEqual(['Student Votes', 'Parent Votes']);
+    expect(barClasses()[0]).toContain('bg-yellow-400');
+    expect(barClasses()[2]).toContain('bg-blue-400');
+  });
+
+  it('gives each voter type its own total tile', async () => {
+    await render(pageData([4, 2], [1]));
+
+    expect(tileTotal('text-blue-600')).toBe('6');
+    expect(tileTotal('text-purple-600')).toBe('1');
+  });
+
+  it('ranks ties within a voter type, not across both', async () => {
+    await render(pageData([3, 3, 1], [2]));
+
+    // Student: two tied leaders share rank 1 and the next is 3. Parent ranks restart at 1 — a list
+    // ranked against the wrong array is the failure the shared definition could introduce.
+    expect(ranks()).toEqual(['1', '1', '3', '1']);
+  });
+
+  it('shows the empty message only for the voter type with no votes', async () => {
+    await render(pageData([3], []));
+
+    expect(target.textContent).toContain('No parent votes yet.');
+    expect(target.textContent).not.toContain('No student votes yet.');
   });
 });
 
