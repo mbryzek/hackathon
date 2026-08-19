@@ -25,7 +25,16 @@ import {
 } from '$lib/api/client';
 import { ApiClient as VoteAdminClient } from '../../generated/com-bryzek-vote-admin';
 
-const voteAdminClient = new VoteAdminClient({ baseUrl: config.apiBaseUrl });
+/**
+ * The admin client for one caller. The session id rides on CONSTRUCTION rather than on each
+ * operation call: `headers` given here are merged into every request the client makes, so an
+ * operation below cannot be written that forgets to authenticate. `login` is the one caller
+ * with no session to carry — it is the call that mints one.
+ */
+function adminClient(sessionId?: string): VoteAdminClient {
+  const headers = sessionId ? { session_id: sessionId } : {};
+  return new VoteAdminClient({ baseUrl: config.apiBaseUrl, headers });
+}
 
 /** Every optional key of `T`, with `undefined` removed from what it may hold. */
 type Defined<T> = { [K in keyof T]?: Exclude<T[K], undefined> };
@@ -44,38 +53,22 @@ function defined<T extends object>(value: T): Defined<T> {
   return Object.fromEntries(Object.entries(value).filter(([, held]) => held !== undefined)) as Defined<T>;
 }
 
-// Helper to create authorization header
-function getAuthHeaders(sessionId?: string): Record<string, string> {
-  if (sessionId) {
-    return { session_id: sessionId };
-  }
-  return {};
-}
-
 export const adminApi = {
   // Session
   async login(email: string, password: string): Promise<ApiResponse<AdminSession>> {
     return handleApiCall(() =>
-      voteAdminClient.createAdminSessionSessionsAndLogins({
+      adminClient().createAdminSessionSessionsAndLogins({
         body: { email, password }
       })
     );
   },
 
   async getSession(sessionId: string): Promise<ApiResponse<AdminSession>> {
-    return handleApiCall(() =>
-      voteAdminClient.getAdminSessionSession({
-        headers: getAuthHeaders(sessionId)
-      })
-    );
+    return handleApiCall(() => adminClient(sessionId).getAdminSessionSession());
   },
 
   async logout(sessionId: string): Promise<ApiResponse<void>> {
-    return handleApiCall(() =>
-      voteAdminClient.deleteAdminSessionSession({
-        headers: getAuthHeaders(sessionId)
-      })
-    );
+    return handleApiCall(() => adminClient(sessionId).deleteAdminSessionSession());
   },
 
   // Events
@@ -84,8 +77,7 @@ export const adminApi = {
     params?: { status?: EventStatus[] | undefined; limit?: number | undefined; offset?: number | undefined }
   ): Promise<ApiResponse<Event[]>> {
     return handleApiCall(() =>
-      voteAdminClient.getEvents({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).getEvents({
         ...defined({ status: params?.status }),
         limit: params?.limit ?? 100,
         offset: params?.offset ?? 0
@@ -94,17 +86,12 @@ export const adminApi = {
   },
 
   async getEvent(sessionId: string, id: string): Promise<ApiResponse<Event>> {
-    return handleApiCall(() =>
-      voteAdminClient.getEventById(id, {
-        headers: getAuthHeaders(sessionId)
-      })
-    );
+    return handleApiCall(() => adminClient(sessionId).getEventById(id));
   },
 
   async createEvent(sessionId: string, form: { key: string; name: string; status?: EventStatus }): Promise<ApiResponse<Event>> {
     return handleApiCall(() =>
-      voteAdminClient.createEvent({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).createEvent({
         body: form
       })
     );
@@ -112,8 +99,7 @@ export const adminApi = {
 
   async updateEvent(sessionId: string, id: string, form: { key: string; name: string; status?: EventStatus }): Promise<ApiResponse<Event>> {
     return handleApiCall(() =>
-      voteAdminClient.updateEventById({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).updateEventById({
         id,
         body: form
       })
@@ -121,18 +107,13 @@ export const adminApi = {
   },
 
   async deleteEvent(sessionId: string, id: string): Promise<ApiResponse<void>> {
-    return handleApiCall(() =>
-      voteAdminClient.deleteEventById(id, {
-        headers: getAuthHeaders(sessionId)
-      })
-    );
+    return handleApiCall(() => adminClient(sessionId).deleteEventById(id));
   },
 
   // Projects
   async getProjects(sessionId: string, eventId: string, params?: { limit?: number; offset?: number }): Promise<ApiResponse<Project[]>> {
     return handleApiCall(() =>
-      voteAdminClient.getProjects({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).getProjects({
         eventId,
         limit: params?.limit ?? 100,
         offset: params?.offset ?? 0
@@ -146,8 +127,7 @@ export const adminApi = {
     form: { name: string; description?: string | undefined }
   ): Promise<ApiResponse<Project>> {
     return handleApiCall(() =>
-      voteAdminClient.createProject({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).createProject({
         eventId,
         body: { name: form.name, ...defined({ description: form.description }) }
       })
@@ -161,8 +141,7 @@ export const adminApi = {
     form: { name: string; description?: string | undefined }
   ): Promise<ApiResponse<Project>> {
     return handleApiCall(() =>
-      voteAdminClient.updateProjectById({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).updateProjectById({
         eventId,
         id,
         body: { name: form.name, ...defined({ description: form.description }) }
@@ -172,8 +151,7 @@ export const adminApi = {
 
   async deleteProject(sessionId: string, eventId: string, id: string): Promise<ApiResponse<void>> {
     return handleApiCall(() =>
-      voteAdminClient.deleteProjectById({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).deleteProjectById({
         eventId,
         id
       })
@@ -182,8 +160,7 @@ export const adminApi = {
 
   async reorderProjects(sessionId: string, eventId: string, projectIds: string[]): Promise<ApiResponse<void>> {
     return handleApiCall(() =>
-      voteAdminClient.createProjectReorder({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).createProjectReorder({
         eventId,
         body: { project_ids: projectIds }
       })
@@ -192,8 +169,7 @@ export const adminApi = {
 
   async createProjectCsv(sessionId: string, eventId: string, data: string, deleteAllProjects: boolean): Promise<ApiResponse<void>> {
     return handleApiCall(() =>
-      voteAdminClient.createProjectCsv({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).createProjectCsv({
         eventId,
         body: { data, delete_all_projects: deleteAllProjects }
       })
@@ -213,8 +189,7 @@ export const adminApi = {
     }
   ): Promise<ApiResponse<Code[]>> {
     return handleApiCall(() =>
-      voteAdminClient.getCodes({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).getCodes({
         eventId,
         ...defined({ voterType: params?.voter_type, hasVoted: params?.has_voted, q: params?.q }),
         limit: params?.limit ?? 100,
@@ -224,17 +199,12 @@ export const adminApi = {
   },
 
   async getCodeSummary(sessionId: string, eventId: string): Promise<ApiResponse<CodeSummary>> {
-    return handleApiCall(() =>
-      voteAdminClient.getCodeSummary(eventId, {
-        headers: getAuthHeaders(sessionId)
-      })
-    );
+    return handleApiCall(() => adminClient(sessionId).getCodeSummary(eventId));
   },
 
   async generateCodes(sessionId: string, eventId: string, form: { voter_type: VoterType; count: number }): Promise<ApiResponse<void>> {
     return handleApiCall(() =>
-      voteAdminClient.createCodeGenerate({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).createCodeGenerate({
         eventId,
         body: form
       })
@@ -243,8 +213,7 @@ export const adminApi = {
 
   async deleteCode(sessionId: string, eventId: string, id: string): Promise<ApiResponse<void>> {
     return handleApiCall(() =>
-      voteAdminClient.deleteCodeById({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).deleteCodeById({
         eventId,
         id
       })
@@ -270,8 +239,7 @@ export const adminApi = {
     }
   ): Promise<ApiResponse<File>> {
     return handleApiCall(() =>
-      voteAdminClient.createCodeExports({
-        headers: getAuthHeaders(sessionId),
+      adminClient(sessionId).createCodeExports({
         eventId,
         body: {
           format: form.format,
@@ -283,10 +251,6 @@ export const adminApi = {
 
   // Results
   async getResults(sessionId: string, eventId: string): Promise<ApiResponse<EventResults>> {
-    return handleApiCall(() =>
-      voteAdminClient.getEventResults(eventId, {
-        headers: getAuthHeaders(sessionId)
-      })
-    );
+    return handleApiCall(() => adminClient(sessionId).getEventResults(eventId));
   }
 };
