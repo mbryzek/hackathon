@@ -494,4 +494,4 @@ npx tsc --noEmit --project tsconfig.playwright.json
 - [Playwright Documentation](https://playwright.dev/)
 - [Playwright Best Practices](https://playwright.dev/docs/best-practices)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Project Plan](~/code/claude/plans/privatedinkers/playwright-typescript-migration.md)
+- [Project Plan](~/code/claude/plans/privatedinkers/playwright_typescript_migration.md)
