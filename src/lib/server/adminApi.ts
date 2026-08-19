@@ -32,7 +32,7 @@ import { ApiClient as VoteAdminClient } from '../../generated/com-bryzek-vote-ad
  * with no session to carry — it is the call that mints one.
  */
 function adminClient(sessionId?: string): VoteAdminClient {
-  const headers = sessionId === undefined ? {} : { session_id: sessionId };
+  const headers = sessionId ? { session_id: sessionId } : {};
   return new VoteAdminClient({ baseUrl: config.apiBaseUrl, headers });
 }
 
