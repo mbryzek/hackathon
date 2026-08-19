@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { invalidateAll } from '$app/navigation';
-  import { type ProjectTally } from '$lib/api/client';
+  import { type ProjectTally, type Tally } from '$lib/api/client';
   import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
   import { visibilityAwareInterval } from '$lib/utils/polling';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
@@ -47,21 +47,63 @@
     }
   }
 
-  // Sort projects by vote count for each category
-  const sortedStudentProjects = $derived(
-    results?.student.projects.slice().sort((a: ProjectTally, b: ProjectTally) => b.vote_count - a.vote_count) || []
-  );
+  /**
+   * The colors that differ between the two voter types. Every one is a whole class name: Tailwind
+   * finds candidates by scanning source text, so a class assembled at runtime from fragments is one
+   * it never emits.
+   */
+  interface Accent {
+    /** The vote total and each project's count, in presentation mode. */
+    presentationText: string;
+    /** The vote total on the tile, outside presentation mode. */
+    tileText: string;
+    /** The leading project's bar, in both modes. */
+    leadBar: string;
+  }
 
-  const sortedParentProjects = $derived(
-    results?.parent.projects.slice().sort((a: ProjectTally, b: ProjectTally) => b.vote_count - a.vote_count) || []
-  );
+  /** One voter type's whole presence on this page — its tile, its heading and its tally list. */
+  interface Category {
+    key: string;
+    label: string;
+    emptyMessage: string;
+    totalVotes: number;
+    projects: ProjectTally[];
+    accent: Accent;
+  }
+
+  function sortByVotes(tally: Tally | undefined): ProjectTally[] {
+    return tally?.projects.slice().sort((a: ProjectTally, b: ProjectTally) => b.vote_count - a.vote_count) ?? [];
+  }
+
+  // The two voter types differ only in a label and an accent — no rule reads one differently from
+  // the other — so they are one shape rendered twice rather than two copies of the same markup.
+  const categories: Category[] = $derived([
+    {
+      key: 'student',
+      label: 'Student Votes',
+      emptyMessage: 'No student votes yet.',
+      totalVotes: results?.student.total_votes ?? 0,
+      projects: sortByVotes(results?.student),
+      accent: { presentationText: 'text-yellow-400', tileText: 'text-blue-600', leadBar: 'bg-yellow-400' }
+    },
+    {
+      key: 'parent',
+      label: 'Parent Votes',
+      emptyMessage: 'No parent votes yet.',
+      totalVotes: results?.parent.total_votes ?? 0,
+      projects: sortByVotes(results?.parent),
+      accent: { presentationText: 'text-blue-400', tileText: 'text-purple-600', leadBar: 'bg-blue-400' }
+    }
+  ]);
 
   // Max votes for bar width (across both categories). A value, not a function: as
   // `$derived(() => …)` this was a getter that rescanned every project on each call, and
   // `getBarWidth` calls it once per bar — so a 40-project event walked the list 40 times per
   // render, and again on every 5s auto-refresh. `$derived` already caches, so the whole scan
   // now runs once per change to the tallies.
-  const maxVotes = $derived(Math.max(...[...sortedStudentProjects, ...sortedParentProjects].map((p: ProjectTally) => p.vote_count), 1));
+  const maxVotes = $derived(
+    Math.max(...categories.flatMap((category: Category) => category.projects).map((p: ProjectTally) => p.vote_count), 1)
+  );
 
   function getBarWidth(voteCount: number): string {
     return `${(voteCount / maxVotes) * 100}%`;
@@ -77,6 +119,20 @@
         return 'bg-amber-600 text-white';
       default:
         return 'bg-gray-100 text-gray-600';
+    }
+  }
+
+  /** The same rank→color mapping as the badge, in the accent the leading project's bar carries. */
+  function getRankBarClass(rank: number, leadBar: string): string {
+    switch (rank) {
+      case 1:
+        return leadBar;
+      case 2:
+        return 'bg-gray-400';
+      case 3:
+        return 'bg-amber-600';
+      default:
+        return 'bg-gray-300';
     }
   }
 
@@ -144,124 +200,75 @@
 
       <!-- Vote counts by type -->
       <div class={isPresentationMode ? 'mb-12 flex justify-center gap-16' : 'mb-6 grid grid-cols-2 gap-4'}>
-        <div class={isPresentationMode ? 'text-center' : 'rounded-xl bg-white p-6 text-center shadow'}>
-          <div class={isPresentationMode ? 'text-5xl font-bold text-yellow-400' : 'text-3xl font-bold text-blue-600'}>
-            {results.student.total_votes}
+        {#each categories as category (category.key)}
+          <div class={isPresentationMode ? 'text-center' : 'rounded-xl bg-white p-6 text-center shadow'}>
+            <div
+              class={isPresentationMode
+                ? `text-5xl font-bold ${category.accent.presentationText}`
+                : `text-3xl font-bold ${category.accent.tileText}`}
+            >
+              {category.totalVotes}
+            </div>
+            <div class={isPresentationMode ? 'text-xl text-gray-400' : 'text-gray-600'}>{category.label}</div>
           </div>
-          <div class={isPresentationMode ? 'text-xl text-gray-400' : 'text-gray-600'}>Student Votes</div>
-        </div>
-        <div class={isPresentationMode ? 'text-center' : 'rounded-xl bg-white p-6 text-center shadow'}>
-          <div class={isPresentationMode ? 'text-5xl font-bold text-blue-400' : 'text-3xl font-bold text-purple-600'}>
-            {results.parent.total_votes}
-          </div>
-          <div class={isPresentationMode ? 'text-xl text-gray-400' : 'text-gray-600'}>Parent Votes</div>
-        </div>
+        {/each}
       </div>
 
-      <!-- Student Results -->
-      <div class="mb-8">
-        <h2 class={isPresentationMode ? 'mb-4 text-3xl font-bold text-white' : 'mb-4 text-xl font-bold text-gray-900'}>Student Votes</h2>
-        {#if sortedStudentProjects.length === 0}
-          <div
-            class={isPresentationMode
-              ? 'py-8 text-center text-xl text-white/60'
-              : 'rounded-xl bg-white p-8 text-center text-gray-500 shadow'}
-          >
-            No student votes yet.
-          </div>
-        {:else}
-          <div class="space-y-{isPresentationMode ? '6' : '4'}">
-            {#each sortedStudentProjects as projectTally, index (projectTally.project.id)}
-              {@const rank = getRank(sortedStudentProjects, index)}
-              <div class={isPresentationMode ? 'rounded-xl bg-white/10 p-6 backdrop-blur' : 'rounded-xl bg-white p-6 shadow'}>
-                <div class="flex items-center gap-4">
-                  <div
-                    class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold {getRankBadgeClass(
-                      rank
-                    )}"
-                  >
-                    {rank}
-                  </div>
-                  <div class="flex-grow">
-                    <div class="mb-2 flex items-center justify-between">
-                      <h3 class={isPresentationMode ? 'text-2xl font-bold text-white' : 'text-lg font-semibold text-gray-900'}>
-                        {projectTally.project.name}
-                      </h3>
-                      <span class={isPresentationMode ? 'text-3xl font-bold text-yellow-400' : 'text-2xl font-bold text-gray-900'}>
-                        {projectTally.vote_count}
-                      </span>
-                    </div>
-                    <div class="{isPresentationMode ? 'h-4 bg-white/10' : 'h-3 bg-gray-100'} overflow-hidden rounded-full">
-                      <div
-                        class="h-full {rank === 1
-                          ? 'bg-yellow-400'
-                          : rank === 2
-                            ? 'bg-gray-400'
-                            : rank === 3
-                              ? 'bg-amber-600'
-                              : 'bg-gray-300'} rounded-full transition-all duration-500"
-                        style="width: {getBarWidth(projectTally.vote_count)}"
-                      ></div>
-                    </div>
-                  </div>
-                </div>
+      <!-- Results, one ranked tally list per voter type -->
+      <div class="space-y-8">
+        {#each categories as category (category.key)}
+          <div>
+            <h2 class={isPresentationMode ? 'mb-4 text-3xl font-bold text-white' : 'mb-4 text-xl font-bold text-gray-900'}>
+              {category.label}
+            </h2>
+            {#if category.projects.length === 0}
+              <div
+                class={isPresentationMode
+                  ? 'py-8 text-center text-xl text-white/60'
+                  : 'rounded-xl bg-white p-8 text-center text-gray-500 shadow'}
+              >
+                {category.emptyMessage}
               </div>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      <!-- Parent Results -->
-      <div>
-        <h2 class={isPresentationMode ? 'mb-4 text-3xl font-bold text-white' : 'mb-4 text-xl font-bold text-gray-900'}>Parent Votes</h2>
-        {#if sortedParentProjects.length === 0}
-          <div
-            class={isPresentationMode
-              ? 'py-8 text-center text-xl text-white/60'
-              : 'rounded-xl bg-white p-8 text-center text-gray-500 shadow'}
-          >
-            No parent votes yet.
-          </div>
-        {:else}
-          <div class="space-y-{isPresentationMode ? '6' : '4'}">
-            {#each sortedParentProjects as projectTally, index (projectTally.project.id)}
-              {@const rank = getRank(sortedParentProjects, index)}
-              <div class={isPresentationMode ? 'rounded-xl bg-white/10 p-6 backdrop-blur' : 'rounded-xl bg-white p-6 shadow'}>
-                <div class="flex items-center gap-4">
-                  <div
-                    class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold {getRankBadgeClass(
-                      rank
-                    )}"
-                  >
-                    {rank}
-                  </div>
-                  <div class="flex-grow">
-                    <div class="mb-2 flex items-center justify-between">
-                      <h3 class={isPresentationMode ? 'text-2xl font-bold text-white' : 'text-lg font-semibold text-gray-900'}>
-                        {projectTally.project.name}
-                      </h3>
-                      <span class={isPresentationMode ? 'text-3xl font-bold text-blue-400' : 'text-2xl font-bold text-gray-900'}>
-                        {projectTally.vote_count}
-                      </span>
-                    </div>
-                    <div class="{isPresentationMode ? 'h-4 bg-white/10' : 'h-3 bg-gray-100'} overflow-hidden rounded-full">
+            {:else}
+              <div class={isPresentationMode ? 'space-y-6' : 'space-y-4'}>
+                {#each category.projects as projectTally, index (projectTally.project.id)}
+                  {@const rank = getRank(category.projects, index)}
+                  <div class={isPresentationMode ? 'rounded-xl bg-white/10 p-6 backdrop-blur' : 'rounded-xl bg-white p-6 shadow'}>
+                    <div class="flex items-center gap-4">
                       <div
-                        class="h-full {rank === 1
-                          ? 'bg-blue-400'
-                          : rank === 2
-                            ? 'bg-gray-400'
-                            : rank === 3
-                              ? 'bg-amber-600'
-                              : 'bg-gray-300'} rounded-full transition-all duration-500"
-                        style="width: {getBarWidth(projectTally.vote_count)}"
-                      ></div>
+                        class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold {getRankBadgeClass(
+                          rank
+                        )}"
+                      >
+                        {rank}
+                      </div>
+                      <div class="flex-grow">
+                        <div class="mb-2 flex items-center justify-between">
+                          <h3 class={isPresentationMode ? 'text-2xl font-bold text-white' : 'text-lg font-semibold text-gray-900'}>
+                            {projectTally.project.name}
+                          </h3>
+                          <span
+                            class={isPresentationMode
+                              ? `text-3xl font-bold ${category.accent.presentationText}`
+                              : 'text-2xl font-bold text-gray-900'}
+                          >
+                            {projectTally.vote_count}
+                          </span>
+                        </div>
+                        <div class="{isPresentationMode ? 'h-4 bg-white/10' : 'h-3 bg-gray-100'} overflow-hidden rounded-full">
+                          <div
+                            class="h-full {getRankBarClass(rank, category.accent.leadBar)} rounded-full transition-all duration-500"
+                            style="width: {getBarWidth(projectTally.vote_count)}"
+                          ></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                {/each}
               </div>
-            {/each}
+            {/if}
           </div>
-        {/if}
+        {/each}
       </div>
     </div>
   {/if}
