@@ -99,7 +99,7 @@ export interface VoteForm {
 
 import { VoidResponse } from './generated-error-void-response.ts';
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
-import { ApiException } from "./generated-util.ts";
+import { ApiException, Util } from "./generated-util.ts";
 import type { ApiClientOptions } from "./generated-util.ts";
 
 export interface GetAllEventsOpenOptions {
@@ -182,8 +182,7 @@ export class ApiClient {
     }, 'application/json', params?.headers || {}, params?.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParseArray<Event>(response, "Event");
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
@@ -199,8 +198,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<Vote>(response, "Vote");
     }
 
     if (response.status === 404) {
@@ -224,8 +222,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<Vote>(response, "Vote");
     }
 
     if (response.status === 404) {

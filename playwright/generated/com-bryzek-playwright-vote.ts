@@ -33,7 +33,7 @@ export interface TestEventForm {
 // ============================================================================
 
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
-import { ApiException } from "./generated-util.ts";
+import { ApiException, Util } from "./generated-util.ts";
 import type { ApiClientOptions } from "./generated-util.ts";
 
 export interface CreatePlaywrightVoteEventsOptions {
@@ -105,8 +105,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 201) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<TestEvent>(response, "TestEvent");
     }
 
     if (response.status === 422) {

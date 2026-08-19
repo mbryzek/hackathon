@@ -13,13 +13,29 @@ export class ApiException extends Error {
   }
 }
 
+/**
+ * The response arrived and its body is not the JSON the spec declares - a proxy or CDN
+ * answering with an HTML error page is the usual cause.
+ *
+ * Separate from `ApiException` because the status alone says the call succeeded, so a
+ * caller that keys off `response.status` would report a 200. `handleApiCall` recognises
+ * this by name and reports 502. The parse detail is kept in `message` for a log and never
+ * reaches the response envelope, where it would be shown to a person verbatim.
+ */
+export class ApiParseException extends ApiException {
+  constructor(response: Response, message: string) {
+    super(response, message);
+    this.name = 'ApiParseException';
+  }
+}
+
 export class Util {
   static async mustParse<T>(response: Response, name: string): Promise<T> {
     try {
       const data = await response.json();
       return data as T;
     } catch (error) {
-      throw new ApiException(
+      throw new ApiParseException(
         response,
         `Unable to parse response body as a ${name}: ${error instanceof Error ? error.message : String(error)}`
       );
@@ -30,7 +46,7 @@ export class Util {
     try {
       const data = await response.json();
       if (!Array.isArray(data)) {
-        throw new ApiException(
+        throw new ApiParseException(
           response,
           `Unable to parse response body. Expected an array but found a ${typeof data}`
         );
@@ -40,7 +56,7 @@ export class Util {
       if (error instanceof ApiException) {
         throw error;
       }
-      throw new ApiException(
+      throw new ApiParseException(
         response,
         `Unable to parse response body as a ${name}[]: ${error instanceof Error ? error.message : String(error)}`
       );
@@ -102,7 +118,11 @@ export function isApiSuccess<T>(response: ApiResponse<T>): response is ApiRespon
 export interface ApiCallOptions {
   /** Called before the error is returned, when the server answered 401. */
   onUnauthorized?: () => void;
-  /** Called for every non-2xx answer - analytics, logging. Never for a network failure. */
+  /**
+   * Called for every failure that carries a status - the server's own non-2xx answers,
+   * and the 502 an unreadable success body is reported as. Never for a network failure
+   * or a timeout, where there is no response to report.
+   */
   onError?: (info: { status: number; url: string; errors: ApiError[] }) => void;
 }
 
@@ -110,6 +130,9 @@ const NETWORK_ERROR_MESSAGE =
   'Unable to connect to the server. Please check your internet connection and try again.';
 
 const TIMEOUT_ERROR_MESSAGE = 'Request timed out. Please try again.';
+
+const UNREADABLE_RESPONSE_MESSAGE =
+  'The server sent a response we could not read. Please try again.';
 
 /**
  * The message shown when the server answered with a status and no usable body.
@@ -202,6 +225,15 @@ function isAbort(error: unknown): boolean {
   return error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError');
 }
 
+/**
+ * A success whose body could not be decoded, thrown by `Util.mustParse`. Recognised by
+ * name rather than by `instanceof`: a consumer can hold two copies of this module (an
+ * app and its test harness), and a nominal check fails across them.
+ */
+function isParseFailure(error: unknown): error is { response: Response } {
+  return error instanceof Error && error.name === 'ApiParseException' && isResponseCarrier(error);
+}
+
 function networkMessage(error: unknown): string {
   if (!(error instanceof Error)) {
     return NETWORK_ERROR_MESSAGE;
@@ -217,7 +249,10 @@ function networkMessage(error: unknown): string {
   ) {
     return NETWORK_ERROR_MESSAGE;
   }
-  return error.message;
+  // Anything else - a `SyntaxError` from a body that is not JSON, a bug in the client -
+  // is a message written for a developer. The envelope is read by a person, so it says
+  // the one true thing instead: the request did not complete.
+  return NETWORK_ERROR_MESSAGE;
 }
 
 /**
@@ -227,7 +262,7 @@ function networkMessage(error: unknown): string {
  * outcomes a caller has to tell apart - data, field errors, a status with no body,
  * and the server not answering at all - are collapsed here into one discriminated
  * union. Status 0 means the request never reached the server; 504 means it was
- * cancelled by a timeout.
+ * cancelled by a timeout; 502 means it arrived and the body could not be decoded.
  *
  * This consumes the error response's body. Do not also call the thrown wrapper's
  * own accessor (`validationErrors()`, `unauthorizedError()`) on the same error - a
@@ -247,6 +282,18 @@ export async function handleApiCall<T>(
     const data = await apiCall();
     return { status: 200, data };
   } catch (error) {
+    if (isParseFailure(error)) {
+      // The gateway answered with a success status and a body that is not the JSON the
+      // spec declares - typically an HTML error page. Reported as 502 rather than as the
+      // status the gateway sent, which would read as a success, and rather than as 0,
+      // which means the request never arrived. The parse detail stays on the thrown
+      // `ApiParseException` for a log; it is never phrased for a person.
+      const errors = [{ message: UNREADABLE_RESPONSE_MESSAGE }];
+      if (options?.onError) {
+        options.onError({ status: 502, url: error.response.url, errors });
+      }
+      return { status: 502, errors };
+    }
     if (isResponseCarrier(error)) {
       const response = error.response;
       const status = response.status;
