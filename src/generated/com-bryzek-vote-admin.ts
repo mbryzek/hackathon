@@ -148,7 +148,7 @@ export const parameterBounds = {
 import { UnauthorizedErrorResponse } from './generated-error-unauthorized-error-response.ts';
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
 import { VoidResponse } from './generated-error-void-response.ts';
-import { ApiException } from "./generated-util.ts";
+import { ApiException, Util } from "./generated-util.ts";
 import type { ApiClientOptions } from "./generated-util.ts";
 
 export interface GetAdminSessionSessionOptions {
@@ -353,8 +353,7 @@ export class ApiClient {
     }, 'application/json', params?.headers || {}, params?.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<AdminSession>(response, "AdminSession");
     }
 
     if (response.status === 401) {
@@ -374,8 +373,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 201) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<AdminSession>(response, "AdminSession");
     }
 
     if (response.status === 422) {
@@ -426,8 +424,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParseArray<Code>(response, "Code");
     }
 
     if (response.status === 401) {
@@ -454,8 +451,7 @@ export class ApiClient {
     }, 'application/json', options?.headers || {}, options?.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<CodeSummary>(response, "CodeSummary");
     }
 
     if (response.status === 401) {
@@ -507,8 +503,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 201) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<File>(response, "File");
     }
 
     if (response.status === 401) {
@@ -572,8 +567,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParseArray<Event>(response, "Event");
     }
 
     if (response.status === 401) {
@@ -596,8 +590,7 @@ export class ApiClient {
     }, 'application/json', options?.headers || {}, options?.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<Event>(response, "Event");
     }
 
     if (response.status === 401) {
@@ -621,8 +614,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 201) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<Event>(response, "Event");
     }
 
     if (response.status === 401) {
@@ -646,8 +638,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<Event>(response, "Event");
     }
 
     if (response.status === 401) {
@@ -701,8 +692,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParseArray<Project>(response, "Project");
     }
 
     if (response.status === 401) {
@@ -725,8 +715,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<Project>(response, "Project");
     }
 
     if (response.status === 401) {
@@ -750,8 +739,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 201) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<Project>(response, "Project");
     }
 
     if (response.status === 401) {
@@ -807,8 +795,7 @@ export class ApiClient {
     }, 'application/json', params.headers || {}, params.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<Project>(response, "Project");
     }
 
     if (response.status === 401) {
@@ -886,8 +873,7 @@ export class ApiClient {
     }, 'application/json', options?.headers || {}, options?.signal);
 
     if (response.status === 200) {
-      const data = await response.json();
-      return data;
+      return await Util.mustParse<EventResults>(response, "EventResults");
     }
 
     if (response.status === 401) {
