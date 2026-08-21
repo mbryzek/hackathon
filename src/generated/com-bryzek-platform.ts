@@ -66,6 +66,7 @@ export enum PlaybookFeature {
   Executions = 'executions',
   Chat = 'chat',
   ChecklistMeasurement = 'checklist_measurement',
+  WeeklyPortfolioBriefing = 'weekly_portfolio_briefing',
 }
 
 export enum RallydNotificationType {
