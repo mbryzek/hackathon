@@ -1372,6 +1372,10 @@ export class ApiClient {
       throw new UnauthorizedErrorResponse(response);
     }
 
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
     throw new ApiException(response, `Request failed with status ${response.status}`);
 
   }
