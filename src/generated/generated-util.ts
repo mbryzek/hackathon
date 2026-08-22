@@ -96,7 +96,17 @@ export interface ApiError {
 
 export interface ApiResponseSuccess<T> {
   data: T;
-  status: number;
+  /**
+   * Always 200, and typed as the literal so the compiler says so.
+   *
+   * A generated method returns the decoded body and discards the `Response`, so the
+   * server's real success code is not available by the time `handleApiCall` builds this -
+   * a 201 from a create and a 204 from a delete both arrive here as 200. Branch on `data`,
+   * or on the error side of the envelope; `success.status === 201` is a comparison that
+   * could never have fired, and this type is what turns it into a compile error instead of
+   * a branch that is silently dead.
+   */
+  status: 200;
 }
 
 export interface ApiResponseError {
@@ -264,6 +274,10 @@ function networkMessage(error: unknown): string {
  * union. Status 0 means the request never reached the server; 504 means it was
  * cancelled by a timeout; 502 means it arrived and the body could not be decoded.
  *
+ * Those three, and every status on the error side, are real. The SUCCESS side is always
+ * 200 - see `ApiResponseSuccess.status` - because the generated methods hand back a
+ * decoded body rather than a `Response`.
+ *
  * This consumes the error response's body. Do not also call the thrown wrapper's
  * own accessor (`validationErrors()`, `unauthorizedError()`) on the same error - a
  * `Response` body can only be read once.
@@ -280,6 +294,9 @@ export async function handleApiCall<T>(
 ): Promise<ApiResponse<T>> {
   try {
     const data = await apiCall();
+    // 200 for every success, whatever the server sent: `apiCall` resolves to the decoded
+    // body and the `Response` it came from is already gone. `ApiResponseSuccess.status`
+    // is typed `200` so a caller cannot write a 2xx test that never fires.
     return { status: 200, data };
   } catch (error) {
     if (isParseFailure(error)) {
@@ -299,8 +316,11 @@ export async function handleApiCall<T>(
       const status = response.status;
       if (status >= 200 && status < 300) {
         // A success the client models as a throw (a `void` response declared as an
-        // error type). There is no body to decode and nothing failed.
-        return { status, data: undefined as T };
+        // error type). There is no body to decode and nothing failed. Reported as 200
+        // like every other success rather than as the status this one happens to carry:
+        // the envelope has one success shape, and a caller that could read a real 204
+        // here and only here would be reading it by accident.
+        return { status: 200, data: undefined as T };
       }
       const errors = decodeErrors(await readJsonBody(response), status);
       if (status === 401 && options?.onUnauthorized) {

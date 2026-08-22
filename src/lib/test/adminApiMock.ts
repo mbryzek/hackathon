@@ -33,7 +33,7 @@ export const apiError = (status: number, message: string): Promise<ApiResponse<n
  * body-less 2xx, so a test deciding on the status alone still has to name something, and
  * `undefined` is what such a response actually carries at runtime.
  */
-export const okStatus = <T>(status: number): Promise<ApiResponse<T>> => Promise.resolve({ status, data: undefined as T });
+export const okStatus = <T>(_status: number): Promise<ApiResponse<T>> => Promise.resolve({ data: undefined as T, status: 200 });
 
 /** What the API answers a call that succeeds and returns nothing. */
 const noContent = (): Promise<ApiResponse<void>> => okStatus<void>(204);
