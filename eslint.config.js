@@ -5,6 +5,7 @@ import sveltePlugin from 'eslint-plugin-svelte';
 import svelteParser from 'svelte-eslint-parser';
 import globals from 'globals';
 import prettierConfig from 'eslint-config-prettier';
+import { typed as p10Typed, svelte as p10Svelte, tests as p10Tests, testFiles as p10TestFiles } from './eslint.p10.js';
 
 // Shared by every block below — a rule that only holds in some of the source tree is a rule
 // with a hole in it, which is exactly the gap this config used to have around playwright/.
@@ -63,9 +64,9 @@ export default [
       '@typescript-eslint': tseslint
     },
     rules: {
+      ...p10Typed,
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': noUnusedVars,
-      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
 
       'no-restricted-syntax': noShorthandInConditionalSpread
@@ -92,9 +93,9 @@ export default [
       '@typescript-eslint': tseslint
     },
     rules: {
+      ...p10Typed,
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': noUnusedVars,
-      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
 
       'no-restricted-syntax': noShorthandInConditionalSpread
@@ -110,7 +111,8 @@ export default [
       parser: tsparser,
       parserOptions: {
         ecmaVersion: 'latest',
-        sourceType: 'module'
+        sourceType: 'module',
+        project: './tsconfig.json'
       },
       globals: {
         ...globals.browser,
@@ -128,15 +130,17 @@ export default [
       '@typescript-eslint': tseslint
     },
     rules: {
+      ...p10Typed,
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': noUnusedVars,
-      '@typescript-eslint/no-explicit-any': 'error',
 
       'no-restricted-syntax': noShorthandInConditionalSpread
     }
   },
 
-  // Svelte files - no type-aware linting (tsconfig doesn't include them)
+  // Svelte files. Type-aware: `.svelte` is in the tsconfig SvelteKit generates, so the parser can
+  // hand typescript-eslint a program for a component and `no-floating-promises` reads real types
+  // here rather than being absent.
   {
     files: ['**/*.svelte'],
     languageOptions: {
@@ -144,7 +148,9 @@ export default [
       parserOptions: {
         parser: tsparser,
         ecmaVersion: 'latest',
-        sourceType: 'module'
+        sourceType: 'module',
+        project: './tsconfig.json',
+        extraFileExtensions: ['.svelte']
       },
       globals: {
         ...globals.browser,
@@ -167,12 +173,19 @@ export default [
       // components (names, scraped data, model output) are user-set. Every use must be an
       // explicit, justified exemption naming why the string is app-authored - never a default.
       'svelte/no-at-html-tags': 'error',
+      ...p10Svelte,
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': noUnusedVars,
-      '@typescript-eslint/no-explicit-any': 'error',
 
       'no-restricted-syntax': noShorthandInConditionalSpread
     }
+  },
+
+  // Test files relax exactly one P10 rule; `eslint.p10.js` says which and why. Last of the
+  // rule blocks, so it wins over the per-extension blocks above for the files it names.
+  {
+    files: p10TestFiles,
+    rules: p10Tests
   },
 
   // JavaScript files
