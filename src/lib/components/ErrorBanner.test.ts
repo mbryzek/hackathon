@@ -13,8 +13,8 @@ function render(props: { error: string; class?: string }): HTMLElement {
   return target.firstElementChild as HTMLElement;
 }
 
-afterEach(() => {
-  if (mounted) unmount(mounted);
+afterEach(async () => {
+  if (mounted) await unmount(mounted);
   mounted = null;
   target?.remove();
 });

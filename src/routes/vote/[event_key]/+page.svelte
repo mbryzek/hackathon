@@ -26,7 +26,8 @@
   // Auto-verify code if provided in URL
   onMount(() => {
     if (initialCode) {
-      verifyCode();
+      // Fire-and-forget: verifyCode writes its own failure into `error`, which the page renders.
+      void verifyCode();
     }
   });
 
@@ -160,9 +161,9 @@
       </div>
 
       <form
-        onsubmit={(e) => {
+        onsubmit={async (e) => {
           e.preventDefault();
-          verifyCode();
+          await verifyCode();
         }}
         class="space-y-6"
       >

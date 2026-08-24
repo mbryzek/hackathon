@@ -33,8 +33,8 @@ function input(id: string): HTMLInputElement {
   return target.querySelector<HTMLInputElement>(`#${id}`)!;
 }
 
-afterEach(() => {
-  if (mounted) unmount(mounted);
+afterEach(async () => {
+  if (mounted) await unmount(mounted);
   mounted = null;
   target?.remove();
 });
@@ -50,9 +50,9 @@ describe('EventForm', () => {
     expect(target.textContent).toContain('Voting URL: /vote/hack-night');
   });
 
-  it('renders the error banner only when there is an error', () => {
+  it('renders the error banner only when there is an error', async () => {
     expect(render().querySelector('.bg-red-50')).toBeNull();
-    unmount(mounted!);
+    await unmount(mounted!);
     mounted = null;
     target.remove();
 

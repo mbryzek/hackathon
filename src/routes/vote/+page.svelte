@@ -12,7 +12,8 @@
   // onMount, not $effect: this writes the same $state it would otherwise be tracking, and
   // an added read before the first await would turn it into a self-retriggering fetch loop.
   onMount(() => {
-    fetchOpenEvents();
+    // Fire-and-forget: the load writes its own failure into `error`, which the page renders.
+    void fetchOpenEvents();
   });
 
   async function fetchOpenEvents() {
@@ -36,8 +37,8 @@
     }
   }
 
-  function selectEvent(event: Event) {
-    goto(urls.voteEvent(event.key));
+  async function selectEvent(event: Event): Promise<void> {
+    await goto(urls.voteEvent(event.key));
   }
 </script>
 

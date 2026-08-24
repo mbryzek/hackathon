@@ -39,7 +39,10 @@ let mounted: Record<string, unknown> | null = null;
 let target: HTMLElement | null = null;
 
 export function unmountComponent(): void {
-  if (mounted) unmount(mounted);
+  // Fire-and-forget: `unmount` without `{ outro: true }` takes the component down
+  // synchronously and returns an already-settled promise, and this must stay a sync
+  // `() => void` for `mountComponent` and the `Mounted` contract.
+  if (mounted) void unmount(mounted);
   mounted = null;
   target?.remove();
   target = null;

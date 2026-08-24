@@ -36,26 +36,17 @@ export interface PollingOptions {
   immediate?: boolean;
 }
 
-export function visibilityAwareInterval(
-  callback: () => void | Promise<void>,
-  intervalMs: number,
-  options: PollingOptions = {}
-): () => void {
-  if (typeof document === 'undefined' || typeof window === 'undefined') {
-    return () => {};
-  }
-
-  const { isPaused, immediate = true } = options;
-
-  const isOnline = () => (typeof navigator !== 'undefined' ? navigator.onLine : true);
-
-  // One tick at a time. A callback slower than its own interval would otherwise have a second
-  // request in flight before the first answered, and two responses can land in either order — so
-  // a tick is SKIPPED while the previous one is unsettled rather than queued behind it. Only an
-  // async callback can be in flight; a synchronous one has already returned.
+/**
+ * The callback, wrapped so a tick can neither overlap the one before it nor throw into the timer.
+ *
+ * A callback slower than its own interval would otherwise have a second request in flight before
+ * the first answered, and two responses can land in either order — so a tick is SKIPPED while the
+ * previous one is unsettled rather than queued behind it. Only an async callback can be in flight;
+ * a synchronous one has already returned.
+ */
+function guardedTick(callback: () => void | Promise<void>, isPaused: (() => boolean) | undefined): () => void {
   let inflight = false;
-
-  function safeCallback() {
+  return () => {
     try {
       if (inflight || isPaused?.()) return;
       const result = callback();
@@ -70,44 +61,74 @@ export function visibilityAwareInterval(
     } catch (e) {
       console.debug('Polling callback error:', e);
     }
-  }
+  };
+}
 
+/**
+ * A `setInterval` that can be stopped and restarted, and that remembers having been stopped.
+ *
+ * `suspended` is what tells a resume apart from a first start: a visibility or network event
+ * arrives whether or not this timer was running, so the handler has to ask. It is distinct from
+ * `PollingOptions.isPaused`, which skips a tick without stopping the timer.
+ */
+interface SuspendableTimer {
+  start(fireNow: boolean): void;
+  stop(): void;
+  readonly suspended: boolean;
+}
+
+function suspendableTimer(tick: () => void, intervalMs: number): SuspendableTimer {
   let intervalId: ReturnType<typeof setInterval> | undefined;
-  // Suspended by visibility or network state — distinct from `isPaused()`, which skips a tick
-  // without stopping the timer.
   let suspended = false;
-
-  function start(fireNow: boolean) {
-    if (intervalId) return;
-    suspended = false;
-    if (fireNow) safeCallback();
-    intervalId = setInterval(safeCallback, intervalMs);
-  }
-
-  function stop() {
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = undefined;
+  return {
+    start(fireNow: boolean): void {
+      if (intervalId) return;
+      suspended = false;
+      if (fireNow) tick();
+      intervalId = setInterval(tick, intervalMs);
+    },
+    stop(): void {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = undefined;
+      }
+      suspended = true;
+    },
+    get suspended(): boolean {
+      return suspended;
     }
-    suspended = true;
+  };
+}
+
+export function visibilityAwareInterval(
+  callback: () => void | Promise<void>,
+  intervalMs: number,
+  options: PollingOptions = {}
+): () => void {
+  if (typeof document === 'undefined' || typeof window === 'undefined') {
+    return () => {};
   }
 
-  function handleVisibilityChange() {
+  const { isPaused, immediate = true } = options;
+  const isOnline = (): boolean => (typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const timer = suspendableTimer(guardedTick(callback, isPaused), intervalMs);
+
+  function handleVisibilityChange(): void {
     if (document.hidden) {
-      stop();
-    } else if (suspended && isOnline()) {
-      start(true);
+      timer.stop();
+    } else if (timer.suspended && isOnline()) {
+      timer.start(true);
     }
   }
 
-  function handleOnline() {
-    if (!document.hidden && suspended) {
-      start(true);
+  function handleOnline(): void {
+    if (!document.hidden && timer.suspended) {
+      timer.start(true);
     }
   }
 
-  function handleOffline() {
-    stop();
+  function handleOffline(): void {
+    timer.stop();
   }
 
   document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -115,13 +136,13 @@ export function visibilityAwareInterval(
   window.addEventListener('offline', handleOffline);
 
   if (document.hidden || !isOnline()) {
-    suspended = true;
+    timer.stop();
   } else {
-    start(immediate);
+    timer.start(immediate);
   }
 
   return () => {
-    stop();
+    timer.stop();
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.removeEventListener('online', handleOnline);
     window.removeEventListener('offline', handleOffline);

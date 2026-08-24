@@ -42,7 +42,9 @@
     const container = button.closest('.video-container');
     const video = container?.querySelector('video');
     if (video) {
-      video.play();
+      // Fire-and-forget: play() rejects when the autoplay policy blocks it or another play
+      // interrupts it. Neither is actionable, and `controls` is the user's fallback.
+      void video.play();
     }
   }
 </script>

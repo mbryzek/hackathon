@@ -40,10 +40,12 @@
 
   function togglePresentationMode() {
     isPresentationMode = !isPresentationMode;
+    // Fire-and-forget: the Fullscreen API rejects when the browser declines the request, and
+    // presentation mode is already applied by `isPresentationMode` either way.
     if (isPresentationMode) {
-      document.documentElement.requestFullscreen?.();
+      void document.documentElement.requestFullscreen?.();
     } else {
-      document.exitFullscreen?.();
+      void document.exitFullscreen?.();
     }
   }
 
