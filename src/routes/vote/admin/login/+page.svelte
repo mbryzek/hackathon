@@ -3,6 +3,7 @@
   import { enhance } from '$app/forms';
   import { urls } from '$lib/urls';
   import type { ActionData } from './$types';
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
 
   let { form }: { form: ActionData } = $props();
 
@@ -70,14 +71,12 @@
         </div>
 
         {#if error}
-          <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {error}
-          </div>
+          <ErrorBanner message={error} />
         {/if}
 
         <button
           type="submit"
-          disabled={isSubmitting || !email.trim() || !password}
+          disabled={isSubmitting}
           class="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {#if isSubmitting}

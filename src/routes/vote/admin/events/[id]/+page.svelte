@@ -6,6 +6,7 @@
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
   import Modal from '$lib/components/Modal.svelte';
   import type { ActionData, PageData } from './$types';
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -24,9 +25,7 @@
 
   {#if event}
     {#if error}
-      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-        {error}
-      </div>
+      <ErrorBanner message={error} class="mb-6" />
     {/if}
 
     <!-- Event Details -->
@@ -92,9 +91,7 @@
       </button>
     </div>
   {:else}
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-      {error || 'Event not found'}
-    </div>
+    <ErrorBanner message={error || 'Event not found'} />
   {/if}
 </div>
 

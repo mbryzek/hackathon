@@ -6,6 +6,7 @@
   import { urls } from '$lib/urls';
   import { voteApi, VoterType, type Vote } from '$lib/api/client';
   import type { PageData } from './$types';
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
 
   let { data }: { data: PageData } = $props();
 
@@ -182,9 +183,7 @@
         </div>
 
         {#if error}
-          <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center" role="alert">
-            {error}
-          </div>
+          <ErrorBanner message={error} class="text-center" />
         {/if}
 
         <button
@@ -233,9 +232,7 @@
       </div>
 
       {#if error}
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg" role="alert">
-          {error}
-        </div>
+        <ErrorBanner message={error} />
       {/if}
 
       <!-- Projects list. A <fieldset> named by its <legend> is the native form of the grouping

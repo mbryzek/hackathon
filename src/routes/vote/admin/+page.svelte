@@ -2,6 +2,7 @@
   import { urls } from '$lib/urls';
   import { eventStatusBadgeClass, eventStatusLabel, formatDate } from '$lib/utils/eventDisplay';
   import type { PageData } from './$types';
+  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
 
   let { data }: { data: PageData } = $props();
 
@@ -27,9 +28,7 @@
   </div>
 
   {#if error}
-    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-      {error}
-    </div>
+    <ErrorBanner message={error} />
   {:else if events.length === 0}
     <div class="bg-white shadow rounded-xl p-12 text-center">
       <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
