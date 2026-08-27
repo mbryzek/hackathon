@@ -64,7 +64,6 @@ export enum PlaybookFeature {
   LocationComparison = 'location_comparison',
   Executions = 'executions',
   Chat = 'chat',
-  ChecklistMeasurement = 'checklist_measurement',
 }
 
 export enum RallydNotificationType {
