@@ -60,12 +60,10 @@ export enum PlatformFeature {
 }
 
 export enum PlaybookFeature {
-  Billing = 'billing',
   Checklist = 'checklist',
   LocationComparison = 'location_comparison',
   Executions = 'executions',
   Chat = 'chat',
-  ChecklistMeasurement = 'checklist_measurement',
   WeeklyPortfolioBriefing = 'weekly_portfolio_briefing',
 }
 
