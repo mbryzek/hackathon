@@ -28,7 +28,12 @@ import { isMainThread } from 'node:worker_threads';
  * enumerates every copy carrying them and reports one that has drifted, so a change here
  * that does not reach the others is caught rather than merely regretted (ISS-3894).
  *
- * Delete this once the adapter disposes the platform proxy itself. ISS-5600
+ * Delete this once every repo carrying this block is on `@sveltejs/adapter-cloudflare`
+ * v8+. v8 drops `emulate()`: the platform proxy moves into a Vite plugin that runs only
+ * for dev and preview servers, so a build never creates one. The adapter still disposes
+ * the proxy nowhere, so the version is the trigger to watch for — not a `dispose()` call,
+ * which is not coming. The check is that `emulate` no longer appears in
+ * `node_modules/@sveltejs/adapter-cloudflare/index.js`. ISS-5600
  */
 if (isMainThread) {
   // Absolute path so nothing earlier on PATH can change what runs, and `-P` so the only thing
