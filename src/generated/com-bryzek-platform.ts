@@ -62,8 +62,8 @@ export enum PlatformFeature {
 export enum PlaybookFeature {
   Checklist = 'checklist',
   LocationComparison = 'location_comparison',
-  Executions = 'executions',
   Chat = 'chat',
+  AiEmployees = 'ai_employees',
 }
 
 export enum RallydNotificationType {
