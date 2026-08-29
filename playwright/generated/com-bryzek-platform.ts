@@ -60,7 +60,6 @@ export enum PlatformFeature {
 }
 
 export enum PlaybookFeature {
-  Checklist = 'checklist',
   LocationComparison = 'location_comparison',
   Chat = 'chat',
   AiEmployees = 'ai_employees',
