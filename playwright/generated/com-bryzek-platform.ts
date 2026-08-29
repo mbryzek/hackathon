@@ -54,11 +54,6 @@ export enum NotificationChannel {
   None = 'none',
 }
 
-export enum PlatformFeature {
-  EmailVerification = 'email_verification',
-  SmsOptin = 'sms_optin',
-}
-
 export enum PlaybookFeature {
   LocationComparison = 'location_comparison',
   Chat = 'chat',
