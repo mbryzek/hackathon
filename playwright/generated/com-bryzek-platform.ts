@@ -55,8 +55,6 @@ export enum NotificationChannel {
 }
 
 export enum PlaybookFeature {
-  LocationComparison = 'location_comparison',
-  Chat = 'chat',
   AiEmployees = 'ai_employees',
 }
 
