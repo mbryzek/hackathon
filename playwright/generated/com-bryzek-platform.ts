@@ -300,6 +300,8 @@ export interface Person {
   name?: string;
   /** What to call the user */
   nickname?: string;
+  /** Role title as written to others -- e.g. 'Membership Director'. Optional and free text: most people have none, and the ones who do are staff whose title is part of how they sign a message. Team members reuse person for identity, so this serves humans and AI staff alike. */
+  title?: string;
   birth?: BirthInfo;
   gender?: Gender;
   mobile_phone?: Phone;
