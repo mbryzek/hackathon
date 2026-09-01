@@ -166,7 +166,8 @@ export interface AddressForm {
  */
 export interface AuditStamp {
   at: ISODateTimeString;
-  by: UserSummary;
+  /** The person who acted. */
+  by: PersonSummary;
 }
 
 export interface BirthInfo {
@@ -348,6 +349,19 @@ export interface PersonSecondaryForm {
   birth?: BirthInfoForm;
   gender?: Gender;
   time_zone?: TimeZone;
+}
+
+/**
+ * Enough of an actor to display them: id plus name fields. Use wherever a payload needs to show who, without the full person graph.
+ *
+ * `id` IS A PERSON ID. Every actor in this codebase is a person -- a member, a guest, an email submitter, and the synthetic system and AI actors -- and person is the only identity that names all of them. A user is a login mechanism attached to a person: strictly one to one with it, and absent for the actors above, so it can name only some of who acts. Render these fields, and compare `id` against another person id; do NOT take it for a user id, and do not build a link or a request to a user resource from it.
+ */
+export interface PersonSummary {
+  id: string;
+  /** Full name */
+  name?: string;
+  nickname?: string;
+  email?: string;
 }
 
 export interface Phone {
@@ -577,17 +591,6 @@ export interface UserReference {
 export interface UserSecondaryForm {
   person: PersonSecondaryForm;
   rallyd?: RallydRatingForm[];
-}
-
-/**
- * Enough of a user to display them: id plus name fields. Use wherever a payload needs to show who, without the full user/person graph.
- */
-export interface UserSummary {
-  id: string;
-  /** Full name */
-  name?: string;
-  nickname?: string;
-  email?: string;
 }
 
 // ============================================================================
