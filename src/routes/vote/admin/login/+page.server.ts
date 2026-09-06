@@ -1,8 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { SESSION_COOKIE, config } from '$lib/config';
 import { isApiError, safeErrorStatus } from '$lib/api/client';
 import { adminApi } from '$lib/server/adminApi';
+import { setSessionCookie } from '$lib/server/adminSession';
 
 /**
  * `locals.adminSession` is set only for a session the API confirmed (see `src/hooks.server.ts`),
@@ -54,14 +54,7 @@ export const actions = {
       });
     }
 
-    // Set session cookie server-side with httpOnly for security
-    cookies.set(SESSION_COOKIE, response.data.session.id, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: config.isProduction,
-      maxAge: 60 * 60 * 8 // 8 hours
-    });
+    setSessionCookie(cookies, response.data.session.id);
 
     // Redirect to admin dashboard
     throw redirect(303, '/vote/admin');
