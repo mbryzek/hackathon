@@ -34,6 +34,10 @@ export const urls = {
   voteEvent: (eventKey: string) => `/vote/${eventKey}`,
   voteThanks: (eventKey: string) => `/vote/${eventKey}/thanks`,
 
+  // Password reset. The `/login/password/reset/<id>` landing page's path is the platform's to
+  // choose (see `src/routes/emailedLinkRoutes.test.ts`); the request page is its sibling.
+  passwordResetRequest: '/login/password/reset',
+
   // Admin routes
   voteAdminLogin: '/vote/admin/login',
   voteAdminLogout: '/vote/admin/logout',

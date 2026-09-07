@@ -52,6 +52,26 @@ export const platformApi = {
   },
 
   /**
+   * Asks the platform to mail a password-reset link to `email`.
+   *
+   * IT ANSWERS 204 WHETHER OR NOT THE ADDRESS HAS AN ACCOUNT, and that is the behaviour the
+   * page in front of it has to preserve: a caller who could tell the two apart would have an
+   * oracle for which addresses hold hackathon accounts. The only 422 the platform raises here
+   * is a blank address, which says nothing about anyone.
+   *
+   * The tenant is named rather than read from a session for the same reason as
+   * `changePassword`: whoever is asking cannot sign in, which is the whole point.
+   */
+  async requestPasswordReset(email: string): Promise<ApiResponse<void>> {
+    return handleApiCall(() =>
+      platformClient().createTenantSessionPasswordAndResets({
+        tenantId: TENANT_ID,
+        body: { email }
+      })
+    );
+  },
+
+  /**
    * Spends a password-reset token, mailed as `/login/password/reset/<id>` by
    * `PasswordResetProcessor`. The `id` the form carries IS that token: the platform builds the
    * link from the password reset's own id.
