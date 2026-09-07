@@ -68,6 +68,11 @@
             autocomplete="current-password"
             disabled={isSubmitting}
           />
+          <p class="mt-2 text-right text-sm">
+            <a href={urls.passwordResetRequest} class="text-gray-600 underline transition-colors hover:text-gray-900">
+              Forgot your password?
+            </a>
+          </p>
         </div>
 
         {#if error}
