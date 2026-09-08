@@ -471,6 +471,56 @@ export async function settle(page: Page, path: string): Promise<boolean> {
   }
 }
 
+/** What a `hover` shot can be taken on: the elements a `hover:` rule reaches. */
+const HOVER_SELECTOR = 'button, [role="button"], a[href]';
+
+/** What a `focus` shot can be taken on: `HOVER_SELECTOR` plus every form control. */
+const FOCUS_SELECTOR = 'input:not([type=hidden]), select, textarea, [contenteditable="true"], button, a[href]';
+
+/**
+ * How many `hover` shots this page offers at this viewport, and how many it would offer uncapped.
+ *
+ * ONE SHOT PER ELIGIBLE ELEMENT, NOT ONE PER PAGE. The first eligible element in document order is
+ * deterministic -- which is why it was the original choice -- and it is almost never the affordance
+ * a `hover:` rule is about: a form puts its decoration before its submit. Measured on account,
+ * where every login-shaped page put the pointer on a 20x20 password-visibility toggle: a change to
+ * the primary button's hover colour moved 6 of 126 shots, and the other 24 button-bearing hover
+ * shots reported equal -- correctly, and uselessly. The harness would have reported the same number
+ * with the change reverted on four of the five pages, which is the sentence this exists to stop
+ * anybody being able to write (ISS-9603).
+ *
+ * THE INDEX IS THE KEY, and it is exactly as stable as the single target it replaces. An element
+ * inserted before another changes what the later indices point at -- a `target` change on a key
+ * both captures hold, which the manifest records and `compare.ts` prints. An element added past the
+ * end is a key present on one side only, which is a compare failure: the loudest outcome available,
+ * and the right one.
+ *
+ * `limit` bounds the count, because the shots are full-page PNGs and a page carrying a forty-link
+ * nav would otherwise multiply the whole capture by forty. `total` comes back alongside it so the
+ * shortfall is REPORTED in the manifest rather than being a smaller number nobody notices.
+ */
+export async function hoverTargetCount(page: Page, limit: number): Promise<{ shots: number; total: number }> {
+  const total = await page.evaluate((selector) => {
+    // The eligibility test `applyState` applies, counted rather than acted on. Written twice
+    // because both copies run INSIDE the page, where nothing this module defines exists.
+    let count = 0;
+    for (const element of Array.from(document.querySelectorAll(selector))) {
+      if ((element as HTMLInputElement).disabled) continue;
+      const rect = element.getBoundingClientRect();
+      const onScreen =
+        rect.width > 0 &&
+        rect.height > 0 &&
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= window.innerHeight &&
+        rect.right <= window.innerWidth;
+      if (onScreen) count += 1;
+    }
+    return count;
+  }, HOVER_SELECTOR);
+  return { shots: Math.min(total, limit), total };
+}
+
 /**
  * Put the page into `state`, and say what it was applied to.
  *
@@ -479,27 +529,31 @@ export async function settle(page: Page, path: string): Promise<boolean> {
  * into view, which would move a fixed header inside the very screenshot being compared; `hover` is
  * therefore a raw mouse move to the element's centre, and `focus` passes `preventScroll`.
  *
+ * `index` SKIPS THAT MANY ELIGIBLE ELEMENTS FIRST, which is how `hover` becomes one shot per
+ * element rather than one per page: `hoverTargetCount` says how many there are and `parity.spec.ts`
+ * walks them, keying each one `hover-<index>`. `focus` is only ever asked for index 0 -- a form's
+ * first control is the affordance a focus ring is about, and the same is not true of its first
+ * button.
+ *
  * `none` is a legitimate answer — a page with no button has no hover state — and it is recorded in
  * the manifest rather than hidden, because "the same page offered a different target after the
  * upgrade" is itself a finding. `null` is the other answer and is not legitimate: it means the
  * webfont was not measurable when the shot was due, so there is nothing honest to record. See
  * `awaitMeasurableFont`.
  */
-export async function applyState(page: Page, state: StateName): Promise<string | null> {
+export async function applyState(page: Page, state: StateName, index = 0): Promise<string | null> {
   if (state === 'rest') return (await awaitMeasurableFont(page)) ? 'n/a' : null;
 
-  const selector =
-    state === 'focus'
-      ? 'input:not([type=hidden]), select, textarea, [contenteditable="true"], button, a[href]'
-      : 'button, [role="button"], a[href]';
+  const selector = state === 'focus' ? FOCUS_SELECTOR : HOVER_SELECTOR;
 
   const found = await page.evaluate(
-    ({ selector: sel, wantFocus }) => {
+    ({ selector: sel, wantFocus, skip }) => {
       const describe = (element: Element): string => {
         const id = element.id ? `#${element.id}` : '';
         const testId = element.getAttribute('data-testid');
         return `${element.tagName.toLowerCase()}${id}${testId ? `[data-testid=${testId}]` : ''}`;
       };
+      let skipped = 0;
       for (const element of Array.from(document.querySelectorAll(sel))) {
         if ((element as HTMLInputElement).disabled) continue;
         const rect = element.getBoundingClientRect();
@@ -511,6 +565,10 @@ export async function applyState(page: Page, state: StateName): Promise<string |
           rect.bottom <= window.innerHeight &&
           rect.right <= window.innerWidth;
         if (!onScreen) continue;
+        if (skipped < skip) {
+          skipped += 1;
+          continue;
+        }
         if (wantFocus) {
           (element as HTMLElement).focus({ preventScroll: true });
           return { description: describe(element), x: 0, y: 0 };
@@ -519,7 +577,7 @@ export async function applyState(page: Page, state: StateName): Promise<string |
       }
       return null;
     },
-    { selector, wantFocus: state === 'focus' }
+    { selector, wantFocus: state === 'focus', skip: index }
   );
 
   if (found === null) return 'none';

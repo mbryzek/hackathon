@@ -165,6 +165,14 @@ function main(): number {
   const a = readManifest(dirA);
   const b = readManifest(dirB);
   if (a.set !== b.set) console.error(`WARNING: comparing the "${a.set}" set against the "${b.set}" set`);
+  // Two captures taken under different hover limits differ in every key past the smaller one, and
+  // the shots-present-on-one-side-only report below would name every one of them without naming
+  // the cause. Both numbers, once, before that list.
+  if (a.hoverLimit !== b.hoverLimit) {
+    console.error(
+      `WARNING: A captured up to ${a.hoverLimit} hover shot(s) per page, B up to ${b.hoverLimit} -- VISUAL_HOVER_LIMIT differed`
+    );
+  }
 
   const comparison = compareManifests(a, b);
   console.log(`A ${dirA} (${a.set}, ${a.capturedAt})`);
