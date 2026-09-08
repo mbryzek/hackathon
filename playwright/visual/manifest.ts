@@ -1,4 +1,3 @@
-// dry-copy: sveltekit/visual-parity-manifest — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
 /**
  * THE VERDICT FORMAT (ISS-9319).
  *
@@ -14,6 +13,7 @@
  * change immediately, and a `focus`/`hover` shot that targeted a different element is a finding in
  * itself rather than a rendering difference.
  */
+// dry-copy: visual-parity/manifest — every copy of this region must match; `dev repo copies` checks it
 
 /** One shot's row in the manifest. */
 export interface ManifestEntry {

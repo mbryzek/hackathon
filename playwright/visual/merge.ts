@@ -1,4 +1,3 @@
-// dry-copy: sveltekit/visual-parity-merge — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
 /**
  * After a capture: fold the per-page shards into the one `manifest.json` a compare reads (ISS-9319).
  *
@@ -8,10 +7,10 @@
  * one — `readManifest` refuses a directory with no manifest, so a run that died mid-way cannot be
  * mistaken for a small one.
  */
+// dry-copy: visual-parity/merge — every copy of this region must match; `dev repo copies` checks it
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { paths, writeFile } from './files.ts';
-import { SHOTS_PER_PAGE } from './matrix.ts';
 import type { Manifest, ManifestEntry } from './manifest.ts';
 import { capturePlan } from './plan.ts';
 
@@ -48,7 +47,7 @@ export default async function globalTeardown(): Promise<void> {
   };
   writeFile(paths.manifest(plan.out), JSON.stringify(manifest, null, 2));
 
-  const expected = plan.targets.length * SHOTS_PER_PAGE;
+  const expected = plan.targets.length * 18;
   console.log(`visual: ${Object.keys(entries).length} of ${expected} shots captured -> ${paths.manifest(plan.out)}`);
   if (manifest.uncovered.length > 0)
     console.log(`visual: ${manifest.uncovered.length} uncovered route(s)/page(s) recorded in the manifest`);

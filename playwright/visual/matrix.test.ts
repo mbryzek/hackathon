@@ -1,37 +1,50 @@
+// dry-copy: visual-parity/matrix-test — every copy of this region must match; `dev repo copies` checks it
 import { describe, expect, it } from 'vitest';
-import { pageTargets, SHOTS_PER_PAGE, shotKey, shotsFor, slugOf, STATES, themeInitScript, THEMES, VIEWPORTS } from './matrix.ts';
+import { pageTargets, shotKey, shotsFor, slugOf, STATES, THEMES, VIEWPORTS } from './matrix.ts';
 
+/**
+ * The bookkeeping, not the browser. What these pin is the property the whole harness rests on: a
+ * shot on one side has exactly one counterpart on the other, and the key that pairs them is stable
+ * and unique. A collision here does not make a capture fail — it makes two different pages compare
+ * EQUAL, which is the one failure mode a green run cannot tell you about.
+ */
 describe('slugOf', () => {
-  it('turns a url path into a filename-safe slug', () => {
-    expect(slugOf('/Y26/program/ad')).toBe('y26-program-ad');
-    expect(slugOf('/')).toBe('root');
+  it('makes a path filename-safe', () => {
+    expect(slugOf('/dev/preview/clubDetail')).toBe('dev-preview-clubdetail');
+    expect(slugOf('/admin/clubs/picklejar/integrations/court-reserve')).toBe('admin-clubs-picklejar-integrations-court-reserve');
   });
 
-  /**
-   * macOS filesystems are case-insensitive, so a slug that preserved case would let two paths
-   * write to one file and the second would silently win. `pageTargets` refuses instead.
-   */
-  it('refuses two paths that differ only in case rather than letting one overwrite the other', () => {
-    expect(() => pageTargets(['/Y26', '/y26'])).toThrow(/both slugify to "y26"/);
+  it('names the root path rather than returning an empty string', () => {
+    expect(slugOf('/')).toBe('root');
+  });
+});
+
+describe('pageTargets', () => {
+  it('pairs every path with its slug', () => {
+    expect(pageTargets(['/a/b', '/c'])).toEqual([
+      { path: '/a/b', slug: 'a-b' },
+      { path: '/c', slug: 'c' }
+    ]);
+  });
+
+  it('refuses a slug collision, naming both paths', () => {
+    // Two preview keys differing only in case would write to one file on a case-insensitive
+    // filesystem, and the second would silently win.
+    expect(() => pageTargets(['/dev/preview/clubDetail', '/dev/preview/clubdetail'])).toThrow(/both slugify to "dev-preview-clubdetail"/);
   });
 });
 
 describe('shotsFor', () => {
-  it('produces one shot per theme, viewport and state, in a fixed order', () => {
-    const shots = shotsFor({ path: '/mission', slug: 'mission' });
-    expect(shots).toHaveLength(SHOTS_PER_PAGE);
-    expect(shots[0]?.key).toBe(shotKey('mission', 'default', 'phone', 'rest'));
+  const shots = shotsFor({ path: '/dev/preview', slug: 'dev-preview' });
+
+  it('covers every theme, viewport and state exactly once', () => {
+    expect(shots).toHaveLength(THEMES.length * VIEWPORTS.length * STATES.length);
     expect(new Set(shots.map((shot) => shot.key)).size).toBe(shots.length);
   });
 
-  it('counts the matrix rather than a literal, which is what setup and merge report against', () => {
-    expect(SHOTS_PER_PAGE).toBe(THEMES.length * VIEWPORTS.length * STATES.length);
+  it('keys a shot by page, theme, viewport and state', () => {
+    expect(shots[0]?.key).toBe(shotKey('dev-preview', 'dark', 'phone', 'rest'));
+    expect(shots.at(-1)?.key).toBe('dev-preview--light--desktop--hover');
   });
 });
-
-describe('themeInitScript', () => {
-  /** This site has no dark mode, so there is nothing to inject and the shared capture skips it. */
-  it('is empty on a site with one theme', () => {
-    expect(themeInitScript('default')).toBe('');
-  });
-});
+// dry-copy-end

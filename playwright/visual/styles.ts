@@ -1,4 +1,3 @@
-// dry-copy: sveltekit/visual-parity-styles — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
 /**
  * THE DIAGNOSTIC HALF (ISS-9319).
  *
@@ -22,6 +21,7 @@
  * element. The transform is lossless and `decodeStyles` is its inverse, which is what the unit
  * test pins.
  */
+// dry-copy: visual-parity/styles — every copy of this region must match; `dev repo copies` checks it
 
 /** One element as the dump identifies it. Not a selector -- a descriptor a human reads. */
 export interface ElementRef {

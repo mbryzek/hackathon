@@ -1,55 +1,42 @@
 /**
- * THE CAPTURE MATRIX, and the naming that makes two captures comparable (ISS-9319, ISS-9327).
- *
- * THIS FILE IS THE ONE THE COPY OF THIS HARNESS IN EACH REPO OWNS. Everything around it carries
- * `dry-copy` markers and must stay byte-identical across repos; this states what is true about
- * THIS site — how many themes it has and how one is applied, how long its longest transition runs,
- * which viewports its stylesheet breaks at — and the shared half reads those out of here rather
- * than assuming playbook-admin's answers.
+ * THE CAPTURE MATRIX, and the naming that makes two captures comparable (ISS-9319, copied under
+ * ISS-9327).
  *
  * Kept apart from the browser so it can be unit-tested: the thing a parity harness gets wrong
- * silently is not the screenshot, it is the BOOKKEEPING around it. Two captures are only
- * comparable if every shot on one side has exactly one counterpart on the other, and the only
- * thing that pairs them is this key. A key that collides makes two different pages compare equal;
- * a key that is not stable across runs makes every shot look new. Both failures read as "the
- * harness said nothing was wrong".
+ * silently is not the screenshot, it is the BOOKKEEPING around it. Two captures are only comparable
+ * if every shot on one side has exactly one counterpart on the other, and the only thing that pairs
+ * them is this key. A key that collides makes two different pages compare equal; a key that is not
+ * stable across runs makes every shot look new. Both failures read as "the harness said nothing was
+ * wrong".
  *
  * WHY EACH AXIS IS HERE. A CSS-toolchain upgrade changes what a stylesheet COMPILES TO, and a
  * single screenshot of a page at rest exercises a small part of that:
  *
- *   - VIEWPORT, because responsive variants are separate compiled rules, and this site is built
- *     out of them: every page is a `sm:`/`md:`/`lg:` grid over a mobile column.
+ *   - THEME, in the repos that have one, because their declared colour is half on
+ *     `:root[data-theme='dark']` and the `dark:` variant has to keep keying off that attribute
+ *     rather than off a class. THIS SITE HAS NO THEME — no `dark:` utility, no `data-theme`, no
+ *     toggle — so the axis is degenerate and each page is captured twice identically. The axis is
+ *     kept rather than dropped because the region below is shared byte for byte with the repos that
+ *     do have one, and because two shots that must be equal are a free control on the harness
+ *     itself: a `dark` hash that differs from its `light` twin inside ONE capture is a harness
+ *     fault.
+ *   - VIEWPORT, because responsive variants are separate compiled rules, and this site is built out
+ *     of them: every page is a `sm:`/`md:`/`lg:` grid over a mobile column.
  *   - STATE, because `hover:` and the focus ring are the two utility families a rest screenshot
  *     cannot see at all — and `hover:` is precisely the one Tailwind 4 changes the meaning of, by
  *     wrapping it in `@media (hover: hover)`. This site writes 117 of them, and its focus ring is
  *     declared once in `app.css` on `:focus-visible` for every page at once.
- *   - THEME, which is a one-element axis here and stays an axis anyway. This site has no dark mode
- *     — no `dark:` utility, no `data-theme`, no toggle — so there is one theme and
- *     `themeInitScript` injects nothing. Keeping the axis rather than deleting it is what lets the
- *     shared half be shared: `capture.ts` and `parity.spec.ts` are the same bytes here as in a
- *     repo that has two.
+ *
+ * The three multiply out to eighteen shots per page. That is the point: the upgrade is claimed to
+ * be a no-op, and a no-op claim is only worth what it was tested against.
  */
 
 /**
- * The themes this site can boot into: one.
- *
- * `default` rather than `light`, because nothing in this repo names a theme at all and calling it
- * `light` would imply a `dark` that is coming.
+ * The two values `capture.ts` boots a context under. Both render identically here; see the axis
+ * note above for why the degenerate axis is kept.
  */
-export const THEMES = ['default'] as const;
+export const THEMES = ['dark', 'light'] as const;
 export type ThemeName = (typeof THEMES)[number];
-
-/**
- * How to put the browser into `theme` before the first byte of the document runs.
- *
- * Empty here, because there is nothing to put it into. A repo whose `app.html` reads a stored
- * theme in an inline `<head>` script returns the `localStorage.setItem` that feeds it; see
- * `themedContext` in `capture.ts` for why it has to be an init script rather than a navigation
- * step.
- */
-export function themeInitScript(_theme: ThemeName): string {
-  return '';
-}
 
 export interface Viewport {
   /** Appears in the key, so it is short and stable. */
@@ -59,12 +46,11 @@ export interface Viewport {
 }
 
 /**
- * Phone, tablet, desktop.
- *
- * `desktop` is 1920x1080 because that is what `playwright.config.ts` already uses, so a shot taken
- * here is the same page the e2e suite sees. The other two straddle Tailwind's own breakpoints,
- * which are the only ones this repo has — `app.css` declares no `@media` block of its own — so 375
- * is below `sm` (640), and 768 is exactly `md` and below `lg` (1024).
+ * Phone, tablet, desktop. `desktop` is 1920x1080 because that is what `playwright.config.ts`
+ * already uses, so a shot taken here is the same page the e2e suite sees. 375 and 768 are
+ * Tailwind's own `sm` and `md` boundaries — below `sm`, and exactly ON `md` — so a responsive
+ * variant that changed the width it applies at lands on one of the three rather than between them.
+ * This repo's `app.css` declares no `@media` block of its own, so Tailwind's are the only ones.
  */
 export const VIEWPORTS: readonly Viewport[] = [
   { name: 'phone', width: 375, height: 812 },
@@ -82,27 +68,12 @@ export const VIEWPORTS: readonly Viewport[] = [
 export const STATES = ['rest', 'focus', 'hover'] as const;
 export type StateName = (typeof STATES)[number];
 
-/**
- * How many shots one page produces. Read by the setup and the teardown so that "N of M captured"
- * is derived from the matrix rather than from a literal somebody has to remember to change.
- */
-export const SHOTS_PER_PAGE = THEMES.length * VIEWPORTS.length * STATES.length;
-
-/**
- * How long to let declared transitions finish after a state change.
- *
- * MUST OUTLAST THE LONGEST TRANSITION THE STYLESHEET DECLARES, or a hover shot is taken part-way
- * through one and the two sides of an A/B disagree about where an element was. This repo's longest
- * is `duration-500` (a `PhotoGallery` lightbox fade), so 650 leaves a margin; playbook-admin's is
- * 0.25s and it uses 250.
- */
-export const SETTLE_MS = 650;
-
+// dry-copy: visual-parity/matrix — every copy of this region must match; `dev repo copies` checks it
 /** One page to capture: the url path, and the slug that names it in every key. */
 export interface PageTarget {
-  /** `/Y26/program` */
+  /** The url path to navigate to, e.g. `/login/password/reset`. */
   path: string;
-  /** `y26-program` — filename-safe, lowercase, unique within a set. */
+  /** `login-password-reset` — filename-safe, lowercase, unique within a set. */
   slug: string;
 }
 
@@ -118,11 +89,11 @@ export interface Shot {
 /**
  * A url path as a filename-safe slug.
  *
- * LOWERCASED, and that is the part with a trap in it. This site's routes are `Y24`, `Y25`, `Y26`,
- * and macOS filesystems are case-INSENSITIVE, so a slug that preserved case would let two paths
- * differing only in case write to one file and the second would silently win. Lowercasing makes
- * the collision visible instead, and `pageTargets` below refuses one rather than letting it
- * through.
+ * LOWERCASED, and that is the part with a trap in it. Two paths can differ only in case — a
+ * camelCase fixture key is the usual way — and macOS filesystems are case-INSENSITIVE, so a slug
+ * that preserved case would write two shots to one file and the second would silently win.
+ * Lowercasing makes the collision visible instead, and `pageTargets` below refuses one rather than
+ * letting it through.
  */
 export function slugOf(path: string): string {
   const slug = path
@@ -138,7 +109,7 @@ export function slugOf(path: string): string {
  * A throw rather than a rename: an auto-disambiguated slug is stable only as long as the set is
  * unchanged, so a page added later would renumber somebody else's shot and every key after it
  * would compare as new. Two paths that collide here is a harness bug to fix by hand, and it has
- * to be loud enough that nobody reads the resulting "198 new keys" as a real diff.
+ * to be loud enough that nobody reads the resulting "812 new keys" as a real diff.
  */
 export function pageTargets(paths: readonly string[]): PageTarget[] {
   const bySlug = new Map<string, string>();
@@ -170,3 +141,4 @@ export function shotsFor(page: PageTarget): Shot[] {
   }
   return shots;
 }
+// dry-copy-end

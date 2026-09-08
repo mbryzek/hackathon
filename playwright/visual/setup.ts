@@ -1,4 +1,3 @@
-// dry-copy: sveltekit/visual-parity-setup — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
 /**
  * Before a capture: prove the server is there, and start from an empty directory (ISS-9319).
  *
@@ -7,9 +6,9 @@
  * indistinguishable from fresh ones — so a compare would pass on a page nobody rendered. Clearing
  * is what makes "present on one side only" mean what `compareManifests` treats it as meaning.
  */
+// dry-copy: visual-parity/setup — every copy of this region must match; `dev repo copies` checks it
 import { rmSync } from 'node:fs';
 import { paths, writeFile } from './files.ts';
-import { SHOTS_PER_PAGE } from './matrix.ts';
 import { capturePlan } from './plan.ts';
 
 export default async function globalSetup(): Promise<void> {
@@ -26,9 +25,7 @@ export default async function globalSetup(): Promise<void> {
     JSON.stringify({ set: plan.set, baseUrl: plan.baseUrl, capturedAt: new Date().toISOString(), uncovered: plan.uncovered }, null, 2)
   );
 
-  console.log(
-    `visual: capturing the ${plan.set} set -- ${plan.targets.length} pages, ${plan.targets.length * SHOTS_PER_PAGE} shots -> ${plan.out}`
-  );
+  console.log(`visual: capturing the ${plan.set} set -- ${plan.targets.length} pages, ${plan.targets.length * 18} shots -> ${plan.out}`);
   if (plan.uncovered.length > 0) console.log(`visual: ${plan.uncovered.length} route(s) uncovered; see manifest.json`);
 }
 // dry-copy-end

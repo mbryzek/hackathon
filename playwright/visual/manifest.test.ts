@@ -1,4 +1,4 @@
-// dry-copy: sveltekit/visual-parity-manifest-test — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
+// dry-copy: visual-parity/manifest-test — every copy of this region must match; `dev repo copies` checks it
 import { describe, expect, it } from 'vitest';
 import { compareManifests, passes, summarize, type Manifest, type ManifestEntry } from './manifest.ts';
 

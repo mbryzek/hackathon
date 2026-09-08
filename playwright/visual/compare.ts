@@ -1,4 +1,3 @@
-// dry-copy: sveltekit/visual-parity-compare — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
 /**
  * THE VERDICT (ISS-9319). `npm run visual:compare -- <dirA> <dirB>`.
  *
@@ -14,6 +13,7 @@
  * Run by node directly rather than through a bundler -- node executes TypeScript by stripping the
  * types, so the compare tool needs no build step and no dependency the repo does not already have.
  */
+// dry-copy: visual-parity/compare — every copy of this region must match; `dev repo copies` checks it
 import { compareManifests, passes, summarize, type Manifest } from './manifest.ts';
 import { readManifest, readStyles } from './files.ts';
 import { describeElement, diffStyles } from './styles.ts';

@@ -1,21 +1,22 @@
-// dry-copy: sveltekit/visual-parity-spec — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
 /**
- * THE CAPTURE (ISS-9319). One test per page; one shot per theme, viewport and state.
+ * THE CAPTURE (ISS-9319, copied under ISS-9325). One test per page; one shot per theme, viewport
+ * and state.
  *
  * NOTHING HERE ASSERTS ANYTHING, and that is the design rather than an omission. A capture's job
  * is to write down what the browser drew; the verdict is `npm run visual:compare` over two capture
  * directories, and it lives outside this file because the two things being compared are produced
  * by two different checkouts and cannot both be in one playwright run. A spec that asserted
  * against committed golden PNGs instead would be the usual snapshot suite — and would answer the
- * wrong question, because a golden file is a claim about what the console SHOULD look like, and
+ * wrong question, because a golden file is a claim about what the app SHOULD look like, and
  * this harness is only ever asked whether it looks like it did an hour ago.
  *
- * ONE TEST PER PAGE, so every context a page needs is created and closed inside it and
+ * ONE TEST PER PAGE, so the six contexts a page needs are created and closed inside it and
  * playwright's own workers give the parallelism. Sharded output for the same reason: several
  * workers writing one manifest is a lost-update race that would silently drop shots, which is
  * exactly the failure `compareManifests` treats as fatal. Each test writes its own shard;
  * `merge.ts` folds them into `manifest.json` after the run.
  */
+// dry-copy: visual-parity/parity-spec — every copy of this region must match; `dev repo copies` checks it
 import { test } from '@playwright/test';
 import { applyState, clearState, dumpStyles, settle, themedContext } from './capture.ts';
 import { paths, sha256, writeFile, writeStyles } from './files.ts';
@@ -29,7 +30,7 @@ test.describe.configure({ mode: 'parallel' });
 
 for (const page of plan.targets) {
   test(`${plan.set} ${page.path}`, async ({ browser }, testInfo) => {
-    // A page is one navigation per (theme, viewport) and one full-page screenshot per state; the default 30s is for a test
+    // A page is six navigations and eighteen full-page screenshots; the default 30s is for a test
     // that does one thing. This budget is generous because a slow page must not silently drop
     // shots -- a missing key is a compare failure, which is the loudest outcome and the right one.
     testInfo.setTimeout(5 * 60_000);

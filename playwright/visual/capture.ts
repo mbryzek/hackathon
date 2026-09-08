@@ -1,6 +1,6 @@
-// dry-copy: sveltekit/visual-parity-capture — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
 /**
- * THE BROWSER HALF (ISS-9319): everything done to a page so that two runs of it are the same bytes.
+ * THE BROWSER HALF (ISS-9319, copied under ISS-9325): everything done to a page so that two runs
+ * of it are the same bytes.
  *
  * A parity harness is worth exactly what its determinism is worth. Every hash difference this
  * thing reports has to mean "the stylesheet renders differently", so anything else that can move a
@@ -11,7 +11,8 @@
  *
  * WHAT MOVES BETWEEN TWO RUNS OF THE SAME PAGE, and what is done about it:
  *
- *   - THE CLOCK. Half the console renders a relative time ("3 minutes ago") or today's date.
+ *   - THE CLOCK. Nothing in this app renders a date today, but a page that grows one must not
+ *     silently start failing every A/B from that day on.
  *     `clock.setFixedTime` rather than `clock.install`: it freezes what `Date.now()` and
  *     `new Date()` answer and leaves the timers running, which is what a page that schedules a
  *     microtask on mount needs in order to finish rendering at all.
@@ -24,15 +25,19 @@
  *     injected `transition: none` rule: that would change the CSSOM the computed-style dump then
  *     reads, and the dump is meant to describe the page, not the harness.
  *   - FONTS, in three places, because one is not enough. `document.fonts.ready` plus every
- *     declared face LOADED, since a shot taken before a self-hosted webfont swaps in is a shot
- *     of the fallback metrics. Then a RELOAD when the document turns out to
- *     have laid itself out before the face arrived, because a `ch` resolved then is kept for the
- *     life of that document. Then the same question again before EVERY shot, because the face can
- *     go away mid-page. See `settle` and `awaitMeasurableFont`.
- *   - THE COLOUR SCHEME. Pinned to `light` at the context. The console's dark mode is a
- *     `data-theme` attribute, not `prefers-color-scheme`, so this pins nothing the app reads — it
- *     pins what the UA stylesheet and any third-party CSS read, which otherwise follows the
- *     MACHINE the capture ran on.
+ *     declared face LOADED, since a shot taken before a self-hosted face swaps in is a shot of the
+ *     fallback metrics. Then a RELOAD when the document turns out to have laid itself out before
+ *     the face arrived, because a `ch` resolved then is kept for the life of that document. Then
+ *     the same question again before EVERY shot, because the face can go away mid-page. See
+ *     `settle` and `awaitMeasurableFont`. THIS APP DECLARES NO `@font-face` — its stack is Inter
+ *     with system fallbacks — so all three are inert here and are kept for the reason the whole
+ *     module is: the region below is shared byte for byte with the repos that do self-host one,
+ *     and a probe that measures an installed font is a correct answer, not a skipped one.
+ *   - THE THEME KEY. `themedContext` writes `localStorage['playbook-theme']` before the first byte
+ *     of the document runs. Nothing in this app reads it; see `matrix.ts` on why the axis is kept.
+ *   - THE COLOUR SCHEME. Pinned to `light` at the context. This app has no dark mode at all, so
+ *     this pins nothing the app reads — it pins what the UA stylesheet reads (form controls,
+ *     scrollbars, the canvas), which otherwise follows the MACHINE the capture ran on.
  *   - THE DEVICE SCALE. `deviceScaleFactor: 1` and `scale: 'css'`, so the PNG is in CSS pixels and
  *     a capture taken on a retina box is comparable with one taken on a runner.
  *   - WHERE THE PAGE IS SCROLLED. A full-page screenshot renders fixed and sticky chrome at the
@@ -41,18 +46,20 @@
  *   - IMAGES AND POSTER FRAMES, decoded rather than merely fetched, and `loading="lazy"` forced
  *     eager first. `networkidle` cannot see a lazy image: it has not been REQUESTED yet, and a
  *     full-page screenshot resizes the viewport to the whole document, which starts those requests
- *     after the wait is already over. See `awaitMedia`.
+ *     after the wait is already over. See `awaitMedia` (ISS-9327).
  *   - THIRD-PARTY BITMAPS AND VIDEO, replaced by a flat rectangle of the same intrinsic size and
  *     by nothing at all. Chromium does not downscale a large photograph reproducibly across page
  *     loads, and a `<video>` with no poster paints whichever frame `preload="metadata"` happened
  *     to decode; neither is something a CSS parity harness has a question about. See
- *     `stubForeignMedia`.
+ *     `stubForeignMedia` (ISS-9327).
+ *   - A LATE CLIENT-SIDE REDIRECT, waited out before any shot. See `settle` (ISS-9327).
  */
+// dry-copy: visual-parity/capture — every copy of this region must match; `dev repo copies` checks it
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { Browser, BrowserContext, Page } from '@playwright/test';
-import { SETTLE_MS, themeInitScript, type StateName, type ThemeName, type Viewport } from './matrix.ts';
+import type { StateName, ThemeName, Viewport } from './matrix.ts';
 import { encodeStyles, type RawElement, type StyleDump } from './styles.ts';
 
 /**
@@ -62,6 +69,15 @@ import { encodeStyles, type RawElement, type StyleDump } from './styles.ts';
  * renders "in 3 days" read as nonsense to whoever opens the PNG to see what broke.
  */
 export const FIXED_TIME = new Date('2025-06-15T12:00:00.000Z');
+
+/**
+ * How long to let declared transitions finish after a state change.
+ *
+ * MUST OUTLAST THE LONGEST TRANSITION ANY REPO CARRYING THIS REGION DECLARES, or a hover shot is
+ * taken part-way through one and two captures of the same page disagree about where an element
+ * was. The longest is hackathon's `duration-500` (ISS-9327); this console's is 0.25s.
+ */
+const SETTLE_MS = 650;
 
 /** The id of the `100ch` box planted before first layout. See `settle`. */
 const CH_PROBE_ID = '__visual_ch_probe__';
@@ -88,7 +104,7 @@ const DETERMINISM_INIT = `(() => {
 })();`;
 
 /**
- * Where the intrinsic size of each foreign image is remembered between captures.
+ * Where the intrinsic size of each foreign image is remembered between captures (ISS-9327).
  *
  * BESIDE the output directory rather than inside it: `setup.ts` clears `VISUAL_OUT` at the start
  * of every capture, and the whole value of this cache is that the two sides of an A/B share it.
@@ -105,7 +121,7 @@ function cacheDir(): string {
  *
  * Enough of each format to read the one thing that matters: PNG states it in `IHDR`, 16 bytes in;
  * JPEG states it in whichever `SOF` marker the encoder used, which is why this walks the segment
- * chain rather than looking at a fixed offset. `null` for anything else — a format this does not
+ * chain rather than looking at a fixed offset. `null` for anything else -- a format this does not
  * know is served through unchanged rather than guessed at.
  */
 export function imageSize(bytes: Buffer): { width: number; height: number } | null {
@@ -131,41 +147,39 @@ export function imageSize(bytes: Buffer): { width: number; height: number } | nu
 }
 
 /**
- * REPLACE EVERY CROSS-ORIGIN IMAGE WITH A FLAT RECTANGLE OF ITS OWN SIZE.
+ * REPLACE EVERY CROSS-ORIGIN IMAGE WITH A FLAT RECTANGLE OF ITS OWN SIZE (ISS-9327).
  *
- * Chromium does not rasterise a downscaled photograph reproducibly. Measured here across three
- * captures of one unchanged page, with the config's whole rasteriser-pinning flag list in force
- * and every image loaded and `decode()`d before the shot: the hash differed every time, on five
- * bands of the page, with byte-identical computed styles and the same images in the same order.
- * Within ONE page load three consecutive screenshots are identical, so what varies is which
- * scaled decode Chromium cached during that load — not something a flag or a longer wait reaches.
+ * Chromium does not rasterise a downscaled photograph reproducibly. Measured across three captures
+ * of one unchanged page, with the config's whole rasteriser-pinning flag list in force and every
+ * image loaded and `decode()`d before the shot: the hash differed every time, on five bands of the
+ * page, with byte-identical computed styles and the same images in the same order. Within ONE page
+ * load three consecutive screenshots are identical, so what varies is which scaled decode Chromium
+ * cached during that load -- not something a flag or a longer wait reaches.
  *
- * A photograph is also not a thing a CSS parity harness has a question about. What it has
- * questions about is the BOX: the aspect ratio the image contributes to layout, the radius it is
- * clipped to, the shadow under it, the opacity transition over it. So the bytes are replaced and
- * the box is kept exactly — an SVG carrying the original's `width`/`height` as its `viewBox` has
- * the same intrinsic dimensions and the same intrinsic ratio, so `h-auto w-full`, `aspect-*` and
+ * A photograph is also not a thing a CSS parity harness has a question about. What it has questions
+ * about is the BOX: the aspect ratio the image contributes to layout, the radius it is clipped to,
+ * the shadow under it, the opacity transition over it. So the bytes are replaced and the box is
+ * kept exactly -- an SVG carrying the original's `width`/`height` as its `viewBox` has the same
+ * intrinsic dimensions and the same intrinsic ratio, so `h-auto w-full`, `aspect-*` and
  * `object-contain` all resolve to the pixel they did before, and the raster is a solid fill.
  *
- * SAME-ORIGIN IMAGES ARE LEFT ALONE. They are the app's own assets, they are usually small
- * (a logo, an icon), they are served by the same tree the A/B is judging, and they do not go over
- * a third-party network. The rule is about removing what the harness cannot reproduce and cannot
- * ask a question about, not about removing images.
+ * SAME-ORIGIN IMAGES ARE LEFT ALONE. They are the app's own assets, they are usually small, they
+ * are served by the same tree the A/B is judging, and they do not go over a third-party network.
+ * The rule is about removing what the harness cannot reproduce and cannot ask a question about,
+ * not about removing images.
  *
- * THE SIZE IS LEARNED ONCE AND CACHED ON DISK, so the second capture of an A/B does not re-fetch
- * two hundred megabytes of photographs, and — more importantly — cannot learn a different answer
- * if the host has a bad minute. A url whose bytes cannot be read at all is passed through: a
- * broken image is a real rendering and both sides get it.
- */
-/*
- * CROSS-ORIGIN VIDEO IS ABORTED RATHER THAN STUBBED, for the same reason and with a blunter
+ * CROSS-ORIGIN VIDEO IS ABORTED rather than stubbed, for the same reason with a blunter
  * instrument. A `<video>` with no poster and `preload="metadata"` paints whichever frame the
  * decoder happened to reach, which varies between page loads exactly as a downscaled photograph
- * does — measured on this repo's demo gallery, 9 of 9 shots differing across two captures of one
- * unchanged page after the image stub had made every other page stable. There is no cheap stub
- * for a media stream, and none is needed: with the request refused the element paints its empty
- * state, which is deterministic, and the box the stylesheet actually decides — `aspect-video`, the
- * radius, the shadow, the overlay button on top of it — is untouched.
+ * does -- measured at 9 of 9 shots differing across two captures of one unchanged page after the
+ * image stub had made every other page stable. There is no cheap stub for a media stream, and none
+ * is needed: with the request refused the element paints its empty state, and the box the
+ * stylesheet decides is untouched.
+ *
+ * THE SIZE IS LEARNED ONCE AND CACHED ON DISK, so the second capture of an A/B does not re-fetch
+ * the images and -- more importantly -- cannot learn a different answer if the host has a bad
+ * minute. A url whose bytes cannot be read at all is passed through: a broken image is a real
+ * rendering and both sides get it.
  */
 async function stubForeignMedia(context: BrowserContext, baseUrl: string): Promise<void> {
   const origin = new URL(baseUrl).origin;
@@ -210,12 +224,11 @@ async function stubForeignMedia(context: BrowserContext, baseUrl: string): Promi
 /**
  * A context per (theme, viewport), which is also the only way the theme can be set.
  *
- * THE THEME IS APPLIED AS AN INIT SCRIPT, never after navigation. A repo that boots a theme out
- * of storage does it in an inline `<head>` script that runs before SvelteKit does, so the value
- * has to be there before the first byte of the document runs; setting it afterwards would
- * capture the page mid-swap. What that script IS belongs to the repo, so it comes from
- * `themeInitScript` in `matrix.ts` — a repo with one theme returns an empty string and nothing
- * is injected.
+ * In an app that has a theme, `app.html` reads `localStorage['playbook-theme']` in an INLINE
+ * script in `<head>`, before SvelteKit boots, and sets `data-theme` from it. So the theme has to
+ * be in storage before the first byte of the document runs — an init script is the only hook early
+ * enough, and setting it after navigation would capture the page mid-swap. An app that has no
+ * theme ignores the key and renders both contexts identically; see `matrix.ts`.
  */
 export async function themedContext(browser: Browser, theme: ThemeName, viewport: Viewport, baseUrl: string): Promise<BrowserContext> {
   const context = await browser.newContext({
@@ -229,8 +242,7 @@ export async function themedContext(browser: Browser, theme: ThemeName, viewport
   });
   await stubForeignMedia(context, baseUrl);
   await context.addInitScript(DETERMINISM_INIT);
-  const themeScript = themeInitScript(theme);
-  if (themeScript !== '') await context.addInitScript(themeScript);
+  await context.addInitScript(`try { localStorage.setItem('playbook-theme', ${JSON.stringify(theme)}); } catch (e) {}`);
   await context.clock.setFixedTime(FIXED_TIME);
   return context;
 }
@@ -296,8 +308,8 @@ async function removePlantedCh(page: Page): Promise<void> {
  * Wait until a font-relative unit measures against a REAL face, and say whether it ever did.
  *
  * THE FACE CAN GO AWAY IN THE MIDDLE OF A PAGE, which is what the A/A gate found and is why this
- * is checked before every shot rather than once after the navigation. On playbook-admin's decision detail and
- * workflow authority pages, `max-width: 88ch` and `max-width: 62ch` measured correctly for
+ * is checked before every shot rather than once after the navigation. On the decision detail and
+ * on the workflow authority page, `max-width: 88ch` and `max-width: 62ch` measured correctly for
  * the `rest` shot, measured 0.5em per `ch` for the `hover` shot taken seconds later, and measured
  * correctly again for the `focus` shot after that -- one shot in 810, on a page whose stylesheet
  * had not changed and whose fonts had all been loaded and awaited before any of the three. 0.5em
@@ -310,7 +322,7 @@ async function removePlantedCh(page: Page): Promise<void> {
  * right again), so what has to be established is that the face is back BEFORE the shot is taken,
  * not that some particular element is stale. The probe inherits `<body>`'s font, so it asks the
  * question about the font the page is actually set in, and 100ch against 50em is a comparison with
- * six ems of daylight in it for any real face (playbook-admin's Hanken Grotesk is 0.56em per `ch`).
+ * six ems of daylight in it for this console's Hanken Grotesk (0.56em per `ch`).
  *
  * Returns false when the face never came back. The caller drops the shot rather than recording it:
  * a missing key is a compare failure, which is loud and correct, and a shot recorded against
@@ -335,27 +347,23 @@ async function awaitMeasurableFont(page: Page): Promise<boolean> {
 }
 
 /**
- * Every image decoded, and every `<video>` poster fetched, before a shot is taken.
+ * Every image decoded, and every `<video>` poster fetched, before a shot is taken (ISS-9327).
  *
  * `networkidle` IS BLIND TO A LAZY IMAGE, which is the failure this exists for. `loading="lazy"`
  * means the browser has not requested the image at all while it is below the fold, so the network
- * genuinely is idle — and then playwright's full-page screenshot resizes the viewport to the whole
+ * genuinely is idle -- and then playwright's full-page screenshot resizes the viewport to the whole
  * document, which brings those images into view and starts the requests after every wait has
  * already returned. Whether a given one arrived before the raster is a coin flip on the network.
- * Measured by the A/A gate on this repo's remote galleries: 15 of 189 shots differed between two
- * captures of the same server, on the two pages with the most below-the-fold media, with
- * byte-identical computed styles on both sides.
  *
  * DECODED, NOT MERELY LOADED. `complete` turns true when the bytes are in; the first paint that
- * needs the bitmap can still be a frame later, and `decode()` is the documented way to wait for
- * the bitmap rather than for the transfer.
+ * needs the bitmap can still be a frame later, and `decode()` is the documented way to wait for the
+ * bitmap rather than for the transfer.
  *
  * A POSTER IS FETCHED THROUGH A DETACHED `Image` because a `<video>` exposes no load event for it,
- * and the browser serves the second request from cache. `preload="metadata"` means the media
- * itself is deliberately not waited on: nothing of it is painted while the poster is up.
+ * and the browser serves the second request from cache.
  *
  * Forcing `loading` eager changes an attribute and no computed style, so the style dump is
- * unaffected — and it is applied identically to both sides of an A/B, like everything else here.
+ * unaffected -- and it is applied identically to both sides of an A/B, like everything else here.
  */
 async function awaitMedia(page: Page): Promise<void> {
   await page.evaluate(async () => {
@@ -396,7 +404,7 @@ async function awaitMedia(page: Page): Promise<void> {
  * resolves a font-relative unit at FIRST LAYOUT and does not re-resolve it when a face arrives
  * afterwards, so a face that loses that race decides the width of a whole page permanently --
  * loading every face and waiting for it, which is what `loadDeclaredFaces` does, comes too late to
- * undo a resolution already made. Measured on playbook-admin's decision detail page, whose `max-width: 88ch`
+ * undo a resolution already made. Measured on the decision detail page, whose `max-width: 88ch`
  * resolved to 665.28px where the webfont won the race and to 594px -- exactly `0.5em`, which is
  * what `ch` means when the font has no `0` glyph to measure -- in one capture out of five, on one
  * of its six contexts, and stayed there for the shot that was then taken.
@@ -441,10 +449,10 @@ export async function settle(page: Page, path: string): Promise<boolean> {
     await page.waitForTimeout(SETTLE_MS);
 
     /*
-     * AND THEN WAIT FOR THE URL TO STOP MOVING. A route whose load issues a redirect runs that
-     * load TWICE -- once on the server, which is the navigation above, and once on the client
-     * after hydration, which is a second navigation at an unpredictable moment well after
-     * `networkidle` and the fonts have gone quiet. Caught on this repo's `/`, which redirects to
+     * AND THEN WAIT FOR THE URL TO STOP MOVING (ISS-9327). A route whose load issues a redirect
+     * runs that load TWICE -- once on the server, which is the navigation above, and once on the
+     * client after hydration, which is a second navigation at an unpredictable moment well after
+     * `networkidle` and the fonts have gone quiet. Caught on hackathon's `/`, which redirects to
      * the current year: the shot was taken, and the `document.scrollWidth` read immediately after
      * it died with `Execution context was destroyed, most likely because of a navigation`. A shot
      * that survived that race would be worse -- a screenshot of a page that no longer exists,

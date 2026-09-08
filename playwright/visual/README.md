@@ -4,7 +4,7 @@ Answers one question: **does this branch render the site byte-for-byte as `main`
 
 It exists because a CSS-toolchain change (Tailwind 3 → 4, ISS-9327; a Svelte or vite major; a
 plugin bump) is claimed to be a no-op, and a no-op claim is worth exactly what it was tested
-against. Twenty-two pages, three viewports and three interaction states is more than anybody
+against. Twenty-one pages, two themes, three viewports and three interaction states is more than anybody
 eyeballs, and the differences that matter — a border that fell back to `currentColor`, a radius one
 step larger, a `hover:` rule that stopped applying — are precisely the ones an eye skips.
 
@@ -12,8 +12,11 @@ The verdict is a **sha256 of the PNG**. There is no threshold, no tolerance and 
 list, on purpose: a threshold turns "one step of border colour, on every page" into a pass.
 
 Copied from playbook-admin (ISS-9319), which built it and found what is in the "Determinism"
-section below. Everything here except `matrix.ts`, `pages.ts`, `plan.ts` and their tests carries
-`dry-copy` markers, so `dev repo copies` reports a change that reaches one repo and not the other.
+section below, under the `visual-parity/*` `dry-copy` groups `account` established (ISS-9325).
+What this repo owns is the head of `matrix.ts` (themes, viewports, states), `pages.ts`, `plan.ts`,
+`files.ts`, `server-determinism.mjs` and this file; everything else is a marked region that must
+stay byte-identical, and `dev repo copies` reports a change that reaches one repo and not the
+others.
 
 ## The three commands
 
@@ -81,9 +84,9 @@ png/<key>.png                 the shot
 styles/<key>.json.gz          every element's full getComputedStyle map; the diagnostic
 ```
 
-`<key>` is `<page-slug>--<theme>--<viewport>--<state>`. This site has one theme, so `<theme>` is
-always `default`; the axis stays in the key so that the shared half of the harness is the same
-bytes here as in a repo that has two.
+`<key>` is `<page-slug>--<theme>--<viewport>--<state>`. This site has no theme, so the two theme
+values render identically and each page is captured twice — see `matrix.ts` on why the degenerate
+axis is kept, and why two shots that must be equal are a free control on the harness itself.
 
 The style dump is **never a verdict** — it cannot see a background image, a font fallback or a
 sub-pixel shift. It is read only after a hash has already failed, and it is what turns "page X
@@ -109,7 +112,8 @@ Pinned identically on both sides, and each line is a hazard that was measured ra
 a fixed clock (`Date.now()` frozen, timers still running), a seeded `Math.random`, reduced motion,
 `animations: 'disabled'` at screenshot time, `document.fonts.ready`, a pinned `colorScheme` and
 `deviceScaleFactor`, and a settle after each state change that outlasts the stylesheet's longest
-transition (`SETTLE_MS` in `matrix.ts` — this site's longest is `duration-500`). `capture.ts`
+transition (`SETTLE_MS` in `capture.ts` is 650ms; this site's longest is `duration-500`, which is
+the longest any repo carrying that region declares and therefore what the constant is set from). `capture.ts`
 documents why each one is there, and `playwright.visual.config.ts` pins Chromium's rasteriser,
 which is not deterministic by default.
 
@@ -126,7 +130,7 @@ element was targeted is itself reported.
 
 ## What is repo-specific
 
-`matrix.ts` (themes, viewports, states, settle budget), `pages.ts` (how the two sets are derived
-from the routes tree), `plan.ts` (which set one capture is doing) and their unit tests. Everything
-else is shared with playbook-admin under `dry-copy` markers and must not be edited in one repo
-alone.
+The head of `matrix.ts` (themes, viewports, states), `pages.ts` (how the two sets are derived from
+the routes tree), `plan.ts` (which set one capture is doing), `files.ts`, `server-determinism.mjs`,
+`pages.test.ts` and this file. Everything else is a `dry-copy` region shared with `account` and
+`playbook-admin`, and must not be edited in one repo alone.

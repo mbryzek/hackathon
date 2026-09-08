@@ -1,4 +1,3 @@
-// dry-copy: sveltekit/visual-parity-files — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
 /**
  * WHERE A CAPTURE PUTS THINGS, and the two filesystem reads that derive the page lists (ISS-9319).
  *
@@ -20,12 +19,6 @@ export function listFiles(root: string, suffix: string): string[] {
     .filter((entry) => entry.endsWith(suffix))
     .map((entry) => join(root, entry))
     .sort();
-}
-
-/** `src/routes/admin/clubs/clubDetail.preview.ts` -> `clubDetail`, the key `/dev/preview/<key>` takes. */
-export function previewKeyOf(file: string): string {
-  const name = file.slice(file.lastIndexOf('/') + 1);
-  return name.slice(0, -'.preview.ts'.length);
 }
 
 /** The paths inside one capture directory. */
@@ -70,4 +63,3 @@ export function readManifest(dir: string): Manifest {
   }
   return JSON.parse(readFileSync(file, 'utf8')) as Manifest;
 }
-// dry-copy-end

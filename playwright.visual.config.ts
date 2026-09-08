@@ -1,13 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Playwright config for the VISUAL PARITY HARNESS (`playwright/visual/`, ISS-9319).
+ * Playwright config for the VISUAL PARITY HARNESS (`playwright/visual/`, ISS-9319; copied here under ISS-9327).
  *
  * A second config beside `playwright.config.ts`, because this is not a test suite. Nothing in
  * `playwright/visual` asserts anything, `ci/e2e.sh` runs `npm run test:e2e` and this directory is
- * not in that config's `testDir` (`./playwright/tests`), so a capture only ever happens because
- * somebody asked for one. That is the right default — a capture is meaningless on its own, since
- * the verdict is the comparison of two of them taken from two different checkouts.
+ * not in that config's `testDir` (`./playwright/tests`), so a
+ * capture only ever happens because somebody asked for one. That is the right default — a capture
+ * is meaningless on its own, since the verdict is the comparison of two of them taken from two
+ * different checkouts.
  *
  * IT MANAGES NO SERVER, deliberately. The whole point of an A/B is that the two sides are served
  * by two different working trees, so the caller stands the server up and passes `VISUAL_BASE_URL`;
@@ -17,10 +18,6 @@ import { defineConfig, devices } from '@playwright/test';
  * NO RETRIES, EVER. A retry re-renders and silently replaces the shot, which is the one thing that
  * must not happen in a harness whose entire claim is that a rendering is reproducible: a shot that
  * only matched on the second try is a shot that proves the opposite of what it is recorded as.
- *
- * ISS-9327 copied this from playbook-admin (ISS-9319). Everything under `playwright/visual` except
- * `matrix.ts`, `pages.ts`, `plan.ts` and their tests carries `dry-copy` markers, so `dev repo
- * copies` reports a change that reaches one repo and not the other.
  */
 const VISUAL_BASE_URL = process.env['VISUAL_BASE_URL'] || 'http://localhost:5173';
 const VISUAL_OUT = process.env['VISUAL_OUT'] || 'visual-out';
@@ -34,8 +31,8 @@ export default defineConfig({
   globalSetup: './playwright/visual/setup.ts',
   globalTeardown: './playwright/visual/merge.ts',
   outputDir: `${VISUAL_OUT}/test-results`,
-  // Per-test timeout is set inside the spec: one test is a whole page, which is one navigation
-  // per viewport and a full-page screenshot per state.
+  // Per-test timeout is set inside the spec: one test is a whole page, which is six navigations
+  // and eighteen full-page screenshots.
   timeout: 300_000,
   expect: { timeout: 10_000 },
   fullyParallel: true,
