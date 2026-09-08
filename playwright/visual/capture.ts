@@ -38,7 +38,19 @@
  *   - WHERE THE PAGE IS SCROLLED. A full-page screenshot renders fixed and sticky chrome at the
  *     current scroll offset, so `focus` and `hover` deliberately never scroll: both pick a target
  *     that is already inside the initial viewport, and skip the state when there is none.
+ *   - IMAGES AND POSTER FRAMES, decoded rather than merely fetched, and `loading="lazy"` forced
+ *     eager first. `networkidle` cannot see a lazy image: it has not been REQUESTED yet, and a
+ *     full-page screenshot resizes the viewport to the whole document, which starts those requests
+ *     after the wait is already over. See `awaitMedia`.
+ *   - THIRD-PARTY BITMAPS AND VIDEO, replaced by a flat rectangle of the same intrinsic size and
+ *     by nothing at all. Chromium does not downscale a large photograph reproducibly across page
+ *     loads, and a `<video>` with no poster paints whichever frame `preload="metadata"` happened
+ *     to decode; neither is something a CSS parity harness has a question about. See
+ *     `stubForeignMedia`.
  */
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import type { Browser, BrowserContext, Page } from '@playwright/test';
 import { SETTLE_MS, themeInitScript, type StateName, type ThemeName, type Viewport } from './matrix.ts';
 import { encodeStyles, type RawElement, type StyleDump } from './styles.ts';
@@ -76,6 +88,126 @@ const DETERMINISM_INIT = `(() => {
 })();`;
 
 /**
+ * Where the intrinsic size of each foreign image is remembered between captures.
+ *
+ * BESIDE the output directory rather than inside it: `setup.ts` clears `VISUAL_OUT` at the start
+ * of every capture, and the whole value of this cache is that the two sides of an A/B share it.
+ * `VISUAL_CACHE` overrides it when the two captures do not sit under one parent.
+ */
+function cacheDir(): string {
+  const explicit = process.env['VISUAL_CACHE'];
+  if (explicit !== undefined && explicit !== '') return explicit;
+  return join(dirname(process.env['VISUAL_OUT'] ?? '.'), 'image-sizes');
+}
+
+/**
+ * `width`/`height` out of a PNG or JPEG header, without decoding the image.
+ *
+ * Enough of each format to read the one thing that matters: PNG states it in `IHDR`, 16 bytes in;
+ * JPEG states it in whichever `SOF` marker the encoder used, which is why this walks the segment
+ * chain rather than looking at a fixed offset. `null` for anything else — a format this does not
+ * know is served through unchanged rather than guessed at.
+ */
+export function imageSize(bytes: Buffer): { width: number; height: number } | null {
+  if (bytes.length > 24 && bytes.readUInt32BE(0) === 0x89504e47) {
+    return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+  }
+  if (bytes.length > 4 && bytes[0] === 0xff && bytes[1] === 0xd8) {
+    let at = 2;
+    while (at + 9 < bytes.length) {
+      if (bytes[at] !== 0xff) {
+        at += 1;
+        continue;
+      }
+      const marker = bytes[at + 1] ?? 0;
+      // SOF0..SOF15, except the four that are not frame headers (DHT, JPG, DAC, RST).
+      if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+        return { height: bytes.readUInt16BE(at + 5), width: bytes.readUInt16BE(at + 7) };
+      }
+      at += 2 + bytes.readUInt16BE(at + 2);
+    }
+  }
+  return null;
+}
+
+/**
+ * REPLACE EVERY CROSS-ORIGIN IMAGE WITH A FLAT RECTANGLE OF ITS OWN SIZE.
+ *
+ * Chromium does not rasterise a downscaled photograph reproducibly. Measured here across three
+ * captures of one unchanged page, with the config's whole rasteriser-pinning flag list in force
+ * and every image loaded and `decode()`d before the shot: the hash differed every time, on five
+ * bands of the page, with byte-identical computed styles and the same images in the same order.
+ * Within ONE page load three consecutive screenshots are identical, so what varies is which
+ * scaled decode Chromium cached during that load — not something a flag or a longer wait reaches.
+ *
+ * A photograph is also not a thing a CSS parity harness has a question about. What it has
+ * questions about is the BOX: the aspect ratio the image contributes to layout, the radius it is
+ * clipped to, the shadow under it, the opacity transition over it. So the bytes are replaced and
+ * the box is kept exactly — an SVG carrying the original's `width`/`height` as its `viewBox` has
+ * the same intrinsic dimensions and the same intrinsic ratio, so `h-auto w-full`, `aspect-*` and
+ * `object-contain` all resolve to the pixel they did before, and the raster is a solid fill.
+ *
+ * SAME-ORIGIN IMAGES ARE LEFT ALONE. They are the app's own assets, they are usually small
+ * (a logo, an icon), they are served by the same tree the A/B is judging, and they do not go over
+ * a third-party network. The rule is about removing what the harness cannot reproduce and cannot
+ * ask a question about, not about removing images.
+ *
+ * THE SIZE IS LEARNED ONCE AND CACHED ON DISK, so the second capture of an A/B does not re-fetch
+ * two hundred megabytes of photographs, and — more importantly — cannot learn a different answer
+ * if the host has a bad minute. A url whose bytes cannot be read at all is passed through: a
+ * broken image is a real rendering and both sides get it.
+ */
+/*
+ * CROSS-ORIGIN VIDEO IS ABORTED RATHER THAN STUBBED, for the same reason and with a blunter
+ * instrument. A `<video>` with no poster and `preload="metadata"` paints whichever frame the
+ * decoder happened to reach, which varies between page loads exactly as a downscaled photograph
+ * does — measured on this repo's demo gallery, 9 of 9 shots differing across two captures of one
+ * unchanged page after the image stub had made every other page stable. There is no cheap stub
+ * for a media stream, and none is needed: with the request refused the element paints its empty
+ * state, which is deterministic, and the box the stylesheet actually decides — `aspect-video`, the
+ * radius, the shadow, the overlay button on top of it — is untouched.
+ */
+async function stubForeignMedia(context: BrowserContext, baseUrl: string): Promise<void> {
+  const origin = new URL(baseUrl).origin;
+  const directory = cacheDir();
+  mkdirSync(directory, { recursive: true });
+
+  await context.route('**/*', async (route) => {
+    const request = route.request();
+    const foreign = !request.url().startsWith(origin);
+    if (foreign && request.resourceType() === 'media') {
+      await route.abort();
+      return;
+    }
+    if (!foreign || request.resourceType() !== 'image') {
+      await route.fallback();
+      return;
+    }
+    const file = join(directory, `${createHash('sha256').update(request.url()).digest('hex').slice(0, 32)}.json`);
+    const size = await (async (): Promise<{ width: number; height: number } | null> => {
+      if (existsSync(file)) return JSON.parse(readFileSync(file, 'utf8')) as { width: number; height: number };
+      const response = await route.fetch().catch(() => null);
+      const bytes = response === null ? null : await response.body().catch(() => null);
+      const measured = bytes === null ? null : imageSize(bytes);
+      if (measured !== null) writeFileSync(file, JSON.stringify(measured));
+      return measured;
+    })();
+    if (size === null) {
+      await route.fallback();
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/svg+xml',
+      headers: { 'cache-control': 'no-store' },
+      body:
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${size.width}" height="${size.height}" ` +
+        `viewBox="0 0 ${size.width} ${size.height}"><rect width="100%" height="100%" fill="#8a8a8a"/></svg>`
+    });
+  });
+}
+
+/**
  * A context per (theme, viewport), which is also the only way the theme can be set.
  *
  * THE THEME IS APPLIED AS AN INIT SCRIPT, never after navigation. A repo that boots a theme out
@@ -95,6 +227,7 @@ export async function themedContext(browser: Browser, theme: ThemeName, viewport
     // The e2e suite sends this on every request; the dev server ignores it and a live platform needs it.
     extraHTTPHeaders: { 'X-Bypass-Rate-Limit': 'true' }
   });
+  await stubForeignMedia(context, baseUrl);
   await context.addInitScript(DETERMINISM_INIT);
   const themeScript = themeInitScript(theme);
   if (themeScript !== '') await context.addInitScript(themeScript);
@@ -202,6 +335,61 @@ async function awaitMeasurableFont(page: Page): Promise<boolean> {
 }
 
 /**
+ * Every image decoded, and every `<video>` poster fetched, before a shot is taken.
+ *
+ * `networkidle` IS BLIND TO A LAZY IMAGE, which is the failure this exists for. `loading="lazy"`
+ * means the browser has not requested the image at all while it is below the fold, so the network
+ * genuinely is idle — and then playwright's full-page screenshot resizes the viewport to the whole
+ * document, which brings those images into view and starts the requests after every wait has
+ * already returned. Whether a given one arrived before the raster is a coin flip on the network.
+ * Measured by the A/A gate on this repo's remote galleries: 15 of 189 shots differed between two
+ * captures of the same server, on the two pages with the most below-the-fold media, with
+ * byte-identical computed styles on both sides.
+ *
+ * DECODED, NOT MERELY LOADED. `complete` turns true when the bytes are in; the first paint that
+ * needs the bitmap can still be a frame later, and `decode()` is the documented way to wait for
+ * the bitmap rather than for the transfer.
+ *
+ * A POSTER IS FETCHED THROUGH A DETACHED `Image` because a `<video>` exposes no load event for it,
+ * and the browser serves the second request from cache. `preload="metadata"` means the media
+ * itself is deliberately not waited on: nothing of it is painted while the poster is up.
+ *
+ * Forcing `loading` eager changes an attribute and no computed style, so the style dump is
+ * unaffected — and it is applied identically to both sides of an A/B, like everything else here.
+ */
+async function awaitMedia(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const images = Array.from(document.images);
+    for (const image of images) image.loading = 'eager';
+    const posters = Array.from(document.querySelectorAll('video'))
+      .map((video) => video.poster)
+      .filter((poster) => poster !== '')
+      .map(
+        async (poster) =>
+          new Promise<void>((resolve) => {
+            const preload = new Image();
+            preload.onload = () => resolve();
+            preload.onerror = () => resolve();
+            preload.src = poster;
+          })
+      );
+    const loads = images.map(
+      async (image) =>
+        new Promise<void>((resolve) => {
+          if (image.complete) {
+            resolve();
+            return;
+          }
+          image.addEventListener('load', () => resolve(), { once: true });
+          image.addEventListener('error', () => resolve(), { once: true });
+        })
+    );
+    await Promise.all([...loads, ...posters]);
+    await Promise.all(images.map(async (image) => image.decode().catch(() => undefined)));
+  });
+}
+
+/**
  * Navigate and wait until the page has stopped changing.
  *
  * THE DOCUMENT IS RELOADED IF IT LAID ITSELF OUT AGAINST METRICS IT NO LONGER HAS. Chromium
@@ -247,6 +435,8 @@ export async function settle(page: Page, path: string): Promise<boolean> {
     }
     await removePlantedCh(page);
 
+    await awaitMedia(page);
+    await page.waitForLoadState('networkidle', { timeout: 30_000 });
     await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
     await page.waitForTimeout(SETTLE_MS);
     return true;

@@ -19,8 +19,11 @@ section below. Everything here except `matrix.ts`, `pages.ts`, `plan.ts` and the
 
 ```sh
 # 1. Stand a server up. The harness manages none, because the two sides of an A/B are two
-#    different working trees.
-npm run dev -- --port 5744 --strictPort
+#    different working trees. NODE_OPTIONS is not optional: this site shuffles its galleries
+#    during SSR, so without it the server serves a different document to every request. See
+#    server-determinism.mjs.
+NODE_OPTIONS="--import $PWD/playwright/visual/server-determinism.mjs" \
+  npm run dev -- --port 5744 --strictPort
 
 # 2. Capture.
 VISUAL_SET=static VISUAL_BASE_URL=http://localhost:5744 VISUAL_OUT=../visual/baseline \
@@ -109,6 +112,12 @@ a fixed clock (`Date.now()` frozen, timers still running), a seeded `Math.random
 transition (`SETTLE_MS` in `matrix.ts` — this site's longest is `duration-500`). `capture.ts`
 documents why each one is there, and `playwright.visual.config.ts` pins Chromium's rasteriser,
 which is not deterministic by default.
+
+**And the server, which is the half a browser-side harness cannot reach.** This site shuffles its
+photo and video galleries during SSR, so it serves a different document to every request;
+`server-determinism.mjs` is `--import`ed into the server process to pin that, and the A/A gate is
+what found it (24 of 189 shots, on exactly the four shuffling pages, with identical computed
+styles). Start both sides of an A/B the same way or neither.
 
 `focus` and `hover` never scroll: both pick the first eligible element already inside the initial
 viewport, because a full-page screenshot renders fixed and sticky chrome at the current scroll
