@@ -32,7 +32,7 @@
   }: Props = $props();
 
   const baseClasses =
-    'inline-flex items-center justify-center font-semibold rounded-lg shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2';
+    'inline-flex items-center justify-center font-semibold rounded-lg shadow-md transition-all duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-offset-2';
 
   const variantClasses = {
     primary: 'bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-400 disabled:bg-yellow-300',

@@ -73,13 +73,13 @@
           {#if !playingVideos.has(index)}
             <button
               type="button"
-              class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/30 opacity-100 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:ring-offset-2 group-hover:bg-black/40"
+              class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/30 opacity-100 transition-all duration-300 focus:outline-hidden focus:ring-4 focus:ring-yellow-400 focus:ring-offset-2 group-hover:bg-black/40"
               onclick={playVideo}
               aria-label="Play video: {video.title}"
             >
               <!-- Play button circle -->
               <div
-                class="flex h-20 w-20 items-center justify-center rounded-full bg-white/90 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:bg-white"
+                class="flex h-20 w-20 items-center justify-center rounded-full bg-[rgb(255_255_255_/_0.9)] shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:bg-white"
               >
                 {#if loadingVideos.has(index)}
                   <!-- Loading spinner -->

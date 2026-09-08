@@ -42,7 +42,7 @@
   <!-- Add project button/form -->
   <div class="mb-6">
     {#if showAddForm}
-      <div class="rounded-xl bg-white p-6 shadow">
+      <div class="rounded-xl bg-white p-6 shadow-sm">
         <h3 class="mb-4 text-lg font-semibold text-gray-900">Add New Project</h3>
         <form
           method="POST"
@@ -128,7 +128,7 @@
 
   <!-- Projects list -->
   {#if projects.length === 0}
-    <div class="rounded-xl bg-white p-12 text-center shadow">
+    <div class="rounded-xl bg-white p-12 text-center shadow-sm">
       <svg class="mx-auto mb-4 h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           stroke-linecap="round"
@@ -143,7 +143,7 @@
   {:else}
     <div class="space-y-4">
       {#each projects as project, index (project.id)}
-        <div class="rounded-xl bg-white p-6 shadow">
+        <div class="rounded-xl bg-white p-6 shadow-sm">
           {#if editingProjectId === project.id}
             <!-- Edit mode -->
             <form
@@ -196,7 +196,7 @@
           {:else}
             <!-- Display mode -->
             <div class="flex items-start justify-between gap-4">
-              <div class="flex-grow">
+              <div class="grow">
                 <div class="flex items-center gap-3">
                   <span class="font-mono text-sm text-gray-400">#{index + 1}</span>
                   <h3 class="text-lg font-semibold text-gray-900">{project.name}</h3>

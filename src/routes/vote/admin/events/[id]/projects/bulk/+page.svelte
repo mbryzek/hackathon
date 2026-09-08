@@ -28,7 +28,7 @@ Code Helper,AI-powered coding assistant`;
     <ErrorBanner {error} class="mb-6" />
   {/if}
 
-  <div class="rounded-xl bg-white p-6 shadow">
+  <div class="rounded-xl bg-white p-6 shadow-sm">
     <div class="mb-6">
       <a href={urls.voteAdminEventProjects(eventId)} class="inline-flex items-center text-gray-600 transition-colors hover:text-gray-900">
         <svg class="mr-1 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,7 +75,7 @@ Code Helper,AI-powered coding assistant`;
           id="delete-all-projects"
           name="delete_all_projects"
           checked={form?.deleteAllProjects ?? false}
-          class="h-4 w-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
+          class="h-4 w-4 rounded-sm border-gray-300 text-yellow-500 focus:ring-yellow-400"
           disabled={isSubmitting}
         />
         <label for="delete-all-projects" class="ml-2 block text-sm text-gray-700"> Delete all existing projects before importing </label>

@@ -100,7 +100,7 @@
       <div class="ml-2 border-l-2 border-yellow-300">
         {#each schedule as item}
           <div class="relative flex items-start gap-4 py-3 pl-6">
-            <span class="absolute -left-[5px] top-4 h-2 w-2 rounded-full bg-yellow-500"></span>
+            <span class="absolute left-[-5px] top-4 h-2 w-2 rounded-full bg-yellow-500"></span>
             <span class="w-24 shrink-0 text-sm font-semibold text-yellow-600">{item.time}</span>
             <div>
               <span class="font-semibold text-gray-800">{item.event}</span>

@@ -114,7 +114,7 @@
       <div class="group relative">
         <button
           type="button"
-          class="w-full cursor-pointer overflow-hidden rounded-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
+          class="w-full cursor-pointer overflow-hidden rounded-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl focus:outline-hidden focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
           onclick={() => openLightbox(index)}
           aria-label="View photo in lightbox"
         >
@@ -165,7 +165,7 @@
     {#if displayPhotos.length > 1}
       <button
         type="button"
-        class="absolute left-2 z-10 rounded-full bg-black/30 p-3 text-white/80 transition-all duration-200 hover:bg-black/50 hover:text-white focus:outline-none focus:ring-2 focus:ring-white md:left-4"
+        class="absolute left-2 z-10 rounded-full bg-black/30 p-3 text-[rgb(255_255_255_/_0.8)] transition-all duration-200 hover:bg-black/50 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white md:left-4"
         onclick={prevPhoto}
         aria-label="Previous photo"
       >
@@ -176,7 +176,7 @@
 
       <button
         type="button"
-        class="absolute right-2 z-10 rounded-full bg-black/30 p-3 text-white/80 transition-all duration-200 hover:bg-black/50 hover:text-white focus:outline-none focus:ring-2 focus:ring-white md:right-4"
+        class="absolute right-2 z-10 rounded-full bg-black/30 p-3 text-[rgb(255_255_255_/_0.8)] transition-all duration-200 hover:bg-black/50 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white md:right-4"
         onclick={nextPhoto}
         aria-label="Next photo"
       >
@@ -190,7 +190,7 @@
     <div class="flex max-h-[85vh] w-full items-center justify-center">
       {#if imageLoading}
         <div class="absolute inset-0 flex items-center justify-center">
-          <div class="h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-white"></div>
+          <div class="h-12 w-12 animate-spin rounded-full border-4 border-[rgb(255_255_255_/_0.3)] border-t-white"></div>
         </div>
       {/if}
 

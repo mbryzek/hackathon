@@ -103,23 +103,23 @@
 
   <!-- Stats -->
   <div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-5">
-    <div class="rounded-xl bg-white p-4 text-center shadow">
+    <div class="rounded-xl bg-white p-4 text-center shadow-sm">
       <div class="text-3xl font-bold text-gray-900">{data.summary?.total ?? 0}</div>
       <div class="text-sm text-gray-600">Total Codes</div>
     </div>
-    <div class="rounded-xl bg-white p-4 text-center shadow">
+    <div class="rounded-xl bg-white p-4 text-center shadow-sm">
       <div class="text-3xl font-bold text-blue-600">{data.summary?.student.codes ?? 0}</div>
       <div class="text-sm text-gray-600">Student Codes</div>
     </div>
-    <div class="rounded-xl bg-white p-4 text-center shadow">
+    <div class="rounded-xl bg-white p-4 text-center shadow-sm">
       <div class="text-3xl font-bold text-blue-600">{data.summary?.student.votes ?? 0}</div>
       <div class="text-sm text-gray-600">Student Votes</div>
     </div>
-    <div class="rounded-xl bg-white p-4 text-center shadow">
+    <div class="rounded-xl bg-white p-4 text-center shadow-sm">
       <div class="text-3xl font-bold text-purple-600">{data.summary?.parent.codes ?? 0}</div>
       <div class="text-sm text-gray-600">Parent Codes</div>
     </div>
-    <div class="rounded-xl bg-white p-4 text-center shadow">
+    <div class="rounded-xl bg-white p-4 text-center shadow-sm">
       <div class="text-3xl font-bold text-purple-600">{data.summary?.parent.votes ?? 0}</div>
       <div class="text-sm text-gray-600">Parent Votes</div>
     </div>
@@ -128,7 +128,7 @@
   <!-- Generate codes form -->
   <div class="mb-6">
     {#if showGenerateForm}
-      <div class="rounded-xl bg-white p-6 shadow">
+      <div class="rounded-xl bg-white p-6 shadow-sm">
         <h3 class="mb-4 text-lg font-semibold text-gray-900">Generate New Codes</h3>
         <form
           method="POST"
@@ -280,7 +280,7 @@
   </div>
 
   <!-- Filters -->
-  <div class="mb-6 rounded-xl bg-white p-4 shadow">
+  <div class="mb-6 rounded-xl bg-white p-4 shadow-sm">
     <form
       method="GET"
       bind:this={filterForm}
@@ -340,12 +340,12 @@
   <!-- Codes list -->
   <div class="relative">
     {#if isSearching}
-      <div class="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/70">
+      <div class="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-[rgb(255_255_255_/_0.7)]">
         <Spinner size="lg" label="Searching" class="text-gray-600" />
       </div>
     {/if}
     {#if data.codes.length === 0}
-      <div class="rounded-xl bg-white p-12 text-center shadow">
+      <div class="rounded-xl bg-white p-12 text-center shadow-sm">
         <svg class="mx-auto mb-4 h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -369,7 +369,7 @@
         {/if}
       </div>
     {:else}
-      <div class="overflow-hidden rounded-xl bg-white shadow">
+      <div class="overflow-hidden rounded-xl bg-white shadow-sm">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">

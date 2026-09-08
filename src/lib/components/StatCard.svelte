@@ -11,15 +11,15 @@
   let { value, label, icon, highlight = false }: Props = $props();
 
   const cardClasses = $derived(
-    highlight ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-white' : 'bg-white border border-gray-200'
+    highlight ? 'bg-[linear-gradient(to_bottom_right,#facc15,#eab308)] text-white' : 'bg-white border border-gray-200'
   );
 
   const valueClasses = $derived(highlight ? 'text-white' : 'text-gray-900');
 
-  const labelClasses = $derived(highlight ? 'text-white/90' : 'text-gray-600');
+  const labelClasses = $derived(highlight ? 'text-[rgb(255_255_255_/_0.9)]' : 'text-gray-600');
 </script>
 
-<div class="rounded-xl p-6 {cardClasses} shadow-sm transition-shadow duration-300 hover:shadow-md">
+<div class="rounded-xl p-6 {cardClasses} shadow-xs transition-shadow duration-300 hover:shadow-md">
   <div class="flex items-start justify-between">
     <div>
       <p class="text-3xl font-bold md:text-4xl {valueClasses}">
@@ -30,7 +30,7 @@
       </p>
     </div>
     {#if icon}
-      <div class="rounded-lg p-2 {highlight ? 'bg-white/20' : 'bg-gray-100'}">
+      <div class="rounded-lg p-2 {highlight ? 'bg-[rgb(255_255_255_/_0.2)]' : 'bg-gray-100'}">
         {@render icon()}
       </div>
     {/if}

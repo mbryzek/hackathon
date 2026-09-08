@@ -155,7 +155,7 @@
       >
         <div class="text-center" style="max-width: 180px;">
           {#if businessSize <= 1}
-            <div class="mx-auto mb-2 flex h-12 w-16 items-center justify-center rounded bg-gray-200">
+            <div class="mx-auto mb-2 flex h-12 w-16 items-center justify-center rounded-sm bg-gray-200">
               <span class="text-[10px] font-medium text-gray-400">YOUR LOGO</span>
             </div>
           {/if}

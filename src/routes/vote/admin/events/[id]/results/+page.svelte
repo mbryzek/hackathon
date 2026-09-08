@@ -170,7 +170,7 @@
         type="button"
         onclick={togglePresentationMode}
         class="{isPresentationMode
-          ? 'bg-white/10 text-white hover:bg-white/20'
+          ? 'bg-[rgb(255_255_255_/_0.1)] text-white hover:bg-[rgb(255_255_255_/_0.2)]'
           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} inline-flex items-center gap-2 rounded-lg px-4 py-2 font-semibold transition-colors"
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,7 +188,7 @@
         {isPresentationMode ? 'Exit' : 'Present'}
       </button>
       <label class="inline-flex items-center gap-2 {isPresentationMode ? 'text-white' : 'text-gray-700'}">
-        <input type="checkbox" bind:checked={autoRefresh} class="rounded border-gray-300 text-yellow-500 focus:ring-yellow-400" />
+        <input type="checkbox" bind:checked={autoRefresh} class="rounded-sm border-gray-300 text-yellow-500 focus:ring-yellow-400" />
         Auto-refresh
       </label>
     </div>
@@ -203,7 +203,7 @@
       <!-- Vote counts by type -->
       <div class={isPresentationMode ? 'mb-12 flex justify-center gap-16' : 'mb-6 grid grid-cols-2 gap-4'}>
         {#each categories as category (category.key)}
-          <div class={isPresentationMode ? 'text-center' : 'rounded-xl bg-white p-6 text-center shadow'}>
+          <div class={isPresentationMode ? 'text-center' : 'rounded-xl bg-white p-6 text-center shadow-sm'}>
             <div
               class={isPresentationMode
                 ? `text-5xl font-bold ${category.accent.presentationText}`
@@ -226,8 +226,8 @@
             {#if category.projects.length === 0}
               <div
                 class={isPresentationMode
-                  ? 'py-8 text-center text-xl text-white/60'
-                  : 'rounded-xl bg-white p-8 text-center text-gray-500 shadow'}
+                  ? 'py-8 text-center text-xl text-[rgb(255_255_255_/_0.6)]'
+                  : 'rounded-xl bg-white p-8 text-center text-gray-500 shadow-sm'}
               >
                 {category.emptyMessage}
               </div>
@@ -235,16 +235,16 @@
               <div class={isPresentationMode ? 'space-y-6' : 'space-y-4'}>
                 {#each category.projects as projectTally, index (projectTally.project.id)}
                   {@const rank = getRank(category.projects, index)}
-                  <div class={isPresentationMode ? 'rounded-xl bg-white/10 p-6 backdrop-blur' : 'rounded-xl bg-white p-6 shadow'}>
+                  <div class={isPresentationMode ? 'rounded-xl bg-[rgb(255_255_255_/_0.1)] p-6 backdrop-blur-sm' : 'rounded-xl bg-white p-6 shadow-sm'}>
                     <div class="flex items-center gap-4">
                       <div
-                        class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold {getRankBadgeClass(
+                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold {getRankBadgeClass(
                           rank
                         )}"
                       >
                         {rank}
                       </div>
-                      <div class="flex-grow">
+                      <div class="grow">
                         <div class="mb-2 flex items-center justify-between">
                           <h3 class={isPresentationMode ? 'text-2xl font-bold text-white' : 'text-lg font-semibold text-gray-900'}>
                             {projectTally.project.name}
@@ -257,7 +257,7 @@
                             {projectTally.vote_count}
                           </span>
                         </div>
-                        <div class="{isPresentationMode ? 'h-4 bg-white/10' : 'h-3 bg-gray-100'} overflow-hidden rounded-full">
+                        <div class="{isPresentationMode ? 'h-4 bg-[rgb(255_255_255_/_0.1)]' : 'h-3 bg-gray-100'} overflow-hidden rounded-full">
                           <div
                             class="h-full {getRankBarClass(rank, category.accent.leadBar)} rounded-full transition-all duration-500"
                             style="width: {getBarWidth(projectTally.vote_count)}"

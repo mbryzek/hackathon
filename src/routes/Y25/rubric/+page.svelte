@@ -84,7 +84,7 @@
           <div class="flex flex-col gap-y-4">
             {#each executionRubric as item}
               <div class="flex gap-x-4">
-                <div class="min-w-[2rem] font-bold text-yellow-600">{item.score}</div>
+                <div class="min-w-8 font-bold text-yellow-600">{item.score}</div>
                 <div>{item.description}</div>
               </div>
             {/each}
@@ -101,7 +101,7 @@
           <div class="flex flex-col gap-y-4">
             {#each ambitionRubric as item}
               <div class="flex gap-x-4">
-                <div class="min-w-[2rem] font-bold text-yellow-600">{item.score}</div>
+                <div class="min-w-8 font-bold text-yellow-600">{item.score}</div>
                 <div>{item.description}</div>
               </div>
             {/each}

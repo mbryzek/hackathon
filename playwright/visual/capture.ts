@@ -439,6 +439,24 @@ export async function settle(page: Page, path: string): Promise<boolean> {
     await page.waitForLoadState('networkidle', { timeout: 30_000 });
     await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
     await page.waitForTimeout(SETTLE_MS);
+
+    /*
+     * AND THEN WAIT FOR THE URL TO STOP MOVING. A route whose load issues a redirect runs that
+     * load TWICE -- once on the server, which is the navigation above, and once on the client
+     * after hydration, which is a second navigation at an unpredictable moment well after
+     * `networkidle` and the fonts have gone quiet. Caught on this repo's `/`, which redirects to
+     * the current year: the shot was taken, and the `document.scrollWidth` read immediately after
+     * it died with `Execution context was destroyed, most likely because of a navigation`. A shot
+     * that survived that race would be worse -- a screenshot of a page that no longer exists,
+     * recorded under the redirecting route's key.
+     */
+    for (let attempt = 0; attempt < RELOAD_ATTEMPTS; attempt += 1) {
+      const before = page.url();
+      await page.waitForTimeout(SETTLE_MS);
+      if (page.url() === before) break;
+      await page.waitForLoadState('networkidle', { timeout: 30_000 });
+      await loadDeclaredFaces(page);
+    }
     return true;
   } catch {
     return false;

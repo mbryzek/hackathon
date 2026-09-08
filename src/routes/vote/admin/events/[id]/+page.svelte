@@ -29,7 +29,7 @@
     {/if}
 
     <!-- Event Details -->
-    <div class="mb-6 rounded-xl bg-white p-6 shadow">
+    <div class="mb-6 rounded-xl bg-white p-6 shadow-sm">
       <div class="mb-4 flex items-center justify-between">
         <h2 class="text-lg font-semibold text-gray-900">Event Details</h2>
         <a
@@ -80,7 +80,7 @@
     </div>
 
     <!-- Danger Zone -->
-    <div class="rounded-xl bg-white p-6 shadow">
+    <div class="rounded-xl bg-white p-6 shadow-sm">
       <h2 class="mb-4 text-lg font-semibold text-red-600">Danger Zone</h2>
       <button
         type="button"

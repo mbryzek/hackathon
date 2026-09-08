@@ -6,7 +6,7 @@
 <Shell title="Press">
   <div class="mx-auto max-w-3xl space-y-8">
     {#each pressReleases as release}
-      <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs">
         <time datetime={release.dateIso} class="text-sm text-gray-500">{release.date}</time>
         <h2 class="mt-1 text-xl font-semibold text-gray-900">{release.title}</h2>
         <p class="mt-3 leading-relaxed text-gray-700">{release.summary}</p>

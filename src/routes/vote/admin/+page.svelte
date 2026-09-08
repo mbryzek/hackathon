@@ -30,7 +30,7 @@
   {#if error}
     <ErrorBanner {error} />
   {:else if events.length === 0}
-    <div class="rounded-xl bg-white p-12 text-center shadow">
+    <div class="rounded-xl bg-white p-12 text-center shadow-sm">
       <svg class="mx-auto mb-4 h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           stroke-linecap="round"
@@ -49,7 +49,7 @@
       </a>
     </div>
   {:else}
-    <div class="overflow-hidden rounded-xl bg-white shadow">
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -66,13 +66,13 @@
                 <td class="whitespace-nowrap px-6 py-4">
                   <a
                     href={urls.voteAdminEvent(event.id)}
-                    class="rounded font-medium text-gray-900 hover:text-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    class="rounded-sm font-medium text-gray-900 hover:text-yellow-600 focus:outline-hidden focus:ring-2 focus:ring-yellow-400"
                   >
                     {event.name}
                   </a>
                 </td>
                 <td class="whitespace-nowrap px-6 py-4">
-                  <code class="rounded bg-gray-100 px-2 py-1 text-sm text-gray-600">{event.key}</code>
+                  <code class="rounded-sm bg-gray-100 px-2 py-1 text-sm text-gray-600">{event.key}</code>
                 </td>
                 <td class="whitespace-nowrap px-6 py-4">
                   <span class="rounded-full px-2 py-1 text-xs font-medium {eventStatusBadgeClass(event.status)}">

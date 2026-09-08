@@ -102,7 +102,7 @@
         <div class="flex items-center">
           <!-- Logo -->
           <div class="shrink-0">
-            <a href={urls.index} class="rounded focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            <a href={urls.index} class="rounded-sm focus:outline-hidden focus:ring-2 focus:ring-yellow-400">
               <img class="h-12 w-36 cursor-pointer" src="/assets/bt-cs-logo.png" alt="Bergen Tech Hackathon" />
             </a>
           </div>
@@ -157,7 +157,7 @@
                     <div
                       class="invisible absolute left-0 top-full w-48 pt-2 opacity-0 transition-all duration-200 ease-out group-hover:visible group-hover:opacity-100"
                     >
-                      <div class="overflow-hidden rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
+                      <div class="overflow-hidden rounded-md bg-gray-800 shadow-lg ring-1 ring-black/5">
                         {#each section.children as child, i}
                           {@const childActive = page.url.pathname === child.href}
                           <a
@@ -185,7 +185,7 @@
         <div class="-mr-2 flex md:hidden">
           <button
             type="button"
-            class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 transition-colors duration-150 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+            class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 transition-colors duration-150 hover:bg-gray-700 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
             aria-controls="mobile-menu"
             aria-expanded={mobileMenuOpen}
             onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
@@ -270,7 +270,7 @@
     </div>
   </nav>
 
-  <header class="bg-white shadow-sm">
+  <header class="bg-white shadow-xs">
     <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
       <h1 class="text-lg/6 font-semibold text-gray-800">{title}</h1>
     </div>

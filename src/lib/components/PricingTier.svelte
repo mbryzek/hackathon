@@ -14,7 +14,7 @@
 
   const cardClasses = $derived(
     featured
-      ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-white ring-2 ring-yellow-400 ring-offset-2'
+      ? 'bg-[linear-gradient(to_bottom_right,#facc15,#eab308)] text-white ring-2 ring-yellow-400 ring-offset-2'
       : 'bg-white border border-gray-200'
   );
 
@@ -22,7 +22,7 @@
 
   const costClasses = $derived(featured ? 'text-white' : 'text-gray-900');
 
-  const benefitTextClasses = $derived(featured ? 'text-white/90' : 'text-gray-600');
+  const benefitTextClasses = $derived(featured ? 'text-[rgb(255_255_255_/_0.9)]' : 'text-gray-600');
 
   const checkClasses = $derived(featured ? 'text-white' : 'text-green-500');
 </script>
@@ -37,7 +37,7 @@
   </div>
 
   <!-- Benefits -->
-  <ul class="mb-6 flex-grow space-y-3">
+  <ul class="mb-6 grow space-y-3">
     {#each benefits as benefit}
       <li class="flex items-start gap-3">
         <svg class="h-5 w-5 {checkClasses} mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
