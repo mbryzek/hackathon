@@ -25,7 +25,13 @@ export default async function globalSetup(): Promise<void> {
     JSON.stringify({ set: plan.set, baseUrl: plan.baseUrl, capturedAt: new Date().toISOString(), uncovered: plan.uncovered }, null, 2)
   );
 
-  console.log(`visual: capturing the ${plan.set} set -- ${plan.targets.length} pages, ${plan.targets.length * 18} shots -> ${plan.out}`);
+  // "N pages" and not "N shots": `hover` contributes one shot per interactive element the page
+  // offers inside the viewport, which only the browser knows. The floor is stated instead, so the
+  // line cannot be read as a total the run then quietly fails to reach.
+  console.log(
+    `visual: capturing the ${plan.set} set -- ${plan.targets.length} pages, at least ${plan.targets.length * 12} shots ` +
+      `(plus one per hover target, up to ${plan.hoverLimit} each) -> ${plan.out}`
+  );
   if (plan.uncovered.length > 0) console.log(`visual: ${plan.uncovered.length} route(s) uncovered; see manifest.json`);
 }
 // dry-copy-end
