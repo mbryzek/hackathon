@@ -103,23 +103,23 @@
 
   <!-- Stats -->
   <div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-5">
-    <div class="rounded-xl bg-white p-4 text-center shadow">
+    <div class="rounded-xl bg-white p-4 text-center shadow-sm">
       <div class="text-3xl font-bold text-gray-900">{data.summary?.total ?? 0}</div>
       <div class="text-sm text-gray-600">Total Codes</div>
     </div>
-    <div class="rounded-xl bg-white p-4 text-center shadow">
+    <div class="rounded-xl bg-white p-4 text-center shadow-sm">
       <div class="text-3xl font-bold text-blue-600">{data.summary?.student.codes ?? 0}</div>
       <div class="text-sm text-gray-600">Student Codes</div>
     </div>
-    <div class="rounded-xl bg-white p-4 text-center shadow">
+    <div class="rounded-xl bg-white p-4 text-center shadow-sm">
       <div class="text-3xl font-bold text-blue-600">{data.summary?.student.votes ?? 0}</div>
       <div class="text-sm text-gray-600">Student Votes</div>
     </div>
-    <div class="rounded-xl bg-white p-4 text-center shadow">
+    <div class="rounded-xl bg-white p-4 text-center shadow-sm">
       <div class="text-3xl font-bold text-purple-600">{data.summary?.parent.codes ?? 0}</div>
       <div class="text-sm text-gray-600">Parent Codes</div>
     </div>
-    <div class="rounded-xl bg-white p-4 text-center shadow">
+    <div class="rounded-xl bg-white p-4 text-center shadow-sm">
       <div class="text-3xl font-bold text-purple-600">{data.summary?.parent.votes ?? 0}</div>
       <div class="text-sm text-gray-600">Parent Votes</div>
     </div>
@@ -128,7 +128,7 @@
   <!-- Generate codes form -->
   <div class="mb-6">
     {#if showGenerateForm}
-      <div class="rounded-xl bg-white p-6 shadow">
+      <div class="rounded-xl bg-white p-6 shadow-sm">
         <h3 class="mb-4 text-lg font-semibold text-gray-900">Generate New Codes</h3>
         <form
           method="POST"
@@ -280,7 +280,7 @@
   </div>
 
   <!-- Filters -->
-  <div class="mb-6 rounded-xl bg-white p-4 shadow">
+  <div class="mb-6 rounded-xl bg-white p-4 shadow-sm">
     <form
       method="GET"
       bind:this={filterForm}
@@ -340,12 +340,12 @@
   <!-- Codes list -->
   <div class="relative">
     {#if isSearching}
-      <div class="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/70">
+      <div class="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-[rgb(255_255_255_/_0.7)]">
         <Spinner size="lg" label="Searching" class="text-gray-600" />
       </div>
     {/if}
     {#if data.codes.length === 0}
-      <div class="rounded-xl bg-white p-12 text-center shadow">
+      <div class="rounded-xl bg-white p-12 text-center shadow-sm">
         <svg class="mx-auto mb-4 h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -369,36 +369,36 @@
         {/if}
       </div>
     {:else}
-      <div class="overflow-hidden rounded-xl bg-white shadow">
+      <div class="overflow-hidden rounded-xl bg-white shadow-sm">
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"> Code </th>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"> Type </th>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"> Status </th>
-                <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"> Actions </th>
+                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"> Code </th>
+                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"> Type </th>
+                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"> Status </th>
+                <th class="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase"> Actions </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white">
               {#each data.codes as code (code.id)}
                 <tr class="transition-colors hover:bg-gray-50">
-                  <td class="whitespace-nowrap px-6 py-4">
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <code class="font-mono text-lg font-bold tracking-widest">{code.code}</code>
                   </td>
-                  <td class="whitespace-nowrap px-6 py-4">
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <span class="rounded-full px-2 py-1 text-xs font-medium {voterTypeBadgeClass(code.voter_type)}">
                       {voterTypeLabel(code.voter_type)}
                     </span>
                   </td>
-                  <td class="whitespace-nowrap px-6 py-4">
+                  <td class="px-6 py-4 whitespace-nowrap">
                     {#if code.has_voted}
                       <span class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800"> Voted </span>
                     {:else}
                       <span class="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800"> Unused </span>
                     {/if}
                   </td>
-                  <td class="whitespace-nowrap px-6 py-4 text-right">
+                  <td class="px-6 py-4 text-right whitespace-nowrap">
                     <form
                       method="POST"
                       action="?/delete"

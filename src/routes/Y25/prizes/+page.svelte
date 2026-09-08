@@ -36,7 +36,7 @@
           <div class="rounded-lg border-l-4 border-yellow-500 bg-gray-50 p-4 transition-colors duration-200 hover:bg-gray-100">
             <div class="mb-2 flex items-start justify-between gap-2">
               <h3 class="text-lg font-bold text-gray-900">{prize.title}</h3>
-              <span class="inline-flex items-center whitespace-nowrap rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-700">
+              <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-bold whitespace-nowrap text-green-700">
                 {prize.amount}
               </span>
             </div>
@@ -69,7 +69,7 @@
           <div class="rounded-lg border-l-4 border-blue-500 bg-gray-50 p-4 transition-colors duration-200 hover:bg-gray-100">
             <div class="mb-2 flex items-start justify-between gap-2">
               <h3 class="text-lg font-bold text-gray-900">{prize.title}</h3>
-              <span class="inline-flex items-center whitespace-nowrap rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-700">
+              <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-bold whitespace-nowrap text-green-700">
                 {prize.amount}
               </span>
             </div>

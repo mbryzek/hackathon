@@ -38,7 +38,7 @@
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div
-    class="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+    class="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs"
     onclick={handleBackdropClick}
     role="dialog"
     aria-modal="true"
@@ -54,7 +54,7 @@
       <!-- Close button -->
       <button
         type="button"
-        class="absolute right-4 top-4 z-10 rounded-full bg-black/30 p-2 text-white/80 transition-all duration-200 hover:bg-black/50 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
+        class="absolute top-4 right-4 z-10 rounded-full bg-black/30 p-2 text-[rgb(255_255_255_/_0.8)] transition-all duration-200 hover:bg-black/50 hover:text-white focus:ring-2 focus:ring-white focus:outline-hidden"
         onclick={onclose}
         aria-label="Close modal"
       >

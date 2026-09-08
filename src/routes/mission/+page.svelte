@@ -5,7 +5,7 @@
 </script>
 
 <Shell title="Our Vision & Mission">
-  <div class="mx-auto max-w-3xl space-y-10 px-4 py-8 text-lg leading-relaxed">
+  <div class="mx-auto space-y-10 max-w-3xl px-4 py-8 text-lg leading-relaxed">
     <!-- Vision -->
     <div>
       <h2 class="mb-3 text-2xl font-semibold text-gray-800">Our Vision</h2>

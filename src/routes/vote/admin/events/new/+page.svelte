@@ -47,7 +47,7 @@
     <h1 class="mt-4 text-2xl font-bold text-gray-900">Create New Event</h1>
   </div>
 
-  <div class="rounded-xl bg-white p-6 shadow">
+  <div class="rounded-xl bg-white p-6 shadow-sm">
     <EventForm
       {name}
       {key}

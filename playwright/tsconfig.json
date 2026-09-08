@@ -25,5 +25,5 @@
     "types": ["node"],
     "verbatimModuleSyntax": true
   },
-  "include": ["**/*.ts", "../playwright.config.ts"]
+  "include": ["**/*.ts", "../playwright.config.ts", "../playwright.visual.config.ts"]
 }

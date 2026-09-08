@@ -18,7 +18,7 @@
 </script>
 
 <Shell title="2025 Hackathon Event Summary">
-  <div class="mx-auto max-w-3xl space-y-6 px-4 py-8 text-lg leading-relaxed">
+  <div class="mx-auto space-y-6 max-w-3xl px-4 py-8 text-lg leading-relaxed">
     <!-- Callout Boxes - responsive stack on mobile -->
     <div class="flex flex-col gap-4 sm:flex-row">
       <CalloutBox title="Date & Time">

@@ -77,7 +77,7 @@ export default [
   // browser, this code drives it from node), typed against playwright/tsconfig.json, and covering
   // playwright.config.ts because that file is part of the same suite.
   {
-    files: ['playwright/**/*.ts', 'playwright.config.ts'],
+    files: ['playwright/**/*.ts', 'playwright.config.ts', 'playwright.visual.config.ts'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -99,6 +99,21 @@ export default [
       '@typescript-eslint/consistent-type-imports': 'error',
 
       'no-restricted-syntax': noShorthandInConditionalSpread
+    }
+  },
+
+  // The visual parity harness, which is the one place in playwright/ that ships code INTO the
+  // browser: every `page.evaluate()` callback in `playwright/visual/capture.ts` is serialised and
+  // run in the page, so `document`, `window` and `getComputedStyle` are real there and undefined
+  // in the node half of the same file. The block above is right to withhold browser globals from
+  // a suite that only drives a browser; this narrows the exception to the directory that needs it
+  // rather than widening it over all of playwright/.
+  {
+    files: ['playwright/visual/**/*.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.browser
+      }
     }
   },
 

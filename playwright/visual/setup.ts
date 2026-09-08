@@ -1,0 +1,31 @@
+/**
+ * Before a capture: prove the server is there, and start from an empty directory (ISS-9319).
+ *
+ * THE EMPTY DIRECTORY IS THE LOAD-BEARING HALF. A capture that reuses a directory inherits the
+ * previous run's shots for every page the current run fails on, and those stale shots are
+ * indistinguishable from fresh ones — so a compare would pass on a page nobody rendered. Clearing
+ * is what makes "present on one side only" mean what `compareManifests` treats it as meaning.
+ */
+// dry-copy: visual-parity/setup — every copy of this region must match; `dev repo copies` checks it
+import { rmSync } from 'node:fs';
+import { paths, writeFile } from './files.ts';
+import { capturePlan } from './plan.ts';
+
+export default async function globalSetup(): Promise<void> {
+  const plan = capturePlan();
+
+  const response = await fetch(plan.baseUrl, { redirect: 'manual' }).catch((error: unknown) => {
+    throw new Error(`visual: nothing answered at ${plan.baseUrl} -- start the server first (${String(error)})`);
+  });
+  if (response.status >= 500) throw new Error(`visual: ${plan.baseUrl} answered ${response.status}`);
+
+  rmSync(plan.out, { recursive: true, force: true });
+  writeFile(
+    paths.meta(plan.out),
+    JSON.stringify({ set: plan.set, baseUrl: plan.baseUrl, capturedAt: new Date().toISOString(), uncovered: plan.uncovered }, null, 2)
+  );
+
+  console.log(`visual: capturing the ${plan.set} set -- ${plan.targets.length} pages, ${plan.targets.length * 18} shots -> ${plan.out}`);
+  if (plan.uncovered.length > 0) console.log(`visual: ${plan.uncovered.length} route(s) uncovered; see manifest.json`);
+}
+// dry-copy-end

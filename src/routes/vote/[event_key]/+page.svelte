@@ -210,7 +210,7 @@
           <div>
             <!-- tabindex="-1" so focus can be moved here when the ballot replaces the code form.
                  It is not a tab stop; -1 only makes it programmatically focusable. -->
-            <h1 class="text-2xl font-bold text-gray-900 focus:outline-none" bind:this={ballotHeading} tabindex="-1">
+            <h1 class="text-2xl font-bold text-gray-900 focus:outline-hidden" bind:this={ballotHeading} tabindex="-1">
               {verification.event.name}
             </h1>
             <p class="mt-1 text-gray-600">
@@ -276,7 +276,7 @@
                 <span class="flex items-start gap-4">
                   <!-- Selection indicator. aria-hidden: the input already announces checked state,
                        so exposing this too would say it twice. -->
-                  <span class="mt-1 flex-shrink-0" aria-hidden="true">
+                  <span class="mt-1 shrink-0" aria-hidden="true">
                     {#if verification.max_votes === 1}
                       <!-- Radio style -->
                       <span
@@ -303,7 +303,7 @@
                   </span>
 
                   <!-- Project info -->
-                  <span class="flex-grow">
+                  <span class="grow">
                     <span class="block text-lg font-semibold text-gray-900">
                       {pv.project.name}
                     </span>

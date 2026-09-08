@@ -168,7 +168,7 @@
               <div class="flex flex-col gap-y-4">
                 {#each section.items as item}
                   <div class="flex gap-x-4">
-                    <div class="min-w-[2.5rem] font-bold text-yellow-600">{item.score}</div>
+                    <div class="min-w-10 font-bold text-yellow-600">{item.score}</div>
                     <div class="text-gray-800">{item.description}</div>
                   </div>
                 {/each}

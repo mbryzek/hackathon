@@ -52,7 +52,7 @@
 </script>
 
 <Shell title="2026 Program">
-  <div class="mx-auto max-w-3xl space-y-10 px-4 py-8 text-lg leading-relaxed">
+  <div class="mx-auto space-y-10 max-w-3xl px-4 py-8 text-lg leading-relaxed">
     <!-- Theme -->
     <div class="border-l-4 border-yellow-500 py-2 pl-6">
       <h2 class="mb-2 text-2xl font-bold text-gray-800">2026 Theme: Build</h2>
@@ -67,7 +67,7 @@
       <h2 class="text-2xl font-semibold text-gray-800">Welcome</h2>
 
       <div class="border-l-4 border-yellow-400 py-2 pl-6">
-        <p class="font-light italic text-gray-800">
+        <p class="font-light text-gray-800 italic">
           "Today isn't about getting everything perfect. In fact, perfection is what stands in the way of creating something that endures
           beyond tomorrow. Innovation can only take place when you move beyond ideas. Stop thinking and start doing! At the end of the day,
           the team with the most failures will be the only one left standing."
@@ -76,7 +76,7 @@
       </div>
 
       <div class="border-l-4 border-yellow-400 py-2 pl-6">
-        <p class="font-light italic text-gray-800">
+        <p class="font-light text-gray-800 italic">
           "Hackathons are about exploring, learning, and creating. Today you get to take what you know and turn it into something real. You
           might hit walls and change direction along the way. That's exactly how the best ideas take shape. Stay curious, keep
           experimenting, and go make something you're proud of!"
@@ -85,7 +85,7 @@
       </div>
 
       <div class="border-l-4 border-yellow-400 py-2 pl-6">
-        <p class="font-light italic text-gray-800">
+        <p class="font-light text-gray-800 italic">
           "Today you chose to come here early, prepared to spend all day working together with your teammates to create projects and
           prototypes that could potentially change people's lives. You will meet like-minded people, get professional feedback, and talk to
           industry leaders. You are all so very impressive. Be proud of yourself, because we are all proud of you!"
@@ -100,7 +100,7 @@
       <div class="ml-2 border-l-2 border-yellow-300">
         {#each schedule as item}
           <div class="relative flex items-start gap-4 py-3 pl-6">
-            <span class="absolute -left-[5px] top-4 h-2 w-2 rounded-full bg-yellow-500"></span>
+            <span class="absolute top-4 left-[-5px] h-2 w-2 rounded-full bg-yellow-500"></span>
             <span class="w-24 shrink-0 text-sm font-semibold text-yellow-600">{item.time}</span>
             <div>
               <span class="font-semibold text-gray-800">{item.event}</span>
@@ -119,7 +119,7 @@
         creativity, technical skill, and meaningful impact.
       </p>
 
-      <h3 class="mb-3 mt-6 text-xl font-semibold text-gray-800">Required Deliverables</h3>
+      <h3 class="mt-6 mb-3 text-xl font-semibold text-gray-800">Required Deliverables</h3>
       <ul class="space-y-3">
         <li class="flex items-start gap-3 font-light text-gray-800">
           <span class="mt-1 text-yellow-500">&#9679;</span>
@@ -153,7 +153,7 @@
     <div>
       <h2 class="mb-4 text-2xl font-semibold text-gray-800">Rules & Guidelines</h2>
 
-      <h3 class="mb-3 mt-4 text-xl font-semibold text-gray-800">Team Rules</h3>
+      <h3 class="mt-4 mb-3 text-xl font-semibold text-gray-800">Team Rules</h3>
       <ul class="space-y-3">
         <li class="flex items-start gap-3 font-light text-gray-800">
           <span class="mt-1 text-yellow-500">&#9679;</span>
@@ -169,7 +169,7 @@
         </li>
       </ul>
 
-      <h3 class="mb-3 mt-6 text-xl font-semibold text-gray-800">Project Rules</h3>
+      <h3 class="mt-6 mb-3 text-xl font-semibold text-gray-800">Project Rules</h3>
       <ul class="space-y-3">
         <li class="flex items-start gap-3 font-light text-gray-800">
           <span class="mt-1 text-yellow-500">&#9679;</span>
@@ -197,7 +197,7 @@
         </li>
       </ul>
 
-      <h3 class="mb-3 mt-6 text-xl font-semibold text-gray-800">Code of Conduct</h3>
+      <h3 class="mt-6 mb-3 text-xl font-semibold text-gray-800">Code of Conduct</h3>
       <p class="font-light text-gray-800">
         The Bergen Tech Hackathon is committed to providing a welcoming, inclusive, and harassment-free experience for everyone. We expect
         all participants, mentors, judges, and volunteers to treat everyone with respect and kindness, be collaborative and supportive of

@@ -102,14 +102,14 @@
         <div class="flex items-center">
           <!-- Logo -->
           <div class="shrink-0">
-            <a href={urls.index} class="rounded focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            <a href={urls.index} class="rounded-sm focus:ring-2 focus:ring-yellow-400 focus:outline-hidden">
               <img class="h-12 w-36 cursor-pointer" src="/assets/bt-cs-logo.png" alt="Bergen Tech Hackathon" />
             </a>
           </div>
 
           <!-- Desktop Navigation -->
           <div class="hidden md:block">
-            <div class="ml-10 flex items-baseline space-x-4">
+            <div class="space-x-4 ml-10 flex items-baseline">
               {#each sections as section}
                 {@const active = isActive(section) || hasActiveChild(section)}
                 {#if section.children.length === 0}
@@ -155,9 +155,9 @@
                     </a>
                     <!-- Dropdown menu with smooth transition -->
                     <div
-                      class="invisible absolute left-0 top-full w-48 pt-2 opacity-0 transition-all duration-200 ease-out group-hover:visible group-hover:opacity-100"
+                      class="invisible absolute top-full left-0 w-48 pt-2 opacity-0 transition-all duration-200 ease-out group-hover:visible group-hover:opacity-100"
                     >
-                      <div class="overflow-hidden rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
+                      <div class="overflow-hidden rounded-md bg-gray-800 shadow-lg ring-1 ring-black/5">
                         {#each section.children as child, i}
                           {@const childActive = page.url.pathname === child.href}
                           <a
@@ -185,7 +185,7 @@
         <div class="-mr-2 flex md:hidden">
           <button
             type="button"
-            class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 transition-colors duration-150 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+            class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 transition-colors duration-150 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
             aria-controls="mobile-menu"
             aria-expanded={mobileMenuOpen}
             onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
@@ -196,17 +196,17 @@
             <!-- Animated hamburger/close icon -->
             <div class="relative h-6 w-6">
               <span
-                class="absolute left-0 top-1 h-0.5 w-6 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
+                class="absolute top-1 left-0 h-0.5 w-6 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
                   ? 'translate-y-1.5 rotate-45'
                   : ''}"
               ></span>
               <span
-                class="absolute left-0 top-3 h-0.5 w-6 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
+                class="absolute top-3 left-0 h-0.5 w-6 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
                   ? 'opacity-0'
                   : ''}"
               ></span>
               <span
-                class="absolute left-0 top-5 h-0.5 w-6 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
+                class="absolute top-5 left-0 h-0.5 w-6 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
                   ? '-translate-y-1.5 -rotate-45'
                   : ''}"
               ></span>
@@ -223,7 +223,7 @@
         ? 'max-h-screen opacity-100'
         : 'max-h-0 opacity-0'}"
     >
-      <div class="space-y-1 border-t border-gray-700 bg-gray-800 px-2 pb-3 pt-2">
+      <div class="space-y-1 border-t border-gray-700 bg-gray-800 px-2 pt-2 pb-3">
         {#each sections as section}
           {@const active = isActive(section) || hasActiveChild(section)}
           <div>
@@ -249,7 +249,7 @@
               {/if}
             </a>
             {#if section.children.length > 0}
-              <div class="mt-1 space-y-1 pl-4">
+              <div class="space-y-1 mt-1 pl-4">
                 {#each section.children as child}
                   {@const childActive = page.url.pathname === child.href}
                   <a
@@ -270,7 +270,7 @@
     </div>
   </nav>
 
-  <header class="bg-white shadow-sm">
+  <header class="bg-white shadow-xs">
     <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
       <h1 class="text-lg/6 font-semibold text-gray-800">{title}</h1>
     </div>

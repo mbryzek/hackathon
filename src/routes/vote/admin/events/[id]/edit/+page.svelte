@@ -30,7 +30,7 @@
   </div>
 
   {#if event}
-    <div class="rounded-xl bg-white p-6 shadow">
+    <div class="rounded-xl bg-white p-6 shadow-sm">
       <EventForm
         {name}
         {key}

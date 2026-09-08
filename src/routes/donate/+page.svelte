@@ -40,7 +40,7 @@
 </script>
 
 <Shell title="Support the Hackathon">
-  <div class="mx-auto max-w-5xl space-y-12 px-4 py-8">
+  <div class="mx-auto space-y-12 max-w-5xl px-4 py-8">
     <!-- Introduction -->
     <div class="mx-auto max-w-2xl text-center">
       <p class="text-xl font-light text-gray-800">

@@ -5,7 +5,7 @@
 </script>
 
 <Shell title="2024 Hackathon Event Summary">
-  <div class="mx-auto max-w-3xl space-y-6 px-4 py-8 text-lg leading-relaxed">
+  <div class="mx-auto space-y-6 max-w-3xl px-4 py-8 text-lg leading-relaxed">
     <p class="font-light text-gray-800">
       The inaugural 2024 Bergen Tech Hackathon was a huge success! We wanted to deeply thank you for your support and share a few highlights
       from the day - we could not have put this event together without you!
@@ -23,7 +23,7 @@
     <!-- Projects Section -->
     <div class="mt-4 pl-4">
       <h3 class="mb-2 text-xl font-semibold text-gray-800">Projects</h3>
-      <ul class="list-disc space-y-2 pl-6">
+      <ul class="space-y-2 list-disc pl-6">
         <li class="pl-2 font-light text-gray-800">AI Recipe Generator: Enter ingredients to get tailored recipes using AI.</li>
         <li class="pl-2 font-light text-gray-800">Disease Identifier: Identifies diseases based on symptoms with AI assistance.</li>
         <li class="pl-2 font-light text-gray-800">Competition Platform: An end-to-end platform for creating and hosting events.</li>
@@ -37,7 +37,7 @@
     <!-- By the Numbers Section -->
     <div class="mt-4 pl-4">
       <h2 class="mb-2 text-2xl font-semibold text-gray-800">By the Numbers</h2>
-      <ul class="list-disc space-y-2 pl-6">
+      <ul class="space-y-2 list-disc pl-6">
         <li class="pl-2 font-light text-gray-800">52 student participants</li>
         <li class="pl-2 font-light text-gray-800">18 teams</li>
         <li class="pl-2 font-light text-gray-800">10 awards</li>

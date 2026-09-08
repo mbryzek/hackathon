@@ -26,7 +26,7 @@
         <div class="flex h-16 items-center justify-between">
           <div class="flex items-center gap-8">
             <a href={urls.index} class="flex items-center">
-              <img class="w-30 h-10" src="/assets/bt-cs-logo.png" alt="Bergen Tech Hackathon" />
+              <img class="h-10 w-30" src="/assets/bt-cs-logo.png" alt="Bergen Tech Hackathon" />
             </a>
             <span class="font-semibold text-white">Vote Admin</span>
           </div>

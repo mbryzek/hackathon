@@ -8,7 +8,7 @@
 
 {#snippet sponsorCard(sponsor: (typeof sponsorsY26)[number], isLead: boolean)}
   {@const sizeClass = isLead ? 'h-64 sm:h-72' : 'h-32 sm:h-40'}
-  {@const baseClass = `bg-white rounded-xl shadow-sm border border-gray-100 ${sizeClass}`}
+  {@const baseClass = `bg-white rounded-xl shadow-xs border border-gray-100 ${sizeClass}`}
   {#if sponsor.url}
     <a
       href={sponsor.url}
@@ -30,7 +30,7 @@
 
   {#if leadSponsors.length > 0}
     <div class="mb-10">
-      <h2 class="mb-4 text-center text-lg font-semibold uppercase tracking-wide text-gray-600">Lead Sponsor</h2>
+      <h2 class="mb-4 text-center text-lg font-semibold tracking-wide text-gray-600 uppercase">Lead Sponsor</h2>
       <div class="flex justify-center">
         {#each leadSponsors as sponsor}
           <div class="w-full max-w-md">
