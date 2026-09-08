@@ -15,6 +15,9 @@ export default defineConfig({
     ...(process.env['VITEST'] ? { conditions: ['browser'] } : {})
   },
   test: {
-    include: ['src/**/*.test.ts']
+    // The visual parity harness's own units (`playwright/visual/*.test.ts`) run here too: they
+    // pin the bookkeeping a capture cannot assert about itself -- the shot key, the page-set
+    // derivation, the manifest compare. See playwright/visual/README.md.
+    include: ['src/**/*.test.ts', 'playwright/visual/**/*.test.ts']
   }
 });

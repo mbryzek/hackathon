@@ -19,6 +19,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
+    "visual:capture": "playwright test --config playwright.visual.config.ts",
+    "visual:compare": "node playwright/visual/compare.ts",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
