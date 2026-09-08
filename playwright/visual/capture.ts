@@ -29,7 +29,7 @@
  *     fallback metrics. Then a RELOAD when the document turns out to have laid itself out before
  *     the face arrived, because a `ch` resolved then is kept for the life of that document. Then
  *     the same question again before EVERY shot, because the face can go away mid-page. See
- *     `settle` and `awaitMeasurableFont`. THIS APP DECLARES NO `@font-face` — its stack is Inter
+ *     `settle`, `metrics` and `captureShot`. THIS APP DECLARES NO `@font-face` — its stack is Inter
  *     with system fallbacks — so all three are inert here and are kept for the reason the whole
  *     module is: the region below is shared byte for byte with the repos that do self-host one,
  *     and a probe that measures an installed font is a correct answer, not a skipped one.
@@ -58,7 +58,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import type { Browser, BrowserContext, Page } from '@playwright/test';
+import type { Browser, BrowserContext, Cookie, Page } from '@playwright/test';
 import type { StateName, ThemeName, Viewport } from './matrix.ts';
 import { encodeStyles, type RawElement, type StyleDump } from './styles.ts';
 
@@ -75,14 +75,24 @@ export const FIXED_TIME = new Date('2025-06-15T12:00:00.000Z');
  *
  * MUST OUTLAST THE LONGEST TRANSITION ANY REPO CARRYING THIS REGION DECLARES, or a hover shot is
  * taken part-way through one and two captures of the same page disagree about where an element
- * was. The longest is hackathon's `duration-500` (ISS-9327); this console's is 0.25s.
+ * was. The longest is playbook-www's `--v2-dur-slow` at 780ms, which the chart entrance
+ * choreography and the product tour's frame transition both run on; hackathon's `duration-500` is
+ * the next one down, and a console's is 0.25s.
  */
-const SETTLE_MS = 650;
+const SETTLE_MS = 900;
 
-/** The id of the `100ch` box planted before first layout. See `settle`. */
+/**
+ * The id of the `100ch` box planted before first layout and kept until the document goes away.
+ *
+ * IT IS NOT REMOVED AFTER THE NAVIGATION, because the question it answers is not a question about
+ * the navigation. A box created now cannot see a resolution the page made earlier and is still
+ * carrying, and the page can acquire one at any style recalc after the load — so the only box that
+ * can be compared against a fresh one is one that has been there since before the first layout.
+ * `dumpStyles` skips it by this id and it paints nothing, so it is in no shot and no diagnostic.
+ */
 const CH_PROBE_ID = '__visual_ch_probe__';
 
-/** Off-flow, unpainted, and removed before any shot is taken. */
+/** Off-flow, zero-height and unpainted, so a box that stays in the document is in no screenshot. */
 const CH_PROBE_STYLE = 'position:absolute;top:-9999px;left:-9999px;width:100ch;height:0;visibility:hidden;pointer-events:none';
 
 /** Applied identically to both sides. See the class comment for why each line is here. */
@@ -94,7 +104,7 @@ const DETERMINISM_INIT = `(() => {
     return seed / 0x80000000;
   };
   // A 100ch box in the document from the moment there is a document, so that it resolves ch in
-  // the same first layout the page's own elements do. settle() reads it and removes it.
+  // the same first layout the page's own elements do, and stays for as long as they do.
   document.addEventListener('DOMContentLoaded', () => {
     const probe = document.createElement('div');
     probe.id = ${JSON.stringify(CH_PROBE_ID)};
@@ -222,13 +232,52 @@ async function stubForeignMedia(context: BrowserContext, baseUrl: string): Promi
 }
 
 /**
+ * COOKIES TO PLANT BEFORE THE FIRST NAVIGATION, from `VISUAL_COOKIES` (ISS-9329).
+ *
+ * A `{"NAME":"value"}` JSON object, scoped to the base url. Unset is the ordinary case and plants
+ * nothing, so a repo whose captured pages are all public is untouched by this.
+ *
+ * IT HAS TO BE A COOKIE ON THE CONTEXT, and that is the whole reason it is here rather than in a
+ * repo's own page list. A session cookie in these apps is `httpOnly`, so an init script cannot
+ * write one; and it has to ride the VERY FIRST request, because the guard that redirects a
+ * signed-out visitor to the login form runs in the page's server load. Anything later captures the
+ * login form under the guarded route's name -- the worst kind of coverage, a number that grows
+ * while the thing it counts is not there. lakeviewsummit-ui is the first repo in this epic whose
+ * interesting pages are behind a session: five of its fourteen routes are, and they hold the admin
+ * table, the pagination and the status badge, which appear nowhere else in the app.
+ *
+ * The value is a session id minted by the repo's own playwright fixtures against the backend the
+ * capture is running against, so it is meaningless outside that one `dev e2e run` and there is
+ * nothing here worth keeping out of a log.
+ */
+function plantedCookies(baseUrl: string): Cookie[] {
+  const raw = process.env['VISUAL_COOKIES'];
+  if (raw === undefined || raw === '') return [];
+  const parsed: unknown = JSON.parse(raw);
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error('visual: VISUAL_COOKIES must be a JSON object of cookie name to value');
+  }
+  return Object.entries(parsed as Record<string, unknown>).map(([name, value]) => {
+    if (typeof value !== 'string') throw new Error(`visual: VISUAL_COOKIES.${name} must be a string`);
+    // `url` rather than domain/path: playwright derives both from it, so the pairing cannot be got
+    // wrong and a cookie can never be planted for an origin the capture is not talking to.
+    return { name, value, url: baseUrl } as unknown as Cookie;
+  });
+}
+
+/**
  * A context per (theme, viewport), which is also the only way the theme can be set.
  *
- * In an app that has a theme, `app.html` reads `localStorage['playbook-theme']` in an INLINE
+ * In an app that has a theme, `app.html` reads `localStorage[THEME_STORAGE_KEY]` in an INLINE
  * script in `<head>`, before SvelteKit boots, and sets `data-theme` from it. So the theme has to
  * be in storage before the first byte of the document runs — an init script is the only hook early
  * enough, and setting it after navigation would capture the page mid-swap. An app that has no
  * theme ignores the key and renders both contexts identically; see `matrix.ts`.
+ *
+ * THE KEY ITSELF IS REPO-SPECIFIC and is declared ABOVE this region, because it is the app's own
+ * key and not the harness's: playbook-www reads `ca-theme` where the consoles read
+ * `playbook-theme`. Hard-coding it here is what kept that repo out of this region, and out of
+ * every determinism fix the region has had since.
  */
 export async function themedContext(browser: Browser, theme: ThemeName, viewport: Viewport, baseUrl: string): Promise<BrowserContext> {
   const context = await browser.newContext({
@@ -240,9 +289,11 @@ export async function themedContext(browser: Browser, theme: ThemeName, viewport
     // The e2e suite sends this on every request; the dev server ignores it and a live platform needs it.
     extraHTTPHeaders: { 'X-Bypass-Rate-Limit': 'true' }
   });
+  const cookies = plantedCookies(baseUrl);
+  if (cookies.length > 0) await context.addCookies(cookies);
   await stubForeignMedia(context, baseUrl);
   await context.addInitScript(DETERMINISM_INIT);
-  await context.addInitScript(`try { localStorage.setItem('playbook-theme', ${JSON.stringify(theme)}); } catch (e) {}`);
+  await context.addInitScript(`try { localStorage.setItem(${JSON.stringify(THEME_STORAGE_KEY)}, ${JSON.stringify(theme)}); } catch (e) {}`);
   await context.clock.setFixedTime(FIXED_TIME);
   return context;
 }
@@ -299,51 +350,60 @@ async function plantedCh(page: Page): Promise<{ width: number; em: number } | nu
   );
 }
 
-/** Take the planted probe back out, so it is in no screenshot and in no style dump. */
-async function removePlantedCh(page: Page): Promise<void> {
-  await page.evaluate(({ id }) => document.getElementById(id)?.remove(), { id: CH_PROBE_ID });
+/** The width a `ch` on this page is being resolved with, taken from the oldest box available. */
+async function chWidth(page: Page): Promise<number> {
+  const planted = await plantedCh(page);
+  return planted === null ? (await freshCh(page)).width : planted.width;
+}
+
+/** What the page's font-relative units are currently resolving against. See `metrics`. */
+type Metrics = 'ok' | 'no-face' | 'stale';
+
+/**
+ * Whether a `ch` on this page means what the stylesheet says it means, RIGHT NOW.
+ *
+ * TWO DIFFERENT FAILURES, separated because only one of them can be waited out.
+ *
+ * `no-face` is the momentary one. A box created NOW measures `100ch` as exactly `50em`, and 0.5em
+ * is not a font metric: it is what CSS says `ch` means when there is no `0` glyph to measure, so
+ * the browser has no face at all at this instant. It comes back — a full-page screenshot
+ * rasterises a document twelve thousand pixels tall and the face does not survive every one of
+ * them — and `awaitMeasurable` waits for it. 100ch against 50em is a comparison with six ems of
+ * daylight in it for this console's Hanken Grotesk (0.56em per `ch`), and the probe inherits
+ * `<body>`'s font, so it asks about the font the page is actually set in.
+ *
+ * `stale` is the permanent one, and it is the failure a fresh probe ALONE cannot see. The box
+ * created now measures a real face and the box that has been in the document since before the
+ * first layout does not agree with it: Chromium resolves a font-relative unit at layout and keeps
+ * the result, so the document is carrying widths it can no longer reproduce. Every `max-width:
+ * 88ch` on that page is wrong, waiting does not fix it and neither does loading the face — the
+ * resolution has already been made. Only a fresh document has none.
+ *
+ * A document with no planted probe can only be asked the first question and is answered on that.
+ */
+async function metrics(page: Page): Promise<Metrics> {
+  const fresh = await freshCh(page);
+  if (Math.abs(fresh.width - fresh.em * 50) <= 0.5) return 'no-face';
+  const planted = await plantedCh(page);
+  if (planted !== null && Math.abs(planted.width - fresh.width) > 0.5) return 'stale';
+  return 'ok';
 }
 
 /**
- * Wait until a font-relative unit measures against a REAL face, and say whether it ever did.
+ * Keep asking for the face back, and say what the page settled on.
  *
- * THE FACE CAN GO AWAY IN THE MIDDLE OF A PAGE, which is what the A/A gate found and is why this
- * is checked before every shot rather than once after the navigation. On the decision detail and
- * on the workflow authority page, `max-width: 88ch` and `max-width: 62ch` measured correctly for
- * the `rest` shot, measured 0.5em per `ch` for the `hover` shot taken seconds later, and measured
- * correctly again for the `focus` shot after that -- one shot in 810, on a page whose stylesheet
- * had not changed and whose fonts had all been loaded and awaited before any of the three. 0.5em
- * is not a font metric: it is what CSS says `ch` means when there is no `0` glyph to measure, so
- * the browser had no face at all at that instant. The full-page screenshot between the two shots
- * rasterises a document twelve thousand pixels tall, and the face does not survive it every time.
- *
- * A FRESH PROBE IS A HONEST DETECTOR precisely because the condition is momentary and global: the
- * page's own elements re-resolve on their own once the face returns (which is why `focus` was
- * right again), so what has to be established is that the face is back BEFORE the shot is taken,
- * not that some particular element is stale. The probe inherits `<body>`'s font, so it asks the
- * question about the font the page is actually set in, and 100ch against 50em is a comparison with
- * six ems of daylight in it for this console's Hanken Grotesk (0.56em per `ch`).
- *
- * Returns false when the face never came back. The caller drops the shot rather than recording it:
- * a missing key is a compare failure, which is loud and correct, and a shot recorded against
- * fallback metrics is a difference the next A/B blames on a stylesheet.
+ * `stale` is returned the moment it is seen rather than retried: reloading every face is exactly
+ * what does not repair a resolution the document has already made, so spending ten seconds on it
+ * would only delay the reload that does.
  */
-async function awaitMeasurableFont(page: Page): Promise<boolean> {
+async function awaitMeasurable(page: Page): Promise<Metrics> {
   for (let attempt = 0; attempt < FONT_ATTEMPTS; attempt += 1) {
-    const measurable = await page.evaluate(() => {
-      const probe = document.createElement('div');
-      probe.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:100ch;height:0;visibility:hidden;pointer-events:none';
-      document.body.appendChild(probe);
-      const width = probe.getBoundingClientRect().width;
-      const em = Number.parseFloat(window.getComputedStyle(probe).fontSize);
-      probe.remove();
-      return Math.abs(width - em * 50) > 0.5;
-    });
-    if (measurable) return true;
+    const state = await metrics(page);
+    if (state !== 'no-face') return state;
     await loadDeclaredFaces(page);
     await page.waitForTimeout(SETTLE_MS);
   }
-  return false;
+  return 'no-face';
 }
 
 /**
@@ -429,43 +489,52 @@ async function awaitMedia(page: Page): Promise<void> {
 export async function settle(page: Page, path: string): Promise<boolean> {
   try {
     await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-    for (let attempt = 0; ; attempt += 1) {
-      await page.waitForLoadState('networkidle', { timeout: 30_000 });
-      await loadDeclaredFaces(page);
-      await page.waitForLoadState('networkidle', { timeout: 30_000 });
+    return await quiet(page);
+  } catch {
+    return false;
+  }
+}
 
-      const planted = await plantedCh(page);
-      const fresh = await freshCh(page);
-      const stale = planted !== null && Math.abs(planted.width - fresh.width) > 0.5;
-      if (!stale) break;
-      if (attempt + 1 >= RELOAD_ATTEMPTS) return false;
-      await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
-    }
-    await removePlantedCh(page);
-
-    await awaitMedia(page);
+/**
+ * Everything `settle` does after the navigation, so that a reload can have it too.
+ *
+ * THE URL IS WAITED ON LAST (ISS-9327). A route whose load issues a redirect runs that load TWICE
+ * -- once on the server, which is the navigation, and once on the client after hydration, which is
+ * a second navigation at an unpredictable moment well after `networkidle` and the fonts have gone
+ * quiet. Caught on hackathon's `/`, which redirects to the current year: the shot was taken, and
+ * the `document.scrollWidth` read immediately after it died with `Execution context was destroyed,
+ * most likely because of a navigation`. A shot that survived that race would be worse -- a
+ * screenshot of a page that no longer exists, recorded under the redirecting route's key.
+ */
+async function quiet(page: Page): Promise<boolean> {
+  for (let attempt = 0; ; attempt += 1) {
     await page.waitForLoadState('networkidle', { timeout: 30_000 });
-    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-    await page.waitForTimeout(SETTLE_MS);
+    await loadDeclaredFaces(page);
+    await page.waitForLoadState('networkidle', { timeout: 30_000 });
+    if ((await awaitMeasurable(page)) !== 'stale') break;
+    if (attempt + 1 >= RELOAD_ATTEMPTS) return false;
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
+  }
+  await awaitMedia(page);
+  await page.waitForLoadState('networkidle', { timeout: 30_000 });
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  await page.waitForTimeout(SETTLE_MS);
 
-    /*
-     * AND THEN WAIT FOR THE URL TO STOP MOVING (ISS-9327). A route whose load issues a redirect
-     * runs that load TWICE -- once on the server, which is the navigation above, and once on the
-     * client after hydration, which is a second navigation at an unpredictable moment well after
-     * `networkidle` and the fonts have gone quiet. Caught on hackathon's `/`, which redirects to
-     * the current year: the shot was taken, and the `document.scrollWidth` read immediately after
-     * it died with `Execution context was destroyed, most likely because of a navigation`. A shot
-     * that survived that race would be worse -- a screenshot of a page that no longer exists,
-     * recorded under the redirecting route's key.
-     */
-    for (let attempt = 0; attempt < RELOAD_ATTEMPTS; attempt += 1) {
-      const before = page.url();
-      await page.waitForTimeout(SETTLE_MS);
-      if (page.url() === before) break;
-      await page.waitForLoadState('networkidle', { timeout: 30_000 });
-      await loadDeclaredFaces(page);
-    }
-    return true;
+  for (let attempt = 0; attempt < RELOAD_ATTEMPTS; attempt += 1) {
+    const before = page.url();
+    await page.waitForTimeout(SETTLE_MS);
+    if (page.url() === before) break;
+    await page.waitForLoadState('networkidle', { timeout: 30_000 });
+    await loadDeclaredFaces(page);
+  }
+  return true;
+}
+
+/** A fresh document of the same url, for a page that is carrying a resolution it cannot reproduce. */
+async function reload(page: Page): Promise<boolean> {
+  try {
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
+    return await quiet(page);
   } catch {
     return false;
   }
@@ -537,12 +606,12 @@ export async function hoverTargetCount(page: Page, limit: number): Promise<{ sho
  *
  * `none` is a legitimate answer — a page with no button has no hover state — and it is recorded in
  * the manifest rather than hidden, because "the same page offered a different target after the
- * upgrade" is itself a finding. `null` is the other answer and is not legitimate: it means the
- * webfont was not measurable when the shot was due, so there is nothing honest to record. See
- * `awaitMeasurableFont`.
+ * upgrade" is itself a finding. `null` is the other answer and is not legitimate: it means a `ch`
+ * on this page does not currently mean what the stylesheet says it means, so there is nothing
+ * honest to record. `captureShot` reloads and asks again. See `metrics`.
  */
 export async function applyState(page: Page, state: StateName, index = 0): Promise<string | null> {
-  if (state === 'rest') return (await awaitMeasurableFont(page)) ? 'n/a' : null;
+  if (state === 'rest') return (await awaitMeasurable(page)) === 'ok' ? 'n/a' : null;
 
   const selector = state === 'focus' ? FOCUS_SELECTOR : HOVER_SELECTOR;
 
@@ -583,7 +652,7 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
   if (found === null) return 'none';
   if (state === 'hover') await page.mouse.move(found.x, found.y);
   await page.waitForTimeout(SETTLE_MS);
-  return (await awaitMeasurableFont(page)) ? found.description : null;
+  return (await awaitMeasurable(page)) === 'ok' ? found.description : null;
 }
 
 /** Undo whatever `applyState` did, so the next state starts from rest rather than from the last one. */
@@ -608,31 +677,37 @@ export async function clearState(page: Page): Promise<void> {
  * without letting its ORDER be a finding, which it is not.
  */
 export async function dumpStyles(page: Page): Promise<StyleDump> {
-  const raw = await page.evaluate(() => {
-    const SKIP = new Set(['SCRIPT', 'STYLE', 'LINK', 'META', 'TITLE', 'HEAD', 'NOSCRIPT', 'TEMPLATE']);
-    const root = document.documentElement;
-    const props = Array.from(getComputedStyle(root));
-    const elements: { index: number; tag: string; id?: string; testId?: string; className?: string; values: string[] }[] = [];
-    let index = 0;
-    const walk = (element: Element): void => {
-      if (SKIP.has(element.tagName)) return;
-      const computed = getComputedStyle(element);
-      const testId = element.getAttribute('data-testid');
-      const classAttribute = element.getAttribute('class');
-      elements.push({
-        index,
-        tag: element.tagName.toLowerCase(),
-        ...(element.id ? { id: element.id } : {}),
-        ...(testId ? { testId: testId } : {}),
-        ...(classAttribute ? { className: classAttribute.split(/\s+/).filter(Boolean).sort().join(' ') } : {}),
-        values: props.map((property) => computed.getPropertyValue(property))
-      });
-      index += 1;
-      for (const child of Array.from(element.children)) walk(child);
-    };
-    walk(root);
-    return { props, elements };
-  });
+  const raw = await page.evaluate(
+    ({ probeId }) => {
+      const SKIP = new Set(['SCRIPT', 'STYLE', 'LINK', 'META', 'TITLE', 'HEAD', 'NOSCRIPT', 'TEMPLATE']);
+      const root = document.documentElement;
+      const props = Array.from(getComputedStyle(root));
+      const elements: { index: number; tag: string; id?: string; testId?: string; className?: string; values: string[] }[] = [];
+      let index = 0;
+      const walk = (element: Element): void => {
+        // The ch probe is the harness, not the page, and it stays in the document for the whole of
+        // it -- so it is skipped WITHOUT taking an index, which keeps every other element's index
+        // exactly what it would be in a document the harness had never touched.
+        if (SKIP.has(element.tagName) || element.id === probeId) return;
+        const computed = getComputedStyle(element);
+        const testId = element.getAttribute('data-testid');
+        const classAttribute = element.getAttribute('class');
+        elements.push({
+          index,
+          tag: element.tagName.toLowerCase(),
+          ...(element.id ? { id: element.id } : {}),
+          ...(testId ? { testId: testId } : {}),
+          ...(classAttribute ? { className: classAttribute.split(/\s+/).filter(Boolean).sort().join(' ') } : {}),
+          values: props.map((property) => computed.getPropertyValue(property))
+        });
+        index += 1;
+        for (const child of Array.from(element.children)) walk(child);
+      };
+      walk(root);
+      return { props, elements };
+    },
+    { probeId: CH_PROBE_ID }
+  );
   return encodeStyles(raw.props, raw.elements as RawElement[]);
 }
 /** The id of the stylesheet planted for the duration of one shot. See `screenshotFrozen`. */
@@ -670,8 +745,22 @@ const FREEZE_CSS = `*, *::before, *::after, *::backdrop {
  *
  * A SETTLE AFTER PLANTING IT, because de-compositing is a repaint like any other and a screenshot
  * taken in the same frame can catch the old raster.
+ *
+ * THE FONT METRICS ARE CHECKED ON BOTH SIDES OF THE SHOT, AND THIS IS THE ONLY PLACE WHERE THAT
+ * CHECK IS WORTH ANYTHING. Planting the stylesheet above is a whole-tree style recalc, and a
+ * recalc is exactly when Chromium re-resolves every font-relative unit on the page -- so a recalc
+ * that lands in the instant the face is gone rewrites `max-width: 88ch` to `0.5em` per `ch` across
+ * the whole document, AFTER every check made before the state was applied has passed. Measured on
+ * the decision detail page: 88ch shot at 638px on one capture and 714.56px on the next, of the
+ * same server, with 806 of the other 810 shots identical. The width is re-read after the
+ * screenshot as well, because the shot itself rasterises a document twelve thousand pixels tall
+ * and the face does not survive every one of them.
+ *
+ * `null` is the answer when the page could not be shot on metrics it can reproduce. It is not a
+ * dropped shot: `captureShot` reloads the document, which is the one thing that clears a stale
+ * resolution, and takes it again.
  */
-export async function screenshotFrozen(page: Page): Promise<Buffer> {
+export async function screenshotFrozen(page: Page): Promise<Buffer | null> {
   await page.evaluate(
     ({ id, css }) => {
       const style = document.createElement('style');
@@ -683,9 +772,63 @@ export async function screenshotFrozen(page: Page): Promise<Buffer> {
   );
   await page.waitForTimeout(SETTLE_MS);
   try {
-    return await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css', type: 'png' });
+    await loadDeclaredFaces(page);
+    if ((await awaitMeasurable(page)) !== 'ok') return null;
+    const before = await chWidth(page);
+    const png = await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css', type: 'png' });
+    if ((await awaitMeasurable(page)) !== 'ok') return null;
+    if (Math.abs((await chWidth(page)) - before) > 0.5) return null;
+    return png;
   } finally {
     await page.evaluate(({ id }) => document.getElementById(id)?.remove(), { id: FREEZE_ID });
   }
 }
+
+/** How many documents a single shot is allowed to need before it is given up on. */
+const SHOT_ATTEMPTS = 3;
+
+/** One shot: what the state was applied to, and the png. */
+export interface Shot {
+  /** The element `applyState` targeted, or `none` where the page offered none. */
+  target: string;
+  png: Buffer;
+}
+
+/**
+ * One state, shot on metrics the page can reproduce, reloading the document until it can.
+ *
+ * THE REPAIR IS A RELOAD AND CANNOT BE ANYTHING ELSE. A `ch` is resolved at layout and kept, so a
+ * document that has resolved one against a face it no longer has is carrying a width that no
+ * amount of loading the face back will correct -- only a document that has not made that
+ * resolution yet. Three tries, and then the shot is dropped rather than recorded on the wrong
+ * metrics: a key missing from one side is a compare failure, which is loud and correct, and a shot
+ * recorded against fallback metrics is a difference the next A/B blames on a stylesheet.
+ *
+ * A reload puts the page back at rest, which is why the state is applied again inside the loop
+ * rather than once outside it. `index` survives that, and has to: it is an ordinal among the
+ * page's own eligible elements rather than a coordinate, so the reloaded document resolves it to
+ * the same element without anything having to be re-measured across the reload.
+ */
+export async function captureShot(page: Page, state: StateName, index = 0): Promise<Shot | null> {
+  for (let attempt = 0; attempt < SHOT_ATTEMPTS; attempt += 1) {
+    if (attempt > 0 && !(await reload(page))) return null;
+    const target = await applyState(page, state, index);
+    if (target === null) continue;
+    const png = await screenshotFrozen(page);
+    if (png !== null) return { target, png };
+  }
+  return null;
+}
 // dry-copy-end
+
+/**
+ * The `localStorage` key `app.html` reads the theme from, in an inline script before SvelteKit
+ * boots.
+ *
+ * REPO-SPECIFIC, and outside the shared region above for exactly that reason: it is the app's own
+ * key and not the harness's — the consoles read `playbook-theme`, playbook-www reads `ca-theme`.
+ * Hard-coding it inside the region is what kept playbook-www out of it, and out of every
+ * determinism fix the region has had since. `themedContext` reads it at call time, so declaring it
+ * here is enough for a repo to state its own key and still share every line of the harness.
+ */
+const THEME_STORAGE_KEY = 'playbook-theme';
