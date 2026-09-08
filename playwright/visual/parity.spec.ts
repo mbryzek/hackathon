@@ -18,7 +18,7 @@
  */
 // dry-copy: visual-parity/parity-spec — every copy of this region must match; `dev repo copies` checks it
 import { test } from '@playwright/test';
-import { applyState, clearState, dumpStyles, hoverTargetCount, screenshotFrozen, settle, themedContext } from './capture.ts';
+import { captureShot, clearState, dumpStyles, hoverTargetCount, settle, themedContext } from './capture.ts';
 import { themedPath } from './pages.ts';
 import { paths, sha256, writeFile, writeStyles } from './files.ts';
 import { hoverState, shotKey, STATES, THEMES, VIEWPORTS } from './matrix.ts';
@@ -75,20 +75,14 @@ for (const page of plan.targets) {
              */
             for (let index = 0; index < Math.max(counted.shots, 1); index += 1) {
               const key = shotKey(page.slug, theme, viewport.name, state === 'hover' ? hoverState(index) : state);
-              const target = await applyState(browserPage, state, index);
-              // `null` means the webfont was not measurable when the shot was due, so every
-              // font-relative length on the page would be recorded against fallback metrics. The
-              // shot is dropped rather than written: a key missing from one side is a compare
-              // failure, and a shot recorded on the wrong metrics is a difference the next A/B
-              // blames on a stylesheet. See `awaitMeasurableFont`.
-              if (target === null) {
-                uncovered.push([key, 'webfont never became measurable when the shot was due']);
-                await clearState(browserPage);
-                continue;
-              }
-              // The style dump BELOW is taken after this returns, and `screenshotFrozen` has put
-              // the page back by then -- so the dump still describes the page rather than the
-              // harness.
+              // `null` means the page could not be shot on font metrics it can reproduce, three
+              // documents running -- so every font-relative length on it would be recorded against
+              // fallback metrics. The shot is dropped rather than written: a key missing from one
+              // side is a compare failure, and a shot recorded on the wrong metrics is a difference
+              // the next A/B blames on a stylesheet. See `captureShot`.
+              //
+              // The style dump BELOW is taken after it returns, and `screenshotFrozen` has put the
+              // page back by then -- so the dump still describes the page rather than the harness.
               //
               // ONE ARTEFACT FOLLOWS FROM THAT ORDER, and it is in the diagnostic only: putting the
               // animations back RESTARTS an `animation-fill-mode: both` entrance, so a
@@ -96,14 +90,19 @@ for (const page of plan.targets) {
               // in both directions, on shots whose PNGs are identical. The hash is the verdict and
               // it is taken while the page is frozen; read an opacity difference on a revealing
               // card as this, not as a stylesheet change.
-              const png = await screenshotFrozen(browserPage);
-              writeFile(paths.png(plan.out, key), png);
+              const shot = await captureShot(browserPage, state, index);
+              if (shot === null) {
+                uncovered.push([key, 'no document resolved ch against the webfont; shot dropped']);
+                await clearState(browserPage);
+                continue;
+              }
+              writeFile(paths.png(plan.out, key), shot.png);
               writeStyles(plan.out, key, await dumpStyles(browserPage));
               const size = await browserPage.evaluate(() => ({
                 width: document.documentElement.scrollWidth,
                 height: document.documentElement.scrollHeight
               }));
-              entries[key] = { sha256: sha256(png), width: size.width, height: size.height, target };
+              entries[key] = { sha256: sha256(shot.png), width: size.width, height: size.height, target: shot.target };
               await clearState(browserPage);
             }
           }

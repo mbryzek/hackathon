@@ -113,7 +113,7 @@ Pinned identically on both sides, and each line is a hazard that was measured ra
 a fixed clock (`Date.now()` frozen, timers still running), a seeded `Math.random`, reduced motion,
 `animations: 'disabled'` at screenshot time, `document.fonts.ready`, a pinned `colorScheme` and
 `deviceScaleFactor`, and a settle after each state change that outlasts the stylesheet's longest
-transition (`SETTLE_MS` in `capture.ts` is 650ms; this site's longest is `duration-500`, which is
+transition (`SETTLE_MS` in `capture.ts` is 900ms; this site's longest is `duration-500`, which is
 the longest any repo carrying that region declares and therefore what the constant is set from). `capture.ts`
 documents why each one is there, and `playwright.visual.config.ts` pins Chromium's rasteriser,
 which is not deterministic by default.
@@ -123,6 +123,19 @@ photo and video galleries during SSR, so it serves a different document to every
 `server-determinism.mjs` is `--import`ed into the server process to pin that, and the A/A gate is
 what found it (24 of 189 shots, on exactly the four shuffling pages, with identical computed
 styles). Start both sides of an A/B the same way or neither.
+
+The font is the one that needed more than waiting. A `ch` is resolved **at layout** and kept, so a
+document that laid itself out while the self-hosted face was momentarily gone renders every
+`max-width: 88ch` on it at `0.5em` per `ch` and goes on doing so however loaded the face is by the
+time anything asks — which is how one page came back 714.56px wide in one capture and 638px wide in
+the next of the same server. A `100ch` box is therefore planted before the first layout and kept for
+the life of the document, and the shot is only taken while it still measures what a box created now
+measures. A page that cannot answer that is reloaded and shot again, and dropped rather than
+recorded on fallback metrics if three documents running cannot.
+
+`VISUAL_COOKIES` is a `{"NAME":"value"}` object planted on every context before the first
+navigation, for a repo whose interesting pages are behind a session. Unset is the ordinary case and
+plants nothing.
 
 `focus` and `hover` never scroll, because a full-page screenshot renders fixed and sticky chrome at
 the current scroll offset: both are confined to the elements already inside the initial viewport.
