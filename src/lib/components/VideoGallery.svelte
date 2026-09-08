@@ -73,7 +73,7 @@
           {#if !playingVideos.has(index)}
             <button
               type="button"
-              class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/30 opacity-100 transition-all duration-300 focus:outline-hidden focus:ring-4 focus:ring-yellow-400 focus:ring-offset-2 group-hover:bg-black/40"
+              class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/30 opacity-100 transition-all duration-300 group-hover:bg-black/40 focus:ring-4 focus:ring-yellow-400 focus:ring-offset-2 focus:outline-hidden"
               onclick={playVideo}
               aria-label="Play video: {video.title}"
             >

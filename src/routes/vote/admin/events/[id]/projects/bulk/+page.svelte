@@ -89,7 +89,7 @@ Code Helper,AI-powered coding assistant`;
         >
           {#if isSubmitting}
             <span class="inline-flex items-center">
-              <Spinner class="-ml-1 mr-2" />
+              <Spinner class="mr-2 -ml-1" />
               Adding Projects...
             </span>
           {:else}

@@ -29,7 +29,7 @@
 </script>
 
 <Shell title="Contact The Hackathon Organizers">
-  <div class="mx-auto max-w-2xl space-y-8 px-4 py-8">
+  <div class="mx-auto space-y-8 max-w-2xl px-4 py-8">
     <!-- Introduction -->
     <p class="text-center text-lg font-light text-gray-800">
       The Bergen Tech Hackathon is run by Bergen Youth Enrichment, a 501(c)(3) non-profit organization which is 100% volunteer-run.
@@ -89,7 +89,7 @@
           </div>
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 {copied
+            class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden {copied
               ? 'bg-green-100 text-green-700'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}"
             onclick={copyToClipboard}
@@ -117,7 +117,7 @@
         <div class="pt-2 text-center">
           <a
             href="mailto:{email}"
-            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden"
           >
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path

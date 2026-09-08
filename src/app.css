@@ -141,7 +141,7 @@
 
   /* The one colour tailwind.config.js added. Unused today; carried so the upgrade changes
      nothing about what compiles. */
-  --color-hackathon-blue: #5B7FF6;
+  --color-hackathon-blue: #5b7ff6;
 
   /* v3 type scale: absolute line heights. Tailwind 4 makes them unitless ratios, which is
      identical on an element that takes the utility own font size and different on one that
@@ -231,12 +231,12 @@
 
   /* Better focus styles for accessibility */
   :focus-visible {
-    @apply outline-hidden ring-2 ring-yellow-400 ring-offset-2;
+    @apply ring-2 ring-yellow-400 ring-offset-2 outline-hidden;
   }
 
   /* Remove default focus outline when using mouse */
   :focus:not(:focus-visible) {
-    @apply outline-hidden ring-0;
+    @apply ring-0 outline-hidden;
   }
 }
 
@@ -313,11 +313,11 @@
   @apply relative h-0 w-full overflow-hidden rounded-lg pb-[56.25%] shadow-lg;
 
   & iframe {
-    @apply absolute left-0 top-0 h-full w-full;
+    @apply absolute top-0 left-0 h-full w-full;
   }
 
   & video {
-    @apply absolute left-0 top-0 h-full w-full;
+    @apply absolute top-0 left-0 h-full w-full;
   }
 }
 

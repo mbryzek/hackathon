@@ -24,7 +24,7 @@
 </script>
 
 <Shell title="Program Ad Space">
-  <div class="mx-auto max-w-3xl space-y-12 px-4 py-8 pb-24 text-lg leading-relaxed">
+  <div class="mx-auto space-y-12 max-w-3xl px-4 py-8 pb-24 text-lg leading-relaxed">
     <p class="font-light text-gray-800">
       Our printed event program is handed to every participant, parent, and judge at the hackathon. Place an ad to support the event and
       connect with our community of students, families, and educators — or create an ad to further encourage your students.
@@ -39,9 +39,9 @@
       <table class="w-full border-collapse text-left">
         <thead>
           <tr class="border-b-2 border-gray-200">
-            <th class="py-3 pr-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Size</th>
-            <th class="py-3 pr-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Dimensions</th>
-            <th class="py-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Price</th>
+            <th class="py-3 pr-4 text-sm font-semibold tracking-wide text-gray-500 uppercase">Size</th>
+            <th class="py-3 pr-4 text-sm font-semibold tracking-wide text-gray-500 uppercase">Dimensions</th>
+            <th class="py-3 text-sm font-semibold tracking-wide text-gray-500 uppercase">Price</th>
           </tr>
         </thead>
         <tbody>
@@ -101,14 +101,14 @@
             Alex, we are SO proud of you!
           </p>
           {#if encouragementSize === 0}
-            <p class="mt-2 text-xs italic text-gray-700">
+            <p class="mt-2 text-xs text-gray-700 italic">
               From your very first "Hello World" to building real apps &mdash; watching you grow as a coder and a person has been the
               greatest joy. Today, show them what you've got. We'll be cheering the loudest!
             </p>
             <p class="mt-3 text-xs" style="color: #b8960c;">Love, Mom & Dad</p>
             <p class="mt-1 text-xs text-gray-500">&mdash; The Martinez Family</p>
           {:else if encouragementSize === 1}
-            <p class="mt-1 text-xs italic text-gray-700">We're so proud of everything you've built. Show them what you've got!</p>
+            <p class="mt-1 text-xs text-gray-700 italic">We're so proud of everything you've built. Show them what you've got!</p>
             <p class="mt-2 text-xs" style="color: #b8960c;">Love, Mom & Dad</p>
           {:else}
             <p class="mt-1 text-xs" style="color: #b8960c;">Love, Mom & Dad</p>
@@ -168,10 +168,10 @@
             Your Business Name
           </p>
           {#if businessSize === 0}
-            <p class="mt-2 text-xs italic text-gray-700">Your message or tagline here</p>
+            <p class="mt-2 text-xs text-gray-700 italic">Your message or tagline here</p>
             <p class="mt-2 text-xs" style="color: #b8960c;">yourwebsite.com</p>
           {:else if businessSize === 1}
-            <p class="mt-1 text-xs italic text-gray-700">Your tagline here</p>
+            <p class="mt-1 text-xs text-gray-700 italic">Your tagline here</p>
           {/if}
         </div>
       </div>
@@ -182,7 +182,7 @@
   </div>
 
   <!-- Floating CTA -->
-  <div class="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-yellow-400 bg-yellow-50 px-4 py-3 text-center">
+  <div class="fixed right-0 bottom-0 left-0 z-50 border-t-2 border-yellow-400 bg-yellow-50 px-4 py-3 text-center">
     <div class="flex items-center justify-center gap-3">
       <p class="text-sm font-semibold text-gray-900 sm:text-base">Deadline has passed. Support your students with a donation.</p>
       <Button href="/donate" label="Donate" variant="primary" size="sm" />

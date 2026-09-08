@@ -54,32 +54,32 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"> Event </th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"> Key </th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"> Status </th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"> Created </th>
+              <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"> Event </th>
+              <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"> Key </th>
+              <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"> Status </th>
+              <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"> Created </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white">
             {#each events as event (event.id)}
               <tr class="transition-colors hover:bg-gray-50">
-                <td class="whitespace-nowrap px-6 py-4">
+                <td class="px-6 py-4 whitespace-nowrap">
                   <a
                     href={urls.voteAdminEvent(event.id)}
-                    class="rounded-sm font-medium text-gray-900 hover:text-yellow-600 focus:outline-hidden focus:ring-2 focus:ring-yellow-400"
+                    class="rounded-sm font-medium text-gray-900 hover:text-yellow-600 focus:ring-2 focus:ring-yellow-400 focus:outline-hidden"
                   >
                     {event.name}
                   </a>
                 </td>
-                <td class="whitespace-nowrap px-6 py-4">
+                <td class="px-6 py-4 whitespace-nowrap">
                   <code class="rounded-sm bg-gray-100 px-2 py-1 text-sm text-gray-600">{event.key}</code>
                 </td>
-                <td class="whitespace-nowrap px-6 py-4">
+                <td class="px-6 py-4 whitespace-nowrap">
                   <span class="rounded-full px-2 py-1 text-xs font-medium {eventStatusBadgeClass(event.status)}">
                     {eventStatusLabel(event.status)}
                   </span>
                 </td>
-                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {formatDate(event.created_at)}
                 </td>
               </tr>

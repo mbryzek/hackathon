@@ -37,7 +37,7 @@
   </div>
 
   <!-- Benefits -->
-  <ul class="mb-6 grow space-y-3">
+  <ul class="space-y-3 mb-6 grow">
     {#each benefits as benefit}
       <li class="flex items-start gap-3">
         <svg class="h-5 w-5 {checkClasses} mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

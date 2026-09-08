@@ -4,7 +4,7 @@
 </script>
 
 <Shell title="Press">
-  <div class="mx-auto max-w-3xl space-y-8">
+  <div class="mx-auto space-y-8 max-w-3xl">
     {#each pressReleases as release}
       <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-xs">
         <time datetime={release.dateIso} class="text-sm text-gray-500">{release.date}</time>

@@ -374,31 +374,31 @@
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"> Code </th>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"> Type </th>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"> Status </th>
-                <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"> Actions </th>
+                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"> Code </th>
+                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"> Type </th>
+                <th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"> Status </th>
+                <th class="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase"> Actions </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white">
               {#each data.codes as code (code.id)}
                 <tr class="transition-colors hover:bg-gray-50">
-                  <td class="whitespace-nowrap px-6 py-4">
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <code class="font-mono text-lg font-bold tracking-widest">{code.code}</code>
                   </td>
-                  <td class="whitespace-nowrap px-6 py-4">
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <span class="rounded-full px-2 py-1 text-xs font-medium {voterTypeBadgeClass(code.voter_type)}">
                       {voterTypeLabel(code.voter_type)}
                     </span>
                   </td>
-                  <td class="whitespace-nowrap px-6 py-4">
+                  <td class="px-6 py-4 whitespace-nowrap">
                     {#if code.has_voted}
                       <span class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800"> Voted </span>
                     {:else}
                       <span class="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800"> Unused </span>
                     {/if}
                   </td>
-                  <td class="whitespace-nowrap px-6 py-4 text-right">
+                  <td class="px-6 py-4 text-right whitespace-nowrap">
                     <form
                       method="POST"
                       action="?/delete"

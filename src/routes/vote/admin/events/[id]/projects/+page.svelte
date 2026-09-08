@@ -202,7 +202,7 @@
                   <h3 class="text-lg font-semibold text-gray-900">{project.name}</h3>
                 </div>
                 {#if project.description}
-                  <p class="ml-8 mt-1 text-gray-600">{project.description}</p>
+                  <p class="mt-1 ml-8 text-gray-600">{project.description}</p>
                 {/if}
               </div>
               <div class="flex items-center gap-2">

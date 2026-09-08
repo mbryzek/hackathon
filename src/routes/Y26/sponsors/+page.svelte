@@ -30,7 +30,7 @@
 
   {#if leadSponsors.length > 0}
     <div class="mb-10">
-      <h2 class="mb-4 text-center text-lg font-semibold uppercase tracking-wide text-gray-600">Lead Sponsor</h2>
+      <h2 class="mb-4 text-center text-lg font-semibold tracking-wide text-gray-600 uppercase">Lead Sponsor</h2>
       <div class="flex justify-center">
         {#each leadSponsors as sponsor}
           <div class="w-full max-w-md">

@@ -46,7 +46,7 @@ function seedOf(url) {
     hash ^= url.charCodeAt(i);
     hash = Math.imul(hash, 0x01000193) >>> 0;
   }
-  return (hash & 0x7fffffff) || 1;
+  return hash & 0x7fffffff || 1;
 }
 
 Math.random = () => {

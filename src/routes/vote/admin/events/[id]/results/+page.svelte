@@ -165,7 +165,7 @@
 
   {#if results}
     <!-- Controls -->
-    <div class="{isPresentationMode ? 'absolute right-4 top-4 z-10' : 'mb-6'} flex gap-4">
+    <div class="{isPresentationMode ? 'absolute top-4 right-4 z-10' : 'mb-6'} flex gap-4">
       <button
         type="button"
         onclick={togglePresentationMode}
@@ -235,12 +235,14 @@
               <div class={isPresentationMode ? 'space-y-6' : 'space-y-4'}>
                 {#each category.projects as projectTally, index (projectTally.project.id)}
                   {@const rank = getRank(category.projects, index)}
-                  <div class={isPresentationMode ? 'rounded-xl bg-[rgb(255_255_255_/_0.1)] p-6 backdrop-blur-sm' : 'rounded-xl bg-white p-6 shadow-sm'}>
+                  <div
+                    class={isPresentationMode
+                      ? 'rounded-xl bg-[rgb(255_255_255_/_0.1)] p-6 backdrop-blur-sm'
+                      : 'rounded-xl bg-white p-6 shadow-sm'}
+                  >
                     <div class="flex items-center gap-4">
                       <div
-                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold {getRankBadgeClass(
-                          rank
-                        )}"
+                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold {getRankBadgeClass(rank)}"
                       >
                         {rank}
                       </div>
@@ -257,7 +259,9 @@
                             {projectTally.vote_count}
                           </span>
                         </div>
-                        <div class="{isPresentationMode ? 'h-4 bg-[rgb(255_255_255_/_0.1)]' : 'h-3 bg-gray-100'} overflow-hidden rounded-full">
+                        <div
+                          class="{isPresentationMode ? 'h-4 bg-[rgb(255_255_255_/_0.1)]' : 'h-3 bg-gray-100'} overflow-hidden rounded-full"
+                        >
                           <div
                             class="h-full {getRankBarClass(rank, category.accent.leadBar)} rounded-full transition-all duration-500"
                             style="width: {getBarWidth(projectTally.vote_count)}"
