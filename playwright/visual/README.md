@@ -84,7 +84,8 @@ png/<key>.png                 the shot
 styles/<key>.json.gz          every element's full getComputedStyle map; the diagnostic
 ```
 
-`<key>` is `<page-slug>--<theme>--<viewport>--<state>`. This site has no theme, so the two theme
+`<key>` is `<page-slug>--<theme>--<viewport>--<state>`, where `<state>` is `rest`, `focus`,
+or `hover-<n>` — one per interactive element the page offered inside the viewport. This site has no theme, so the two theme
 values render identically and each page is captured twice — see `matrix.ts` on why the degenerate
 axis is kept, and why two shots that must be equal are a free control on the harness itself.
 
@@ -123,10 +124,16 @@ photo and video galleries during SSR, so it serves a different document to every
 what found it (24 of 189 shots, on exactly the four shuffling pages, with identical computed
 styles). Start both sides of an A/B the same way or neither.
 
-`focus` and `hover` never scroll: both pick the first eligible element already inside the initial
-viewport, because a full-page screenshot renders fixed and sticky chrome at the current scroll
-offset. A page that offers no target records `none` in the manifest, and a _change_ in which
-element was targeted is itself reported.
+`focus` and `hover` never scroll, because a full-page screenshot renders fixed and sticky chrome at
+the current scroll offset: both are confined to the elements already inside the initial viewport.
+`focus` takes the first of them. **`hover` takes every one of them, in turn** — one shot per
+element, keyed `hover-0`, `hover-1`, ..., capped at `VISUAL_HOVER_LIMIT` (default 6). The first
+interactive element in document order is deterministic, which is why it was the original target, and
+it is almost never the affordance a `hover:` rule is about: a form puts its decoration before its
+submit, so a harness that hovered only it spent every button-bearing shot on a 20x20
+password-visibility toggle and reported "equal" about a primary button it never touched. A page that
+offers no target records one shot targeted `none`; a _change_ in which element a key was targeted at
+is itself reported; and whatever the cap did not reach is listed in the manifest's `uncovered`.
 
 ## What is repo-specific
 

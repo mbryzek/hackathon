@@ -35,6 +35,15 @@ export interface Manifest {
   baseUrl: string;
   /** Wall-clock of the capture. Not compared, and deliberately not part of any key. */
   capturedAt: string;
+  /**
+   * The cap this capture applied to `hover` shots per page/theme/viewport. Reported, not compared.
+   *
+   * It is here because it decides the KEY SET: two captures taken under different limits agree on
+   * every key up to the smaller one and differ past it, which `compareManifests` reports as shots
+   * present on one side only. That is the right verdict and the wrong explanation, so the number
+   * is written down and `compare.ts` names it.
+   */
+  hoverLimit: number;
   /** Route templates this run could not point at, `[template, why]`. Reported, never compared. */
   uncovered: [string, string][];
   entries: Record<string, ManifestEntry>;

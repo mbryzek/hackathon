@@ -7,7 +7,14 @@ function entry(sha256: string): ManifestEntry {
 }
 
 function manifest(entries: Record<string, ManifestEntry>): Manifest {
-  return { set: 'preview', baseUrl: 'http://localhost:5173', capturedAt: '2025-06-15T12:00:00.000Z', uncovered: [], entries };
+  return {
+    set: 'preview',
+    baseUrl: 'http://localhost:5173',
+    capturedAt: '2025-06-15T12:00:00.000Z',
+    hoverLimit: 6,
+    uncovered: [],
+    entries
+  };
 }
 
 describe('compareManifests', () => {

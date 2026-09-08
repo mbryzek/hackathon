@@ -9,7 +9,7 @@
 import { readFileSync } from 'node:fs';
 import { liveTargets, routeTemplates, staticTargets, isSetName, type RouteFacts, type SetName } from './pages.ts';
 import { listFiles } from './files.ts';
-import type { PageTarget } from './matrix.ts';
+import { hoverLimit, type PageTarget } from './matrix.ts';
 
 export interface CapturePlan {
   set: SetName;
@@ -17,6 +17,14 @@ export interface CapturePlan {
   out: string;
   targets: PageTarget[];
   uncovered: [string, string][];
+  /**
+   * How many `hover` shots one page/theme/viewport may contribute -- `VISUAL_HOVER_LIMIT`.
+   *
+   * Part of the plan rather than a constant read where it is used, because the three readers of
+   * this module -- the spec, the setup and the teardown -- have to agree on it for the same reason
+   * they have to agree on the page list: it decides which keys the capture writes.
+   */
+  hoverLimit: number;
 }
 
 function required(name: string): string {
@@ -76,13 +84,14 @@ export function capturePlan(): CapturePlan {
   if (!isSetName(setName)) throw new Error(`visual: VISUAL_SET must be "static" or "live", got "${setName}"`);
   const baseUrl = required('VISUAL_BASE_URL');
   const out = required('VISUAL_OUT');
+  const hovers = hoverLimit(process.env['VISUAL_HOVER_LIMIT']);
 
   const pages = listFiles('src/routes', '+page.svelte');
   if (setName === 'static') {
     const facts: RouteFacts = { pages, serverPages: listFiles('src/routes', '+page.server.ts'), dynamicRoots: dynamicRoots() };
     const { targets, uncovered } = staticTargets(facts);
-    return { set: setName, baseUrl, out, targets, uncovered };
+    return { set: setName, baseUrl, out, targets, uncovered, hoverLimit: hovers };
   }
   const { targets, uncovered } = liveTargets(routeTemplates(pages), seeds());
-  return { set: setName, baseUrl, out, targets, uncovered };
+  return { set: setName, baseUrl, out, targets, uncovered, hoverLimit: hovers };
 }

@@ -27,8 +27,9 @@
  *     wrapping it in `@media (hover: hover)`. This site writes 117 of them, and its focus ring is
  *     declared once in `app.css` on `:focus-visible` for every page at once.
  *
- * The three multiply out to eighteen shots per page. That is the point: the upgrade is claimed to
- * be a no-op, and a no-op claim is only worth what it was tested against.
+ * The three multiply out to twelve shots per page plus one per hover target — `hover` is the axis
+ * member that is not a single shot, see `STATES`. That is the point: the upgrade is claimed to be a
+ * no-op, and a no-op claim is only worth what it was tested against.
  */
 
 /**
@@ -59,11 +60,17 @@ export const VIEWPORTS: readonly Viewport[] = [
 ] as const;
 
 /**
- * `rest` is the page as it loads. `focus` puts the keyboard focus on the first form control that
- * is already inside the viewport, and `hover` puts the pointer on the first button that is — both
- * constrained to the initial viewport ON PURPOSE, because the alternative (playwright's own
- * `hover()`, which scrolls) would move the document under a full-page screenshot and make the shot
- * depend on where the target happened to sit.
+ * `rest` is the page as it loads. `focus` puts the keyboard focus on the first form control that is
+ * already inside the viewport. `hover` puts the pointer on EVERY interactive element that is, one
+ * shot each — all three constrained to the initial viewport ON PURPOSE, because the alternative
+ * (playwright's own `hover()`, which scrolls) would move the document under a full-page screenshot
+ * and make the shot depend on where the target happened to sit.
+ *
+ * `hover` IS THE ONE MEMBER OF THIS AXIS THAT IS NOT ONE SHOT, which is why `shotStates` exists
+ * below: a page contributes `hover-0`, `hover-1`, ... up to `DEFAULT_HOVER_LIMIT`. The first
+ * interactive element in document order is deterministic and is almost never the affordance a
+ * `hover:` rule is about, so hovering only it spends every button shot on a form's decoration
+ * (ISS-9603).
  */
 export const STATES = ['rest', 'focus', 'hover'] as const;
 export type StateName = (typeof STATES)[number];
@@ -77,13 +84,58 @@ export interface PageTarget {
   slug: string;
 }
 
+/**
+ * `hover-0`, `hover-1`, ... -- the state segment of the key for one indexed hover shot.
+ *
+ * `hover` is the one state that is not a single shot: the pointer goes on every eligible element
+ * inside the viewport in turn, because the FIRST one in document order is almost never the
+ * affordance a `hover:` rule is about. `capture.ts`'s `hoverTargetCount` carries the argument and
+ * the measurement behind it (ISS-9603).
+ */
+export type HoverState = `hover-${number}`;
+
+export function hoverState(index: number): HoverState {
+  return `hover-${index}`;
+}
+
+/** What a shot key's last segment can be: a singleton state, or one indexed hover. */
+export type ShotState = StateName | HoverState;
+
+/**
+ * How many hover shots one page/theme/viewport may contribute when nothing says otherwise.
+ *
+ * SIX, not "all of them", because every shot is a full-page PNG and a style dump: a console page
+ * carrying a nav, a breadcrumb and a table of row links offers dozens of eligible elements, and an
+ * uncapped capture would multiply its own size by that. Six reaches past the decoration a form puts
+ * first -- the failure this cap sits on top of -- on every page measured, and what it does not
+ * reach is REPORTED in the manifest rather than dropped.
+ */
+export const DEFAULT_HOVER_LIMIT = 6;
+
+/**
+ * `VISUAL_HOVER_LIMIT`, parsed.
+ *
+ * A THROW RATHER THAN A FALLBACK on anything unparseable. The limit decides the key set a capture
+ * writes, so a typo that silently became the default would produce a capture whose keys do not
+ * match the other side's, and the compare would report hundreds of shots present on one side only
+ * -- which is loud, but names the wrong cause.
+ */
+export function hoverLimit(raw: string | undefined): number {
+  if (raw === undefined || raw === '') return DEFAULT_HOVER_LIMIT;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`visual: VISUAL_HOVER_LIMIT must be a positive integer, got "${raw}"`);
+  }
+  return value;
+}
+
 /** One shot: a page in one theme, at one viewport, in one state. */
 export interface Shot {
   key: string;
   page: PageTarget;
   theme: ThemeName;
   viewport: Viewport;
-  state: StateName;
+  state: ShotState;
 }
 
 /**
@@ -125,16 +177,34 @@ export function pageTargets(paths: readonly string[]): PageTarget[] {
 }
 
 /** `<slug>--<theme>--<viewport>--<state>`, the identity of one shot in both captures. */
-export function shotKey(slug: string, theme: ThemeName, viewport: string, state: StateName): string {
+export function shotKey(slug: string, theme: ThemeName, viewport: string, state: ShotState): string {
   return `${slug}--${theme}--${viewport}--${state}`;
 }
 
-/** Every shot for one page, in a fixed order: theme outermost, then viewport, then state. */
-export function shotsFor(page: PageTarget): Shot[] {
+/**
+ * The state segments one page/theme/viewport contributes, given how many hover targets it offered.
+ *
+ * A PAGE OFFERING NONE STILL CONTRIBUTES `hover-0`, recorded with the target `none`. That keeps the
+ * key set independent of whether a page has a button today: the day it grows one, that is a
+ * `target` change on a key both captures hold, rather than a new key with nothing to compare it to.
+ */
+export function shotStates(hoverShots: number): ShotState[] {
+  return STATES.flatMap((state) =>
+    state === 'hover' ? Array.from({ length: Math.max(hoverShots, 1) }, (_, index) => hoverState(index)) : [state]
+  );
+}
+
+/**
+ * Every shot for one page, in a fixed order: theme outermost, then viewport, then state.
+ *
+ * `hoverShots` is a per-page number the browser answers (`hoverTargetCount`), so this takes it
+ * rather than deriving it: the count is a property of the rendered page, not of the matrix.
+ */
+export function shotsFor(page: PageTarget, hoverShots: number): Shot[] {
   const shots: Shot[] = [];
   for (const theme of THEMES) {
     for (const viewport of VIEWPORTS) {
-      for (const state of STATES) {
+      for (const state of shotStates(hoverShots)) {
         shots.push({ key: shotKey(page.slug, theme, viewport.name, state), page, theme, viewport, state });
       }
     }

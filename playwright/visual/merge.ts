@@ -16,7 +16,15 @@ import { capturePlan } from './plan.ts';
 
 interface Shard {
   entries: Record<string, ManifestEntry>;
-  skipped: string[];
+  /**
+   * `[what, why]` for every rendering this page's test could not shoot.
+   *
+   * The WHY comes from the spec rather than being supplied here, because the reasons are no longer
+   * one: a page that never settled, a shot whose webfont was not measurable, and a page offering
+   * more hover targets than the limit are three different gaps, and a single sentence written at
+   * the merge would be wrong about two of them.
+   */
+  uncovered: [string, string][];
 }
 
 export default async function globalTeardown(): Promise<void> {
@@ -27,28 +35,42 @@ export default async function globalTeardown(): Promise<void> {
     : { capturedAt: new Date().toISOString() };
 
   const entries: Record<string, ManifestEntry> = {};
-  const skipped: string[] = [];
+  // A page that would not settle, a shot whose font never resolved and a page with more hover
+  // targets than the limit are reported the same way an unseeded route is: as named gaps, in the
+  // artefact somebody reads, rather than as a smaller total nobody notices.
+  const uncovered: [string, string][] = [...plan.uncovered];
   if (existsSync(shardDir)) {
     for (const file of readdirSync(shardDir).sort()) {
       const shard = JSON.parse(readFileSync(join(shardDir, file), 'utf8')) as Shard;
       Object.assign(entries, shard.entries);
-      skipped.push(...shard.skipped);
+      uncovered.push(...shard.uncovered);
     }
   }
+
+  /*
+   * A PAGE THAT WROTE NO SHARD AT ALL IS THE QUIET FAILURE, and it is checked by name rather than
+   * by arithmetic. A shot count cannot be predicted any more -- `hover` contributes one shot per
+   * eligible element, which only the browser knows -- so "N of an expected M" no longer exists to
+   * catch a worker that died. What does catch it is that every planned page owes a shard, and a
+   * missing one is recorded as a gap instead of being a smaller total nobody reads.
+   */
+  const missing = plan.targets.filter((target) => !existsSync(paths.shard(plan.out, target.slug)));
+  for (const target of missing) uncovered.push([target.path, "no shard: this page's capture did not finish"]);
 
   const manifest: Manifest = {
     set: plan.set,
     baseUrl: plan.baseUrl,
     capturedAt: meta.capturedAt,
-    // A page that would not settle is reported the same way an unseeded route is: as a named gap,
-    // in the artefact somebody reads, rather than as a smaller total nobody notices.
-    uncovered: [...plan.uncovered, ...skipped.map((note): [string, string] => [note, 'page never settled; no shots taken'])],
+    hoverLimit: plan.hoverLimit,
+    uncovered,
     entries: Object.fromEntries(Object.entries(entries).sort(([a], [b]) => a.localeCompare(b)))
   };
   writeFile(paths.manifest(plan.out), JSON.stringify(manifest, null, 2));
 
-  const expected = plan.targets.length * 18;
-  console.log(`visual: ${Object.keys(entries).length} of ${expected} shots captured -> ${paths.manifest(plan.out)}`);
+  console.log(
+    `visual: ${Object.keys(entries).length} shot(s) across ${plan.targets.length - missing.length} of ${plan.targets.length} page(s) ` +
+      `-> ${paths.manifest(plan.out)}`
+  );
   if (manifest.uncovered.length > 0)
     console.log(`visual: ${manifest.uncovered.length} uncovered route(s)/page(s) recorded in the manifest`);
 }
