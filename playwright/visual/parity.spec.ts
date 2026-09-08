@@ -18,7 +18,8 @@
  */
 // dry-copy: visual-parity/parity-spec — every copy of this region must match; `dev repo copies` checks it
 import { test } from '@playwright/test';
-import { applyState, clearState, dumpStyles, settle, themedContext } from './capture.ts';
+import { applyState, clearState, dumpStyles, screenshotFrozen, settle, themedContext } from './capture.ts';
+import { themedPath } from './pages.ts';
 import { paths, sha256, writeFile, writeStyles } from './files.ts';
 import { shotKey, STATES, THEMES, VIEWPORTS } from './matrix.ts';
 import type { ManifestEntry } from './manifest.ts';
@@ -43,7 +44,10 @@ for (const page of plan.targets) {
         const context = await themedContext(browser, theme, viewport, plan.baseUrl);
         try {
           const browserPage = await context.newPage();
-          if (!(await settle(browserPage, page.path))) {
+          // `themedPath` and not `page.path`: a repo whose fixture surface reads the theme off the
+          // url says so there. Where the theme is the localStorage key `themedContext` writes --
+          // every real route, in every repo -- it returns the path unchanged.
+          if (!(await settle(browserPage, themedPath(page.path, theme)))) {
             skipped.push(`${page.path} ${theme} ${viewport.name}: never reached a quiet state`);
             continue;
           }
@@ -60,13 +64,16 @@ for (const page of plan.targets) {
               await clearState(browserPage);
               continue;
             }
-            const png = await browserPage.screenshot({
-              fullPage: true,
-              animations: 'disabled',
-              caret: 'hide',
-              scale: 'css',
-              type: 'png'
-            });
+            // The style dump BELOW is taken after this returns, and `screenshotFrozen` has put the
+            // page back by then -- so the dump still describes the page rather than the harness.
+            //
+            // ONE ARTEFACT FOLLOWS FROM THAT ORDER, and it is in the diagnostic only: putting the
+            // animations back RESTARTS an `animation-fill-mode: both` entrance, so a
+            // `--audit opacity` run reports a revealing card at 0 on one side and 1 on the other,
+            // in both directions, on shots whose PNGs are identical. The hash is the verdict and it
+            // is taken while the page is frozen; read an opacity difference on a revealing card as
+            // this, not as a stylesheet change.
+            const png = await screenshotFrozen(browserPage);
             writeFile(paths.png(plan.out, key), png);
             writeStyles(plan.out, key, await dumpStyles(browserPage));
             const size = await browserPage.evaluate(() => ({

@@ -577,4 +577,57 @@ export async function dumpStyles(page: Page): Promise<StyleDump> {
   });
   return encodeStyles(raw.props, raw.elements as RawElement[]);
 }
+/** The id of the stylesheet planted for the duration of one shot. See `screenshotFrozen`. */
+const FREEZE_ID = '__visual_freeze__';
+
+/**
+ * Every animation and transition off, and nothing promoted for one that is coming.
+ *
+ * `filter` and `opacity` are deliberately NOT touched: they are what a `hover:` state actually
+ * looks like, and the shot is meant to show it.
+ */
+const FREEZE_CSS = `*, *::before, *::after, *::backdrop {
+  animation: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}`;
+
+/**
+ * The shot, taken with the page's animations removed and then put back.
+ *
+ * WHY THIS IS NOT `page.screenshot` WITH `animations: 'disabled'`. That option finishes an
+ * animation and holds it at its end value, which is the right SEMANTICS and does nothing about the
+ * COMPOSITING the animation caused: an element with a `transform` animation is promoted to its own
+ * layer, text inside a layer is rasterised separately, and Chromium decides whether to keep that
+ * layer on a budget rather than on anything the page says. The A/A gate measured the result on
+ * playbook-app -- three or four shots in 450, on every run, never the same ones twice, differing
+ * only in the glyph edges of one card, with identical computed styles on both sides. Every one of
+ * them was inside a card carrying `animation: ... both`, whose fill mode keeps the animation
+ * attached forever.
+ *
+ * Removing the animation for the length of the shot removes the promotion, so the text is
+ * rasterised into the document exactly once and both sides of an A/B agree. It is put back
+ * immediately afterwards, which is what keeps the style dump -- taken next, by the caller -- a
+ * description of the page rather than of the harness.
+ *
+ * A SETTLE AFTER PLANTING IT, because de-compositing is a repaint like any other and a screenshot
+ * taken in the same frame can catch the old raster.
+ */
+export async function screenshotFrozen(page: Page): Promise<Buffer> {
+  await page.evaluate(
+    ({ id, css }) => {
+      const style = document.createElement('style');
+      style.id = id;
+      style.textContent = css;
+      document.head.appendChild(style);
+    },
+    { id: FREEZE_ID, css: FREEZE_CSS }
+  );
+  await page.waitForTimeout(SETTLE_MS);
+  try {
+    return await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css', type: 'png' });
+  } finally {
+    await page.evaluate(({ id }) => document.getElementById(id)?.remove(), { id: FREEZE_ID });
+  }
+}
 // dry-copy-end

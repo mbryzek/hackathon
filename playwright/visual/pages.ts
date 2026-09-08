@@ -22,7 +22,7 @@
  * travels with it. The failure this exists to stop is a harness that quietly skips half the site
  * and reports "all equal": only the smaller honest number is worth anything.
  */
-import { pageTargets, type PageTarget } from './matrix.ts';
+import { pageTargets, type PageTarget, type ThemeName } from './matrix.ts';
 
 /** The two sets a capture can be asked for. */
 export const SETS = ['static', 'live'] as const;
@@ -30,6 +30,23 @@ export type SetName = (typeof SETS)[number];
 
 export function isSetName(value: string): value is SetName {
   return (SETS as readonly string[]).includes(value);
+}
+
+/**
+ * The url to navigate to for one target in one theme.
+ *
+ * REPO-SPECIFIC, and on this site it is the identity — twice over. There is no theme here at all
+ * (see `matrix.ts` on why the axis is kept degenerate), so there is nothing for a url to carry.
+ *
+ * It exists because that is not true everywhere. A fixture surface that runs OUTSIDE the shell
+ * owning the theme toggle has to set `data-theme` itself, and then it reads the theme off the url:
+ * playbook-app's `/dev-viz` takes `?theme=`, and a capture there that relied on localStorage would
+ * render every preview in one theme and compare the dark half against a copy of the light one.
+ * Keeping the question in `pages.ts` is what lets `parity.spec.ts` stay shared byte for byte
+ * across the repos (ISS-9323).
+ */
+export function themedPath(path: string, _theme: ThemeName): string {
+  return path;
 }
 
 /**
