@@ -905,19 +905,27 @@ export interface Shot {
  * its own. Measured directly -- eight consecutive shots of one hovered chart band, the bubble gone
  * from the fourth onward.
  */
-export async function captureShot(page: Page, state: StateName, index = 0): Promise<Shot | null> {
+export async function captureShot(page: Page, state: StateName, index = 0): Promise<Shot | ShotFailure> {
+  // What the last thing to go wrong WAS, so a dropped shot is reported as the failure it actually
+  // hit. The two read identically in a manifest otherwise, and they send whoever opens it to
+  // opposite halves of this file.
+  let last: ShotFailure = 'metrics';
   for (let attempt = 0; attempt < SHOT_ATTEMPTS; attempt += 1) {
-    if (attempt > 0 && !(await reload(page))) return null;
+    if (attempt > 0 && !(await reload(page))) return last;
     for (let retake = 0; retake < RETAKES; retake += 1) {
       if (retake > 0) await clearState(page);
       const target = await applyState(page, state, index);
-      if (target === null) break;
+      if (target === null) {
+        last = 'metrics';
+        break;
+      }
       const shot = await screenshotFrozen(page);
       if (typeof shot !== 'string') return { target, png: shot };
+      last = shot;
       if (shot === 'metrics') break;
     }
   }
-  return null;
+  return last;
 }
 // dry-copy-end
 

@@ -1,9 +1,9 @@
 // dry-copy: visual-parity/capture-test — every copy of this region must match; `dev repo copies` checks it
 import type { Page } from '@playwright/test';
 import { describe, expect, it } from 'vitest';
-import { captureShot } from './capture.ts';
+import { captureShot, type Shot } from './capture.ts';
 
-/**
+/*
  * WHAT A SHOT DOES WHEN THE PAGE MOVES UNDER IT (ISS-9986).
  *
  * `captureShot` is the one part of the harness that decides anything: it holds the two repairs for
@@ -19,6 +19,14 @@ import { captureShot } from './capture.ts';
  * function each time, so matching a phrase out of each one is what keeps this test readable when
  * the order of those calls changes -- which it does, and should be free to.
  */
+
+/** `captureShot`'s success arm, so a test asserting on the shot says what went wrong when it failed. */
+function taken(result: Shot | string): Shot {
+  if (typeof result === 'string') throw new Error(`expected a shot, got the failure "${result}"`);
+  return result;
+}
+
+/** What the stub page was asked to do, so a test can say how a shot was repaired and not just that it was. */
 interface Journal {
   screenshots: number;
   statesApplied: number;
@@ -81,8 +89,7 @@ function stubPage(structures: readonly number[], options: { chWidth?: () => numb
 describe('captureShot', () => {
   it('takes one screenshot when the document does not move across the raster', async () => {
     const { page, journal } = stubPage([1, 1]);
-    const shot = await captureShot(page, 'hover', 3);
-    expect(shot?.target).toBe('rect');
+    expect(taken(await captureShot(page, 'hover', 3)).target).toBe('rect');
     expect(journal).toEqual({ screenshots: 1, statesApplied: 1, reloads: 0, clears: 0 });
   });
 
@@ -93,8 +100,7 @@ describe('captureShot', () => {
    */
   it('retakes a shot whose document changed across its own raster', async () => {
     const { page, journal } = stubPage([1, 2, 3, 3]);
-    const shot = await captureShot(page, 'hover', 3);
-    expect(shot?.target).toBe('rect');
+    expect(taken(await captureShot(page, 'hover', 3)).target).toBe('rect');
     expect(journal.screenshots).toBe(2);
     expect(journal.reloads).toBe(0);
   });
@@ -115,7 +121,9 @@ describe('captureShot', () => {
   it('reloads only after the retakes on one document are spent', async () => {
     // Every reading differs from the one before it, so every shot is disturbed and none survives.
     const { page, journal } = stubPage([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]);
-    expect(await captureShot(page, 'hover', 3)).toBeNull();
+    // The REASON comes back, not a bare failure: `parity.spec.ts` writes it into the manifest, and
+    // `disturbed` and `metrics` send whoever reads that to opposite halves of `capture.ts`.
+    expect(await captureShot(page, 'hover', 3)).toBe('disturbed');
     expect(journal.reloads).toBe(2);
     expect(journal.screenshots).toBe(journal.statesApplied);
     expect(journal.screenshots).toBeGreaterThan(3);
@@ -136,7 +144,7 @@ describe('captureShot', () => {
         return 50;
       }
     });
-    expect(await captureShot(page, 'hover', 3)).toBeNull();
+    expect(await captureShot(page, 'hover', 3)).toBe('metrics');
     expect(reads).toBeGreaterThan(0);
     expect(journal.screenshots).toBe(0);
     expect(journal.reloads).toBe(2);
