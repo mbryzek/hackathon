@@ -120,11 +120,14 @@ for (const page of plan.targets) {
              */
             for (let index = 0; index < Math.max(counted.shots, 1); index += 1) {
               const key = shotKey(page.slug, theme, viewport.name, state === 'hover' ? hoverState(index) : state);
-              // `null` means the page could not be shot on font metrics it can reproduce, three
-              // documents running -- so every font-relative length on it would be recorded against
-              // fallback metrics. The shot is dropped rather than written: a key missing from one
-              // side is a compare failure, and a shot recorded on the wrong metrics is a difference
-              // the next A/B blames on a stylesheet. See `captureShot`.
+              // A `ShotFailure` rather than a `Shot` means the page could not be shot in the state
+              // it was asked for, three documents running -- either every font-relative length on
+              // it would be recorded against fallback metrics, or the screenshot's own viewport
+              // transient destroyed the state every time it was applied. The shot is dropped rather
+              // than written: a key missing from one side is a compare failure, and a shot recorded
+              // on the wrong metrics, or of a state nobody asked for, is a difference the next A/B
+              // blames on a stylesheet. WHICH of the two is recorded, because they send whoever
+              // reads the manifest to opposite halves of `capture.ts`. See `captureShot`.
               //
               // The style dump BELOW is taken after it returns, and `screenshotFrozen` has put the
               // page back by then -- so the dump still describes the page rather than the harness.
@@ -136,8 +139,15 @@ for (const page of plan.targets) {
               // it is taken while the page is frozen; read an opacity difference on a revealing
               // card as this, not as a stylesheet change.
               const shot = await captureShot(browserPage, state, index);
-              if (shot === null) {
-                dropped.push({ scope: 'shot', what: key, why: 'no document resolved ch against the webfont; shot dropped' });
+              if (typeof shot === 'string') {
+                dropped.push({
+                  scope: 'shot',
+                  what: key,
+                  why:
+                    shot === 'metrics'
+                      ? 'no document resolved ch against the webfont; shot dropped'
+                      : 'every shot of this state was disturbed by its own raster; shot dropped'
+                });
                 await clearState(browserPage);
                 continue;
               }

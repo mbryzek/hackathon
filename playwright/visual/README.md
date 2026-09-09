@@ -199,6 +199,19 @@ the life of the document, and the shot is only taken while it still measures wha
 measures. A page that cannot answer that is reloaded and shot again, and dropped rather than
 recorded on fallback metrics if three documents running cannot.
 
+The shot itself is the other one, and it is the one that is easy to miss because the harness is
+doing it. A full-page screenshot is not a passive read: Chromium renders the document at its own
+height and is briefly at other viewport sizes on the way there and back — 1x1 among them, measured
+from inside the page. A page that mounts something on hover sees a reflow at that moment, the
+pointer is no longer over what it was over, and the app tears the node down on whatever grace
+period its hover clear runs on. The pointer never moves again, so nothing brings it back. Measured
+on the chart previews, which portal a tooltip bubble: eight consecutive shots of one hovered chart
+band, no other input, and the bubble vanished at the fourth and stayed gone. So the document's
+structure — every element's tag and class — is read either side of the screenshot, and a shot whose
+page moved across its own raster is **retaken with the state re-applied**, not recorded. Re-applying
+is the whole repair; a second screenshot of the same page is a second screenshot of the torn-down
+state.
+
 `VISUAL_COOKIES` is a `{"NAME":"value"}` object planted on every context before the first
 navigation, for a repo whose interesting pages are behind a session. Unset is the ordinary case and
 plants nothing.

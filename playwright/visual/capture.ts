@@ -21,7 +21,14 @@
  *     to remember is a rule that stops being true.
  *   - ANIMATION AND TRANSITION. `reducedMotion: 'reduce'` at the context, playwright's own
  *     `animations: 'disabled'` at the screenshot, and a settle after each state change that
- *     outlasts the stylesheet's longest declared transition. The stylesheet is NOT patched with an
+ *     outlasts the stylesheet's longest declared transition.
+ *   - THE SHOT ITSELF, which resizes the viewport and can destroy the very state being shot. A
+ *     full-page screenshot renders the document at its own height, and Chromium is briefly at
+ *     other sizes on the way there and back -- 1x1 among them, measured. A page that mounts
+ *     something on hover sees a reflow, loses the pointer, and tears that node down on its own
+ *     grace period; whether the teardown lands before the raster is a coin flip on machine load.
+ *     So the DOM's structure is read on both sides of the screenshot and a shot whose page moved
+ *     across its own raster is retaken rather than recorded. See `screenshotFrozen`. The stylesheet is NOT patched with an
  *     injected `transition: none` rule: that would change the CSSOM the computed-style dump then
  *     reads, and the dump is meant to describe the page, not the harness.
  *   - FONTS, in three places, because one is not enough. `document.fonts.ready` plus every
@@ -330,6 +337,37 @@ const FONT_ATTEMPTS = 40;
 
 /** How many times to reload a document that laid itself out against metrics it no longer has. */
 const RELOAD_ATTEMPTS = 3;
+
+/**
+ * A cheap fingerprint of what the document CONTAINS, for asking whether it moved across the shot.
+ *
+ * TAG AND CLASS OF EVERY ELEMENT, IN ORDER, hashed to one integer. That is the widest question
+ * that can be asked for the price of a single `evaluate`, and it is the right question: a state a
+ * hover shot exists to capture is either a node that appeared (a tooltip, a popover, a menu) or a
+ * class that toggled, and both move this number. `dumpStyles` asks a far bigger version of the
+ * same question and costs a hundred times as much, which is why it is taken once per shot rather
+ * than twice.
+ *
+ * WHAT IT CANNOT SEE is a pure `:hover` pseudo-class -- a button whose only reaction is a CSS rule
+ * puts nothing in the DOM, so a pointer that came off it during the raster is invisible here.
+ * Nothing short of comparing two rasters can see that, and it has not been measured: the hover
+ * shots the A/A gate reported as differing were, every one of them, a node present on one side and
+ * absent on the other.
+ *
+ * The class attribute is NOT sorted, unlike `dumpStyles`'s. The two readings compared here are of
+ * one document seconds apart, so nothing has re-sorted anything in between, and the ORDER moving
+ * would itself be a change worth catching.
+ */
+async function structure(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    let hash = 0;
+    for (const element of Array.from(document.querySelectorAll('*'))) {
+      const text = `${element.tagName}.${element.getAttribute('class') ?? ''}|`;
+      for (let at = 0; at < text.length; at += 1) hash = (Math.imul(hash, 31) + text.charCodeAt(at)) | 0;
+    }
+    return hash;
+  });
+}
 
 /** `100ch` in css pixels, and the `em` it was measured against, for a box created NOW. */
 async function freshCh(page: Page): Promise<{ width: number; em: number }> {
@@ -785,6 +823,18 @@ const FREEZE_CSS = `*, *::before, *::after, *::backdrop {
 }`;
 
 /**
+ * Why a shot could not be taken, when it could not.
+ *
+ * Two states rather than one `null`, because the two are repaired by opposite acts -- a fresh
+ * document for one, the state re-applied to this one for the other. See `screenshotFrozen`.
+ */
+export type ShotFailure =
+  /** A `ch` on this page does not currently mean what the stylesheet says it means. */
+  | 'metrics'
+  /** The document changed across its own raster, so the png is not of the state it was asked for. */
+  | 'disturbed';
+
+/**
  * The shot, taken with the page's animations removed and then put back.
  *
  * WHY THIS IS NOT `page.screenshot` WITH `animations: 'disabled'`. That option finishes an
@@ -815,11 +865,32 @@ const FREEZE_CSS = `*, *::before, *::after, *::backdrop {
  * screenshot as well, because the shot itself rasterises a document twelve thousand pixels tall
  * and the face does not survive every one of them.
  *
- * `null` is the answer when the page could not be shot on metrics it can reproduce. It is not a
- * dropped shot: `captureShot` reloads the document, which is the one thing that clears a stale
- * resolution, and takes it again.
+ * THE DOCUMENT'S STRUCTURE IS CHECKED ON BOTH SIDES OF THE SHOT TOO, and it is a different hazard
+ * with the same shape. A full-page screenshot is not a passive read: Chromium renders the document
+ * at its own height and is briefly at other viewport sizes on the way there and back, 1x1 among
+ * them -- measured, from inside the page, by listening for `resize` across a `page.screenshot`. A
+ * page that mounts something on hover sees a reflow at that moment, the pointer is no longer over
+ * the element it was over, and the app tears the node down on whatever grace period it schedules
+ * its hover clear on. The pointer never moves again, so nothing brings it back: every later shot
+ * of that page is of the torn-down state.
+ *
+ * Measured on playbook-app's chart previews, which portal a tooltip bubble on hover: eight
+ * consecutive shots of ONE hovered chart band, no other input, and the bubble vanished at the
+ * fourth and stayed gone -- 1604 elements before the raster, 1600 after, a different sha from
+ * there on. That is the whole of ISS-9986: two captures of one dev server disagreeing on 14 hover
+ * shots, every one of them the tooltip present on one side and absent on the other at the same
+ * key, with no computed-style difference anywhere.
+ *
+ * A SHOT WHOSE PAGE MOVED ACROSS ITS OWN RASTER DOES NOT DEPICT THE STATE IT WOULD BE FILED UNDER,
+ * whichever half of the raster caught the truth, so it is reported rather than recorded.
+ *
+ * The two failures are told apart because their repairs are opposites. `metrics` needs a FRESH
+ * DOCUMENT -- a `ch` is resolved at layout and kept, so nothing short of reloading clears it.
+ * `disturbed` needs the STATE PUT BACK on the document that is already there, and a reload is the
+ * wrong instrument for it: it costs a navigation and lands back in the same coin flip. See
+ * `captureShot`.
  */
-export async function screenshotFrozen(page: Page): Promise<Buffer | null> {
+export async function screenshotFrozen(page: Page): Promise<Buffer | ShotFailure> {
   await page.evaluate(
     ({ id, css }) => {
       const style = document.createElement('style');
@@ -832,11 +903,16 @@ export async function screenshotFrozen(page: Page): Promise<Buffer | null> {
   await page.waitForTimeout(SETTLE_MS);
   try {
     await loadDeclaredFaces(page);
-    if ((await awaitMeasurable(page)) !== 'ok') return null;
-    const before = await chWidth(page);
+    if ((await awaitMeasurable(page)) !== 'ok') return 'metrics';
+    const beforeCh = await chWidth(page);
+    // Read LAST before the raster and FIRST after it, with nothing of the harness's own in
+    // between: `freshCh` and `chWidth` each plant a probe element and take it away again, so a
+    // reading taken across one of them would be comparing the document with the harness in it.
+    const beforeStructure = await structure(page);
     const png = await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css', type: 'png' });
-    if ((await awaitMeasurable(page)) !== 'ok') return null;
-    if (Math.abs((await chWidth(page)) - before) > 0.5) return null;
+    if ((await structure(page)) !== beforeStructure) return 'disturbed';
+    if ((await awaitMeasurable(page)) !== 'ok') return 'metrics';
+    if (Math.abs((await chWidth(page)) - beforeCh) > 0.5) return 'metrics';
     return png;
   } finally {
     await page.evaluate(({ id }) => document.getElementById(id)?.remove(), { id: FREEZE_ID });
@@ -845,6 +921,18 @@ export async function screenshotFrozen(page: Page): Promise<Buffer | null> {
 
 /** How many documents a single shot is allowed to need before it is given up on. */
 const SHOT_ATTEMPTS = 3;
+
+/**
+ * How many times a shot disturbed by its own raster is re-taken on the document already loaded.
+ *
+ * Measured at roughly two shots in five on playbook-app's chart previews -- three sessions running
+ * the same page in parallel came back with four of nine hovered-band shots missing the bubble --
+ * so four retakes puts the odds of a page never being shot in the state it was asked for under two
+ * in a hundred before the outer loop has reloaded even once, and under a thousandth once it has.
+ * The cost is paid only where the disturbance actually happens: a shot that survives its first
+ * raster takes exactly one.
+ */
+const RETAKES = 4;
 
 /** One shot: what the state was applied to, and the png. */
 export interface Shot {
@@ -867,16 +955,36 @@ export interface Shot {
  * rather than once outside it. `index` survives that, and has to: it is an ordinal among the
  * page's own eligible elements rather than a coordinate, so the reloaded document resolves it to
  * the same element without anything having to be re-measured across the reload.
+ *
+ * A SHOT DISTURBED BY ITS OWN RASTER IS RETAKEN ON THIS DOCUMENT, and the inner loop is that. The
+ * repair is not a reload -- the document is fine, it is the STATE that the screenshot's viewport
+ * transient took away -- so `clearState` puts the pointer back off-target and `applyState` opens
+ * it again. RE-APPLYING IS THE WHOLE OF IT AND A BARE SECOND SCREENSHOT WOULD FIX NOTHING: once a
+ * hover-mounted node has been torn down the pointer never moves again, so it does not come back on
+ * its own. Measured directly -- eight consecutive shots of one hovered chart band, the bubble gone
+ * from the fourth onward.
  */
-export async function captureShot(page: Page, state: StateName, index = 0): Promise<Shot | null> {
+export async function captureShot(page: Page, state: StateName, index = 0): Promise<Shot | ShotFailure> {
+  // What the last thing to go wrong WAS, so a dropped shot is reported as the failure it actually
+  // hit. The two read identically in a manifest otherwise, and they send whoever opens it to
+  // opposite halves of this file.
+  let last: ShotFailure = 'metrics';
   for (let attempt = 0; attempt < SHOT_ATTEMPTS; attempt += 1) {
-    if (attempt > 0 && !(await reload(page))) return null;
-    const target = await applyState(page, state, index);
-    if (target === null) continue;
-    const png = await screenshotFrozen(page);
-    if (png !== null) return { target, png };
+    if (attempt > 0 && !(await reload(page))) return last;
+    for (let retake = 0; retake < RETAKES; retake += 1) {
+      if (retake > 0) await clearState(page);
+      const target = await applyState(page, state, index);
+      if (target === null) {
+        last = 'metrics';
+        break;
+      }
+      const shot = await screenshotFrozen(page);
+      if (typeof shot !== 'string') return { target, png: shot };
+      last = shot;
+      if (shot === 'metrics') break;
+    }
   }
-  return null;
+  return last;
 }
 // dry-copy-end
 
