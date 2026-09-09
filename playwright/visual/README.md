@@ -173,6 +173,34 @@ when the cause is the runner's load: no key is missing from either side, every r
 matches, and the harness reports "every shot is byte-for-byte identical" about a console it did not
 finish rendering.
 
+## A page that navigates mid-capture costs a document, not the page
+
+The page can leave the route half way through its own capture: a client-side redirect that lost its
+race with the settle, or the dev server reloading the document because something regenerated
+`.svelte-kit` underneath it — a `npm run check` in the same checkout is enough to do that. Chromium
+destroys the execution context every read of the page runs in, and playwright reports it as an
+ordinary failure of whichever call happened to be in flight.
+
+Left as a throw it costs the whole PAGE, not the shot: every shot already written is orphaned, no
+shard is written, and the merge records the page as dropped. One late navigation on one of a page's
+six contexts therefore costs the entire capture, because a capture missing a page cannot pass the
+A/A gate. Measured at five of twenty-nine pages on one run, from three different call sites.
+
+So every page operation `capture.ts` exports reports it as `NavigatedAway`, and `parity.spec.ts`
+repairs it the only way it can be repaired: a fresh document at the url this context was asked for,
+in the **same context** — which keeps the theme, the viewport, the pinned clock, the cookies and the
+warm face cache — resuming at the first shot it has no answer for. Shots already recorded are kept
+and never taken again; re-rendering a shot that already succeeded is the one retry
+`playwright.visual.config.ts` forbids outright. Three documents, and then the context is recorded as
+dropped, naming the url the page kept leaving for.
+
+The navigation that destroys nothing is the other half, and it is the one no error can report: one
+that lands in a gap between two of the harness's own calls leaves every later read answering happily
+about the new document, so half a context's keys end up filed against a page they are not about —
+which the compare then blames on a stylesheet. `page.url()` is a local read that costs no round
+trip, so it is asked on both sides of every shot, exactly as the document's structure is asked on
+both sides of every raster.
+
 ## Determinism
 
 Pinned identically on both sides, and each line is a hazard that was measured rather than imagined:
