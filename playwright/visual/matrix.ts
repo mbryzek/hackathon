@@ -168,15 +168,60 @@ export const DEFAULT_SHOT_BUDGET_MS = 45_000;
  * ZERO IS ACCEPTED, AND ASKS FOR NO PER-PAGE BUDGET AT ALL -- playwright reads a zero timeout that
  * way. It is a defensible thing to want here in a way it would not be in a test suite, because
  * nothing inside one test is unbounded on its own: every navigation and load-state wait carries
- * its own 30s timeout, a screenshot carries playwright's, and a page that will not settle is
- * recorded under `uncovered` rather than waited on. What the per-page budget bounds is total WORK,
- * not a hang, so a caller who would rather wait than lose a capture is not switching off a guard.
+ * `VISUAL_SETTLE_TIMEOUT_MS`, a screenshot carries playwright's, and a page that will not settle
+ * is recorded as a dropped rendering rather than waited on. What the per-page budget bounds is
+ * total WORK, not a hang, so a caller who would rather wait than lose a capture is not switching
+ * off a guard.
  */
 export function shotBudget(raw: string | undefined): number {
   if (raw === undefined || raw === '') return DEFAULT_SHOT_BUDGET_MS;
   const value = Number(raw);
   if (!Number.isInteger(value) || value < 0) {
     throw new Error(`visual: VISUAL_SHOT_BUDGET_MS must be a non-negative integer of milliseconds, got "${raw}"`);
+  }
+  return value;
+}
+
+/**
+ * How long ONE navigation or load-state wait inside `settle` may take, when nothing says otherwise.
+ *
+ * THIRTY SECONDS IS PLAYWRIGHT'S OWN DEFAULT and it is here as a NUMBER rather than as six literals
+ * in `capture.ts` because it is the deadline that fires on a loaded box, and the per-page budget is
+ * no help against it: a page whose `goto` misses this deadline loses its whole theme/viewport
+ * context in a hundredth of the time the budget would have allowed it (ISS-9985). Measured on
+ * playbook-app's preview set, two captures of ONE dev server minutes apart: the second was slower
+ * across the board -- one page went from 6.4 to 12.5 minutes -- and eight contexts across five
+ * pages came back "never settled", every one of which had settled in the first capture and settled
+ * in its other five contexts inside the second. Nothing was wrong with any of them; the box was
+ * busy.
+ *
+ * SO THE ERROR IS NOT SYMMETRIC, exactly as it is not for the shot budget. A deadline larger than a
+ * page needs costs nothing at all, because a page that settles never reaches it. A deadline smaller
+ * than a page needs costs a whole context, which costs the CAPTURE: the A/A gate compares key for
+ * key, so 62 shots present on one side only is a failed gate however good the other 1146 were.
+ * Raise it on a machine that shares its cores.
+ */
+export const DEFAULT_SETTLE_TIMEOUT_MS = 30_000;
+
+/**
+ * `VISUAL_SETTLE_TIMEOUT_MS`, parsed. The second lever a caller on a loaded machine has.
+ *
+ * A THROW RATHER THAN A FALLBACK, as `shotBudget` and `hoverLimit` throw: a typo that silently
+ * became the default fails on the very machine the caller raised it FOR, dropping the same contexts
+ * as before and saying nothing about why the number did not take.
+ *
+ * ZERO IS REFUSED HERE THOUGH `shotBudget` ACCEPTS IT, and the asymmetry is the whole point of
+ * having two numbers. The per-page budget bounds total WORK and every wait beneath it is bounded
+ * separately, so switching it off leaves the guards in place. THIS number IS those guards -- it is
+ * what a `waitForLoadState('networkidle')` on a page holding one request open forever is bounded
+ * by, and a page like that exists (a socket, a poll, an analytics beacon the runner's egress
+ * swallows). Zero there is not patience, it is a capture that never ends and reports nothing.
+ */
+export function settleTimeout(raw: string | undefined): number {
+  if (raw === undefined || raw === '') return DEFAULT_SETTLE_TIMEOUT_MS;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`visual: VISUAL_SETTLE_TIMEOUT_MS must be a positive integer of milliseconds, got "${raw}"`);
   }
   return value;
 }

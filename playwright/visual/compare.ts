@@ -14,7 +14,7 @@
  * types, so the compare tool needs no build step and no dependency the repo does not already have.
  */
 // dry-copy: visual-parity/compare — every copy of this region must match; `dev repo copies` checks it
-import { compareManifests, passes, summarize, type Manifest } from './manifest.ts';
+import { compareManifests, complete, passes, summarize, type Manifest } from './manifest.ts';
 import { readManifest, readStyles } from './files.ts';
 import { describeElement, diffStyles } from './styles.ts';
 
@@ -23,6 +23,29 @@ const DETAILED = 4;
 
 /** How many distinct `property: before -> after` groups to print per shot. */
 const GROUPS = 40;
+
+/** How many dropped renderings to name before the rest are counted. */
+const DROPPED = 20;
+
+/**
+ * Say whether a capture has a hole in it, and name what fell through.
+ *
+ * A CAPTURE THAT DROPPED A RENDERING SUPPORTS NO VERDICT, in either direction, and this is checked
+ * on each side separately because `compareManifests` cannot see it. The comparison's evidence is
+ * keys: it reports a context ONE side lost as shots present on one side only -- loudly, and blaming
+ * the diff -- and it says nothing whatever about a context BOTH sides lost, which is the likelier
+ * of the two when the cause is the runner's load, since a page slow enough to miss the deadline in
+ * one capture is slow enough to miss it in the next. Both sides then agree perfectly over what
+ * remains, and the harness reports "every shot is byte-for-byte identical" about a console it did
+ * not finish rendering (ISS-9985).
+ */
+function reportDropped(name: string, dir: string, manifest: Manifest): boolean {
+  if (complete(manifest)) return false;
+  console.error(`\n${name} ${dir} DROPPED ${manifest.dropped.length} rendering(s) it was asked for:`);
+  for (const loss of manifest.dropped.slice(0, DROPPED)) console.error(`  [${loss.scope}] ${loss.what}: ${loss.why}`);
+  if (manifest.dropped.length > DROPPED) console.error(`  (${manifest.dropped.length - DROPPED} further dropped rendering(s))`);
+  return true;
+}
 
 /**
  * `--audit cursor,pointer-events` — properties a SCREENSHOT CANNOT SEE.
@@ -179,6 +202,10 @@ function main(): number {
   console.log(`B ${dirB} (${b.set}, ${b.capturedAt})`);
   console.log(summarize(comparison));
 
+  // BOTH SIDES ARE ASKED, and the array is what makes sure of it: `||` would stop at A and leave B's
+  // losses unnamed on exactly the run where they are the explanation for what follows.
+  const holed = [reportDropped('A', dirA, a), reportDropped('B', dirB, b)].some(Boolean);
+
   for (const [name, keys] of [
     ['only in A', comparison.onlyInA],
     ['only in B', comparison.onlyInB]
@@ -189,6 +216,13 @@ function main(): number {
   if (comparison.mismatched.length > 0) explain(dirA, dirB, a, b, comparison.mismatched);
   if (auditProperties.length > 0) audit(dirA, dirB, comparison.equal, auditProperties);
 
+  if (holed) {
+    console.error(
+      '\nFAIL: a capture dropped a rendering it was asked for, so there is nothing here to be sure about. ' +
+        'Re-capture that side -- VISUAL_SETTLE_TIMEOUT_MS and VISUAL_SHOT_BUDGET_MS are the two levers on a loaded machine.'
+    );
+    return 1;
+  }
   if (comparison.equal.length === 0) {
     console.error('\nFAIL: nothing was compared. Two captures that contain no shots are not evidence of anything.');
     return 1;

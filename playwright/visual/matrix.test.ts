@@ -2,10 +2,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_HOVER_LIMIT,
+  DEFAULT_SETTLE_TIMEOUT_MS,
   DEFAULT_SHOT_BUDGET_MS,
   hoverLimit,
   pageTargets,
   shotBudget,
+  settleTimeout,
   shotKey,
   shotsFor,
   shotStates,
@@ -147,6 +149,49 @@ describe('shotBudget', () => {
    */
   it('leaves the worst measured shot three times over', () => {
     expect(DEFAULT_SHOT_BUDGET_MS).toBeGreaterThanOrEqual(3 * 12_500);
+  });
+});
+
+describe('settleTimeout', () => {
+  it('defaults when VISUAL_SETTLE_TIMEOUT_MS is unset or empty', () => {
+    expect(settleTimeout(undefined)).toBe(DEFAULT_SETTLE_TIMEOUT_MS);
+    expect(settleTimeout('')).toBe(DEFAULT_SETTLE_TIMEOUT_MS);
+  });
+
+  it('takes a count of milliseconds', () => {
+    expect(settleTimeout('120000')).toBe(120_000);
+  });
+
+  /**
+   * THE ASYMMETRY WITH `shotBudget` IS THE POINT OF HAVING TWO NUMBERS. The per-page budget bounds
+   * total WORK and every wait beneath it is bounded separately, so zero there leaves the guards in
+   * place. This number IS those guards: zero here is a `networkidle` wait on a page holding one
+   * request open forever, which is a capture that never ends and reports nothing.
+   */
+  it('refuses zero, which the per-page budget accepts', () => {
+    expect(shotBudget('0')).toBe(0);
+    expect(() => settleTimeout('0')).toThrow(/positive integer of milliseconds, got "0"/);
+  });
+
+  /**
+   * A typo that silently became the default would drop the same contexts on the very machine the
+   * caller raised it for, and say nothing about why the number did not take.
+   */
+  it('refuses anything that is not a count of milliseconds, naming what it was given', () => {
+    expect(() => settleTimeout('-1')).toThrow(/positive integer of milliseconds/);
+    expect(() => settleTimeout('2.5')).toThrow(/positive integer of milliseconds/);
+    expect(() => settleTimeout('30s')).toThrow(/positive integer of milliseconds/);
+  });
+
+  /**
+   * THE MEASUREMENT THIS LEVER EXISTS FOR (ISS-9985): a capture of one dev server took 25.6 minutes
+   * and the next of the SAME server took 37.0, and eight theme/viewport contexts that had settled in
+   * the first missed the deadline in the second. A default that cannot be raised is a capture the
+   * runner's load decides the completeness of, so what is pinned here is that the deadline is
+   * reachable at all -- the number itself is playwright's own default and is not a claim.
+   */
+  it('is a lever rather than a constant, which is the whole of what it is for', () => {
+    expect(settleTimeout('90000')).not.toBe(DEFAULT_SETTLE_TIMEOUT_MS);
   });
 });
 // dry-copy-end
