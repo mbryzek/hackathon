@@ -2,8 +2,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_HOVER_LIMIT,
+  DEFAULT_SHOT_BUDGET_MS,
   hoverLimit,
   pageTargets,
+  shotBudget,
   shotKey,
   shotsFor,
   shotStates,
@@ -101,6 +103,50 @@ describe('hoverLimit', () => {
     expect(() => hoverLimit('-1')).toThrow(/positive integer/);
     expect(() => hoverLimit('2.5')).toThrow(/positive integer/);
     expect(() => hoverLimit('six')).toThrow(/positive integer/);
+  });
+});
+describe('shotBudget', () => {
+  it('defaults when VISUAL_SHOT_BUDGET_MS is unset or empty', () => {
+    expect(shotBudget(undefined)).toBe(DEFAULT_SHOT_BUDGET_MS);
+    expect(shotBudget('')).toBe(DEFAULT_SHOT_BUDGET_MS);
+  });
+
+  it('takes a count of milliseconds', () => {
+    expect(shotBudget('90000')).toBe(90_000);
+  });
+
+  /** Zero is playwright's own "no timeout", and the one number a caller may deliberately want. */
+  it('accepts zero, which asks for no per-page budget at all', () => {
+    expect(shotBudget('0')).toBe(0);
+  });
+
+  /**
+   * A typo that silently became the default would fail on the very machine the caller raised it
+   * for, reporting the same timed-out pages and saying nothing about why the number did not take.
+   */
+  it('refuses anything that is not a count of milliseconds, naming what it was given', () => {
+    expect(() => shotBudget('-1')).toThrow(/non-negative integer of milliseconds, got "-1"/);
+    expect(() => shotBudget('2.5')).toThrow(/non-negative integer of milliseconds/);
+    expect(() => shotBudget('30s')).toThrow(/non-negative integer of milliseconds/);
+  });
+
+  /**
+   * WHY THE BUDGET IS PER SHOT AT ALL, pinned as arithmetic and free of this repo's own axes: the
+   * hover cap alone makes the busiest page in a set worth more than twice the quietest, so no
+   * per-PAGE constant can be right for both ends of it (ISS-9957).
+   */
+  it('is per shot because the matrix does not ask every page for the same number of them', () => {
+    expect(shotStates(DEFAULT_HOVER_LIMIT).length).toBeGreaterThan(shotStates(1).length * 2);
+  });
+
+  /**
+   * THE REGRESSION THIS REPLACED. The fixed five minutes that used to be here could not capture
+   * playbook-app's busiest preview page even on an IDLE machine -- forty-eight shots, ten minutes,
+   * 12.5 seconds a shot -- and a capture missing one page cannot pass the A/A gate, so it answers
+   * nothing. The default leaves that worst measured shot three times the room it took.
+   */
+  it('leaves the worst measured shot three times over', () => {
+    expect(DEFAULT_SHOT_BUDGET_MS).toBeGreaterThanOrEqual(3 * 12_500);
   });
 });
 // dry-copy-end

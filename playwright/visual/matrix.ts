@@ -129,6 +129,58 @@ export function hoverLimit(raw: string | undefined): number {
   return value;
 }
 
+/**
+ * How long ONE SHOT may take, in milliseconds, when nothing says otherwise -- the unit
+ * `VISUAL_SHOT_BUDGET_MS` sets and `parity.spec.ts` multiplies out into a per-page budget.
+ *
+ * A PAGE IS NOT A FIXED AMOUNT OF WORK, which is why the budget is per shot rather than per page.
+ * `hover` is one shot per eligible element, so a page contributes anywhere between
+ * `THEMES * VIEWPORTS * 3` shots and `THEMES * VIEWPORTS * (2 + VISUAL_HOVER_LIMIT)` -- eighteen
+ * and forty-eight on the default matrix, a spread of nearly three to one inside a single set. So a
+ * per-page constant cannot be right for both ends of it, and it is the forty-eight-shot pages that
+ * a loaded machine loses first.
+ *
+ * MEASURED, on one capture of playbook-app's preview set at two workers on an otherwise quiet
+ * runner: its eighteen-shot page took 1.9 minutes, its thirty-eight-shot page 6.5, and its
+ * forty-eight-shot page 10.0 -- between 6 and 13 seconds a shot, because one shot is a state
+ * change, a settle that outlasts the stylesheet's longest declared transition, a full-page
+ * screenshot of a document twelve thousand pixels tall, and a computed-style walk of every element
+ * on it. The fixed five minutes this replaced could not fit that page on an IDLE machine, never
+ * mind a shared one (ISS-9957).
+ *
+ * FORTY-FIVE SECONDS is three times the worst of those, and the headroom is deliberate because the
+ * error is not symmetric. A budget larger than a page needs costs nothing whatever: a page that
+ * finishes never reaches the timer. A budget smaller than a page needs costs the WHOLE CAPTURE --
+ * the test fails, its shard is never written, and a capture missing one page cannot pass the A/A
+ * gate the README puts before every verdict, so a run that dropped two pages out of twenty-nine
+ * answered exactly as much as one that dropped all of them. Raise it on a machine that shares its
+ * cores; there is no reason to lower it.
+ */
+export const DEFAULT_SHOT_BUDGET_MS = 45_000;
+
+/**
+ * `VISUAL_SHOT_BUDGET_MS`, parsed. The lever a caller on a loaded machine has.
+ *
+ * A THROW RATHER THAN A FALLBACK, as `hoverLimit` throws, and for a sharper reason: a typo that
+ * silently became the default fails on the very machine the caller raised it FOR, reporting the
+ * same timed-out pages as before and saying nothing about why the number did not take.
+ *
+ * ZERO IS ACCEPTED, AND ASKS FOR NO PER-PAGE BUDGET AT ALL -- playwright reads a zero timeout that
+ * way. It is a defensible thing to want here in a way it would not be in a test suite, because
+ * nothing inside one test is unbounded on its own: every navigation and load-state wait carries
+ * its own 30s timeout, a screenshot carries playwright's, and a page that will not settle is
+ * recorded under `uncovered` rather than waited on. What the per-page budget bounds is total WORK,
+ * not a hang, so a caller who would rather wait than lose a capture is not switching off a guard.
+ */
+export function shotBudget(raw: string | undefined): number {
+  if (raw === undefined || raw === '') return DEFAULT_SHOT_BUDGET_MS;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`visual: VISUAL_SHOT_BUDGET_MS must be a non-negative integer of milliseconds, got "${raw}"`);
+  }
+  return value;
+}
+
 /** One shot: a page in one theme, at one viewport, in one state. */
 export interface Shot {
   key: string;

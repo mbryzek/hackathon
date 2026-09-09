@@ -31,8 +31,10 @@ export default defineConfig({
   globalSetup: './playwright/visual/setup.ts',
   globalTeardown: './playwright/visual/merge.ts',
   outputDir: `${VISUAL_OUT}/test-results`,
-  // Per-test timeout is set inside the spec: one test is a whole page, which is six navigations
-  // and eighteen full-page screenshots.
+  // Per-test timeout is set inside the spec and is NOT this number: one test is a whole page, and
+  // how many shots a page owes depends on how many hover targets it offers, so the budget there is
+  // per shot and grows with what the page turns out to owe (`VISUAL_SHOT_BUDGET_MS`, ISS-9957).
+  // This value is what a test that never called `setTimeout` would get, and there is no such test.
   timeout: 300_000,
   expect: { timeout: 10_000 },
   fullyParallel: true,

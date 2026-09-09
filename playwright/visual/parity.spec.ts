@@ -21,7 +21,7 @@ import { test } from '@playwright/test';
 import { captureShot, clearState, dumpStyles, hoverTargetCount, settle, themedContext } from './capture.ts';
 import { themedPath } from './pages.ts';
 import { paths, sha256, writeFile, writeStyles } from './files.ts';
-import { hoverState, shotKey, STATES, THEMES, VIEWPORTS } from './matrix.ts';
+import { hoverState, shotBudget, shotKey, shotStates, STATES, THEMES, VIEWPORTS } from './matrix.ts';
 import type { ManifestEntry } from './manifest.ts';
 import { capturePlan } from './plan.ts';
 
@@ -31,11 +31,28 @@ test.describe.configure({ mode: 'parallel' });
 
 for (const page of plan.targets) {
   test(`${plan.set} ${page.path}`, async ({ browser }, testInfo) => {
-    // A page is six navigations and at least twelve full-page screenshots -- more where it offers
-    // several hover targets -- and the default 30s is for a test that does one thing. This budget
-    // is generous because a slow page must not silently drop shots: a missing key is a compare
-    // failure, which is the loudest outcome and the right one.
-    testInfo.setTimeout(5 * 60_000);
+    /*
+     * THE BUDGET IS PER SHOT, AND IT GROWS AS THE PAGE SAYS WHAT IT OWES (ISS-9957).
+     *
+     * A page is six navigations and eighteen full-page screenshots at the very least, and up to
+     * `2 + VISUAL_HOVER_LIMIT` shots per theme and viewport wherever it offers that many hover
+     * targets -- so what one test does varies by nearly three to one across a single set. A
+     * per-page constant is therefore two different budgets depending on which page draws it, and
+     * the fixed five minutes this replaced was not enough for the largest page in playbook-app's
+     * own preview set even on an idle machine: forty-eight shots, ten minutes. On a shared runner
+     * the pages lost to it were a different set on every run and always the hover-rich ones, and a
+     * capture missing any page cannot pass the A/A gate the README puts before every verdict -- so
+     * a run that dropped two pages out of twenty-nine was worth as much as one that dropped all of
+     * them, which is nothing.
+     *
+     * `owed` starts at the fewest shots the matrix can ask for and is raised each time
+     * `hoverTargetCount` says one theme/viewport will contribute more than that. The timeout is
+     * set AGAIN on every raise because playwright measures the deadline from the start of the
+     * test rather than from the call, so re-stating the total is what extends it.
+     */
+    const budgetMs = shotBudget(process.env['VISUAL_SHOT_BUDGET_MS']);
+    let owed = THEMES.length * VIEWPORTS.length * shotStates(1).length;
+    testInfo.setTimeout(budgetMs * owed);
 
     const entries: Record<string, ManifestEntry> = {};
     const uncovered: [string, string][] = [];
@@ -62,6 +79,12 @@ for (const page of plan.targets) {
              * `focus` stay one shot each. `hoverTargetCount` carries the measurement (ISS-9603).
              */
             const counted = state === 'hover' ? await hoverTargetCount(browserPage, plan.hoverLimit) : { shots: 1, total: 1 };
+            if (counted.shots > 1) {
+              // One hover shot per theme and viewport is already in `owed`, because every page
+              // contributes at least that; the rest are what THIS page turned out to offer.
+              owed += counted.shots - 1;
+              testInfo.setTimeout(budgetMs * owed);
+            }
             if (counted.total > counted.shots) {
               uncovered.push([
                 `${page.path} ${theme} ${viewport.name} hover`,

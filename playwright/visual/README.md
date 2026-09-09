@@ -107,6 +107,35 @@ npm run visual:compare -- ../visual/baseline ../visual/candidate --audit cursor,
 It prints; it does not change the exit code. A property list is an argument about what matters, and
 the verdict deliberately is not.
 
+## The per-page budget, and the one knob for a loaded machine
+
+A capture is only worth anything if it is COMPLETE: the A/A gate above compares two captures key for
+key, so a page that timed out is not a smaller answer, it is no answer. The per-page timeout is
+therefore set **per shot** rather than per page, in `parity.spec.ts`, and raised as each page says
+how many hover shots it turned out to owe.
+
+```sh
+VISUAL_SHOT_BUDGET_MS=90000 VISUAL_SET=preview ... npm run visual:capture
+```
+
+| variable                | default | what it does                                                |
+| ----------------------- | ------- | ----------------------------------------------------------- |
+| `VISUAL_SHOT_BUDGET_MS` | `45000` | how long one shot may take; `0` asks for no per-page budget |
+| `VISUAL_WORKERS`        | `4`     | how many pages are captured at once                         |
+
+A page owes between 18 and 48 shots depending on how many hover targets it offers, and the
+difference is real time: on one quiet two-worker capture of playbook-app's preview set the 18-shot
+page took 1.9 minutes and the 48-shot page took 10.0.
+
+Raise the budget, not the workers, on a machine that shares its cores. Halving the workers doubles
+the wall time and does not clear the failures, because the contention is the machine's total load
+rather than this run's own parallelism.
+
+`0` is a real answer rather than an escape hatch: nothing inside one test is unbounded on its own —
+every navigation and load-state wait carries its own 30s timeout, a screenshot carries playwright's,
+and a page that will not settle is recorded under `uncovered` rather than waited on. The per-page
+budget bounds total work, not a hang.
+
 ## Determinism
 
 Pinned identically on both sides, and each line is a hazard that was measured rather than imagined:
