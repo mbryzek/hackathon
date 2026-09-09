@@ -1,21 +1,28 @@
 // dry-copy: visual-parity/manifest-test — every copy of this region must match; `dev repo copies` checks it
 import { describe, expect, it } from 'vitest';
-import { compareManifests, passes, summarize, type Manifest, type ManifestEntry } from './manifest.ts';
+import { compareManifests, complete, passes, summarize, type Dropped, type Manifest, type ManifestEntry } from './manifest.ts';
 
 function entry(sha256: string): ManifestEntry {
   return { sha256, width: 1920, height: 900, target: 'n/a' };
 }
 
-function manifest(entries: Record<string, ManifestEntry>): Manifest {
+function manifest(entries: Record<string, ManifestEntry>, dropped: Dropped[] = []): Manifest {
   return {
     set: 'preview',
     baseUrl: 'http://localhost:5173',
     capturedAt: '2025-06-15T12:00:00.000Z',
     hoverLimit: 6,
     uncovered: [],
+    dropped,
     entries
   };
 }
+
+const lostContext: Dropped = {
+  scope: 'context',
+  what: '/dev-viz?page=forecasting light desktop',
+  why: 'page never settled in 2 attempt(s); no shots taken'
+};
 
 describe('compareManifests', () => {
   it('is all-equal when every shot matches', () => {
@@ -51,6 +58,31 @@ describe('compareManifests', () => {
 
   it('fails when nothing was compared at all', () => {
     expect(passes(compareManifests(manifest({}), manifest({})))).toBe(false);
+  });
+});
+
+describe('complete', () => {
+  it('is true of a capture that produced every rendering it was asked for', () => {
+    expect(complete(manifest({ a: entry('1') }))).toBe(true);
+  });
+
+  it('is false of a capture that dropped one', () => {
+    expect(complete(manifest({ a: entry('1') }, [lostContext]))).toBe(false);
+  });
+
+  /**
+   * THE HOLE `compareManifests` CANNOT SEE (ISS-9985), and the reason this is a separate question
+   * asked of each side rather than a property of the comparison. A context dropped by ONE capture
+   * shows up as a key present on one side only; a context dropped by BOTH leaves no key on either,
+   * so every remaining shot matches and the compare says "all equal" over a console it did not
+   * finish rendering. Both sides dropping it is the LIKELIER case, because the cause is the
+   * runner's load and a page slow enough to miss the deadline once is slow enough to miss it twice.
+   */
+  it('is the only thing that can see a context both captures dropped', () => {
+    const a = manifest({ a: entry('1') }, [lostContext]);
+    const b = manifest({ a: entry('1') }, [lostContext]);
+    expect(passes(compareManifests(a, b))).toBe(true);
+    expect(complete(a) && complete(b)).toBe(false);
   });
 });
 

@@ -66,7 +66,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { Browser, BrowserContext, Cookie, Page } from '@playwright/test';
-import type { StateName, ThemeName, Viewport } from './matrix.ts';
+import { settleTimeout, type StateName, type ThemeName, type Viewport } from './matrix.ts';
 import { encodeStyles, type RawElement, type StyleDump } from './styles.ts';
 
 /**
@@ -87,6 +87,15 @@ export const FIXED_TIME = new Date('2025-06-15T12:00:00.000Z');
  * the next one down, and a console's is 0.25s.
  */
 const SETTLE_MS = 900;
+
+/**
+ * How long any one navigation or load-state wait inside `settle` may take.
+ *
+ * READ ONCE, AT IMPORT, so a typo in `VISUAL_SETTLE_TIMEOUT_MS` throws before the capture has taken
+ * a single shot rather than on the page that happens to need it. `matrix.ts` carries the number and
+ * the argument for it; this is the only place the harness spells the deadline out (ISS-9985).
+ */
+const SETTLE_TIMEOUT_MS = settleTimeout(process.env['VISUAL_SETTLE_TIMEOUT_MS']);
 
 /**
  * The id of the `100ch` box planted before first layout and kept until the document goes away.
@@ -520,17 +529,67 @@ async function awaitMedia(page: Page): Promise<void> {
  * difference the next A/B blames on a stylesheet.
  *
  * Returns false when the page never reached a quiet state. A THROW WOULD BE WRONG HERE: one route
- * that will not settle must not lose the other 800 shots, and a shot that is missing from one side
- * is already a failure in `compareManifests` -- so the honest thing is to record nothing for it and
- * let the compare report it as present on one side only.
+ * that will not settle must not lose the other 800 shots. What the caller does with the false is
+ * `settledPage` below -- try again, and then record the loss as a DROPPED rendering, which fails
+ * the capture by name rather than leaving the compare to report 62 shots present on one side only
+ * and blame a stylesheet for the runner's load (ISS-9985).
+ *
+ * `timeoutMs` bounds each navigation and each load-state wait separately rather than the call as a
+ * whole, which is what playwright's own timeouts are and is why there is no single number here for
+ * how long a settle can take. `VISUAL_SETTLE_TIMEOUT_MS` sets it; `settledPage` raises it per
+ * attempt.
  */
-export async function settle(page: Page, path: string): Promise<boolean> {
+export async function settle(page: Page, path: string, timeoutMs = SETTLE_TIMEOUT_MS): Promise<boolean> {
   try {
-    await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-    return await quiet(page);
+    await page.goto(path, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+    return await quiet(page, timeoutMs);
   } catch {
     return false;
   }
+}
+
+/**
+ * How many documents one theme/viewport context may need before it is given up on.
+ *
+ * A FIRST ATTEMPT AT A CONTEXT THAT PRODUCED NOTHING IS NOT THE RETRY `playwright.visual.config.ts`
+ * FORBIDS. "NO RETRIES, EVER" is about re-rendering a shot that already succeeded -- a shot that
+ * only matched on the second try proves the opposite of what it is recorded as, so the harness must
+ * never take one. Nothing was rendered here: the context produced no bytes, no key and no row, and
+ * a second navigation is the harness's first sample of it rather than its second opinion.
+ *
+ * TWO, AND THE SECOND ONE IS SLOWER (`SETTLE_RETRY_FACTOR`). The measured cause is the runner's
+ * load, and load on a box running a 37-minute capture is sustained rather than a spike -- so a
+ * retry at the identical deadline is the same coin weighted the same way, which is worth very
+ * little. Doubling the deadline is what addresses the thing that actually happened.
+ *
+ * THE COST IS BOUNDED AND IS PAID ONLY ON FAILURE. A context that settles never reaches any of
+ * this. A context that never will costs `timeout * (1 + 2)` before it is recorded, and six of them
+ * -- a page that is wholly broken -- costs about nine minutes against a floor budget of thirteen,
+ * so the page still writes its shard and still names what it lost. A page whose test dies without
+ * writing one is recorded by `merge.ts` instead, at `page` scope.
+ */
+export const SETTLE_ATTEMPTS = 2;
+
+/** What attempt N's deadline is multiplied by: 1x, then 2x. */
+const SETTLE_RETRY_FACTOR = 2;
+
+/**
+ * A page of `context`, navigated to `path` and quiet, or `null` if it never got there.
+ *
+ * A FRESH DOCUMENT PER ATTEMPT, IN THE SAME CONTEXT. The page is where the failure is -- a
+ * navigation that timed out leaves a document part-way through a load, and `goto` on it again
+ * inherits whatever it was still waiting for. The CONTEXT is what must not be rebuilt: it carries
+ * the theme, the viewport, the pinned clock, the seeded `Math.random`, the cookies and the HTTP
+ * cache the faces are now in, all of which the second attempt wants to keep and one of which
+ * (the warm face cache) is why a second attempt is faster than the first.
+ */
+export async function settledPage(context: BrowserContext, path: string): Promise<Page | null> {
+  for (let attempt = 0; attempt < SETTLE_ATTEMPTS; attempt += 1) {
+    const page = await context.newPage();
+    if (await settle(page, path, SETTLE_TIMEOUT_MS * (attempt === 0 ? 1 : SETTLE_RETRY_FACTOR))) return page;
+    await page.close();
+  }
+  return null;
 }
 
 /**
@@ -544,17 +603,17 @@ export async function settle(page: Page, path: string): Promise<boolean> {
  * most likely because of a navigation`. A shot that survived that race would be worse -- a
  * screenshot of a page that no longer exists, recorded under the redirecting route's key.
  */
-async function quiet(page: Page): Promise<boolean> {
+async function quiet(page: Page, timeoutMs: number): Promise<boolean> {
   for (let attempt = 0; ; attempt += 1) {
-    await page.waitForLoadState('networkidle', { timeout: 30_000 });
+    await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     await loadDeclaredFaces(page);
-    await page.waitForLoadState('networkidle', { timeout: 30_000 });
+    await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     if ((await awaitMeasurable(page)) !== 'stale') break;
     if (attempt + 1 >= RELOAD_ATTEMPTS) return false;
-    await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: timeoutMs });
   }
   await awaitMedia(page);
-  await page.waitForLoadState('networkidle', { timeout: 30_000 });
+  await page.waitForLoadState('networkidle', { timeout: timeoutMs });
   await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
   await page.waitForTimeout(SETTLE_MS);
 
@@ -562,7 +621,7 @@ async function quiet(page: Page): Promise<boolean> {
     const before = page.url();
     await page.waitForTimeout(SETTLE_MS);
     if (page.url() === before) break;
-    await page.waitForLoadState('networkidle', { timeout: 30_000 });
+    await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     await loadDeclaredFaces(page);
   }
   return true;
@@ -571,8 +630,8 @@ async function quiet(page: Page): Promise<boolean> {
 /** A fresh document of the same url, for a page that is carrying a resolution it cannot reproduce. */
 async function reload(page: Page): Promise<boolean> {
   try {
-    await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
-    return await quiet(page);
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: SETTLE_TIMEOUT_MS });
+    return await quiet(page, SETTLE_TIMEOUT_MS);
   } catch {
     return false;
   }

@@ -18,11 +18,11 @@
  */
 // dry-copy: visual-parity/parity-spec — every copy of this region must match; `dev repo copies` checks it
 import { test } from '@playwright/test';
-import { captureShot, clearState, dumpStyles, hoverTargetCount, settle, themedContext } from './capture.ts';
+import { captureShot, clearState, dumpStyles, hoverTargetCount, SETTLE_ATTEMPTS, settledPage, themedContext } from './capture.ts';
 import { themedPath } from './pages.ts';
 import { paths, sha256, writeFile, writeStyles } from './files.ts';
 import { hoverState, shotBudget, shotKey, shotStates, STATES, THEMES, VIEWPORTS } from './matrix.ts';
-import type { ManifestEntry } from './manifest.ts';
+import type { Dropped, ManifestEntry } from './manifest.ts';
 import { capturePlan } from './plan.ts';
 
 const plan = capturePlan();
@@ -56,17 +56,39 @@ for (const page of plan.targets) {
 
     const entries: Record<string, ManifestEntry> = {};
     const uncovered: [string, string][] = [];
+    /*
+     * WHAT THIS PAGE WAS ASKED FOR AND DID NOT PRODUCE, kept apart from `uncovered` and FAILING THE
+     * TEST at the bottom of this file (ISS-9985).
+     *
+     * A PAGE THAT LOSES ONE CONTEXT LOOKS EXACTLY LIKE A PAGE THAT LOST NOTHING, which is the half
+     * of this that made the loss quiet: the other five contexts still shoot, so the page still
+     * writes a shard, playwright still counts the test as passed, and `merge.ts` still says "29 of
+     * 29 pages". The only trace was one more line in a list that already had a hundred benign ones
+     * in it. Measured: 8 lost contexts among 114 `uncovered` entries, and 62 shots that then turned
+     * up in the compare as present on one side only.
+     */
+    const dropped: Dropped[] = [];
 
     for (const theme of THEMES) {
       for (const viewport of VIEWPORTS) {
         const context = await themedContext(browser, theme, viewport, plan.baseUrl);
         try {
-          const browserPage = await context.newPage();
           // `themedPath` and not `page.path`: a repo whose fixture surface reads the theme off the
           // url says so there. Where the theme is the localStorage key `themedContext` writes --
           // every real route, in every repo -- it returns the path unchanged.
-          if (!(await settle(browserPage, themedPath(page.path, theme)))) {
-            uncovered.push([`${page.path} ${theme} ${viewport.name}`, 'page never settled; no shots taken']);
+          //
+          // `settledPage` and not `newPage` + `settle`: a context that produced nothing gets a
+          // second document at a longer deadline before it is given up on, because the measured
+          // cause of a context that will not settle is the runner's load rather than the page
+          // (ISS-9985). It closes the page it gave up on, so the `finally` below has nothing of its
+          // to clean up.
+          const browserPage = await settledPage(context, themedPath(page.path, theme));
+          if (browserPage === null) {
+            dropped.push({
+              scope: 'context',
+              what: `${page.path} ${theme} ${viewport.name}`,
+              why: `page never settled in ${SETTLE_ATTEMPTS} attempt(s); no shots taken -- raise VISUAL_SETTLE_TIMEOUT_MS on a loaded machine`
+            });
             continue;
           }
           for (const state of STATES) {
@@ -118,12 +140,14 @@ for (const page of plan.targets) {
               // card as this, not as a stylesheet change.
               const shot = await captureShot(browserPage, state, index);
               if (typeof shot === 'string') {
-                uncovered.push([
-                  key,
-                  shot === 'metrics'
-                    ? 'no document resolved ch against the webfont; shot dropped'
-                    : 'every shot of this state was disturbed by its own raster; shot dropped'
-                ]);
+                dropped.push({
+                  scope: 'shot',
+                  what: key,
+                  why:
+                    shot === 'metrics'
+                      ? 'no document resolved ch against the webfont; shot dropped'
+                      : 'every shot of this state was disturbed by its own raster; shot dropped'
+                });
                 await clearState(browserPage);
                 continue;
               }
@@ -143,7 +167,28 @@ for (const page of plan.targets) {
       }
     }
 
-    writeFile(paths.shard(plan.out, page.slug), JSON.stringify({ entries, uncovered }, null, 2));
+    /*
+     * THE SHARD IS WRITTEN BEFORE THE FAILURE, and the order is the whole of what makes failing
+     * safe. Everything this page did shoot is on disk and in `merge.ts`'s roll-up whatever happens
+     * on the next line, so a caller still gets a capture directory to look at and a manifest that
+     * names what is missing from it -- the failure adds a signal rather than taking the artefacts
+     * away.
+     */
+    writeFile(paths.shard(plan.out, page.slug), JSON.stringify({ entries, uncovered, dropped }, null, 2));
+
+    /*
+     * A DROPPED RENDERING FAILS THIS TEST, which is the signal a caller reading the summary
+     * actually gets (ISS-9985). The alternative -- recording it and passing -- is what a run
+     * reporting "29 passed" over eight lost contexts did, and the number a caller reads is the
+     * number they act on. `merge.ts` fails the whole capture again from the merged manifest, for
+     * the loss that no test can see: a page whose test died before writing a shard at all.
+     */
+    if (dropped.length > 0) {
+      throw new Error(
+        `visual: ${dropped.length} rendering(s) dropped on ${page.path} -- this capture cannot pass an A/A gate:\n` +
+          dropped.map((loss) => `  [${loss.scope}] ${loss.what}: ${loss.why}`).join('\n')
+      );
+    }
   });
 }
 // dry-copy-end

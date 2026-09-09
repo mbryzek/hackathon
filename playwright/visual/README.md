@@ -107,21 +107,33 @@ npm run visual:compare -- ../visual/baseline ../visual/candidate --audit cursor,
 It prints; it does not change the exit code. A property list is an argument about what matters, and
 the verdict deliberately is not.
 
-## The per-page budget, and the one knob for a loaded machine
+## The two deadlines, and the knobs for a loaded machine
 
 A capture is only worth anything if it is COMPLETE: the A/A gate above compares two captures key for
-key, so a page that timed out is not a smaller answer, it is no answer. The per-page timeout is
-therefore set **per shot** rather than per page, in `parity.spec.ts`, and raised as each page says
-how many hover shots it turned out to owe.
+key, so a rendering that timed out is not a smaller answer, it is no answer. Two different deadlines
+can take one away, they fail at completely different scales, and both are settable.
 
 ```sh
-VISUAL_SHOT_BUDGET_MS=90000 VISUAL_SET=preview ... npm run visual:capture
+VISUAL_SHOT_BUDGET_MS=90000 VISUAL_SETTLE_TIMEOUT_MS=90000 VISUAL_SET=preview ... npm run visual:capture
 ```
 
-| variable                | default | what it does                                                |
-| ----------------------- | ------- | ----------------------------------------------------------- |
-| `VISUAL_SHOT_BUDGET_MS` | `45000` | how long one shot may take; `0` asks for no per-page budget |
-| `VISUAL_WORKERS`        | `4`     | how many pages are captured at once                         |
+| variable                   | default | what it does                                                        |
+| -------------------------- | ------- | ------------------------------------------------------------------- |
+| `VISUAL_SHOT_BUDGET_MS`    | `45000` | how long one shot may take; `0` asks for no per-page budget         |
+| `VISUAL_SETTLE_TIMEOUT_MS` | `30000` | how long one navigation or load-state wait inside a settle may take |
+| `VISUAL_WORKERS`           | `4`     | how many pages are captured at once                                 |
+
+The **per-page budget** is the outer one, set per shot in `parity.spec.ts` and raised as each page
+says how many hover shots it turned out to owe. Missing it loses a whole PAGE: the test times out
+and writes no shard at all.
+
+The **settle deadline** is the inner one, and it bounds each navigation and each `networkidle` wait
+separately. Missing it loses one theme/viewport CONTEXT — a sixth of a page — and it is the one that
+fires first on a loaded box, because a page that needs 31 seconds to go quiet was never going to
+reach the per-page budget's thirteen minutes. A context that misses it is navigated a second time at
+twice the deadline before it is given up on, which is not the shot retry
+`playwright.visual.config.ts` forbids: that rule is about re-rendering a shot that already
+succeeded, and a context that never settled rendered nothing.
 
 A page owes between 18 and 48 shots depending on how many hover targets it offers, and the
 difference is real time: on one quiet two-worker capture of playbook-app's preview set the 18-shot
@@ -131,10 +143,35 @@ Raise the budget, not the workers, on a machine that shares its cores. Halving t
 the wall time and does not clear the failures, because the contention is the machine's total load
 rather than this run's own parallelism.
 
-`0` is a real answer rather than an escape hatch: nothing inside one test is unbounded on its own —
-every navigation and load-state wait carries its own 30s timeout, a screenshot carries playwright's,
-and a page that will not settle is recorded under `uncovered` rather than waited on. The per-page
-budget bounds total work, not a hang.
+`VISUAL_SHOT_BUDGET_MS=0` is a real answer rather than an escape hatch: nothing inside one test is
+unbounded on its own — every navigation and load-state wait carries `VISUAL_SETTLE_TIMEOUT_MS`, a
+screenshot carries playwright's, and a context that will not settle is recorded as a dropped
+rendering rather than waited on. The per-page budget bounds total work, not a hang.
+`VISUAL_SETTLE_TIMEOUT_MS=0` is refused for the mirror-image reason: that number IS the guard the
+sentence above leans on, and a `networkidle` wait with no deadline on a page holding one request
+open forever is a capture that never ends.
+
+## A dropped rendering fails the run
+
+The manifest carries two lists, and they mean opposite things.
+
+`uncovered` is what the capture was never going to shoot: a route with no seeded value, a
+`[...rest]` template, a dev-only route, a page offering more hover targets than `VISUAL_HOVER_LIMIT`.
+Every capture of the same tree produces the same list, so it costs the comparison no key. It is a
+note.
+
+`dropped` is what the capture was asked for and did not produce: a context that never settled, a
+shot whose font metrics could not be reproduced, a page whose test died before writing a shard. It
+is fatal, in four places at once — the page's test FAILS, so the playwright summary says so; the
+merge prints each loss and fails the capture; the manifest records it with its scope (`page`,
+`context` or `shot`); and `visual:compare` refuses a capture carrying one, on either side.
+
+That last one is the half that is easy to leave out and is the reason `dropped` is on the manifest
+at all. `compareManifests` reports a context ONE capture lost as shots present on one side only —
+loudly, and blaming the diff — and it is blind to a context BOTH lost, which is the likelier case
+when the cause is the runner's load: no key is missing from either side, every remaining shot
+matches, and the harness reports "every shot is byte-for-byte identical" about a console it did not
+finish rendering.
 
 ## Determinism
 
