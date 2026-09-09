@@ -98,6 +98,112 @@ const SETTLE_MS = 900;
 const SETTLE_TIMEOUT_MS = settleTimeout(process.env['VISUAL_SETTLE_TIMEOUT_MS']);
 
 /**
+ * THE DOCUMENT A PAGE OPERATION WAS ADDRESSING WENT AWAY, BECAUSE THE PAGE NAVIGATED (ISS-10052).
+ *
+ * PLAYWRIGHT REPORTS THIS AS AN ORDINARY FAILURE OF WHATEVER CALL WAS IN FLIGHT -- `page.evaluate:
+ * Execution context was destroyed, most likely because of a navigation` -- with nothing in it to
+ * separate "this page is broken" from "this page moved". Left as a throw it takes the WHOLE TEST
+ * with it: every shot already written is orphaned, no shard is written, and `merge.ts` records the
+ * page as dropped at `page` scope. One late navigation on one of a page's six contexts therefore
+ * costs a thirty-minute capture, because a capture missing a page cannot pass an A/A gate. Measured on
+ * playbook-app's preview set: five of twenty-nine pages, from three different call sites -- the
+ * diagnostic size read, `loadDeclaredFaces` inside `screenshotFrozen`, and `awaitMeasurable`
+ * inside `applyState`.
+ *
+ * A TYPED ERROR RATHER THAN A FAILURE VALUE, and the reason is that nothing between the `evaluate`
+ * and the caller can repair it. Six functions sit on that path and every one of them would have to
+ * grow a third return arm for a condition none of them can answer; the repair needs the ROUTE,
+ * which only `parity.spec.ts` holds -- a fresh document at the url this context was asked for.
+ * Everything in between says nothing and passes it up.
+ */
+export class NavigatedAway extends Error {
+  /** The url the context settled on, which is the one every key it writes is filed under. */
+  readonly from: string;
+  /** Where the document went instead. */
+  readonly to: string;
+
+  constructor(from: string, to: string) {
+    super(`the document left ${from} for ${to} during its own capture`);
+    this.name = 'NavigatedAway';
+    this.from = from;
+    this.to = to;
+  }
+}
+
+/**
+ * Whether playwright's failure is a context destroyed under the call rather than anything about
+ * the page.
+ *
+ * MATCHED ON THE MESSAGE, because playwright does not type these, and DELIBERATELY NARROW. A closed
+ * target ("Target page, context or browser has been closed") is NOT this: treating it as a
+ * navigation would turn a browser that died into a re-settle loop that can never succeed, and would
+ * hide the death behind a `dropped` row blaming a navigation that never happened.
+ */
+function destroyedByNavigation(error: unknown): boolean {
+  const message = (error instanceof Error ? error.message : String(error)).toLowerCase();
+  return (
+    message.includes('execution context was destroyed') ||
+    message.includes('cannot find context with specified id') ||
+    message.includes('frame was detached') ||
+    message.includes('frame got detached')
+  );
+}
+
+/**
+ * Run `body`, reporting a context destroyed by a navigation as `NavigatedAway`.
+ *
+ * WRAPPED AT THE EXPORTED ENTRY POINTS RATHER THAN AT EACH `page.evaluate`, and the difference is
+ * the whole point: this region reaches the page from a dozen places and grows more, so a guard
+ * written per `evaluate` is one somebody has to remember on the thirteenth. Every one of those
+ * calls is reached through one of the handful of functions `parity.spec.ts` calls, so guarding
+ * those covers the sites written so far and the sites written next.
+ */
+async function throughNavigation<T>(page: Page, body: () => Promise<T>): Promise<T> {
+  const from = page.url();
+  try {
+    return await body();
+  } catch (error) {
+    if (!destroyedByNavigation(error)) throw error;
+    throw new NavigatedAway(from, page.url());
+  }
+}
+
+/**
+ * Raise `NavigatedAway` when the page is no longer on the url its context settled on.
+ *
+ * THE SILENT HALF OF THE SAME FAILURE, and the one no error can report. A navigation that lands in
+ * a gap between two of the harness's own calls destroys nothing: the next `evaluate` runs happily
+ * against the NEW document, `captureShot`'s reload reloads the NEW url, and every remaining shot of
+ * that context is filed under this route's keys while depicting another page. That is worse than
+ * the loud failure, because a mixture of two documents under one page's keys is a difference the
+ * next A/B blames on a stylesheet.
+ *
+ * `page.url()` is a local read of what playwright already knows -- no round trip and no execution
+ * context -- so it is asked on both sides of every shot, exactly as `structure` is asked on both
+ * sides of every raster.
+ */
+export function refuseIfNavigated(page: Page, settledAt: string): void {
+  if (page.url() !== settledAt) throw new NavigatedAway(settledAt, page.url());
+}
+
+/**
+ * How many documents one context may be given after a navigation took the one it was shooting.
+ *
+ * A RE-SETTLE IS NOT THE RETRY `playwright.visual.config.ts` FORBIDS, for the same reason
+ * `SETTLE_ATTEMPTS` is not. That rule is about re-rendering a shot that already succeeded, and
+ * nothing here is re-rendered: the shots already recorded are KEPT and skipped by key, and the shot
+ * the navigation landed in produced no bytes, no key and no row -- so the new document is this
+ * harness's first sample of it rather than its second opinion.
+ *
+ * THREE, because both measured causes are transient AND recur. A vite full page reload fires once
+ * per touched file and a `npm run check` in the same checkout touches many; a client-side redirect
+ * that lost its race with the settle can lose it again on the next document. Two documents is one
+ * coin flipped twice. Three bounds the cost at two extra settles per context, paid only where a
+ * navigation actually happened.
+ */
+export const NAVIGATION_ATTEMPTS = 3;
+
+/**
  * The id of the `100ch` box planted before first layout and kept until the document goes away.
  *
  * IT IS NOT REMOVED AFTER THE NAVIGATION, because the question it answers is not a question about
@@ -666,25 +772,27 @@ const FOCUS_SELECTOR = 'input:not([type=hidden]), select, textarea, [contentedit
  * shortfall is REPORTED in the manifest rather than being a smaller number nobody notices.
  */
 export async function hoverTargetCount(page: Page, limit: number): Promise<{ shots: number; total: number }> {
-  const total = await page.evaluate((selector) => {
-    // The eligibility test `applyState` applies, counted rather than acted on. Written twice
-    // because both copies run INSIDE the page, where nothing this module defines exists.
-    let count = 0;
-    for (const element of Array.from(document.querySelectorAll(selector))) {
-      if ((element as HTMLInputElement).disabled) continue;
-      const rect = element.getBoundingClientRect();
-      const onScreen =
-        rect.width > 0 &&
-        rect.height > 0 &&
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= window.innerHeight &&
-        rect.right <= window.innerWidth;
-      if (onScreen) count += 1;
-    }
-    return count;
-  }, HOVER_SELECTOR);
-  return { shots: Math.min(total, limit), total };
+  return throughNavigation(page, async () => {
+    const total = await page.evaluate((selector) => {
+      // The eligibility test `applyState` applies, counted rather than acted on. Written twice
+      // because both copies run INSIDE the page, where nothing this module defines exists.
+      let count = 0;
+      for (const element of Array.from(document.querySelectorAll(selector))) {
+        if ((element as HTMLInputElement).disabled) continue;
+        const rect = element.getBoundingClientRect();
+        const onScreen =
+          rect.width > 0 &&
+          rect.height > 0 &&
+          rect.top >= 0 &&
+          rect.left >= 0 &&
+          rect.bottom <= window.innerHeight &&
+          rect.right <= window.innerWidth;
+        if (onScreen) count += 1;
+      }
+      return count;
+    }, HOVER_SELECTOR);
+    return { shots: Math.min(total, limit), total };
+  });
 }
 
 /**
@@ -754,9 +862,11 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
 
 /** Undo whatever `applyState` did, so the next state starts from rest rather than from the last one. */
 export async function clearState(page: Page): Promise<void> {
-  await page.mouse.move(-1, -1);
-  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
-  await page.waitForTimeout(SETTLE_MS);
+  return throughNavigation(page, async () => {
+    await page.mouse.move(-1, -1);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.waitForTimeout(SETTLE_MS);
+  });
 }
 
 /**
@@ -774,39 +884,56 @@ export async function clearState(page: Page): Promise<void> {
  * without letting its ORDER be a finding, which it is not.
  */
 export async function dumpStyles(page: Page): Promise<StyleDump> {
-  const raw = await page.evaluate(
-    ({ probeId }) => {
-      const SKIP = new Set(['SCRIPT', 'STYLE', 'LINK', 'META', 'TITLE', 'HEAD', 'NOSCRIPT', 'TEMPLATE']);
-      const root = document.documentElement;
-      const props = Array.from(getComputedStyle(root));
-      const elements: { index: number; tag: string; id?: string; testId?: string; className?: string; values: string[] }[] = [];
-      let index = 0;
-      const walk = (element: Element): void => {
-        // The ch probe is the harness, not the page, and it stays in the document for the whole of
-        // it -- so it is skipped WITHOUT taking an index, which keeps every other element's index
-        // exactly what it would be in a document the harness had never touched.
-        if (SKIP.has(element.tagName) || element.id === probeId) return;
-        const computed = getComputedStyle(element);
-        const testId = element.getAttribute('data-testid');
-        const classAttribute = element.getAttribute('class');
-        elements.push({
-          index,
-          tag: element.tagName.toLowerCase(),
-          ...(element.id ? { id: element.id } : {}),
-          ...(testId ? { testId: testId } : {}),
-          ...(classAttribute ? { className: classAttribute.split(/\s+/).filter(Boolean).sort().join(' ') } : {}),
-          values: props.map((property) => computed.getPropertyValue(property))
-        });
-        index += 1;
-        for (const child of Array.from(element.children)) walk(child);
-      };
-      walk(root);
-      return { props, elements };
-    },
-    { probeId: CH_PROBE_ID }
-  );
-  return encodeStyles(raw.props, raw.elements as RawElement[]);
+  return throughNavigation(page, async () => {
+    const raw = await page.evaluate(
+      ({ probeId }) => {
+        const SKIP = new Set(['SCRIPT', 'STYLE', 'LINK', 'META', 'TITLE', 'HEAD', 'NOSCRIPT', 'TEMPLATE']);
+        const root = document.documentElement;
+        const props = Array.from(getComputedStyle(root));
+        const elements: { index: number; tag: string; id?: string; testId?: string; className?: string; values: string[] }[] = [];
+        let index = 0;
+        const walk = (element: Element): void => {
+          // The ch probe is the harness, not the page, and it stays in the document for the whole of
+          // it -- so it is skipped WITHOUT taking an index, which keeps every other element's index
+          // exactly what it would be in a document the harness had never touched.
+          if (SKIP.has(element.tagName) || element.id === probeId) return;
+          const computed = getComputedStyle(element);
+          const testId = element.getAttribute('data-testid');
+          const classAttribute = element.getAttribute('class');
+          elements.push({
+            index,
+            tag: element.tagName.toLowerCase(),
+            ...(element.id ? { id: element.id } : {}),
+            ...(testId ? { testId: testId } : {}),
+            ...(classAttribute ? { className: classAttribute.split(/\s+/).filter(Boolean).sort().join(' ') } : {}),
+            values: props.map((property) => computed.getPropertyValue(property))
+          });
+          index += 1;
+          for (const child of Array.from(element.children)) walk(child);
+        };
+        walk(root);
+        return { props, elements };
+      },
+      { probeId: CH_PROBE_ID }
+    );
+    return encodeStyles(raw.props, raw.elements as RawElement[]);
+  });
 }
+/**
+ * The document's own full size, in css pixels.
+ *
+ * DIAGNOSTIC ONLY -- `manifest.ts` says so, and the sha of the png is the whole verdict. It is here
+ * rather than inline in `parity.spec.ts` so that it is guarded like every other read of the page:
+ * it was the call site ISS-10052 was measured at, for no reason other than being the one page
+ * operation the spec performed for itself, and a diagnostic must never be the thing that costs a
+ * capture a page.
+ */
+export async function documentSize(page: Page): Promise<{ width: number; height: number }> {
+  return throughNavigation(page, async () =>
+    page.evaluate(() => ({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight }))
+  );
+}
+
 /** The id of the stylesheet planted for the duration of one shot. See `screenshotFrozen`. */
 const FREEZE_ID = '__visual_freeze__';
 
@@ -915,7 +1042,13 @@ export async function screenshotFrozen(page: Page): Promise<Buffer | ShotFailure
     if (Math.abs((await chWidth(page)) - beforeCh) > 0.5) return 'metrics';
     return png;
   } finally {
-    await page.evaluate(({ id }) => document.getElementById(id)?.remove(), { id: FREEZE_ID });
+    // TAKING THE STYLESHEET BACK OUT MUST NOT DECIDE WHAT THIS CALL REPORTS. A `finally` that
+    // throws replaces the error the `try` raised, and the one document state in which this
+    // `evaluate` fails is the one where something more interesting has already gone wrong -- a
+    // context destroyed by a navigation, which `captureShot`'s caller repairs by name and cannot
+    // repair at all if the reason arrives as a bare cleanup failure. A document that is going away
+    // takes the stylesheet with it regardless.
+    await page.evaluate(({ id }) => document.getElementById(id)?.remove(), { id: FREEZE_ID }).catch(() => undefined);
   }
 }
 
@@ -965,26 +1098,28 @@ export interface Shot {
  * from the fourth onward.
  */
 export async function captureShot(page: Page, state: StateName, index = 0): Promise<Shot | ShotFailure> {
-  // What the last thing to go wrong WAS, so a dropped shot is reported as the failure it actually
-  // hit. The two read identically in a manifest otherwise, and they send whoever opens it to
-  // opposite halves of this file.
-  let last: ShotFailure = 'metrics';
-  for (let attempt = 0; attempt < SHOT_ATTEMPTS; attempt += 1) {
-    if (attempt > 0 && !(await reload(page))) return last;
-    for (let retake = 0; retake < RETAKES; retake += 1) {
-      if (retake > 0) await clearState(page);
-      const target = await applyState(page, state, index);
-      if (target === null) {
-        last = 'metrics';
-        break;
+  return throughNavigation(page, async () => {
+    // What the last thing to go wrong WAS, so a dropped shot is reported as the failure it actually
+    // hit. The two read identically in a manifest otherwise, and they send whoever opens it to
+    // opposite halves of this file.
+    let last: ShotFailure = 'metrics';
+    for (let attempt = 0; attempt < SHOT_ATTEMPTS; attempt += 1) {
+      if (attempt > 0 && !(await reload(page))) return last;
+      for (let retake = 0; retake < RETAKES; retake += 1) {
+        if (retake > 0) await clearState(page);
+        const target = await applyState(page, state, index);
+        if (target === null) {
+          last = 'metrics';
+          break;
+        }
+        const shot = await screenshotFrozen(page);
+        if (typeof shot !== 'string') return { target, png: shot };
+        last = shot;
+        if (shot === 'metrics') break;
       }
-      const shot = await screenshotFrozen(page);
-      if (typeof shot !== 'string') return { target, png: shot };
-      last = shot;
-      if (shot === 'metrics') break;
     }
-  }
-  return last;
+    return last;
+  });
 }
 // dry-copy-end
 
