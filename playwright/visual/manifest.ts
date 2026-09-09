@@ -44,9 +44,54 @@ export interface Manifest {
    * is written down and `compare.ts` names it.
    */
   hoverLimit: number;
-  /** Route templates this run could not point at, `[template, why]`. Reported, never compared. */
+  /**
+   * What this capture was never going to shoot, `[what, why]`. Reported, never compared.
+   *
+   * TWO CAPTURES OF THE SAME TREE PRODUCE THE SAME LIST, which is what separates this from
+   * `dropped` below and is the only property that matters about it. A route with no seeded value,
+   * a `[...rest]` template, a dev-only route, a page offering more hover targets than
+   * `VISUAL_HOVER_LIMIT` -- each is a gap in what the harness was ASKED for, identical on both
+   * sides of an A/B, so it costs the comparison no key and reads as a note rather than a failure.
+   */
   uncovered: [string, string][];
+  /**
+   * Renderings this capture was asked for and did not produce. Reported, and FATAL.
+   *
+   * A SEPARATE LIST AND A DIFFERENT SHAPE, because the two were one list and read the same
+   * (ISS-9985). One capture recorded 114 `uncovered` entries of which 8 were whole theme/viewport
+   * contexts that never settled and 106 were benign hover-cap notices -- and the run reported "29
+   * passed" and "29 of 29 pages", because a page that loses one of its six contexts still has the
+   * other five. The 62 shots those 8 contexts owed turned up in the compare as present on one side
+   * only, which is a failed A/A gate that names the stylesheet rather than the runner's load.
+   *
+   * THIS IS NOT A SMALLER ANSWER, IT IS NO ANSWER, and both readers act on it: `merge.ts` fails the
+   * capture, and `compare.ts` refuses a capture that carries one. The second half is the one that
+   * is easy to leave out and is the reason this is on the manifest at all -- if BOTH sides drop the
+   * same context, no key is missing from either, every remaining shot matches, and the compare
+   * passes over a hole. "All equal" across a capture nobody took is the exact sentence this harness
+   * exists to stop anybody writing.
+   */
+  dropped: Dropped[];
   entries: Record<string, ManifestEntry>;
+}
+
+/**
+ * One rendering that was asked for and not produced.
+ *
+ * AN OBJECT AND NOT A `[what, why]` TUPLE ON PURPOSE. These sit beside `uncovered` in the artefact
+ * a person reads and in the console output, and a tuple would go on reading exactly like the
+ * benign notices it is being separated from. The shape is the signal.
+ */
+export interface Dropped {
+  /**
+   * How much was lost. `page` is a test that wrote no shard at all; `context` is one theme and
+   * viewport of a page, which is a sixth of that page's shots; `shot` is one key.
+   */
+  scope: 'page' | 'context' | 'shot';
+  /** The shot key, or `<path> <theme> <viewport>` for a context, or the page path. */
+  what: string;
+  /** What was tried and what it came back with, including how many attempts it took to give up. */
+  why: string;
 }
 
 export interface Comparison {
@@ -85,6 +130,20 @@ export function compareManifests(a: Manifest, b: Manifest): Comparison {
     .filter((key) => a.entries[key] === undefined)
     .sort();
   return { equal, mismatched, onlyInA, onlyInB };
+}
+
+/**
+ * True when a capture produced every rendering it was asked for.
+ *
+ * ASKED OF EACH SIDE SEPARATELY, and it is not implied by `passes` below. `compareManifests` can
+ * only see a key one side has and the other does not, so it catches a context dropped by ONE
+ * capture and is blind to the same context dropped by BOTH -- which is the likelier of the two on a
+ * runner whose load is what drops them, since a page slow enough to miss the deadline in one
+ * capture is slow enough to miss it in the next. Both sides then agree perfectly over the shots
+ * that remain (ISS-9985).
+ */
+export function complete(manifest: Manifest): boolean {
+  return manifest.dropped.length === 0;
 }
 
 /** True when the two captures are byte-for-byte identical over a non-empty set of shots. */

@@ -11,20 +11,21 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { paths, writeFile } from './files.ts';
-import type { Manifest, ManifestEntry } from './manifest.ts';
+import type { Dropped, Manifest, ManifestEntry } from './manifest.ts';
 import { capturePlan } from './plan.ts';
 
 interface Shard {
   entries: Record<string, ManifestEntry>;
   /**
-   * `[what, why]` for every rendering this page's test could not shoot.
+   * `[what, why]` for what this page was never going to shoot: a hover cap reached, and whatever
+   * else a repo's own plan declares out of reach.
    *
-   * The WHY comes from the spec rather than being supplied here, because the reasons are no longer
-   * one: a page that never settled, a shot whose webfont was not measurable, and a page offering
-   * more hover targets than the limit are three different gaps, and a single sentence written at
-   * the merge would be wrong about two of them.
+   * The WHY comes from the spec rather than being supplied here, because the reasons are not one,
+   * and a single sentence written at the merge would be wrong about most of them.
    */
   uncovered: [string, string][];
+  /** What this page's test was asked for and did not produce. Fatal; see `Dropped`. */
+  dropped: Dropped[];
 }
 
 export default async function globalTeardown(): Promise<void> {
@@ -35,15 +36,20 @@ export default async function globalTeardown(): Promise<void> {
     : { capturedAt: new Date().toISOString() };
 
   const entries: Record<string, ManifestEntry> = {};
-  // A page that would not settle, a shot whose font never resolved and a page with more hover
-  // targets than the limit are reported the same way an unseeded route is: as named gaps, in the
-  // artefact somebody reads, rather than as a smaller total nobody notices.
+  // A route this set was never going to point at and a hover cap that was reached are the same
+  // kind of thing: named gaps in what was ASKED for, identical in every capture of this tree, so
+  // they go in the artefact somebody reads and change no verdict.
   const uncovered: [string, string][] = [...plan.uncovered];
+  // What was asked for and did not arrive is the other kind, and it is kept apart because the two
+  // read the same when they are in one list -- 8 lost contexts among 114 lines of benign notice is
+  // how a capture came to report itself complete over a hole 62 shots wide (ISS-9985).
+  const dropped: Dropped[] = [];
   if (existsSync(shardDir)) {
     for (const file of readdirSync(shardDir).sort()) {
       const shard = JSON.parse(readFileSync(join(shardDir, file), 'utf8')) as Shard;
       Object.assign(entries, shard.entries);
       uncovered.push(...shard.uncovered);
+      dropped.push(...shard.dropped);
     }
   }
 
@@ -55,7 +61,9 @@ export default async function globalTeardown(): Promise<void> {
    * missing one is recorded as a gap instead of being a smaller total nobody reads.
    */
   const missing = plan.targets.filter((target) => !existsSync(paths.shard(plan.out, target.slug)));
-  for (const target of missing) uncovered.push([target.path, "no shard: this page's capture did not finish"]);
+  for (const target of missing) {
+    dropped.push({ scope: 'page', what: target.path, why: "no shard: this page's capture did not finish" });
+  }
 
   const manifest: Manifest = {
     set: plan.set,
@@ -63,6 +71,7 @@ export default async function globalTeardown(): Promise<void> {
     capturedAt: meta.capturedAt,
     hoverLimit: plan.hoverLimit,
     uncovered,
+    dropped,
     entries: Object.fromEntries(Object.entries(entries).sort(([a], [b]) => a.localeCompare(b)))
   };
   writeFile(paths.manifest(plan.out), JSON.stringify(manifest, null, 2));
@@ -73,5 +82,27 @@ export default async function globalTeardown(): Promise<void> {
   );
   if (manifest.uncovered.length > 0)
     console.log(`visual: ${manifest.uncovered.length} uncovered route(s)/page(s) recorded in the manifest`);
+
+  /*
+   * THE COUNT ABOVE CANNOT SAY THIS, and that is why the line below is separate and why it throws.
+   *
+   * "N shots across 29 of 29 pages" is true of a capture that lost eight whole theme/viewport
+   * contexts: a page keeps its shard and its place in that count as long as ONE of its six contexts
+   * shot, so the page total is 29 either way and the shot total is a number nobody can predict, `hover`
+   * being one shot per element. A caller reading the summary of the run that lost 62 shots got no
+   * signal at all (ISS-9985).
+   *
+   * THROWN AFTER THE MANIFEST IS WRITTEN, so the capture directory and everything in it survives:
+   * playwright reports the teardown failure and exits non-zero, which is the answer a caller
+   * needs -- a capture with a hole in it must not be handed to `visual:compare` as a baseline, and
+   * `compare.ts` refuses one for the case where it is anyway.
+   */
+  if (dropped.length > 0) {
+    for (const loss of dropped) console.error(`visual: DROPPED [${loss.scope}] ${loss.what}: ${loss.why}`);
+    throw new Error(
+      `visual: ${dropped.length} rendering(s) dropped -- this capture is INCOMPLETE and cannot pass an A/A gate. ` +
+        `A dropped rendering is not a smaller answer, it is no answer. See ${paths.manifest(plan.out)}.`
+    );
+  }
 }
 // dry-copy-end

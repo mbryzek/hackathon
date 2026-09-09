@@ -61,5 +61,12 @@ export function readManifest(dir: string): Manifest {
   if (!existsSync(file)) {
     throw new Error(`${file} does not exist -- ${dir} is not a finished capture directory`);
   }
-  return JSON.parse(readFileSync(file, 'utf8')) as Manifest;
+  const manifest = JSON.parse(readFileSync(file, 'utf8')) as Manifest;
+  // `dropped` is what `compare.ts` refuses a capture over, so a manifest without one is refused
+  // BY NAME rather than read as a capture that dropped nothing. The two are opposite answers, and
+  // the second is the dangerous one: it is a pass over a hole nobody can see.
+  if (!Array.isArray(manifest.dropped)) {
+    throw new Error(`${file} has no "dropped" list -- re-capture ${dir}, this harness did not write it`);
+  }
+  return manifest;
 }
