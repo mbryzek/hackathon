@@ -1,14 +1,20 @@
 /**
- * Before a capture: prove the server is there, and start from an empty directory (ISS-9319).
+ * Before a capture: prove the server is there, prove it is COLD, and start from an empty
+ * directory (ISS-9319, ISS-10161).
  *
  * THE EMPTY DIRECTORY IS THE LOAD-BEARING HALF. A capture that reuses a directory inherits the
  * previous run's shots for every page the current run fails on, and those stale shots are
  * indistinguishable from fresh ones — so a compare would pass on a page nobody rendered. Clearing
  * is what makes "present on one side only" mean what `compareManifests` treats it as meaning.
+ *
+ * THE COLD-SERVER PROOF IS THE OTHER HALF, and it is the one the A/A gate structurally cannot
+ * cover, because the gate runs before anybody has edited anything. `coldServer.ts` carries it and
+ * the argument for it.
  */
 // dry-copy: visual-parity/setup — every copy of this region must match; `dev repo copies` checks it
 import { rmSync } from 'node:fs';
 import { paths, writeFile } from './files.ts';
+import { assertColdServer } from './coldServer.ts';
 import { capturePlan } from './plan.ts';
 
 export default async function globalSetup(): Promise<void> {
@@ -18,6 +24,10 @@ export default async function globalSetup(): Promise<void> {
     throw new Error(`visual: nothing answered at ${plan.baseUrl} -- start the server first (${String(error)})`);
   });
   if (response.status >= 500) throw new Error(`visual: ${plan.baseUrl} answered ${response.status}`);
+
+  // BEFORE THE DIRECTORY IS CLEARED: a refusal here should cost the operator nothing but the
+  // restart, and clearing first would throw away a capture they may still want to compare against.
+  await assertColdServer(plan.baseUrl);
 
   rmSync(plan.out, { recursive: true, force: true });
   writeFile(

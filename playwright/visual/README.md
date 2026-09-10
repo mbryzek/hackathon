@@ -25,6 +25,7 @@ others.
 #    different working trees. NODE_OPTIONS is not optional: this site shuffles its galleries
 #    during SSR, so without it the server serves a different document to every request. See
 #    server-determinism.mjs.
+# RESTART THE SERVER AFTER EVERY EDIT -- see "The server has to be cold" below.
 NODE_OPTIONS="--import $PWD/playwright/visual/server-determinism.mjs" \
   npm run dev -- --port 5744 --strictPort
 
@@ -55,6 +56,40 @@ unseeded `Math.random()` — and it gets fixed in `capture.ts` before the harnes
 change. Skipping this step is how a parity harness comes to report a number that means nothing:
 without it, a green A/B is indistinguishable from a harness whose noise happens to be zero today,
 and a red A/B is indistinguishable from noise.
+
+## The server has to be cold
+
+**A capture is only valid off a server that has not hot-reloaded since it started.** Edit anything
+in the tree the dev server is watching and vite applies the change in place; capture from that
+server and the answer is wrong.
+
+It is wrong in the way a parity harness must never be wrong: quietly, with plausible numbers. One
+working tree, one server, two captures — 112 mismatched shots taken cold, 144 taken after HMR
+applied a single edit to the stylesheet entry. The extra 32 were spread across four pages the
+branch does not touch, every one of them with **zero** computed-style differences to explain it and
+two of them differing only in document height. A reader who saw only the 144 would have concluded
+the change broke four pages it never went near.
+
+The mechanism is the one this harness is most exposed to. HMR re-instantiates the module it
+invalidated and re-injects that module's stylesheet as its own element, rather than in the position
+a cold load gives it, and a layered cascade is decided by exactly that ordering. Opening a fresh
+browser does not undo it: vite keeps the invalidation timestamp on the module node for the life of
+the server process and re-applies it to every later request, so the cold document a brand-new
+context asks for gets the re-instantiated module too.
+
+**The A/A gate above cannot catch this**, and that is what makes it dangerous rather than merely
+annoying. The gate runs before anybody has edited anything, so it passes every shot, the operator
+trusts the harness, and then edits the tree and re-captures from the server still running.
+
+So `setup.ts` refuses the capture instead. Before it clears the output directory it crawls the
+module graph the base url pulls in and looks for vite's `?t=<epoch ms>` stamp; finding one, it names
+the modules and stops. The proof is reported either way, with the count of modules it walked, and
+`VISUAL_ALLOW_HOT_SERVER=1` captures anyway for an operator who has looked and disagrees.
+
+The crawl reaches what the base document imports — the stylesheet entry, the root layout and the
+shell, which is the surface a CSS-toolchain change is about. It is not the whole server, so the rule
+stays a rule the operator keeps: **restart the server after every edit, and do not touch the tree
+while a capture is running.**
 
 ## The two sets
 
