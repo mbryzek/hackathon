@@ -22,6 +22,9 @@ export default defineConfig({
     // The visual parity harness's own units (`playwright/visual/*.test.ts`) run here too: they
     // pin the bookkeeping a capture cannot assert about itself -- the shot key, the page-set
     // derivation, the manifest compare. See playwright/visual/README.md.
-    include: ['src/**/*.test.ts', 'playwright/visual/**/*.test.ts']
+    // `playwright/*.test.ts` is the suite's own top-level harness on the same terms: the readiness
+    // probe global setup classifies a server with, which no spec can assert because a spec runs only
+    // once it has passed.
+    include: ['src/**/*.test.ts', 'playwright/*.test.ts', 'playwright/visual/**/*.test.ts']
   }
 });
