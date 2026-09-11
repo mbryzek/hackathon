@@ -2,17 +2,23 @@
  * Global Setup for Playwright Tests
  * Runs once before all tests to verify dependencies
  *
- * FAILING FAST IS FOR A REFUSED CONNECTION, NOT A SLOW ANSWER. A server that accepted the
- * connection is running; what it is doing is its first request, and on a cold dev server that is
- * expensive — vite compiles the root layout and the page on demand, and the page's own load may
- * then make its first call to a backend that is itself cold. So a probe answers within the budget
- * a spec gives a page navigation (`navigationTimeout` in playwright.config.ts) rather than a fixed
- * few seconds, and a refusal still fails immediately, since it never waits on the timer at all.
+ * FAILING FAST IS FOR A SERVER NOBODY STARTED, NOT FOR A SLOW OR A DROPPED ANSWER. A server that
+ * accepted the connection is running; what it is doing is its first request, and on a cold vite
+ * dev server that is expensive — it compiles the root layout and the page on demand, and the
+ * page's own load may then make its first call to a backend that is itself cold. So the check
+ * polls within the budget a spec gives a page navigation (`navigationTimeout` in
+ * playwright.config.ts) rather than reporting on one GET.
+ *
+ * A REFUSAL IS THE ONE VERDICT THAT DEPENDS ON WHO OWNS THE SERVER. When playwright manages it
+ * (`webServer` in playwright.config.ts, which CI sets), playwright has ALREADY waited for the URL
+ * to answer before this file runs, so a refusal here means not-yet and is waited out with every
+ * other failure. When a developer runs the server themselves, a refusal means they have not
+ * started it, and saying so immediately with the command to run beats a silent wait.
  */
 
 import type { FullConfig } from '@playwright/test';
 import { config } from './config';
-import { probe } from './probe';
+import { waitUntilUp } from './probe';
 
 interface ServerCheck {
   name: string;
@@ -33,26 +39,28 @@ function probeTimeoutMs(playwrightConfig: FullConfig): number {
  * Any response at all (2xx, 3xx, 4xx, 5xx) means the server is up — an auth-protected endpoint
  * answering 401 is a running server.
  */
-async function checkServer(check: ServerCheck, timeoutMs: number): Promise<boolean> {
-  const result = await probe(check.url, timeoutMs);
+async function checkServer(check: ServerCheck, timeoutMs: number, retryRefused: boolean): Promise<boolean> {
+  const result = await waitUntilUp(check.url, timeoutMs, { retryRefused });
   if (result.kind === 'up') {
     console.log(`✅ ${check.name} is running at ${check.url}`);
     return true;
   }
+  const seconds = timeoutMs / 1000;
 
   console.error('');
   switch (result.kind) {
     case 'timeout':
       console.error(`❌ ${check.name} timeout: ${check.url}`);
-      console.error(`   Server accepted the connection but did not respond within ${result.timeoutMs / 1000} seconds`);
+      console.error(`   Server accepted the connection but did not respond within ${seconds} seconds`);
       break;
     case 'refused':
       console.error(`❌ ${check.name} connection refused: ${check.url}`);
       console.error(`   ${check.description}`);
       break;
     case 'error':
-      console.error(`❌ ${check.name} error: ${result.message}`);
+      console.error(`❌ ${check.name} error: ${result.code ?? result.message}`);
       console.error(`   URL: ${check.url}`);
+      console.error(`   Last of ${seconds} seconds of attempts: ${result.message}`);
       break;
   }
 
@@ -87,12 +95,13 @@ export default async function globalSetup(playwrightConfig: FullConfig): Promise
   ];
 
   const timeoutMs = probeTimeoutMs(playwrightConfig);
+  const retryRefused = Boolean(playwrightConfig.webServer);
 
   // Check all servers
   const results = await Promise.all(
     servers.map(async (server) => ({
       server,
-      isRunning: await checkServer(server, timeoutMs)
+      isRunning: await checkServer(server, timeoutMs, retryRefused)
     }))
   );
 
