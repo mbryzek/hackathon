@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import type { Locator, Page } from '@playwright/test';
 import { config } from '../config';
+import { explainingFetch } from '../backendUnreachable';
 import type { WaitForElementOptions } from '../types';
 import { ApiClient } from '../generated/com-bryzek-playwright-vote';
 import type { TestEvent, TestEventForm } from '../generated/com-bryzek-playwright-vote';
@@ -14,7 +15,7 @@ import type { TestEvent, TestEventForm } from '../generated/com-bryzek-playwrigh
 /**
  * Generated API client instance for playwright endpoints
  */
-const apiClient = new ApiClient(config.BACKEND_BASE_URL);
+const apiClient = new ApiClient({ baseUrl: config.BACKEND_BASE_URL, fetch: explainingFetch });
 
 /**
  * Take screenshot with timestamp
