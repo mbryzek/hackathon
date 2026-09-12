@@ -65,6 +65,38 @@ dev codegen lint-consumers
 
 ci_report covered "dev codegen lint-consumers"
 
+# A GENERATED CLIENT BUILT FROM A SPEC NOBODY MERGED FAILS THIS BUILD (ISS-10269).
+# `dev api` resolves a sibling spec-owning clone under `~/code/ai/<feature>/` ahead of
+# anything merged, which is what makes a cross-repo change reviewable on one branch —
+# and the consumer half can then merge on its own while the spec it was generated from
+# is never pushed. trips shipped a reservation kind that way, and every booking of it
+# was refused as unrecognized (ISS-10261). Neither guard around it sees that: the push
+# guard asks whether a codegen run happened in this checkout, and one did, and
+# `dev codegen lint-consumers` asks about hand-written calls.
+#
+# IT JUDGES ONLY WHAT THE BRANCH ADDS — a contract symbol its copy of a generated file
+# declares that neither the fork point's copy nor a regeneration from the producers'
+# main mentions. So a producer spec the `codegen-sync` sweep has not carried over yet,
+# and a generator release, say nothing here; neither is anything the branch added. A
+# branch that changes no generated file pays one fetch and stops, so an ordinary pull
+# request costs almost nothing.
+#
+# EXIT 2 IS THE BOX, NEVER THE BRANCH — no fork point, a `dev repo` mirror or an
+# apibuilder that did not answer — and is mapped to 75 so the lane re-enqueues the head
+# instead of parking the pull request on a red nobody can act on. 1 is the branch.
+#
+# THE LEGITIMATE REFUSAL is the consumer half of an OPEN cross-repo change:
+# `DEV_REPO_PENDING=<producer>#<n> git push origin <branch>` measures this client
+# against the producer's pull request head and records the `pending:` label. The fleet's
+# own run sets nothing, so this pull request stays red until that one merges, which is
+# the order the two have to land in.
+rc=0; dev codegen landed || rc=$?
+case "$rc" in
+  0) ci_report covered "dev codegen landed" ;;
+  2) echo "ci/build.sh: dev codegen landed could not measure this head on this box" >&2; exit 75 ;;
+  *) exit "$rc" ;;
+esac
+
 # `npm ci` rather than `npm install`: the lockfile is the contract, and a build
 # that silently resolved a different tree than the one committed is a green
 # measured on something nobody is merging. It is fast here regardless — the
