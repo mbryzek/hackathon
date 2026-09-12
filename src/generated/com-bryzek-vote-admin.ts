@@ -137,8 +137,13 @@ export interface Tally {
  */
 export const parameterBounds = {
   getCodes: { limit: { minimum: 1, maximum: 101 }, offset: { minimum: 0 } },
-  getEvents: { id: { length: { minimum: 0, maximum: 100 } }, status: { length: { minimum: 0, maximum: 10 } }, limit: { minimum: 1, maximum: 101 }, offset: { minimum: 0 } },
-  getProjects: { limit: { minimum: 1, maximum: 101 }, offset: { minimum: 0 } },
+  getEvents: {
+    id: { length: { minimum: 0, maximum: 100 } },
+    status: { length: { minimum: 0, maximum: 10 } },
+    limit: { minimum: 1, maximum: 101 },
+    offset: { minimum: 0 }
+  },
+  getProjects: { limit: { minimum: 1, maximum: 101 }, offset: { minimum: 0 } }
 } as const;
 
 // ============================================================================
@@ -148,8 +153,8 @@ export const parameterBounds = {
 import { UnauthorizedErrorResponse } from './generated-error-unauthorized-error-response.ts';
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
 import { VoidResponse } from './generated-error-void-response.ts';
-import { ApiException, Util } from "./generated-util.ts";
-import type { ApiClientOptions } from "./generated-util.ts";
+import { ApiException, Util } from './generated-util.ts';
+import type { ApiClientOptions } from './generated-util.ts';
 
 export interface GetAdminSessionSessionOptions {
   headers?: Record<string, string>;
@@ -320,7 +325,7 @@ export class ApiClient {
   ): Promise<Response> {
     const requestInit: RequestInit = {
       ...init,
-      headers: { 'Content-Type': contentType, ...this.defaultHeaders, ...headers },
+      headers: { 'Content-Type': contentType, ...this.defaultHeaders, ...headers }
     };
     if (this.timeoutMs === undefined) {
       return this.fetchImpl(url, { ...requestInit, signal: signal ?? null });
@@ -348,12 +353,18 @@ export class ApiClient {
   async getAdminSessionSession(params?: GetAdminSessionSessionOptions): Promise<AdminSession> {
     const url = `${this.baseUrl}/vote/admin/session`;
 
-      const response = await this.request(url, {
-      method: 'GET',
-    }, 'application/json', params?.headers || {}, params?.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'GET'
+      },
+      'application/json',
+      params?.headers || {},
+      params?.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParse<AdminSession>(response, "AdminSession");
+      return await Util.mustParse<AdminSession>(response, 'AdminSession');
     }
 
     if (response.status === 401) {
@@ -365,19 +376,24 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createAdminSessionSessionsAndLogins(params: CreateAdminSessionSessionsAndLoginsOptions): Promise<AdminSession> {
     const url = `${this.baseUrl}/vote/admin/sessions/logins`;
 
-      const response = await this.request(url, {
-      method: 'POST',
-      body: JSON.stringify(params.body),
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'POST',
+        body: JSON.stringify(params.body)
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 201) {
-      return await Util.mustParse<AdminSession>(response, "AdminSession");
+      return await Util.mustParse<AdminSession>(response, 'AdminSession');
     }
 
     if (response.status === 422) {
@@ -385,15 +401,20 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async deleteAdminSessionSession(params?: DeleteAdminSessionSessionOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/session`;
 
-      const response = await this.request(url, {
-      method: 'DELETE',
-    }, 'application/json', params?.headers || {}, params?.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'DELETE'
+      },
+      'application/json',
+      params?.headers || {},
+      params?.signal
+    );
 
     if (response.status === 204) {
       return;
@@ -404,7 +425,6 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getCodes(params: GetCodesOptions): Promise<Code[]> {
@@ -423,12 +443,18 @@ export class ApiClient {
     const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/codes${queryString}`;
 
-      const response = await this.request(url, {
-      method: 'GET',
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'GET'
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParseArray<Code>(response, "Code");
+      return await Util.mustParseArray<Code>(response, 'Code');
     }
 
     if (response.status === 401) {
@@ -444,18 +470,23 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getCodeSummary(eventId: string, options?: GetCodeSummaryOptions): Promise<CodeSummary> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(eventId)}/codes/summary`;
 
-      const response = await this.request(url, {
-      method: 'GET',
-    }, 'application/json', options?.headers || {}, options?.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'GET'
+      },
+      'application/json',
+      options?.headers || {},
+      options?.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParse<CodeSummary>(response, "CodeSummary");
+      return await Util.mustParse<CodeSummary>(response, 'CodeSummary');
     }
 
     if (response.status === 401) {
@@ -467,16 +498,21 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createCodeGenerate(params: CreateCodeGenerateOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/codes/generate`;
 
-      const response = await this.request(url, {
-      method: 'POST',
-      body: JSON.stringify(params.body),
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'POST',
+        body: JSON.stringify(params.body)
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 204) {
       return;
@@ -495,19 +531,24 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createCodeExports(params: CreateCodeExportsOptions): Promise<File> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/codes/exports`;
 
-      const response = await this.request(url, {
-      method: 'POST',
-      body: JSON.stringify(params.body),
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'POST',
+        body: JSON.stringify(params.body)
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 201) {
-      return await Util.mustParse<File>(response, "File");
+      return await Util.mustParse<File>(response, 'File');
     }
 
     if (response.status === 401) {
@@ -523,15 +564,20 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async deleteCodeById(params: DeleteCodeByIdOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/codes/${encodeURIComponent(params.id)}`;
 
-      const response = await this.request(url, {
-      method: 'DELETE',
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'DELETE'
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 204) {
       return;
@@ -550,28 +596,33 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getEvents(params: GetEventsOptions): Promise<Event[]> {
     const queryParts: string[] = [];
     if (params.id !== undefined && params.id !== null) {
-      params.id.forEach(value => queryParts.push(`id=${encodeURIComponent(value)}`));
+      params.id.forEach((value) => queryParts.push(`id=${encodeURIComponent(value)}`));
     }
     if (params.status !== undefined && params.status !== null) {
-      params.status.forEach(value => queryParts.push(`status=${encodeURIComponent(String(value))}`));
+      params.status.forEach((value) => queryParts.push(`status=${encodeURIComponent(String(value))}`));
     }
     queryParts.push(`limit=${encodeURIComponent(String(params.limit))}`);
     queryParts.push(`offset=${encodeURIComponent(String(params.offset))}`);
     const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
     const url = `${this.baseUrl}/vote/admin/events${queryString}`;
 
-      const response = await this.request(url, {
-      method: 'GET',
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'GET'
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParseArray<Event>(response, "Event");
+      return await Util.mustParseArray<Event>(response, 'Event');
     }
 
     if (response.status === 401) {
@@ -583,18 +634,23 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getEventById(id: string, options?: GetEventByIdOptions): Promise<Event> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(id)}`;
 
-      const response = await this.request(url, {
-      method: 'GET',
-    }, 'application/json', options?.headers || {}, options?.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'GET'
+      },
+      'application/json',
+      options?.headers || {},
+      options?.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParse<Event>(response, "Event");
+      return await Util.mustParse<Event>(response, 'Event');
     }
 
     if (response.status === 401) {
@@ -606,19 +662,24 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createEvent(params: CreateEventOptions): Promise<Event> {
     const url = `${this.baseUrl}/vote/admin/events`;
 
-      const response = await this.request(url, {
-      method: 'POST',
-      body: JSON.stringify(params.body),
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'POST',
+        body: JSON.stringify(params.body)
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 201) {
-      return await Util.mustParse<Event>(response, "Event");
+      return await Util.mustParse<Event>(response, 'Event');
     }
 
     if (response.status === 401) {
@@ -630,19 +691,24 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updateEventById(params: UpdateEventByIdOptions): Promise<Event> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.id)}`;
 
-      const response = await this.request(url, {
-      method: 'PUT',
-      body: JSON.stringify(params.body),
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'PUT',
+        body: JSON.stringify(params.body)
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParse<Event>(response, "Event");
+      return await Util.mustParse<Event>(response, 'Event');
     }
 
     if (response.status === 401) {
@@ -658,15 +724,20 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async deleteEventById(id: string, options?: DeleteEventByIdOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(id)}`;
 
-      const response = await this.request(url, {
-      method: 'DELETE',
-    }, 'application/json', options?.headers || {}, options?.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'DELETE'
+      },
+      'application/json',
+      options?.headers || {},
+      options?.signal
+    );
 
     if (response.status === 204) {
       return;
@@ -681,7 +752,6 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getProjects(params: GetProjectsOptions): Promise<Project[]> {
@@ -691,12 +761,18 @@ export class ApiClient {
     const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects${queryString}`;
 
-      const response = await this.request(url, {
-      method: 'GET',
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'GET'
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParseArray<Project>(response, "Project");
+      return await Util.mustParseArray<Project>(response, 'Project');
     }
 
     if (response.status === 401) {
@@ -708,18 +784,23 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getProjectById(params: GetProjectByIdOptions): Promise<Project> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects/${encodeURIComponent(params.id)}`;
 
-      const response = await this.request(url, {
-      method: 'GET',
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'GET'
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParse<Project>(response, "Project");
+      return await Util.mustParse<Project>(response, 'Project');
     }
 
     if (response.status === 401) {
@@ -731,19 +812,24 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createProject(params: CreateProjectOptions): Promise<Project> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects`;
 
-      const response = await this.request(url, {
-      method: 'POST',
-      body: JSON.stringify(params.body),
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'POST',
+        body: JSON.stringify(params.body)
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 201) {
-      return await Util.mustParse<Project>(response, "Project");
+      return await Util.mustParse<Project>(response, 'Project');
     }
 
     if (response.status === 401) {
@@ -759,16 +845,21 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createProjectCsv(params: CreateProjectCsvOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects/csv`;
 
-      const response = await this.request(url, {
-      method: 'POST',
-      body: JSON.stringify(params.body),
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'POST',
+        body: JSON.stringify(params.body)
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 204) {
       return;
@@ -787,19 +878,24 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async updateProjectById(params: UpdateProjectByIdOptions): Promise<Project> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects/${encodeURIComponent(params.id)}`;
 
-      const response = await this.request(url, {
-      method: 'PUT',
-      body: JSON.stringify(params.body),
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'PUT',
+        body: JSON.stringify(params.body)
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParse<Project>(response, "Project");
+      return await Util.mustParse<Project>(response, 'Project');
     }
 
     if (response.status === 401) {
@@ -815,15 +911,20 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async deleteProjectById(params: DeleteProjectByIdOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects/${encodeURIComponent(params.id)}`;
 
-      const response = await this.request(url, {
-      method: 'DELETE',
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'DELETE'
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 204) {
       return;
@@ -838,16 +939,21 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createProjectReorder(params: CreateProjectReorderOptions): Promise<void> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(params.eventId)}/projects/reorder`;
 
-      const response = await this.request(url, {
-      method: 'POST',
-      body: JSON.stringify(params.body),
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'POST',
+        body: JSON.stringify(params.body)
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 204) {
       return;
@@ -866,18 +972,23 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async getEventResults(eventId: string, options?: GetEventResultsOptions): Promise<EventResults> {
     const url = `${this.baseUrl}/vote/admin/events/${encodeURIComponent(eventId)}/results`;
 
-      const response = await this.request(url, {
-      method: 'GET',
-    }, 'application/json', options?.headers || {}, options?.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'GET'
+      },
+      'application/json',
+      options?.headers || {},
+      options?.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParse<EventResults>(response, "EventResults");
+      return await Util.mustParse<EventResults>(response, 'EventResults');
     }
 
     if (response.status === 401) {
@@ -889,7 +1000,5 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
-
 }

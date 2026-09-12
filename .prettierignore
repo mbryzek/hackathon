@@ -2,8 +2,6 @@ node_modules/
 .svelte-kit/
 build/
 dist/
-src/generated/
-playwright/generated/
 package-lock.json
 playwright-report/
 test-results/

@@ -14,12 +14,12 @@ import type { ISODateTimeString } from './generated-types';
 export enum EventStatus {
   Draft = 'draft',
   Open = 'open',
-  Closed = 'closed',
+  Closed = 'closed'
 }
 
 export enum VoterType {
   Student = 'student',
-  Parent = 'parent',
+  Parent = 'parent'
 }
 
 // ============================================================================
@@ -99,8 +99,8 @@ export interface VoteForm {
 
 import { VoidResponse } from './generated-error-void-response.ts';
 import { ValidationErrorsResponse } from './generated-error-validation-errors-response.ts';
-import { ApiException, Util } from "./generated-util.ts";
-import type { ApiClientOptions } from "./generated-util.ts";
+import { ApiException, Util } from './generated-util.ts';
+import type { ApiClientOptions } from './generated-util.ts';
 
 export interface GetAllEventsOpenOptions {
   headers?: Record<string, string>;
@@ -149,7 +149,7 @@ export class ApiClient {
   ): Promise<Response> {
     const requestInit: RequestInit = {
       ...init,
-      headers: { 'Content-Type': contentType, ...this.defaultHeaders, ...headers },
+      headers: { 'Content-Type': contentType, ...this.defaultHeaders, ...headers }
     };
     if (this.timeoutMs === undefined) {
       return this.fetchImpl(url, { ...requestInit, signal: signal ?? null });
@@ -177,28 +177,39 @@ export class ApiClient {
   async getAllEventsOpen(params?: GetAllEventsOpenOptions): Promise<Event[]> {
     const url = `${this.baseUrl}/vote/events/all/open`;
 
-      const response = await this.request(url, {
-      method: 'GET',
-    }, 'application/json', params?.headers || {}, params?.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'GET'
+      },
+      'application/json',
+      params?.headers || {},
+      params?.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParseArray<Event>(response, "Event");
+      return await Util.mustParseArray<Event>(response, 'Event');
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createVoteCodeAndVerifications(params: CreateVoteCodeAndVerificationsOptions): Promise<Vote> {
     const url = `${this.baseUrl}/vote/events/${encodeURIComponent(params.eventKey)}/code/verifications`;
 
-      const response = await this.request(url, {
-      method: 'POST',
-      body: JSON.stringify(params.body),
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'POST',
+        body: JSON.stringify(params.body)
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParse<Vote>(response, "Vote");
+      return await Util.mustParse<Vote>(response, 'Vote');
     }
 
     if (response.status === 404) {
@@ -210,19 +221,24 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
 
   async createVote(params: CreateVoteOptions): Promise<Vote> {
     const url = `${this.baseUrl}/vote/events/${encodeURIComponent(params.eventKey)}`;
 
-      const response = await this.request(url, {
-      method: 'POST',
-      body: JSON.stringify(params.body),
-    }, 'application/json', params.headers || {}, params.signal);
+    const response = await this.request(
+      url,
+      {
+        method: 'POST',
+        body: JSON.stringify(params.body)
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
 
     if (response.status === 200) {
-      return await Util.mustParse<Vote>(response, "Vote");
+      return await Util.mustParse<Vote>(response, 'Vote');
     }
 
     if (response.status === 404) {
@@ -234,7 +250,5 @@ export class ApiClient {
     }
 
     throw new ApiException(response, `Request failed with status ${response.status}`);
-
   }
-
 }
