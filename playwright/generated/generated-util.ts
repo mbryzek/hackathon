@@ -46,10 +46,7 @@ export class Util {
     try {
       const data = await response.json();
       if (!Array.isArray(data)) {
-        throw new ApiParseException(
-          response,
-          `Unable to parse response body. Expected an array but found a ${typeof data}`
-        );
+        throw new ApiParseException(response, `Unable to parse response body. Expected an array but found a ${typeof data}`);
       }
       return data as T[];
     } catch (error) {
@@ -136,13 +133,11 @@ export interface ApiCallOptions {
   onError?: (info: { status: number; url: string; errors: ApiError[] }) => void;
 }
 
-const NETWORK_ERROR_MESSAGE =
-  'Unable to connect to the server. Please check your internet connection and try again.';
+const NETWORK_ERROR_MESSAGE = 'Unable to connect to the server. Please check your internet connection and try again.';
 
 const TIMEOUT_ERROR_MESSAGE = 'Request timed out. Please try again.';
 
-const UNREADABLE_RESPONSE_MESSAGE =
-  'The server sent a response we could not read. Please try again.';
+const UNREADABLE_RESPONSE_MESSAGE = 'The server sent a response we could not read. Please try again.';
 
 /**
  * The message shown when the server answered with a status and no usable body.
@@ -163,9 +158,7 @@ export function statusMessage(status: number): string {
     case 429:
       return 'Too many requests. Please try again shortly.';
     default:
-      return status >= 500
-        ? 'The server encountered an error. Please try again.'
-        : `Request failed (${status})`;
+      return status >= 500 ? 'The server encountered an error. Please try again.' : `Request failed (${status})`;
   }
 }
 
@@ -174,11 +167,7 @@ function isResponseCarrier(error: unknown): error is { response: Response } {
     return false;
   }
   const response = (error as { response: unknown }).response;
-  return (
-    typeof response === 'object' &&
-    response !== null &&
-    typeof (response as { status?: unknown }).status === 'number'
-  );
+  return typeof response === 'object' && response !== null && typeof (response as { status?: unknown }).status === 'number';
 }
 
 function toApiError(value: unknown): ApiError | undefined {
@@ -192,9 +181,7 @@ function toApiError(value: unknown): ApiError | undefined {
   if (typeof record.message !== 'string') {
     return undefined;
   }
-  return typeof record.field === 'string'
-    ? { message: record.message, field: record.field }
-    : { message: record.message };
+  return typeof record.field === 'string' ? { message: record.message, field: record.field } : { message: record.message };
 }
 
 function decodeErrors(body: unknown, status: number): ApiError[] {
@@ -252,11 +239,7 @@ function networkMessage(error: unknown): string {
   if (message.includes('timeout')) {
     return TIMEOUT_ERROR_MESSAGE;
   }
-  if (
-    message.includes('fetch failed') ||
-    message.includes('failed to fetch') ||
-    message.includes('network')
-  ) {
+  if (message.includes('fetch failed') || message.includes('failed to fetch') || message.includes('network')) {
     return NETWORK_ERROR_MESSAGE;
   }
   // Anything else - a `SyntaxError` from a body that is not JSON, a bug in the client -
@@ -288,10 +271,7 @@ function networkMessage(error: unknown): string {
  *   // result.errors: field-specific when the server sent them
  * }
  */
-export async function handleApiCall<T>(
-  apiCall: () => Promise<T>,
-  options?: ApiCallOptions
-): Promise<ApiResponse<T>> {
+export async function handleApiCall<T>(apiCall: () => Promise<T>, options?: ApiCallOptions): Promise<ApiResponse<T>> {
   try {
     const data = await apiCall();
     // 200 for every success, whatever the server sent: `apiCall` resolves to the decoded
@@ -350,10 +330,7 @@ export async function handleApiCallWithTimeout<T>(
 ): Promise<ApiResponse<T>> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<ApiResponse<T>>((resolve) => {
-    timer = setTimeout(
-      () => resolve({ status: 504, errors: [{ message: TIMEOUT_ERROR_MESSAGE }] }),
-      timeoutMs
-    );
+    timer = setTimeout(() => resolve({ status: 504, errors: [{ message: TIMEOUT_ERROR_MESSAGE }] }), timeoutMs);
   });
   try {
     return await Promise.race([handleApiCall(apiCall, options), timeout]);
