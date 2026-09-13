@@ -396,10 +396,10 @@ function plantedCookies(baseUrl: string): Cookie[] {
  * enough, and setting it after navigation would capture the page mid-swap. An app that has no
  * theme ignores the key and renders both contexts identically; see `matrix.ts`.
  *
- * THE KEY ITSELF IS REPO-SPECIFIC and is declared ABOVE this region, because it is the app's own
- * key and not the harness's: playbook-www reads `ca-theme` where the consoles read
- * `playbook-theme`. Hard-coding it here is what kept that repo out of this region, and out of
- * every determinism fix the region has had since.
+ * THE KEY ITSELF IS REPO-SPECIFIC and is declared BELOW this region, as `THEME_STORAGE_KEY`,
+ * because it is the app's own key and not the harness's: the apps do not agree on one, and each
+ * states its own beside that declaration. Naming a key HERE is what kept the repos that differ
+ * out of this region, and out of every determinism fix the region has had since.
  */
 export async function themedContext(browser: Browser, theme: ThemeName, viewport: Viewport, baseUrl: string): Promise<BrowserContext> {
   const context = await browser.newContext({
@@ -1128,9 +1128,9 @@ export async function captureShot(page: Page, state: StateName, index = 0): Prom
  * boots.
  *
  * REPO-SPECIFIC, and outside the shared region above for exactly that reason: it is the app's own
- * key and not the harness's — the consoles read `playbook-theme`, playbook-www reads `ca-theme`.
- * Hard-coding it inside the region is what kept playbook-www out of it, and out of every
- * determinism fix the region has had since. `themedContext` reads it at call time, so declaring it
- * here is enough for a repo to state its own key and still share every line of the harness.
+ * key and not the harness's, and the apps do not agree on one. Naming a key inside the region is
+ * what kept the repos that differ out of it, and out of every determinism fix the region has had
+ * since. `themedContext` reads it at call time, so declaring it here is enough for a repo to state
+ * its own key and still share every line of the harness.
  */
 const THEME_STORAGE_KEY = 'playbook-theme';
