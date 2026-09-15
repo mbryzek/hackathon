@@ -25,6 +25,14 @@ export default defineConfig({
     // `playwright/*.test.ts` is the suite's own top-level harness on the same terms: the readiness
     // probe global setup classifies a server with, which no spec can assert because a spec runs only
     // once it has passed.
-    include: ['src/**/*.test.ts', 'playwright/*.test.ts', 'playwright/visual/**/*.test.ts']
+    include: ['src/**/*.test.ts', 'playwright/*.test.ts', 'playwright/visual/**/*.test.ts'],
+    // NODE'S OWN `localStorage` HIDES JSDOM'S. From Node 25 Web Storage is on by default, and
+    // without `--localstorage-file` the global it installs reads `undefined` — and vitest's jsdom
+    // environment leaves a global Node already defines alone, so a jsdom test reaching for
+    // `localStorage` gets Node's nothing instead of jsdom's store. `engines` admits Node 26, so a
+    // runner on it fails every such test while one on 24 passes them. Turning the Node feature off
+    // in the test workers leaves jsdom's the only `localStorage` there is; the flag is accepted by
+    // every Node line `engines` names. ISS-11542
+    execArgv: ['--no-experimental-webstorage']
   }
 });
