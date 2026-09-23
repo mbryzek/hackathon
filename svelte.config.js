@@ -91,12 +91,12 @@ const config = {
   preprocess: vitePreprocess(),
 
   kit: {
-    adapter: adapter({
-      routes: {
-        include: ['/*'],
-        exclude: ['<all>']
-      }
-    }),
+    // No `routes` option: it only ever generated `_routes.json`, which is how a Cloudflare
+    // PAGES project decides which requests reach its Function. This app deploys as a Worker
+    // with static assets (`main` + `[assets]` in wrangler.toml), where the asset server
+    // answers what it has and the Worker gets the rest — so the adapter reads the option
+    // nowhere and passing one would read as routing configuration that does nothing.
+    adapter: adapter(),
     alias: {
       $generated: 'src/generated'
     }

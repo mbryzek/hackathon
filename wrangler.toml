@@ -1,7 +1,54 @@
-# Cloudflare Pages Configuration
+# Cloudflare Worker configuration — hackathon, host bthackathon.com.
 name = "hackathon"
 compatibility_date = "2026-01-06"
 compatibility_flags = ["nodejs_compat"]
 
-# Pages configuration
-pages_build_output_dir = ".svelte-kit/cloudflare"
+# adapter-cloudflare writes its generated Worker here, and this is what makes the
+# deploy a WORKER rather than a Pages project: `dev release sveltekit` reads this
+# file and runs `wrangler deploy` when it declares `main`, `wrangler pages deploy`
+# when it declares `pages_build_output_dir`.
+main = ".svelte-kit/cloudflare/_worker.js"
+
+# Persist Workers Logs. Cloudflare retains nothing a Worker writes unless this block
+# asks it to, and a Pages project cannot carry one at all — which is why this app moved
+# off Pages. What it makes readable is every invocation of the server tier (/vote,
+# /vote/admin, /_internal_/version) and, with it, anything printed while serving one:
+# SvelteKit's default `handleError` console.errors an unhandled exception, and this repo
+# adds no server logging of its own yet. Before this block that was live-tail only, so a
+# line logged for a question asked afterwards was already gone. `head_sampling_rate = 1`
+# keeps all of it, matching the other Workers on this fleet (plybk-admin, plybk-app,
+# trips, account). `dev obs worker-logs --app hackathon` is the read, and
+# `dev obs hosting` is the fleet-wide table. ISS-13429
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+# The build output is served as static assets, with `main` above handling everything
+# the asset server does not answer — the Worker equivalent of a Pages Function. The
+# adapter's `.assetsignore` is what keeps `_worker.js` and friends off the network,
+# and the `_headers` file it copies into this directory is applied by the asset
+# server exactly as Pages applied it.
+[assets]
+directory = ".svelte-kit/cloudflare"
+binding = "ASSETS"
+
+# Fixed, single-host route on the apex. bthackathon.com is a zone in the `personal`
+# Cloudflare account — the same account this Worker deploys to — and its apex record
+# is already proxied, so the route attaches to it and nothing else claims the host.
+# www.bthackathon.com is not here: it is answered by a zone-level redirect to the
+# apex, which is not this Worker's to serve and does not move with it.
+[[routes]]
+pattern = "bthackathon.com/*"
+zone_name = "bthackathon.com"
+
+# NO [vars], and no VITE_* anywhere in this file. wrangler `[vars]` are RUNTIME Worker
+# bindings (`event.platform.env`); `import.meta.env`, which src/lib/config.ts is the
+# only reader of, is inlined by Vite at BUILD time out of the dotenv files. So a VITE_*
+# set here reaches nothing and reads as configuration that works — .env / .env.production
+# is the single source of truth for client config, and nothing in src/ reads
+# `platform.env`.
+#
+# NO account_id either: the Cloudflare account is pinned by the deploy itself
+# (CLOUDFLARE_ACCOUNT_ID, resolved from the target's label in the env repo's
+# apps/hackathon/config.pkl), which keeps the account id out of a file every session
+# can read.

@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs';
 import { SECURITY_HEADERS } from './security-headers';
 
 /**
- * `_headers` covers what Cloudflare Pages serves directly (prerendered pages, static
- * assets); `SECURITY_HEADERS` covers what the SvelteKit worker renders. Neither covers
- * the other's surface, so a header added to one and not the other ships applied to half
- * the site with nothing to say so. This is the thing that says so.
+ * `_headers` covers what Cloudflare's asset server serves directly (prerendered pages,
+ * static assets); `SECURITY_HEADERS` covers what the SvelteKit Worker renders. Neither
+ * covers the other's surface, so a header added to one and not the other ships applied to
+ * half the site with nothing to say so. This is the thing that says so.
  */
 const HEADERS_FILE = new URL('../../_headers', import.meta.url);
 
