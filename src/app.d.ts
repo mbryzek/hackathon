@@ -7,7 +7,10 @@ export type AdminSession = {
 
 declare global {
   namespace App {
-    // interface Error {}
+    interface Error {
+      /** The id `handleError` logged this failure under; the error page shows it. */
+      errorId?: string;
+    }
     interface Locals {
       /**
        * The admin session id from the httpOnly cookie. Server-side only, and never returned

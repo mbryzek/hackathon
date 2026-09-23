@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Handle } from '@sveltejs/kit';
-import { handle } from './hooks.server';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
+import { handle, handleError } from './hooks.server';
 import { SECURITY_HEADERS } from '$lib/security-headers';
 import { SESSION_COOKIE } from '$lib/config';
 import type { AdminSession, ApiResponse } from '$lib/api/client';
@@ -136,5 +136,62 @@ describe('handle', () => {
 
     expect(locals.adminSession).toEqual({ id: 'sess-1' });
     expect(deletedCookies).toEqual([]);
+  });
+});
+
+type HandleErrorInput = Parameters<HandleServerError>[0];
+
+/** The hook reads the request's method and path and the route id, so the event is faked down to those. */
+function failure(pathname: string, error: unknown = new Error('boom')): HandleErrorInput {
+  return {
+    error,
+    status: 500,
+    message: 'Internal Error',
+    event: {
+      url: new URL(`https://hackathon.bergen.tech${pathname}`),
+      request: new Request(`https://hackathon.bergen.tech${pathname}`),
+      route: { id: '/vote/[event_key]' }
+    }
+  } as unknown as HandleErrorInput;
+}
+
+describe('handleError', () => {
+  it('logs a [Server Error] line under the same errorId it hands the error page', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const error = new Error('boom');
+
+    const result = await handleError(failure('/vote/spring', error));
+
+    expect(result?.errorId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(consoleError).toHaveBeenCalledWith('[Server Error]', {
+      errorId: result?.errorId,
+      status: 500,
+      method: 'GET',
+      path: '/vote/spring',
+      route: '/vote/[event_key]',
+      message: 'Internal Error',
+      error
+    });
+    consoleError.mockRestore();
+  });
+
+  it('mints a distinct errorId per failure, so two reports never name the same line', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const first = await handleError(failure('/vote'));
+    const second = await handleError(failure('/vote'));
+
+    expect(first?.errorId).not.toEqual(second?.errorId);
+    consoleError.mockRestore();
+  });
+
+  it('does not log a missing browser icon, which every crawler requests', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const result = await handleError(failure('/favicon.ico'));
+
+    expect(consoleError).not.toHaveBeenCalled();
+    expect(result?.errorId).toBeDefined();
+    consoleError.mockRestore();
   });
 });
