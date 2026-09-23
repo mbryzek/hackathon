@@ -1,13 +1,14 @@
 /**
  * SvelteKit server hooks
  *
- * Sets the security headers on every response the worker renders, and establishes the admin
- * session for /vote/admin pages. Prerendered pages and static assets never reach this hook —
+ * Sets the security headers on every response the worker renders, establishes the admin
+ * session for /vote/admin pages, and logs every unexpected server error under an id the error
+ * page shows the user. Prerendered pages and static assets never reach this hook —
  * see `$lib/security-headers` for how they are covered.
  */
 
-import type { Handle } from '@sveltejs/kit';
-import { SESSION_COOKIE } from '$lib/config';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
+import { SESSION_COOKIE, config } from '$lib/config';
 import { SECURITY_HEADERS } from '$lib/security-headers';
 import { adminApi } from '$lib/server/adminApi';
 
@@ -57,4 +58,37 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
 
   return response;
+};
+
+const IGNORED_PATHS = ['/favicon.ico', '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png'];
+
+/**
+ * Logs an unexpected server error as one `[Server Error]` line carrying the `errorId` the error
+ * page shows. Workers Logs retains that line, so a user quoting the id names exactly one
+ * failure in `dev obs worker-logs --app hackathon`. Errors thrown with `error()` are expected
+ * and never reach this hook.
+ */
+export const handleError: HandleServerError = ({ error, event, status, message }) => {
+  const errorId = crypto.randomUUID();
+
+  if (!IGNORED_PATHS.includes(event.url.pathname)) {
+    console.error('[Server Error]', {
+      errorId,
+      status,
+      method: event.request.method,
+      path: event.url.pathname,
+      route: event.route.id,
+      message,
+      error
+    });
+  }
+
+  return {
+    message: config.isProduction
+      ? 'An unexpected error occurred. Please try again.'
+      : error instanceof Error
+        ? error.message
+        : 'Unknown error',
+    errorId
+  };
 };
