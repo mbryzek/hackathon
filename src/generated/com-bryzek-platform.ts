@@ -54,10 +54,6 @@ export enum NotificationChannel {
   None = 'none'
 }
 
-export enum PlaybookFeature {
-  AiEmployees = 'ai_employees'
-}
-
 export enum RallydNotificationType {
   GameActivity = 'game_activity',
   OrganizerHelp = 'organizer_help',
