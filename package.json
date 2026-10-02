@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "engines": {
-    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+    "node": "^24.16.0 || >=26.0.0"
   },
   "scripts": {
     "dev": "vite dev",
@@ -50,6 +50,7 @@
     "svelte": "^5.57.1",
     "svelte-check": "^4.7.0",
     "svelte-eslint-parser": "^1.7.1",
+    "svelte-vitals": "0.55.1",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
     "vite": "^8.0.16",
