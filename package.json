@@ -50,6 +50,7 @@
     "svelte": "^5.57.1",
     "svelte-check": "^4.7.0",
     "svelte-eslint-parser": "^1.7.1",
+    "svelte-vitals": "0.55.1",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
     "vite": "^8.0.16",
