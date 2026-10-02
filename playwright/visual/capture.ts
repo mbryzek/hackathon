@@ -60,6 +60,12 @@
  *     to decode; neither is something a CSS parity harness has a question about. See
  *     `stubForeignMedia` (ISS-9327).
  *   - A LATE CLIENT-SIDE REDIRECT, waited out before any shot. See `settle` (ISS-9327).
+ *   - THE ORDER OF THE DEV SERVER'S STYLESHEETS, which vite decides by when each module happened
+ *     to evaluate, so two equally specific rules in two files trade places with the runner's load.
+ *     Put into one canonical order before every shot. See `canonicalStyleOrder` (ISS-15642).
+ *   - WHERE AN INNER SCROLLER WAS LEFT, which is the history of the page's own layout rather than
+ *     anything the stylesheet says. Every one is put back at its origin. See `canonicalize`
+ *     (ISS-15642).
  */
 // dry-copy: visual-parity/capture — every copy of this region must match; `dev repo copies` checks it
 import { createHash } from 'node:crypto';
@@ -720,6 +726,7 @@ async function quiet(page: Page, timeoutMs: number): Promise<boolean> {
   }
   await awaitMedia(page);
   await page.waitForLoadState('networkidle', { timeout: timeoutMs });
+  await canonicalize(page);
   await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
   await page.waitForTimeout(SETTLE_MS);
 
@@ -731,6 +738,91 @@ async function quiet(page: Page, timeoutMs: number): Promise<boolean> {
     await loadDeclaredFaces(page);
   }
   return true;
+}
+
+/**
+ * THE ORDER THE DEV SERVER'S STYLESHEETS ARE PUT IN BEFORE A SHOT, given the ids they carry
+ * (ISS-15642).
+ *
+ * VITE'S DEV CLIENT ORDERS THEM BY TIMING. Each CSS module calls `updateStyle` when it evaluates,
+ * and that appends a `<style data-vite-dev-id>` to `<head>` -- chained after the previous one only
+ * until a `setTimeout(0)` fires, at the end of the head after it. SvelteKit loads the root layout's
+ * node and the page's node CONCURRENTLY, and a page load that does not call `parent()` goes on to
+ * import its own components without waiting for the layout. So whether the global stylesheet the
+ * layout imports lands before or after a page component's stylesheet is decided by which module
+ * graph finished fetching first, and under load either one can.
+ *
+ * THAT DECIDES THE CASCADE WHEREVER TWO RULES TIE ON SPECIFICITY, which a global `.field .hint`
+ * and a component's scoped `.hint.svelte-xyz` do. Measured on playbook-admin's undo-confirm
+ * preview, one server, one page: the hint rendered at 12px with app.css arriving first and at
+ * 12.5px with app.css held back three seconds -- and the A/A gate it broke differed on 35 shots
+ * across three pages, every one a hover state, a font size or a chip border, with nothing changed
+ * in between.
+ *
+ * THE CANONICAL ORDER IS THE ONE A PRODUCTION BUILD GIVES: plain stylesheets first, component
+ * styles after, so a component wins a tie against the global sheet as it does when the layout's CSS
+ * is linked ahead of the page's. A component style is told apart by its id carrying a query -- vite
+ * names one `<file>?svelte&type=style&lang.css` (or `?vue&...`), and a plain file has none. Within
+ * each group the order is the id's, which is what makes it the same on every run: two captures of
+ * one tree carry the same ids, and two working trees of an A/B differ only in a shared prefix.
+ *
+ * A capture of a production build has no `data-vite-dev-id` element at all, so this is a no-op
+ * there: its order was never the dev client's to decide.
+ */
+export function canonicalStyleOrder(ids: readonly string[]): string[] {
+  const byId = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+  const plain = ids.filter((id) => !id.includes('?')).sort(byId);
+  const component = ids.filter((id) => id.includes('?')).sort(byId);
+  return [...plain, ...component];
+}
+
+/**
+ * Put the page into the state a shot is allowed to depend on: the dev server's stylesheets in
+ * `canonicalStyleOrder`, and every inner scroller at its origin (ISS-15642).
+ *
+ * THE STYLESHEETS ARE MOVED AS ONE BLOCK to where the first of them stood, and only when they are
+ * out of order -- a move is a whole-document style recalc, and the usual page is already in order.
+ *
+ * AN INNER SCROLLER'S OFFSET IS HISTORY, NOT STYLE. A chat thread that sets `scrollTop` to its
+ * `scrollHeight` on mount keeps whatever offset that produced, and anything that grows the thread
+ * afterwards -- a face, an image, a late stylesheet -- leaves it short of the bottom by an amount
+ * that depends on when it arrived. Measured on the issue-chat preview: the turns column stopped at
+ * 308px of 454 on one load and 332px on the next with a font held back, with identical computed
+ * styles, and that offset then held for every shot of the context. The ORIGIN is the one position
+ * that no history can reach differently, so every element but the document's own scroller is put
+ * there. The document is left alone, as `focus` and `hover` leave it: the harness never scrolls it.
+ *
+ * Called at the end of every settle, so the hover targets are measured against the page the shot
+ * will show, and again inside `screenshotFrozen`, because a state change can mount a component
+ * whose stylesheet arrives with it.
+ */
+async function canonicalize(page: Page): Promise<void> {
+  const ids = await page.evaluate(() =>
+    Array.from(document.head.querySelectorAll('style[data-vite-dev-id]')).map((style) => style.getAttribute('data-vite-dev-id') ?? '')
+  );
+  const order = canonicalStyleOrder(ids);
+  if (order.some((id, at) => id !== ids[at])) {
+    await page.evaluate((wanted) => {
+      const styles = Array.from(document.head.querySelectorAll('style[data-vite-dev-id]'));
+      const first = styles[0];
+      if (first === undefined) return;
+      const marker = document.createComment('visual-style-order');
+      first.before(marker);
+      const byId = new Map(styles.map((style) => [style.getAttribute('data-vite-dev-id') ?? '', style]));
+      for (const id of wanted) {
+        const style = byId.get(id);
+        if (style !== undefined) marker.before(style);
+      }
+      marker.remove();
+    }, order);
+  }
+  await page.evaluate(() => {
+    for (const element of Array.from(document.querySelectorAll('*'))) {
+      if (element === document.scrollingElement || element === document.body) continue;
+      if (element.scrollTop !== 0) element.scrollTop = 0;
+      if (element.scrollLeft !== 0) element.scrollLeft = 0;
+    }
+  });
 }
 
 /** A fresh document of the same url, for a page that is carrying a resolution it cannot reproduce. */
@@ -1027,6 +1119,7 @@ export async function screenshotFrozen(page: Page): Promise<Buffer | ShotFailure
     },
     { id: FREEZE_ID, css: FREEZE_CSS }
   );
+  await canonicalize(page);
   await page.waitForTimeout(SETTLE_MS);
   try {
     await loadDeclaredFaces(page);
