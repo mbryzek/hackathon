@@ -303,6 +303,8 @@ export interface Person {
   work_phone?: string;
   time_zone: TimeZone;
   photo?: File;
+  /** The language this person reads, as a lowercase primary language subtag (pl, en). Absent is not set: a client falls back to the language the device sends. Delivered with the session so a client can apply it before anything else renders. */
+  language?: string;
 }
 
 export interface PersonForm {
