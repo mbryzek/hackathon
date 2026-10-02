@@ -117,6 +117,45 @@ npm ci
 # `npm run test:e2e` below is not.
 npm run check
 
+# A NEW CORRECTNESS, SECURITY OR A11Y FINDING FAILS THIS BUILD (ISS-15600).
+# svelte-vitals reads the routes and components statically: an `{#each}` with no
+# key, an `{@html}` site, an ARIA attribute the element does not allow, an id
+# repeated on one route. `svelte-vitals.config.js` turns every other category
+# off and sets `failOn: 'warning'`.
+#
+# ONLY WHAT THIS BRANCH INTRODUCES. `--baseline` analyzes the merge base in a
+# temporary worktree and subtracts every finding already there, so the backlog
+# on `main` parks nothing; burning it down is separate work. The base is the
+# MERGE BASE with a freshly fetched `main`, never `origin/main`: a CI checkout
+# names an explicit refspec on every fetch, so its remote-tracking ref is as old
+# as the clone, and a baseline against it would charge this branch with every
+# finding merged since. On `main` the merge base is the head, so nothing is new.
+#
+# A BASELINE THAT COULD NOT BE MEASURED IS 75, NEVER A RED. svelte-vitals itself
+# answers a failed baseline by reporting the whole backlog, which would park the
+# pull request on findings it did not write — so its stderr is read for that
+# warning, and an unreachable `main` is the same answer. Exit 2 (the analysis
+# did not run) fails the build under `set -e`: "could not check" is not "clean".
+#
+# A finding that is right as written is suppressed AT THE SITE with a
+# `svelte-vitals-disable-next-line <rule-id>` comment, never by dropping this
+# step. `npx svelte-vitals explain <rule-id>` says what a rule wants.
+git fetch --quiet origin "+refs/heads/main:refs/ci/svelte-vitals-base" ||
+  { echo "ci/build.sh: could not fetch main for the svelte-vitals baseline" >&2; exit 75; }
+vitals_base=$(git merge-base HEAD refs/ci/svelte-vitals-base) ||
+  { echo "ci/build.sh: no merge base with main for the svelte-vitals baseline" >&2; exit 75; }
+vitals_err=$(mktemp -t svelte-vitals)
+rc=0
+npx svelte-vitals --baseline "$vitals_base" --reporter console --no-color --no-animation 2>"$vitals_err" || rc=$?
+cat "$vitals_err" >&2
+if [ "$rc" -ne 0 ] && grep -q "reporting all findings" "$vitals_err"; then
+  echo "ci/build.sh: svelte-vitals could not analyze the baseline $vitals_base on this box" >&2
+  exit 75
+fi
+rm -f "$vitals_err"
+[ "$rc" -eq 0 ] || exit "$rc"
+ci_report covered "svelte-vitals (new correctness/security/a11y findings vs ${vitals_base:0:12})"
+
 # THE BUILD IS A VERDICT `npm run check` CANNOT GIVE (ISS-868). SvelteKit's
 # "$lib/server imported into browser code" guard is a vite BUILD plugin, so
 # svelte-check is blind to it — as it is to a bad adapter config and every other
