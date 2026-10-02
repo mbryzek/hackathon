@@ -29,9 +29,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.57.0",
-    "@sveltejs/adapter-auto": "^4.0.0",
     "@sveltejs/adapter-cloudflare": "^7.2.4",
-    "@sveltejs/adapter-static": "^3.0.0",
     "@sveltejs/kit": "^2.70.2",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@tailwindcss/forms": "^0.5.10",
@@ -49,11 +47,11 @@
     "prettier-plugin-svelte": "^4.1.1",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "semver": "^7.8.5",
-    "svelte": "^5.55.7",
-    "svelte-check": "^4.3.3",
+    "svelte": "^5.57.1",
+    "svelte-check": "^4.7.0",
     "svelte-eslint-parser": "^1.7.1",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.3",
+    "typescript": "~6.0.3",
     "vite": "^8.0.16",
     "vitest": "^5.0.0"
   }
