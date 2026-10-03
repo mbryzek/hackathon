@@ -269,11 +269,23 @@ from inside the page. A page that mounts something on hover sees a reflow at tha
 pointer is no longer over what it was over, and the app tears the node down on whatever grace
 period its hover clear runs on. The pointer never moves again, so nothing brings it back. Measured
 on the chart previews, which portal a tooltip bubble: eight consecutive shots of one hovered chart
-band, no other input, and the bubble vanished at the fourth and stayed gone. So the document's
-structure — every element's tag and class — is read either side of the screenshot, and a shot whose
-page moved across its own raster is **retaken with the state re-applied**, not recorded. Re-applying
-is the whole repair; a second screenshot of the same page is a second screenshot of the torn-down
-state.
+band, no other input, and the bubble vanished at the fourth and stayed gone.
+
+The teardown is an event, so the event is sealed off. At 1x1 the pointer is outside the page, and
+Chromium dispatches `pointerout`, `mouseout` and `mouseleave` at a pointer that never moved — logged
+from inside the page, in the same millisecond as the `resize` — then `pointerover` once the viewport
+is back. A listener installed before any page script runs swallows every pointer and mouse boundary
+or move event from the moment the freeze stylesheet goes in until it comes out; the harness moves
+the pointer only outside that window. Unsealed, on a runner at load 25-48, every hover shot of
+playbook-app's `court` and `member` previews was disturbed on all twelve attempts and dropped, and the `pointerover` that
+re-mounts the bubble let other torn-down shots through a matching structure check and into an A/A
+failure (ISS-15799).
+
+The structure check stays, for what an event seal cannot reach — a `ResizeObserver` re-rendering a
+chart at the 1x1 width is a callback, not an event. The document's structure — every element's tag
+and class — is read either side of the screenshot, and a shot whose page moved across its own raster
+is **retaken with the state re-applied**, not recorded. Re-applying is the whole repair; a second
+screenshot of the same page is a second screenshot of the torn-down state.
 
 `VISUAL_COOKIES` is a `{"NAME":"value"}` object planted on every context before the first
 navigation, for a repo whose interesting pages are behind a session. Unset is the ordinary case and
