@@ -55,6 +55,6 @@ describe('the forgot-password page', () => {
     const back = [...render(form).querySelectorAll('a')].filter((a) => a.getAttribute('href') === urls.voteAdminLogin);
 
     expect(back.length).toBe(1);
-    expect(back[0].className).toContain('underline');
+    expect(back[0]?.className).toContain('underline');
   });
 });

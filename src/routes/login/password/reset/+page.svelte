@@ -28,8 +28,8 @@
 >
   {#if form?.sent}
     <AuthNotice tone="success">
-      If {form.email} has a hackathon account, a link to reset the password is on its way. The link works once and expires, so use the most
-      recent mail if you ask more than once.
+      If {form.email} has a hackathon account, a link to reset the password is on its way. The link works once and expires, so use the most recent
+      mail if you ask more than once.
     </AuthNotice>
   {:else}
     <form
