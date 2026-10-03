@@ -34,6 +34,16 @@ interface Journal {
   clears: number;
 }
 
+/**
+ * Whether the page's pointer events were sealed at each moment that matters, so a test can say the
+ * raster was taken sealed and that the harness's own pointer moves were not.
+ */
+interface PointerSeal {
+  atScreenshot: boolean[];
+  atPointerMove: boolean[];
+  sealed: boolean;
+}
+
 /** Where the stub page believes it is until something moves it. */
 const SETTLED_URL = 'http://localhost/x';
 
@@ -68,19 +78,26 @@ interface Interrupt {
 function stubPage(
   structures: readonly number[],
   options: { chWidth?: () => number; interrupt?: Interrupt } = {}
-): { page: Page; journal: Journal } {
+): { page: Page; journal: Journal; seal: PointerSeal } {
   const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0 };
+  const seal: PointerSeal = { atScreenshot: [], atPointerMove: [], sealed: false };
   let structureReads = 0;
   let url = SETTLED_URL;
   const chWidth = options.chWidth ?? ((): number => 56);
 
-  const evaluate = async (fn: unknown): Promise<unknown> => {
+  const evaluate = async (fn: unknown, arg?: unknown): Promise<unknown> => {
     const source = String(fn);
     // The interruption goes FIRST, because what it stands for is the document going away: whatever
     // this call was about, it is not going to be answered.
     if (options.interrupt !== undefined && source.includes(options.interrupt.source)) {
       if (options.interrupt.to !== undefined) url = options.interrupt.to;
       throw new Error(options.interrupt.message);
+    }
+    // The seal is written by the two calls that plant and remove the freeze stylesheet, which name
+    // it as their argument; the one that removes it is the one that writes `false`.
+    if (typeof arg === 'object' && arg !== null && 'seal' in arg) {
+      seal.sealed = !source.includes('false');
+      return undefined;
     }
     if (source.includes('scrollWidth')) return { width: 1280, height: 4096 };
     // The stylesheet-order read: a page with no dev-server stylesheets, so nothing is moved.
@@ -106,7 +123,11 @@ function stubPage(
 
   const page = {
     evaluate,
-    mouse: { move: async (): Promise<void> => undefined },
+    mouse: {
+      move: async (): Promise<void> => {
+        seal.atPointerMove.push(seal.sealed);
+      }
+    },
     waitForTimeout: async (): Promise<void> => undefined,
     waitForLoadState: async (): Promise<void> => undefined,
     url: (): string => url,
@@ -115,10 +136,11 @@ function stubPage(
     },
     screenshot: async (): Promise<Buffer> => {
       journal.screenshots += 1;
+      seal.atScreenshot.push(seal.sealed);
       return Buffer.from('png');
     }
   };
-  return { page: page as unknown as Page, journal };
+  return { page: page as unknown as Page, journal, seal };
 }
 
 describe('captureShot', () => {
@@ -183,6 +205,33 @@ describe('captureShot', () => {
     expect(reads).toBeGreaterThan(0);
     expect(journal.screenshots).toBe(0);
     expect(journal.reloads).toBe(2);
+  });
+});
+
+/*
+ * THE POINTER IS SEALED OFF FROM THE PAGE FOR THE LENGTH OF THE RASTER, AND ONLY THEN (ISS-15799).
+ *
+ * The screenshot's 1x1 viewport transient puts the pointer outside the page, and Chromium tells the
+ * page so with `pointerout` and `mouseleave` at a pointer that never moved -- which is what tore the
+ * hover-mounted tooltips down. Sealed, the page never hears it. The harness's OWN pointer moves are
+ * the inputs a hover shot is made of, so they must never land while the seal is on, and a seal left
+ * on after the shot would swallow the move `clearState` makes to take the hover away.
+ */
+describe('the pointer seal', () => {
+  it('takes every raster sealed and lifts the seal before captureShot returns', async () => {
+    const { page, seal } = stubPage([1, 1]);
+    await captureShot(page, 'hover', 3);
+    expect(seal.atScreenshot).toEqual([true]);
+    expect(seal.sealed).toBe(false);
+  });
+
+  it('puts the hover back unsealed when a disturbed shot is retaken', async () => {
+    const { page, seal } = stubPage([1, 2, 3, 3]);
+    await captureShot(page, 'hover', 3);
+    expect(seal.atScreenshot).toEqual([true, true]);
+    // `applyState`'s move onto the target, twice, and `clearState`'s move off it in between.
+    expect(seal.atPointerMove).toEqual([false, false, false]);
+    expect(seal.sealed).toBe(false);
   });
 });
 
