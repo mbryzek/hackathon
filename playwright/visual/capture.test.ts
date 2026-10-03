@@ -1,7 +1,7 @@
 // dry-copy: visual-parity/capture-test — every copy of this region must match; `dev repo copies` checks it
 import type { Page } from '@playwright/test';
 import { describe, expect, it } from 'vitest';
-import { captureShot, documentSize, NavigatedAway, refuseIfNavigated, type Shot } from './capture.ts';
+import { canonicalStyleOrder, captureShot, documentSize, NavigatedAway, refuseIfNavigated, type Shot } from './capture.ts';
 
 /*
  * WHAT A SHOT DOES WHEN THE PAGE MOVES UNDER IT (ISS-9986).
@@ -83,6 +83,8 @@ function stubPage(
       throw new Error(options.interrupt.message);
     }
     if (source.includes('scrollWidth')) return { width: 1280, height: 4096 };
+    // The stylesheet-order read: a page with no dev-server stylesheets, so nothing is moved.
+    if (source.includes('data-vite-dev-id')) return [];
     // The order matters: several of these read a box, and only one of them is the target finder.
     if (source.includes('wantFocus')) {
       journal.statesApplied += 1;
@@ -268,6 +270,32 @@ describe('refuseIfNavigated', () => {
   it('raises NavigatedAway for a document that was replaced without failing anything', () => {
     const { page } = stubPage([1, 1]);
     expect(() => refuseIfNavigated(page, 'http://localhost/members')).toThrow(NavigatedAway);
+  });
+});
+/*
+ * THE ORDER THE DEV SERVER'S STYLESHEETS ARE PUT IN (ISS-15642).
+ *
+ * Vite's dev client appends each stylesheet when its module evaluates, so the order is the
+ * runner's timing -- and wherever a global rule and a component rule tie on specificity, the order
+ * IS the cascade. These pin the one order every capture is shot in, whatever order it arrived in.
+ */
+describe('canonicalStyleOrder', () => {
+  const APP = '/r/src/app.css';
+  const FONT = '/r/node_modules/@fontsource/x/index.css';
+  const LAYOUT = '/r/src/routes/+layout.svelte?svelte&type=style&lang.css';
+  const PAGE = '/r/src/routes/x/+page.svelte?svelte&type=style&lang.css';
+
+  it('puts the plain stylesheets ahead of every component style, as a production build links them', () => {
+    expect(canonicalStyleOrder([PAGE, APP, LAYOUT, FONT])).toEqual([FONT, APP, LAYOUT, PAGE]);
+  });
+
+  /** The defect: the same four sheets, arriving in the two orders one runner produced under load. */
+  it('answers the same order for every order the sheets can arrive in', () => {
+    expect(canonicalStyleOrder([LAYOUT, FONT, APP, PAGE])).toEqual(canonicalStyleOrder([PAGE, APP, FONT, LAYOUT]));
+  });
+
+  it('leaves a page with no dev-server stylesheets alone', () => {
+    expect(canonicalStyleOrder([])).toEqual([]);
   });
 });
 // dry-copy-end
