@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canonicalStyleOrder,
   captureShot,
+  KEYBOARD_MODALITY_KEY,
   documentSize,
   type FetchedImage,
   hasUnmeasuredImage,
@@ -47,6 +48,8 @@ interface Journal {
   resizes: { width: number; height: number; screenshotsBefore: number; statesBefore: number }[];
   /** The fold each target search was told to choose above. */
   folds: { width: number; height: number }[];
+  /** Every key pressed, and how many states had been applied by then. */
+  keys: { key: string; statesBefore: number }[];
 }
 
 /** The viewport every stub page is opened at, which is the fold its targets are chosen above. */
@@ -106,11 +109,13 @@ function stubPage(
     hoverHolds?: boolean;
     faceFailed?: boolean;
     unreachable?: boolean;
+    /** Whether the n-th focus comes back matching `:focus-visible`; every one does by default. */
+    ring?: (n: number) => boolean;
     /** What the fresh document does on arriving, which is where a foreign image is asked for again. */
     onReload?: (page: Page) => void;
   } = {}
 ): { page: Page; journal: Journal; seal: PointerSeal } {
-  const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0, resizes: [], folds: [] };
+  const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0, resizes: [], folds: [], keys: [] };
   const seal: PointerSeal = { atScreenshot: [], atPointerMove: [], sealed: false };
   let structureReads = 0;
   let url = SETTLED_URL;
@@ -139,7 +144,8 @@ function stubPage(
     if (source.includes('wantFocus')) {
       journal.statesApplied += 1;
       journal.folds.push((arg as { fold: { width: number; height: number } }).fold);
-      return options.unreachable === true ? { description: 'rect', x: null, y: null } : { description: 'rect', x: 10, y: 20 };
+      if (options.unreachable === true) return { description: 'rect', x: null, y: null };
+      return { description: 'rect', x: 10, y: 20, ring: options.ring?.(journal.statesApplied) ?? true };
     }
     if (source.includes('elementFromPoint')) return options.hoverHolds ?? true;
     if (source.includes('cssText')) return { width: chWidth(), em: 1 };
@@ -161,6 +167,11 @@ function stubPage(
     mouse: {
       move: async (): Promise<void> => {
         seal.atPointerMove.push(seal.sealed);
+      }
+    },
+    keyboard: {
+      press: async (key: string): Promise<void> => {
+        journal.keys.push({ key, statesBefore: journal.statesApplied });
       }
     },
     waitForTimeout: async (): Promise<void> => undefined,
@@ -294,6 +305,35 @@ describe('captureShot', () => {
   it('does not ask a focus state whether the pointer holds it', async () => {
     const { page } = stubPage([1, 1], { hoverHolds: false });
     expect(taken(await captureShot(page, 'focus', 0)).target).toBe('rect');
+  });
+
+  /**
+   * A SCRIPTED FOCUS DRAWS ITS RING BY THE DOCUMENT'S INPUT HISTORY (ISS-15883). Chromium matches
+   * `:focus-visible` on a scripted focus only under keyboard modality, so the same focus shot drew
+   * the UA ring on one capture and none on the next. A key goes down immediately before every
+   * focus, and never before a hover, where it would be a keypress the page did not ask for.
+   */
+  it('sets keyboard modality before every focus and never before a hover', async () => {
+    const focused = stubPage([1, 1]);
+    taken(await captureShot(focused.page, 'focus', 0));
+    expect(focused.journal.keys).toEqual([{ key: KEYBOARD_MODALITY_KEY, statesBefore: 0 }]);
+
+    const hovered = stubPage([1, 1]);
+    taken(await captureShot(hovered.page, 'hover', 0));
+    expect(hovered.journal.keys).toEqual([]);
+  });
+
+  it('retakes a focus that came back without its ring on the same document, and shoots the one that has it', async () => {
+    const { page, journal } = stubPage([1, 1], { ring: (n) => n > 1 });
+    expect(taken(await captureShot(page, 'focus', 0)).target).toBe('rect');
+    expect(journal).toMatchObject({ screenshots: 1, statesApplied: 2, reloads: 0, clears: 1 });
+    expect(journal.keys.map((press) => press.statesBefore)).toEqual([0, 1]);
+  });
+
+  it('never shoots a focus that will not draw its ring', async () => {
+    const { page, journal } = stubPage([1, 1], { ring: () => false });
+    expect(await captureShot(page, 'focus', 0)).toBe('disturbed');
+    expect(journal.screenshots).toBe(0);
   });
 
   /**
