@@ -11,6 +11,15 @@ import { liveTargets, routeTemplates, staticTargets, isSetName, type RouteFacts,
 import { listFiles } from './files.ts';
 import { hoverLimit, type PageTarget } from './matrix.ts';
 
+/**
+ * WHICH APP THIS IS, in a form the served document can be asked for (ISS-15766).
+ *
+ * `setup.ts` refuses a capture of a server whose base document does not carry it, because a server
+ * that answered is not evidence it is this app's. `src/app.html` carries it, so every page this app
+ * serves does; `setup.test.ts` pins that.
+ */
+export const APP_MARKER = '<!-- visual-parity app: hackathon -->';
+
 export interface CapturePlan {
   set: SetName;
   baseUrl: string;
