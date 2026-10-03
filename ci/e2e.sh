@@ -32,7 +32,14 @@
 # ci-needs: docker, registry, database, heap:4G
 set -euo pipefail
 
-echo "e2e ${CI_REPO:-hackathon} @ ${CI_SHA:-working tree} (${CI_EVENT:-local})"
+# `--frontend hackathon` names the TENANT ID this repo serves (a key of platform's
+# `TenantHosts.DefaultDevFrontendUrls`), so this build's allocated vite port is pointed at that
+# one tenant and the other ten are left on their defaults.
+E2E_REPO=hackathon
+E2E_TENANT=(--frontend hackathon)
+
+# dry-copy: sveltekit/ci-e2e — every copy of this region must match; `dev repo copies` checks it (ISS-15745)
+echo "e2e ${CI_REPO:-$E2E_REPO} @ ${CI_SHA:-working tree} (${CI_EVENT:-local})"
 
 npm ci
 
@@ -45,8 +52,5 @@ npx playwright install chromium
 # THE WHOLE LIFECYCLE, and the teardown is inside it rather than in a `trap` here: ports, the
 # session database and the container are machine-wide state, and all three leak if this script is
 # killed between two lines of its own. See devops/lib/e2e.rb.
-#
-# `--frontend hackathon` names the TENANT ID this repo serves (a key of platform's
-# `TenantHosts.DefaultDevFrontendUrls`), so this build's allocated vite port is pointed at that
-# one tenant and the other ten are left on their defaults.
-exec dev e2e run --app platform --frontend hackathon -- npm run test:e2e
+exec dev e2e run --app platform "${E2E_TENANT[@]}" -- npm run test:e2e
+# dry-copy-end
