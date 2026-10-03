@@ -1293,7 +1293,7 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
   if (state === 'hover') await page.mouse.move(found.x, found.y);
   await page.waitForTimeout(SETTLE_MS);
   if ((await awaitMeasurable(page)) !== 'ok') return 'metrics';
-  if (state === 'hover' && !(await hoverHolds(page, { x: found.x, y: found.y }))) return 'unstable';
+  if (state === 'hover' && !(await hoverHolds(page, { x: found.x, y: found.y }, found.description))) return 'unstable';
   return found.description;
 }
 
@@ -1323,21 +1323,37 @@ export const HOVER_HOLD_FRAMES = 12;
  * ONE FRAME PER READ, each read its own `evaluate` after its own `requestAnimationFrame`, so a
  * frame on which the page re-decides what is under the pointer lands between two reads rather than
  * inside one.
+ *
+ * EACH FAILED READ SAYS WHICH HALF FAILED, and a hover recorded unstable logs every distinct reason.
+ * The manifest records only the verdict, and a verdict that differs between two captures of one
+ * server is a harness defect that cannot be chased without knowing what the page looked like.
  */
-async function hoverHolds(page: Page, at: { x: number; y: number }): Promise<boolean> {
+async function hoverHolds(page: Page, at: { x: number; y: number }, description: string): Promise<boolean> {
+  const reasons = new Set<string>();
   for (let frame = 0; frame < HOVER_HOLD_FRAMES; frame += 1) {
-    const holds = await page.evaluate(
+    const reason = await page.evaluate(
       async ({ x, y, key }) => {
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        const describe = (element: Element | null | undefined): string => {
+          if (element === null || element === undefined) return 'nothing';
+          const id = element.id ? `#${element.id}` : '';
+          return `${element.tagName.toLowerCase()}${id}`;
+        };
         const target = (window as unknown as Record<string, unknown>)[key] as Element | undefined;
-        if (target === undefined || !target.isConnected) return false;
+        if (target === undefined || !target.isConnected) return 'the target is no longer in the document';
         const hit = document.elementFromPoint(x, y);
-        return target.matches(':hover') && hit !== null && target.contains(hit);
+        const holdsHover = target.matches(':hover');
+        const underPointer = hit !== null && target.contains(hit);
+        if (holdsHover && underPointer) return null;
+        const hovered = Array.from(document.querySelectorAll(':hover')).at(-1);
+        return `${holdsHover ? '' : 'not :hover (hovering ' + describe(hovered) + '); '}${underPointer ? '' : 'pointer over ' + describe(hit)}`;
       },
       { x: at.x, y: at.y, key: HOVER_TARGET_KEY }
     );
-    if (holds) return true;
+    if (reason === null) return true;
+    reasons.add(reason);
   }
+  console.warn(`visual: ${page.url()} hover on ${description} at (${at.x}, ${at.y}) never held: ${Array.from(reasons).join(' | ')}`);
   return false;
 }
 

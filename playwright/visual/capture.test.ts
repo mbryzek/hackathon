@@ -138,9 +138,10 @@ function stubPage(
       return options.unreachable === true ? { description: 'rect', x: null, y: null } : { description: 'rect', x: 10, y: 20 };
     }
     if (source.includes('elementFromPoint')) {
-      const answer = hoverAnswers[Math.min(journal.hoverReads, hoverAnswers.length - 1)];
+      const holds = hoverAnswers[Math.min(journal.hoverReads, hoverAnswers.length - 1)];
       journal.hoverReads += 1;
-      return answer;
+      // The check answers why it failed, or nothing when it held.
+      return holds === true ? null : 'not :hover';
     }
     if (source.includes('cssText')) return { width: chWidth(), em: 1 };
     if (source.includes('getElementById') && source.includes('getComputedStyle')) return { width: chWidth(), em: 1 };
