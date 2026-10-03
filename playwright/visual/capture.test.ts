@@ -5,13 +5,13 @@ import {
   canonicalStyleOrder,
   captureShot,
   KEYBOARD_MODALITY_KEY,
-  documentSize,
   type FetchedImage,
   hasUnmeasuredImage,
   markUnmeasured,
   measureForeignImage,
   NavigatedAway,
   refuseIfNavigated,
+  settle,
   type Shot
 } from './capture.ts';
 
@@ -87,6 +87,15 @@ interface Interrupt {
   to?: string;
 }
 
+/** The head of a PNG `width` x `height`, which is every byte `imageSize` reads and one more. */
+function pngOf(size: { width: number; height: number }): Buffer {
+  const head = Buffer.alloc(25);
+  head.writeUInt32BE(0x89504e47, 0);
+  head.writeUInt32BE(size.width, 16);
+  head.writeUInt32BE(size.height, 20);
+  return head;
+}
+
 /** A request the stub page made, as the image route sees one. */
 function requestFrom(page: Page): Request {
   return { frame: () => ({ page: () => page }) } as unknown as Request;
@@ -113,12 +122,24 @@ function stubPage(
     ring?: (n: number) => boolean;
     /** What the fresh document does on arriving, which is where a foreign image is asked for again. */
     onReload?: (page: Page) => void;
+    /** The size of the n-th raster, where it is not the viewport's: a page resized under the shot. */
+    rasters?: readonly ({ width: number; height: number } | null)[];
+    /** Called at the n-th wait the harness makes, which is where a document can be replaced under it. */
+    onWait?: (wait: number) => void;
   } = {}
-): { page: Page; journal: Journal; seal: PointerSeal } {
+): { page: Page; journal: Journal; seal: PointerSeal; newDocument: () => void } {
   const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0, resizes: [], folds: [], keys: [] };
   const seal: PointerSeal = { atScreenshot: [], atPointerMove: [], sealed: false };
   let structureReads = 0;
+  let waits = 0;
   let url = SETTLED_URL;
+  const mainFrame = {};
+  const requestListeners: ((request: Request) => void)[] = [];
+  /** A new document asked for by the main frame -- a reload, the dev server's or the harness's own. */
+  const newDocument = (): void => {
+    const request = { isNavigationRequest: () => true, frame: () => mainFrame } as unknown as Request;
+    for (const listener of requestListeners) listener(request);
+  };
   let viewport = { ...FOLD };
   const chWidth = options.chWidth ?? ((): number => 56);
 
@@ -174,10 +195,20 @@ function stubPage(
         journal.keys.push({ key, statesBefore: journal.statesApplied });
       }
     },
-    waitForTimeout: async (): Promise<void> => undefined,
+    waitForTimeout: async (): Promise<void> => {
+      options.onWait?.(waits);
+      waits += 1;
+    },
     waitForLoadState: async (): Promise<void> => undefined,
     waitForFunction: async (): Promise<void> => undefined,
     url: (): string => url,
+    mainFrame: (): object => mainFrame,
+    on: (event: string, listener: (request: Request) => void): void => {
+      if (event === 'request') requestListeners.push(listener);
+    },
+    goto: async (): Promise<void> => {
+      newDocument();
+    },
     viewportSize: (): { width: number; height: number } => viewport,
     setViewportSize: async (size: { width: number; height: number }): Promise<void> => {
       viewport = { ...size };
@@ -185,15 +216,16 @@ function stubPage(
     },
     reload: async (): Promise<void> => {
       journal.reloads += 1;
+      newDocument();
       options.onReload?.(page as unknown as Page);
     },
     screenshot: async (): Promise<Buffer> => {
       journal.screenshots += 1;
       seal.atScreenshot.push(seal.sealed);
-      return Buffer.from('png');
+      return pngOf(options.rasters?.[journal.screenshots - 1] ?? viewport);
     }
   };
-  return { page: page as unknown as Page, journal, seal };
+  return { page: page as unknown as Page, journal, seal, newDocument };
 }
 
 describe('captureShot', () => {
@@ -460,16 +492,6 @@ describe('a page that navigates under the harness', () => {
     await expect(captureShot(page, 'hover', 3)).rejects.toBeInstanceOf(NavigatedAway);
   });
 
-  it('reports the diagnostic size read the same way, so a diagnostic cannot cost a page', async () => {
-    const { page } = stubPage([1, 1], { interrupt: { source: 'scrollWidth', message: DESTROYED, to: 'http://localhost/login' } });
-    await expect(documentSize(page)).rejects.toBeInstanceOf(NavigatedAway);
-  });
-
-  it('answers the size read normally when nothing takes the document away', async () => {
-    const { page } = stubPage([1, 1]);
-    expect(await documentSize(page)).toEqual({ width: 1280, height: 4096 });
-  });
-
   /**
    * THE NARROWNESS IS THE POINT. `NavigatedAway` means "settle this route again", so anything else
    * mistaken for it becomes a re-settle loop over a failure re-settling cannot touch -- a closed
@@ -505,6 +527,82 @@ describe('refuseIfNavigated', () => {
   it('raises NavigatedAway for a document that was replaced without failing anything', () => {
     const { page } = stubPage([1, 1]);
     expect(() => refuseIfNavigated(page, 'http://localhost/members')).toThrow(NavigatedAway);
+  });
+});
+
+/*
+ * A NEW DOCUMENT AT THE SAME URL (ISS-15888).
+ *
+ * A dev server's full page reload replaces the document and leaves the url alone, and a
+ * client-rendered page is then an empty shell for as long as it takes to mount again. Measured on
+ * trips' A/A: rest and focus of one context shot as two identical PNGs of the bare viewport, with
+ * no focus target. Nothing about the url says so, so the document is counted.
+ */
+describe('a page whose document is replaced at the same url', () => {
+  it('is refused after it settled, though the url never moved', async () => {
+    const { page, newDocument } = stubPage([1, 1]);
+    expect(await settle(page, SETTLED_URL)).toBe(true);
+    expect(() => refuseIfNavigated(page, SETTLED_URL)).not.toThrow();
+    newDocument();
+    expect(() => refuseIfNavigated(page, SETTLED_URL)).toThrow(NavigatedAway);
+  });
+
+  it('refuses the shot taken off the replacement, rather than returning it', async () => {
+    const { page, newDocument } = stubPage([1, 1]);
+    expect(await settle(page, SETTLED_URL)).toBe(true);
+    newDocument();
+    await expect(captureShot(page, 'rest')).rejects.toBeInstanceOf(NavigatedAway);
+  });
+
+  it('settles the replacement when the replacement arrives during the settle', async () => {
+    let replacer = (): void => undefined;
+    const { page, newDocument } = stubPage([1, 1], { onWait: (wait) => wait === 0 && replacer() });
+    replacer = newDocument;
+    expect(await settle(page, SETTLED_URL)).toBe(true);
+    // The document the settle finally answered for is the one the page is on.
+    expect(() => refuseIfNavigated(page, SETTLED_URL)).not.toThrow();
+  });
+
+  it('gives a page up that is replaced on every settle', async () => {
+    let replacer = (): void => undefined;
+    const { page, newDocument } = stubPage([1, 1], { onWait: () => replacer() });
+    replacer = newDocument;
+    expect(await settle(page, SETTLED_URL)).toBe(false);
+  });
+
+  it('does not count the reload the harness makes itself', async () => {
+    const { page, journal } = stubPage([1, 1]);
+    expect(await settle(page, SETTLED_URL)).toBe(true);
+    // A refused foreign image, so `captureShot` reloads the document itself before it shoots.
+    markUnmeasured(requestFrom(page));
+    taken(await captureShot(page, 'rest'));
+    expect(journal.reloads).toBe(1);
+    expect(() => refuseIfNavigated(page, SETTLED_URL)).not.toThrow();
+  });
+});
+
+/*
+ * THE MANIFEST'S SIZE IS THE PNG'S (ISS-15888).
+ *
+ * The row's sha is of the png, so its size must be too. A raster that is not the size the document
+ * was measured at is of a page that was resized under the shot, and is refused and retaken.
+ */
+describe('the size of a shot', () => {
+  it('is the size of its png, which is the size the document measured', async () => {
+    const shot = taken(await captureShot(stubPage([1, 1]).page, 'rest'));
+    expect({ width: shot.width, height: shot.height }).toEqual({ width: 1280, height: 4096 });
+  });
+
+  it('retakes a raster whose size disagrees with the measured document', async () => {
+    const { page, journal } = stubPage([1, 1], { rasters: [{ width: 1280, height: 720 }] });
+    const shot = taken(await captureShot(page, 'rest'));
+    expect(journal.screenshots).toBe(2);
+    expect(shot.height).toBe(4096);
+  });
+
+  it('drops the shot, as disturbed, when no raster ever agrees', async () => {
+    const { page } = stubPage([1, 1], { rasters: Array.from({ length: 64 }, () => ({ width: 1280, height: 720 })) });
+    expect(await captureShot(page, 'rest')).toBe('disturbed');
   });
 });
 /*
