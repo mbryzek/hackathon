@@ -191,7 +191,8 @@ open forever is a capture that never ends.
 The manifest carries two lists, and they mean opposite things.
 
 `uncovered` is what the capture was never going to shoot: a route with no seeded value, a
-`[...rest]` template, a dev-only route, a page offering more hover targets than `VISUAL_HOVER_LIMIT`.
+`[...rest]` template, a dev-only route, a page offering more hover targets than `VISUAL_HOVER_LIMIT`,
+a hover that is not a fixed point or that the pointer cannot land on (see "Determinism").
 Every capture of the same tree produces the same list, so it costs the comparison no key. It is a
 note.
 
@@ -262,18 +263,53 @@ the life of the document, and the shot is only taken while it still measures wha
 measures. A page that cannot answer that is reloaded and shot again, and dropped rather than
 recorded on fallback metrics if three documents running cannot.
 
+A face served by another host is the other half of the font problem. When that request fails under
+load the text is laid out on a system font. The family in the computed style is unchanged, and the
+system font has a `0` glyph, so the `ch` check passes. Measured on playbook-app, whose face comes
+from Google Fonts: one context in a capture of an unchanged server had every text box 3 to 8 percent
+wider. So **cross-origin fonts and stylesheets are fetched once and then served from disk**, beside
+the image-size cache (`VISUAL_CACHE`), and both sides of an A/B get the same bytes whatever the host
+is doing. A face that fails anyway is treated like a stale `ch`: the document is reloaded, and
+dropped after three, rather than shot on the fallback.
+
 The shot itself is the other one, and it is the one that is easy to miss because the harness is
-doing it. A full-page screenshot is not a passive read: Chromium renders the document at its own
-height and is briefly at other viewport sizes on the way there and back — 1x1 among them, measured
-from inside the page. A page that mounts something on hover sees a reflow at that moment, the
-pointer is no longer over what it was over, and the app tears the node down on whatever grace
-period its hover clear runs on. The pointer never moves again, so nothing brings it back. Measured
-on the chart previews, which portal a tooltip bubble: eight consecutive shots of one hovered chart
-band, no other input, and the bubble vanished at the fourth and stayed gone. So the document's
-structure — every element's tag and class — is read either side of the screenshot, and a shot whose
-page moved across its own raster is **retaken with the state re-applied**, not recorded. Re-applying
-is the whole repair; a second screenshot of the same page is a second screenshot of the torn-down
-state.
+doing it. A full-page screenshot of a document taller than the viewport is not a passive read:
+Chromium re-lays the document out at its own height for the raster and is briefly at other viewport
+sizes on the way there and back — 1x1 among them, measured from inside the page. Every one of those
+layouts re-decides what is under the pointer. A pure `:hover` rule can come off and back on inside
+one raster with nothing in the DOM to show it, and a page that mounts something on hover tears the
+node down on whatever grace period its hover clear runs on. So **the viewport is made the document's
+own size while the page is at rest, before any state is applied**, and the shot is of that viewport,
+which needs no resize. That is the shot a full-page screenshot always produced — the page laid out
+at the size it measured at the fold, clipped to that size — and only the order changed. Targets are
+still chosen above the fold the context was opened at.
+
+The clip is the size measured at the fold, not the document's size after the fit, because a page
+sized against its own viewport grows when the viewport does. Every `/dev-viz` page in playbook-app
+is: its shell is `min-height: 100dvh` under a header. A state that grows the document is clipped the
+same way, so what it pushes past the bottom edge is not in the shot; everything it moves above that
+edge is.
+
+The document's structure — every element's tag and class — is still read either side of the
+screenshot, and a shot whose page moved across its own raster is **retaken with the state
+re-applied**, not recorded. Re-applying is the whole repair; a second screenshot of the same page is
+a second screenshot of the torn-down state.
+
+A hover can also fail to be a **fixed point**: the `hover:` rule moves its own target out from under
+the pointer. On playbook-app's team-hub-tab at phone width, hovering a filter chip reveals its
+"only" link, the chip grows past the end of its row and wraps, the pointer is left over the gap, the
+chip shrinks and wraps back. A real browser flickers there too, and which half of the flicker a
+raster catches is timing. After the settle the harness asks whether the target is still `:hover`
+**and** still under the pointer, and each half of the flicker fails one of the two. That shot is
+recorded under `uncovered` as unstable rather than taken. Every capture of the same tree finds the
+same keys, and a change that makes a hover stable or unstable shows up as a key present on one side
+only.
+
+The point the pointer goes to is the first one, in a fixed order, that is actually over the target:
+the centre of each of its line boxes, then a grid over its box. The centre of the box is often not
+on the element — a donut segment's box is centred in the hole, a link wrapped onto two lines is
+centred in the gap between them — and a pointer sent there hovers the background. A target with no
+such point inside the fold is recorded under `uncovered` as unreachable.
 
 `VISUAL_COOKIES` is a `{"NAME":"value"}` object planted on every context before the first
 navigation, for a repo whose interesting pages are behind a session. Unset is the ordinary case and

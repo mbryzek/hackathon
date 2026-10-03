@@ -125,6 +125,17 @@ for (const page of plan.targets) {
           const lost = new Map<string, string>();
 
           /*
+           * WHAT THIS CONTEXT OFFERED NO STATE TO SHOOT FOR, keyed for the same reason as `lost`
+           * and folded into `uncovered` below rather than `dropped`. An `unstable` hover is a hover
+           * that moves its own target out from under the pointer, and an `unreachable` one a target
+           * the pointer cannot land on at all (`applyState`). Both are properties of the page:
+           * every capture of the same tree finds the same keys here, so they cost the comparison
+           * nothing, and a change that makes one shootable or not is a key present on one side
+           * only, which the compare reports.
+           */
+          const unshootable = new Map<string, 'unstable' | 'unreachable'>();
+
+          /*
            * EVERY SHOT THIS CONTEXT OWES, ONTO A DOCUMENT THAT MUST STILL BE THE ONE IT SETTLED ON.
            *
            * A FUNCTION BECAUSE IT IS RESUMABLE, which is the whole of the repair for a navigation:
@@ -170,7 +181,7 @@ for (const page of plan.targets) {
                */
               for (let index = 0; index < Math.max(shots.shots, 1); index += 1) {
                 const key = shotKey(page.slug, theme, viewport.name, state === 'hover' ? hoverState(index) : state);
-                if (key in entries || lost.has(key)) continue;
+                if (key in entries || lost.has(key) || unshootable.has(key)) continue;
                 // ASKED ON BOTH SIDES OF THE SHOT, like `structure` is asked on both sides of the
                 // raster and for the same reason: a navigation that destroyed nothing leaves every
                 // later read answering happily about a document these keys are not about.
@@ -182,9 +193,16 @@ for (const page of plan.targets) {
                 // than written: a key missing from one side is a compare failure, and a shot recorded
                 // on the wrong metrics, or of a state nobody asked for, is a difference the next A/B
                 // blames on a stylesheet. WHICH of the two is recorded, because they send whoever
-                // reads the manifest to opposite halves of `capture.ts`. See `captureShot`.
+                // reads the manifest to opposite halves of `capture.ts`. See `captureShot`. The third
+                // and fourth failures, `unstable` and `unreachable`, are not losses: the state does not
+                // exist to be shot, on any run, and they are recorded as `uncovered` below.
                 const shot = await captureShot(open, state, index);
                 refuseIfNavigated(open, settledAt);
+                if (shot === 'unstable' || shot === 'unreachable') {
+                  unshootable.set(key, shot);
+                  await clearState(open);
+                  continue;
+                }
                 if (typeof shot === 'string') {
                   lost.set(
                     key,
@@ -280,6 +298,14 @@ for (const page of plan.targets) {
           }
 
           for (const [key, why] of lost) dropped.push({ scope: 'shot', what: key, why });
+          for (const [key, why] of unshootable) {
+            uncovered.push([
+              key,
+              why === 'unstable'
+                ? 'hovering the target moves it out from under the pointer, so the state is never at rest; no shot'
+                : 'no point of the target inside the fold is under the pointer; no shot'
+            ]);
+          }
         } finally {
           await context.close();
         }
