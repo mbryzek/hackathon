@@ -40,6 +40,11 @@
  *     the gap, the chip shrinks and wraps back. That page flickers in a real browser too, and
  *     which half of the flicker a raster catches is timing. It is recorded as `unstable`, which is
  *     the same answer on every run, rather than shot. See `applyState`.
+ *   - WHETHER A FOCUS DRAWS ITS RING. A scripted `focus()` matches `:focus-visible` or not by the
+ *     document's input history -- Chromium's modality heuristic -- not by anything on the page, so
+ *     the same focus shot rendered the UA ring on one capture and no ring on the next (ISS-15883).
+ *     Keyboard modality is set before every focus, and a focus that still comes back without its
+ *     ring is retaken rather than shot. See `KEYBOARD_MODALITY_KEY`.
  *   - FONTS, asked at the LAST POSSIBLE MOMENT and answered on both sides of every shot.
  *     `document.fonts.ready` plus every declared face LOADED is where it starts, since a shot
  *     taken before a self-hosted face swaps in is a shot of the fallback
@@ -1268,6 +1273,20 @@ const HOVER_GRID = 8;
 const HOVER_TARGET_KEY = '__visual_hover_target__';
 
 /**
+ * THE KEY PRESSED IMMEDIATELY BEFORE EVERY `focus`, so the focus is a keyboard focus (ISS-15883).
+ *
+ * Chromium decides whether a scripted `focus()` matches `:focus-visible` from the document's input
+ * history: a keydown since the last pointer press makes it match, a pointer press makes it not. That
+ * history is the harness's own earlier states and whatever the page did on load, so the ring was a
+ * coin the page did not flip. A keydown pins it. Shift, because a keydown carrying Control, Alt or
+ * Meta is a shortcut rather than keyboard navigation and does NOT set the modality, measured; and
+ * because Shift on its own has no default action and moves no focus, as Tab would. Not
+ * `FocusOptions.focusVisible`: measured honoured by Chromium 151 and ignored by Chromium 141, and
+ * these repos pin different playwright versions, so it would pin the ring in some copies only.
+ */
+export const KEYBOARD_MODALITY_KEY = 'Shift';
+
+/**
  * Put the page into `state`, and say what it was applied to.
  *
  * BOTH TARGETS ARE CONSTRAINED TO THE FOLD, the viewport the page was opened at, and are chosen in
@@ -1275,7 +1294,8 @@ const HOVER_TARGET_KEY = '__visual_hover_target__';
  * by then (`fitToDocument`), so `window.innerHeight` is the whole document and is not the test.
  * Playwright's own `focus()`/`hover()` scroll the element into view, which would move a fixed
  * header inside the very screenshot being compared; `hover` is therefore a raw mouse move to the
- * element's centre, and `focus` passes `preventScroll`.
+ * element's centre, and `focus` passes `preventScroll`. `focus` is a KEYBOARD focus, so that it
+ * draws the `:focus-visible` ring on every run; see `KEYBOARD_MODALITY_KEY`.
  *
  * `index` SKIPS THAT MANY ELIGIBLE ELEMENTS FIRST, which is how `hover` becomes one shot per
  * element rather than one per page: `hoverTargetCount` says how many there are and `parity.spec.ts`
@@ -1297,6 +1317,8 @@ const HOVER_TARGET_KEY = '__visual_hover_target__';
  *     is left over the row. Both halves of that alternation fail the check, so it is the same
  *     answer on every run. Retaking cannot repair it and neither can reloading: the state asked for
  *     does not exist to be shot.
+ *   - `disturbed`: the target took focus without matching `:focus-visible`, so the shot would be of
+ *     a focus with no ring. `captureShot` retakes it, as it does a shot its own raster disturbed.
  *   - `unreachable`: no point of the target inside the fold hits anything at all. A target
  *     covered by another element is NOT this: a chart's marks sit under one transparent plot-wide
  *     hit area that picks the mark from the pointer's position, so the pointer goes to the
@@ -1307,6 +1329,7 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
   if (state === 'rest') return (await awaitMeasurable(page)) === 'ok' ? 'n/a' : 'metrics';
 
   const selector = state === 'focus' ? FOCUS_SELECTOR : HOVER_SELECTOR;
+  if (state === 'focus') await page.keyboard.press(KEYBOARD_MODALITY_KEY);
 
   const found = await page.evaluate(
     ({ selector: sel, wantFocus, skip, fold, key, grid }) => {
@@ -1328,7 +1351,10 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
         }
         if (wantFocus) {
           (element as HTMLElement).focus({ preventScroll: true });
-          return { description: describe(element), x: 0, y: 0 };
+          // A page that moves focus on its own is shot as it is; one that took the focus without
+          // the ring is not the state asked for.
+          const ring = document.activeElement !== element || element.matches(':focus-visible');
+          return { description: describe(element), x: 0, y: 0, ring };
         }
         // The first point, in a fixed order, at which the pointer is over this element and not
         // over something beside or above it: each line box's centre, then a grid over the box.
@@ -1363,6 +1389,7 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
 
   if (found === null) return 'none';
   if (found.x === null || found.y === null) return 'unreachable';
+  if (found.ring === false) return 'disturbed';
   if (state === 'hover') await page.mouse.move(found.x, found.y);
   await page.waitForTimeout(SETTLE_MS);
   if ((await awaitMeasurable(page)) !== 'ok') return 'metrics';
@@ -1490,7 +1517,10 @@ const FREEZE_CSS = `*, *::before, *::after, *::backdrop {
 export type ShotFailure =
   /** A `ch` on this page does not currently mean what the stylesheet says it means. */
   | 'metrics'
-  /** The document changed across its own raster, so the png is not of the state it was asked for. */
+  /**
+   * The document changed across its own raster, or a focus came back without its `:focus-visible`
+   * ring, so the png would not be of the state it was asked for. Re-applied on the same document.
+   */
   | 'disturbed'
   /** The hover moves its own target out from under the pointer, so the state is never at rest. */
   | 'unstable'
@@ -1694,6 +1724,11 @@ export async function captureShot(page: Page, state: StateName, index = 0): Prom
         }
         // The same answer however often it is asked, so it is returned rather than retaken.
         if (target === 'unstable' || target === 'unreachable') return target;
+        // A focus without its ring is re-applied to this document, as a disturbed raster is.
+        if (target === 'disturbed') {
+          last = 'disturbed';
+          continue;
+        }
         const shot = await screenshotFrozen(page);
         if (typeof shot !== 'string') return { target, png: shot };
         last = shot;
