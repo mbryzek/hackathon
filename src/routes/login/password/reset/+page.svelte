@@ -6,6 +6,7 @@
    * who mistyped their address is not left waiting for a mail that is never coming.
    */
   import { enhance } from '$app/forms';
+  import { createSubmitting } from '$lib/utils/submitting.svelte';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import { urls } from '$lib/urls';
@@ -13,7 +14,7 @@
 
   let { form }: { form: ActionData } = $props();
 
-  let isSubmitting = $state(false);
+  const submitting = createSubmitting();
 </script>
 
 <svelte:head>
@@ -43,17 +44,7 @@
           </a>
         </p>
       {:else}
-        <form
-          method="POST"
-          use:enhance={() => {
-            isSubmitting = true;
-            return async ({ update }) => {
-              await update();
-              isSubmitting = false;
-            };
-          }}
-          class="space-y-6"
-        >
+        <form method="POST" use:enhance={submitting.enhance} class="space-y-6">
           {#if form?.error}
             <ErrorBanner error={form.error} />
           {/if}
@@ -68,16 +59,16 @@
               placeholder="admin@example.com"
               class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
               autocomplete="email"
-              disabled={isSubmitting}
+              disabled={submitting.active}
             />
           </div>
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={submitting.active}
             class="w-full rounded-lg bg-gray-900 px-6 py-3 font-bold text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {#if isSubmitting}
+            {#if submitting.active}
               <span class="inline-flex items-center justify-center gap-2">
                 <Spinner />
                 Sending...

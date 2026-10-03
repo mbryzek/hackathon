@@ -6,6 +6,7 @@
   import { urls } from '$lib/urls';
   import { isApiError, voteApi, VoterType, type Vote } from '$lib/api/client';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { createSubmitting } from '$lib/utils/submitting.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -20,7 +21,7 @@
   let selectedProjectIds = $state<Set<string>>(new Set());
   let error = $state<string | null>(null);
   let isVerifying = $state(false);
-  let isSubmitting = $state(false);
+  const submitting = createSubmitting();
   let codeVerified = $state(false);
 
   // Auto-verify code if provided in URL
@@ -92,11 +93,7 @@
     }
 
     error = null;
-    isSubmitting = true;
-
-    const response = await voteApi.submitVote(eventKey, code, Array.from(selectedProjectIds));
-
-    isSubmitting = false;
+    const response = await submitting.run(() => voteApi.submitVote(eventKey, code, Array.from(selectedProjectIds)));
 
     if (isApiError(response)) {
       error = response.errors[0]?.message || 'Failed to submit vote';
@@ -325,10 +322,10 @@
         <button
           type="button"
           onclick={handleSubmit}
-          disabled={!canSubmit || isSubmitting}
+          disabled={!canSubmit || submitting.active}
           class="w-full rounded-lg bg-yellow-400 px-6 py-4 text-lg font-bold text-gray-900 shadow-md transition-colors hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {#if isSubmitting}
+          {#if submitting.active}
             <span class="inline-flex items-center justify-center gap-2">
               <Spinner />
               Submitting Vote...

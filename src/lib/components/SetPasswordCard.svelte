@@ -9,6 +9,7 @@
    * has no password restrictions, and what the platform will accept is the platform's to say.
    */
   import { enhance } from '$app/forms';
+  import { createSubmitting } from '$lib/utils/submitting.svelte';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
 
@@ -23,7 +24,7 @@
 
   let { heading, intro = '', submitLabel, error = null }: Props = $props();
 
-  let isSubmitting = $state(false);
+  const submitting = createSubmitting();
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
@@ -37,17 +38,7 @@
         {/if}
       </div>
 
-      <form
-        method="POST"
-        use:enhance={() => {
-          isSubmitting = true;
-          return async ({ update }) => {
-            await update();
-            isSubmitting = false;
-          };
-        }}
-        class="space-y-6"
-      >
+      <form method="POST" use:enhance={submitting.enhance} class="space-y-6">
         {#if error}
           <ErrorBanner {error} />
         {/if}
@@ -60,7 +51,7 @@
             name="password"
             class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
             autocomplete="new-password"
-            disabled={isSubmitting}
+            disabled={submitting.active}
           />
         </div>
 
@@ -72,16 +63,16 @@
             name="password_confirmation"
             class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
             autocomplete="new-password"
-            disabled={isSubmitting}
+            disabled={submitting.active}
           />
         </div>
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={submitting.active}
           class="w-full rounded-lg bg-gray-900 px-6 py-3 font-bold text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {#if isSubmitting}
+          {#if submitting.active}
             <span class="inline-flex items-center justify-center gap-2">
               <Spinner />
               Saving...

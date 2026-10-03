@@ -1,6 +1,7 @@
 <script lang="ts">
   import Spinner from '$lib/components/Spinner.svelte';
   import { enhance } from '$app/forms';
+  import { createSubmitting } from '$lib/utils/submitting.svelte';
   import { urls } from '$lib/urls';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import type { ActionData } from './$types';
@@ -16,7 +17,7 @@
       email = form.email;
     }
   });
-  let isSubmitting = $state(false);
+  const submitting = createSubmitting();
 
   // Get error message from form errors
   let error = $derived(form?.errors?.[0]?.message || null);
@@ -31,17 +32,7 @@
         <p class="mt-2 text-gray-600">Sign in to manage voting events</p>
       </div>
 
-      <form
-        method="POST"
-        use:enhance={() => {
-          isSubmitting = true;
-          return async ({ update }) => {
-            await update();
-            isSubmitting = false;
-          };
-        }}
-        class="space-y-6"
-      >
+      <form method="POST" use:enhance={submitting.enhance} class="space-y-6">
         <div>
           <label for="email" class="mb-2 block text-sm font-medium text-gray-700"> Email </label>
           <input
@@ -52,7 +43,7 @@
             placeholder="admin@example.com"
             class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
             autocomplete="email"
-            disabled={isSubmitting}
+            disabled={submitting.active}
           />
         </div>
 
@@ -66,7 +57,7 @@
             placeholder="Enter your password"
             class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
             autocomplete="current-password"
-            disabled={isSubmitting}
+            disabled={submitting.active}
           />
           <p class="mt-2 text-right text-sm">
             <a href={urls.passwordResetRequest} class="text-gray-600 underline transition-colors hover:text-gray-900">
@@ -81,10 +72,10 @@
 
         <button
           type="submit"
-          disabled={isSubmitting || !email.trim() || !password}
+          disabled={submitting.active || !email.trim() || !password}
           class="w-full rounded-lg bg-gray-900 px-6 py-3 font-bold text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {#if isSubmitting}
+          {#if submitting.active}
             <span class="inline-flex items-center justify-center gap-2">
               <Spinner />
               Signing in...

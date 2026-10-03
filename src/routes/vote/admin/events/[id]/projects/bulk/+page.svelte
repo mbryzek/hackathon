@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { enhance } from '$app/forms';
+  import { createSubmitting } from '$lib/utils/submitting.svelte';
   import { urls } from '$lib/urls';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
@@ -13,7 +14,7 @@
   const event = $derived(data.event);
   const error = $derived(form?.error ?? data.error);
 
-  let isSubmitting = $state(false);
+  const submitting = createSubmitting({ reset: false });
 
   const csvExample = `team_name,description
 Awesome App,An app that does awesome things
@@ -46,17 +47,7 @@ Code Helper,AI-powered coding assistant`;
       <pre class="overflow-x-auto rounded-lg bg-gray-100 p-4 text-sm text-gray-800">{csvExample}</pre>
     </div>
 
-    <form
-      method="POST"
-      use:enhance={() => {
-        isSubmitting = true;
-        return async ({ update }) => {
-          await update({ reset: false });
-          isSubmitting = false;
-        };
-      }}
-      class="space-y-4"
-    >
+    <form method="POST" use:enhance={submitting.enhance} class="space-y-4">
       <div>
         <label for="csv-data" class="mb-2 block text-sm font-medium text-gray-700"> CSV Data </label>
         <textarea
@@ -66,7 +57,7 @@ Code Helper,AI-powered coding assistant`;
           placeholder="Paste your CSV data here..."
           rows="10"
           class="w-full rounded-lg border border-gray-300 px-4 py-3 font-mono text-sm focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
-          disabled={isSubmitting}></textarea>
+          disabled={submitting.active}></textarea>
       </div>
 
       <div class="flex items-center">
@@ -76,7 +67,7 @@ Code Helper,AI-powered coding assistant`;
           name="delete_all_projects"
           checked={form?.deleteAllProjects ?? false}
           class="h-4 w-4 rounded-sm border-gray-300 text-yellow-500 focus:ring-yellow-400"
-          disabled={isSubmitting}
+          disabled={submitting.active}
         />
         <label for="delete-all-projects" class="ml-2 block text-sm text-gray-700"> Delete all existing projects before importing </label>
       </div>
@@ -84,10 +75,10 @@ Code Helper,AI-powered coding assistant`;
       <div class="flex gap-3">
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={submitting.active}
           class="rounded-lg bg-yellow-400 px-6 py-3 font-bold text-gray-900 transition-colors hover:bg-yellow-500 disabled:opacity-50"
         >
-          {#if isSubmitting}
+          {#if submitting.active}
             <span class="inline-flex items-center">
               <Spinner class="mr-2 -ml-1" />
               Adding Projects...

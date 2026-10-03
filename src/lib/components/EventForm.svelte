@@ -10,6 +10,7 @@
   import Spinner from '$lib/components/Spinner.svelte';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import { enhance } from '$app/forms';
+  import { createSubmitting } from '$lib/utils/submitting.svelte';
   import type { EventStatus } from '$lib/api/client';
   import { EVENT_STATUS_OPTIONS } from '$lib/utils/eventDisplay';
 
@@ -28,20 +29,10 @@
 
   let { name, key, status, error, submitLabel, submittingLabel, cancelHref, onNameInput, onKeyInput }: Props = $props();
 
-  let isSubmitting = $state(false);
+  const submitting = createSubmitting();
 </script>
 
-<form
-  method="POST"
-  use:enhance={() => {
-    isSubmitting = true;
-    return async ({ update }) => {
-      await update();
-      isSubmitting = false;
-    };
-  }}
-  class="space-y-6"
->
+<form method="POST" use:enhance={submitting.enhance} class="space-y-6">
   <div>
     <label for="name" class="mb-2 block text-sm font-medium text-gray-700"> Event Name </label>
     <input
@@ -52,7 +43,7 @@
       oninput={(e) => onNameInput?.(e.currentTarget.value)}
       placeholder="e.g., Hackathon 2025"
       class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
-      disabled={isSubmitting}
+      disabled={submitting.active}
     />
   </div>
 
@@ -66,7 +57,7 @@
       oninput={(e) => onKeyInput?.(e.currentTarget.value)}
       placeholder="e.g., hackathon-2025"
       class="w-full rounded-lg border border-gray-300 px-4 py-3 font-mono transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
-      disabled={isSubmitting}
+      disabled={submitting.active}
     />
     <p class="mt-2 text-sm text-gray-500">
       Voting URL: /vote/{key || 'event-key'}
@@ -80,7 +71,7 @@
       name="status"
       value={status}
       class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
-      disabled={isSubmitting}
+      disabled={submitting.active}
     >
       {#each EVENT_STATUS_OPTIONS as option (option.value)}
         <option value={option.value}>{option.label}</option>
@@ -96,10 +87,10 @@
   <div class="flex gap-4">
     <button
       type="submit"
-      disabled={isSubmitting}
+      disabled={submitting.active}
       class="flex-1 rounded-lg bg-yellow-400 px-6 py-3 font-bold text-gray-900 transition-colors hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      {#if isSubmitting}
+      {#if submitting.active}
         <span class="inline-flex items-center justify-center gap-2">
           <Spinner />
           {submittingLabel}
