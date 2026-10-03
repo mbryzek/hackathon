@@ -893,14 +893,11 @@ const HYDRATED_MARKER_ID = 'svelte-announcer';
  * Wait until SvelteKit has hydrated the document.
  *
  * `networkidle` IS NOT HYDRATION. It says the module graph has finished FETCHING; evaluating it
- * and mounting the root come after, on the main thread, and under load that is long enough for a
- * document to be shot as the server rendered it. Measured on rallyd's A/A (ISS-15877): a shot taken
- * on a document `captureShot` had just reloaded carried the footer's year from the server's clock
- * rather than the pinned one, and no `#svelte-announcer`, while every other shot of the same page
- * carried both -- the screenshot was of a page no visitor's browser would show a moment later.
- * That shot was the one an earlier A/A had recorded `unstable` on one side only, which a page
- * hydrating under the pointer explains. A page that never hydrates times out here, and `settle`
- * records it as a page that did not settle.
+ * and mounting the root come after, on the main thread, and a document can be shot in between as
+ * the server rendered it. Measured on rallyd's A/A (ISS-15877): a page the dev server reloaded under
+ * the capture was shot with the footer's year from the server's clock rather than the pinned one,
+ * and no `#svelte-announcer`, while every other shot of the same page carried both. A page that
+ * never hydrates times out here, and `settle` records it as a page that did not settle.
  */
 async function hydrated(page: Page, timeoutMs: number): Promise<void> {
   await page.waitForFunction((id) => document.getElementById(id) !== null, HYDRATED_MARKER_ID, { timeout: timeoutMs });
@@ -1302,10 +1299,9 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
  *
  * ONE READ IS A SAMPLE, NOT A VERDICT. Anything still settling when it is taken -- hover state
  * Chromium has not re-resolved yet, a document finishing its hydration -- reads a target that IS a
- * fixed point as broken once, and it is recorded unstable: measured on rallyd's A/A, where the
- * same header link was unstable in one capture and shot in the other (ISS-15877). A hover that genuinely cancels
- * itself alternates between two layouts that each fail the check, so it fails on EVERY frame, and
- * reading it this many times costs that case nothing but the frames.
+ * fixed point as broken once, and a single read records it unstable (ISS-15877). A hover that
+ * genuinely cancels itself alternates between two layouts that each fail the check, so it fails on
+ * EVERY frame, and reading it this many times costs that case nothing but the frames.
  */
 export const HOVER_HOLD_FRAMES = 12;
 

@@ -116,6 +116,20 @@ describe('assertColdServer', () => {
     await expect(assertColdServer('http://localhost:5391/')).resolves.toBeUndefined();
   });
 
+  /** Cold at the start says nothing about the middle: a second server on the same tree heats the first. */
+  it('refuses, after the capture, a server that hot-reloaded while it ran', async () => {
+    serve({
+      '/': 'import "/.svelte-kit/generated/client/app.js?t=1757530000000";',
+      '/.svelte-kit/generated/client/app.js?t=1757530000000': ''
+    });
+    await expect(assertColdServer('http://localhost:5391/', 'after')).rejects.toThrow(/HOT-RELOADED DURING THIS CAPTURE/);
+  });
+
+  it('lets a server that stayed cold through the capture through', async () => {
+    serve({ '/': 'import "/src/app.css";', '/src/app.css': '' });
+    await expect(assertColdServer('http://localhost:5391/', 'after')).resolves.toBeUndefined();
+  });
+
   it('warns instead of refusing when the operator has said to capture anyway', async () => {
     serve({ '/': 'import "/src/app.css?t=1757530000000";', '/src/app.css?t=1757530000000': '' });
     process.env['VISUAL_ALLOW_HOT_SERVER'] = '1';

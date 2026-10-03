@@ -128,6 +128,19 @@ export async function scanForHmr(baseUrl: string, document: string): Promise<Col
 }
 
 /**
+ * When the proof is asked: before the capture opens a page, or after it has shot the last one.
+ *
+ * `after` IS THE HALF THE START CANNOT ANSWER. A server that was cold when the capture began can go
+ * hot while it runs, and vite then pushes a reload into every page the capture has open -- so shots
+ * taken after that moment are of documents that reloaded, or remounted, under the harness. The
+ * commonest way it happens is a SECOND dev server started on the same working tree, whose
+ * `svelte-kit sync` rewrites `.svelte-kit/generated` under the first: measured on rallyd's A/A
+ * (ISS-15877), where capture B's server starting put a full reload into capture A's first pages,
+ * and the hovers and shots taken across it disagreed with B's.
+ */
+export type ProofMoment = 'before' | 'after';
+
+/**
  * Refuse a capture off a server that has hot-reloaded since it booted.
  *
  * A THROW RATHER THAN A WARNING, because the cost of being wrong is asymmetric and both halves
@@ -141,7 +154,7 @@ export async function scanForHmr(baseUrl: string, document: string): Promise<Col
  * with no HMR to have happened, and it references no dev module urls, so the crawl finds nothing
  * to follow and says so.
  */
-export async function assertColdServer(baseUrl: string): Promise<void> {
+export async function assertColdServer(baseUrl: string, moment: ProofMoment = 'before'): Promise<void> {
   // `redirect: 'follow'` and a fetch of its own, rather than reusing the reachability probe above:
   // that one is deliberately `manual`, so a base url that redirects to a login answers it with an
   // EMPTY body -- and an empty body crawls to zero modules and passes this proof for a reason that
@@ -150,11 +163,12 @@ export async function assertColdServer(baseUrl: string): Promise<void> {
     .then(async (response) => response.text())
     .catch(() => '');
   const scan = await scanForHmr(baseUrl, document);
+  const when = moment === 'before' ? '' : ' after the capture';
   if (scan.stamped.length === 0) {
     console.log(
       scan.scanned === 0
-        ? `visual: cold-server proof -- ${baseUrl} references no vite dev modules, so there is no HMR state to have; nothing checked`
-        : `visual: cold-server proof -- ${scan.scanned} dev module(s) scanned, none carrying an HMR timestamp` +
+        ? `visual: cold-server proof${when} -- ${baseUrl} references no vite dev modules, so there is no HMR state to have; nothing checked`
+        : `visual: cold-server proof${when} -- ${scan.scanned} dev module(s) scanned, none carrying an HMR timestamp` +
             (scan.truncated ? ` (stopped at the ${SCAN_LIMIT}-module limit; the proof is PARTIAL)` : '')
     );
     return;
@@ -162,12 +176,19 @@ export async function assertColdServer(baseUrl: string): Promise<void> {
 
   const first = scan.stamped.slice(0, 5).join('\n  ');
   const message =
-    `visual: the server at ${baseUrl} has HOT-RELOADED since it started -- ${scan.stamped.length} module(s) are served with a vite ` +
-    `HMR timestamp:\n  ${first}\n` +
-    "HMR re-injects an invalidated module's stylesheet as its own element rather than in the position a cold load gives it, and the " +
-    'layered cascade depends on that order -- so a capture taken from this server is not comparable with one taken from a cold one, ' +
-    'and the shots it moves are on pages the branch never touched. Restart the server and capture again ' +
-    '(VISUAL_ALLOW_HOT_SERVER=1 to capture anyway).';
+    moment === 'before'
+      ? `visual: the server at ${baseUrl} has HOT-RELOADED since it started -- ${scan.stamped.length} module(s) are served with a vite ` +
+        `HMR timestamp:\n  ${first}\n` +
+        "HMR re-injects an invalidated module's stylesheet as its own element rather than in the position a cold load gives it, and the " +
+        'layered cascade depends on that order -- so a capture taken from this server is not comparable with one taken from a cold one, ' +
+        'and the shots it moves are on pages the branch never touched. Restart the server and capture again ' +
+        '(VISUAL_ALLOW_HOT_SERVER=1 to capture anyway).'
+      : `visual: the server at ${baseUrl} HOT-RELOADED DURING THIS CAPTURE -- ${scan.stamped.length} module(s) are now served with a ` +
+        `vite HMR timestamp:\n  ${first}\n` +
+        'vite pushed that update into the pages the capture had open, so the shots taken across it are of documents that reloaded or ' +
+        'remounted under the harness, and the capture is not comparable with any other. A second dev server started on this working ' +
+        'tree does this: its svelte-kit sync rewrites .svelte-kit/generated under the first. Start every server before the first ' +
+        'capture, do not touch the tree while one runs, restart this server and capture again (VISUAL_ALLOW_HOT_SERVER=1 to keep it).';
 
   if (process.env['VISUAL_ALLOW_HOT_SERVER'] === '1') {
     console.warn(`${message}\nvisual: VISUAL_ALLOW_HOT_SERVER=1 -- capturing anyway.`);

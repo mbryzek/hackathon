@@ -121,6 +121,14 @@ shell, which is the surface a CSS-toolchain change is about. It is not the whole
 stays a rule the operator keeps: **restart the server after every edit, and do not touch the tree
 while a capture is running.**
 
+**Starting a dev server touches the tree.** Its `svelte-kit sync` rewrites `.svelte-kit/generated`,
+and every other dev server watching that tree pushes the change into its open pages as a reload. So
+a second server for the second half of a pair, started while the first capture is running, heats the
+first one mid-capture: measured on an A/A whose two captures disagreed on a handful of shots, all of
+them on the pages the first capture had open at that moment (ISS-15877). Start every server a pair
+needs before either capture begins. The teardown asks the cold-server proof again after the last shot
+and fails a capture whose server went hot while it ran.
+
 ## The two sets
 
 | `VISUAL_SET` | What it captures                                                                          | What it needs                                                             |

@@ -10,6 +10,7 @@
 // dry-copy: visual-parity/merge — every copy of this region must match; `dev repo copies` checks it
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { assertColdServer } from './coldServer.ts';
 import { paths, writeFile } from './files.ts';
 import type { Dropped, Manifest, ManifestEntry } from './manifest.ts';
 import { capturePlan } from './plan.ts';
@@ -100,8 +101,17 @@ export default async function globalTeardown(): Promise<void> {
    * needs -- a capture with a hole in it must not be handed to `visual:compare` as a baseline, and
    * `compare.ts` refuses one for the case where it is anyway.
    */
+  for (const loss of dropped) console.error(`visual: DROPPED [${loss.scope}] ${loss.what}: ${loss.why}`);
+
+  /*
+   * THE SERVER IS ASKED AGAIN, because cold at the start says nothing about the middle. A server
+   * that hot-reloaded while the capture ran pushed a reload into the pages it had open, and every
+   * shot taken across that moment is of a document that changed under the harness -- which no
+   * per-shot check can see, since the shot is self-consistent. See `ProofMoment`.
+   */
+  await assertColdServer(plan.baseUrl, 'after');
+
   if (dropped.length > 0) {
-    for (const loss of dropped) console.error(`visual: DROPPED [${loss.scope}] ${loss.what}: ${loss.why}`);
     throw new Error(
       `visual: ${dropped.length} rendering(s) dropped -- this capture is INCOMPLETE and cannot pass an A/A gate. ` +
         `A dropped rendering is not a smaller answer, it is no answer. See ${paths.manifest(plan.out)}.`
