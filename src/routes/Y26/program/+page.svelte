@@ -52,7 +52,7 @@
 </script>
 
 <Shell title="2026 Program">
-  <div class="mx-auto space-y-10 max-w-3xl px-4 py-8 text-lg leading-relaxed">
+  <div class="mx-auto max-w-3xl space-y-10 px-4 py-8 text-lg leading-relaxed">
     <!-- Theme -->
     <div class="border-l-4 border-yellow-500 py-2 pl-6">
       <h2 class="mb-2 text-2xl font-bold text-gray-800">2026 Theme: Build</h2>

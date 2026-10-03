@@ -24,48 +24,43 @@
  */
 
 import { config } from './config';
+import { transportCause } from './transportCause';
 
+/** The url a reader of the failure has to go and look at, under this repo's own config key. */
+export const BACKEND_BASE_URL = config.BACKEND_BASE_URL;
+
+/** What else the same dead backend looks like in this suite's report, if anything does. */
+const ALSO_REPORTED_AS = '';
+
+// dry-copy: sveltekit/playwright-backend-unreachable — every copy of this region must match; `dev repo copies` checks it (ISS-15745)
 /**
  * The dead-backend explanation for a thrown value, or `undefined` when it is something else.
  *
  * Node's fetch reports every transport-level failure (refused, reset, closed mid-response, DNS)
  * as exactly `TypeError: fetch failed`, and reports nothing else as it. An aborted request is a
  * `DOMException` and an HTTP error is a response, so neither is matched here.
+ *
+ * What actually failed is on `cause`, and `transportCause.ts` reads it — the same reading the
+ * readiness check in `probe.ts` reports. The FIRST request to a backend that has just gone away is
+ * answered by `SocketError: other side closed`, because it was in flight when the socket went;
+ * every request after it is refused on every address family. That difference is what tells a
+ * reader which spec was running when the backend died.
+ *
+ * `BACKEND_BASE_URL` and `ALSO_REPORTED_AS` are the repo's own and are declared above this region.
  */
 export function backendUnreachable(error: unknown): Error | undefined {
   if (!(error instanceof TypeError) || error.message !== 'fetch failed') {
     return undefined;
   }
   return new Error(
-    `The e2e backend at ${config.BACKEND_BASE_URL} is not answering (${transportCause(error)}), so nothing was ` +
+    `The e2e backend at ${BACKEND_BASE_URL} is not answering (${transportCause(error).detail}), so nothing was ` +
       `seeded and this spec never reached its subject. It WAS answering when global-setup probed it before ` +
       `the run, so the platform container serving this suite has gone away since — this is not a spec ` +
-      `failure and not a wrong url. Every spec after this one that needs the backend fails the same way. ` +
+      `failure and not a wrong url. Every spec after this one that needs the backend fails the same way${ALSO_REPORTED_AS}. ` +
       `What the container did before it stopped is in backend.log in this run's artifact directory, and ` +
       `nowhere else — the container is ephemeral and its log dies with it.`,
     { cause: error }
   );
-}
-
-/**
- * The line under `fetch failed` that actually says what happened, and it is two different lines.
- *
- * The FIRST request to a backend that has just gone away is answered by `SocketError: other side
- * closed`: it was in flight when the socket went. Every request after it gets an `AggregateError`
- * wrapping one `connect ECONNREFUSED` per address family, which is nothing on the port at all.
- * That distinction tells a reader which spec was running when the backend died, so the inner error
- * is unwrapped rather than reported as a bare `AggregateError` with an empty message.
- */
-function transportCause(error: TypeError): string {
-  const cause: unknown = error.cause;
-  if (!(cause instanceof Error)) {
-    return 'no cause reported';
-  }
-  const described: Error =
-    cause instanceof AggregateError
-      ? ((cause.errors as unknown[]).find((inner): inner is Error => inner instanceof Error) ?? cause)
-      : cause;
-  return described.message.trim() === '' ? described.name : `${described.name}: ${described.message}`;
 }
 
 /**
@@ -80,3 +75,4 @@ export const explainingFetch: typeof fetch = async (input, init) => {
     throw backendUnreachable(error) ?? error;
   }
 };
+// dry-copy-end

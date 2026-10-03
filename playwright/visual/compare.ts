@@ -14,7 +14,7 @@
  * types, so the compare tool needs no build step and no dependency the repo does not already have.
  */
 // dry-copy: visual-parity/compare — every copy of this region must match; `dev repo copies` checks it
-import { compareManifests, complete, passes, summarize, type Manifest } from './manifest.ts';
+import { compareManifests, complete, passes, scopeToSelection, summarize, type Manifest } from './manifest.ts';
 import { readManifest, readStyles } from './files.ts';
 import { describeElement, diffStyles } from './styles.ts';
 
@@ -197,9 +197,19 @@ function main(): number {
     );
   }
 
-  const comparison = compareManifests(a, b);
-  console.log(`A ${dirA} (${a.set}, ${a.capturedAt})`);
-  console.log(`B ${dirB} (${b.set}, ${b.capturedAt})`);
+  // A `VISUAL_PAGES` subset on either side narrows the comparison to the pages both captures took,
+  // and says so on the first lines, before any count: "N equal" over a sample is a different claim
+  // from "N equal" over the set, and the reader has to know which one they are looking at.
+  const scope = scopeToSelection(a, b);
+  const comparison = compareManifests(scope.a, scope.b);
+  console.log(`A ${dirA} (${a.set}, ${a.capturedAt}${a.selection ? `, VISUAL_PAGES=${a.selection.pattern}` : ''})`);
+  console.log(`B ${dirB} (${b.set}, ${b.capturedAt}${b.selection ? `, VISUAL_PAGES=${b.selection.pattern}` : ''})`);
+  if (scope.pages !== null) {
+    console.log(
+      `scoped to the ${scope.pages.length} page(s) both captures selected; ` +
+        `${scope.outsideA} shot(s) of A and ${scope.outsideB} of B lie outside it and were not compared`
+    );
+  }
   console.log(summarize(comparison));
 
   // BOTH SIDES ARE ASKED, and the array is what makes sure of it: `||` would stop at A and leave B's
@@ -213,7 +223,7 @@ function main(): number {
     if (keys.length > 0) console.error(`\n${keys.length} shot(s) ${name}:\n  ${keys.join('\n  ')}`);
   }
 
-  if (comparison.mismatched.length > 0) explain(dirA, dirB, a, b, comparison.mismatched);
+  if (comparison.mismatched.length > 0) explain(dirA, dirB, scope.a, scope.b, comparison.mismatched);
   if (auditProperties.length > 0) audit(dirA, dirB, comparison.equal, auditProperties);
 
   if (holed) {

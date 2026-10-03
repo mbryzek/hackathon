@@ -24,7 +24,7 @@
 </script>
 
 <Shell title="Program Ad Space">
-  <div class="mx-auto space-y-12 max-w-3xl px-4 py-8 pb-24 text-lg leading-relaxed">
+  <div class="mx-auto max-w-3xl space-y-12 px-4 py-8 pb-24 text-lg leading-relaxed">
     <p class="font-light text-gray-800">
       Our printed event program is handed to every participant, parent, and judge at the hackathon. Place an ad to support the event and
       connect with our community of students, families, and educators — or create an ad to further encourage your students.

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
   import { page } from '$app/state';
   import { enhance } from '$app/forms';
   import { urls } from '$lib/urls';
@@ -79,13 +80,9 @@
               disabled={isAddingProject}></textarea>
           </div>
           <div class="flex gap-3">
-            <button
-              type="submit"
-              disabled={isAddingProject}
-              class="rounded-lg bg-yellow-400 px-4 py-2 font-bold text-gray-900 transition-colors hover:bg-yellow-500 disabled:opacity-50"
-            >
+            <Button variant="vote" size="sm" type="submit" loading={isAddingProject}>
               {isAddingProject ? 'Adding...' : 'Add Project'}
-            </button>
+            </Button>
             <button
               type="button"
               onclick={() => (showAddForm = false)}
@@ -98,16 +95,13 @@
       </div>
     {:else}
       <div class="flex gap-3">
-        <button
-          type="button"
-          onclick={() => (showAddForm = true)}
-          class="inline-flex items-center rounded-lg bg-yellow-400 px-6 py-3 font-bold text-gray-900 transition-colors hover:bg-yellow-500"
-        >
-          <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          Add Project
-        </button>
+        <Button variant="vote" onclick={() => (showAddForm = true)} label="Add Project">
+          {#snippet icon()}
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+          {/snippet}
+        </Button>
         <a
           href={urls.voteAdminEventProjectsBulk(eventId)}
           class="inline-flex items-center rounded-lg bg-gray-100 px-6 py-3 font-bold text-gray-900 transition-colors hover:bg-gray-200"
@@ -181,13 +175,9 @@
                   disabled={savingProjectId === project.id}></textarea>
               </div>
               <div class="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={savingProjectId === project.id}
-                  class="rounded-lg bg-yellow-400 px-4 py-2 font-bold text-gray-900 transition-colors hover:bg-yellow-500 disabled:opacity-50"
-                >
+                <Button variant="vote" size="sm" type="submit" loading={savingProjectId === project.id}>
                   {savingProjectId === project.id ? 'Saving...' : 'Save'}
-                </button>
+                </Button>
                 <button type="button" onclick={cancelEdit} class="px-4 py-2 text-gray-600 transition-colors hover:text-gray-900">
                   Cancel
                 </button>

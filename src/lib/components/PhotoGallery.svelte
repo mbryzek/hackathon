@@ -72,7 +72,10 @@
     imageError = true;
   }
 
-  // Touch handling for swipe
+  // Touch handling for swipe. Only touchmove advances touchEndX, so touchstart resets it to the
+  // start: a tap then measures zero movement and leaves navigation to the tapped button's own
+  // click. Without the reset a tap on Next read a stale touchEndX (0, or where the last swipe
+  // ended) as a swipe and moved twice. ISS-15721
   let touchStartX = 0;
   let touchEndX = 0;
 
@@ -80,6 +83,7 @@
     const touch = event.touches[0];
     if (touch) {
       touchStartX = touch.clientX;
+      touchEndX = touch.clientX;
     }
   }
 

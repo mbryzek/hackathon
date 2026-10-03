@@ -279,6 +279,70 @@ export function shotKey(slug: string, theme: ThemeName, viewport: string, state:
 }
 
 /**
+ * The page a shot key belongs to. `slugOf` collapses every run of non-alphanumerics to ONE `-`, so
+ * a slug never contains `--` and the first `--` in a key is always the end of the slug.
+ */
+export function slugOfKey(key: string): string {
+  const end = key.indexOf('--');
+  return end === -1 ? key : key.slice(0, end);
+}
+
+/** What `VISUAL_PAGES` narrowed a capture to: the pattern as typed, and the slugs of the pages it kept. */
+export interface Selection {
+  pattern: string;
+  slugs: string[];
+}
+
+/** A plan after `selectPages`: the same plan, carrying what it was narrowed to, or `null` for every page. */
+export type Selected<P> = P & { selection: Selection | null };
+
+/**
+ * `VISUAL_PAGES`, applied to a plan: a regular expression matched against each page's url path,
+ * keeping the pages it matches (ISS-15761).
+ *
+ * A SUBSET IS A QUESTION ASKED, NOT AN ANSWER LOST, and that is why this sits in the PLAN and not
+ * in playwright's `--grep`. Every reader of the plan -- the spec, the setup and the teardown --
+ * then agrees on the smaller page list, so a page left out is recorded in `uncovered`, identical in
+ * every capture taken with the same pattern, and changes no verdict. Under `--grep` the teardown
+ * still expects a shard from every page, and records each one it never asked the browser for as
+ * DROPPED, which fails the capture and makes `visual:compare` refuse it.
+ *
+ * It exists because a full capture of a large set outlasts the session taking it: trips' preview
+ * set, 119 pages and 5602 shots, took 2.2 to 2.3 hours on a shared runner, so an A/A gate plus an
+ * A/B is three of those. A sampled second A/A capture is the honest way to fit that, and
+ * `compare.ts` scopes a comparison to the pages both sides selected and says so.
+ *
+ * A THROW RATHER THAN A FALLBACK on a pattern that does not parse or that selects nothing, as
+ * `hoverLimit` throws: a typo that silently captured every page costs hours, and one that silently
+ * captured none produces a manifest with nothing in it.
+ */
+export function selectPages<P extends { targets: PageTarget[]; uncovered: [string, string][] }>(
+  plan: P,
+  raw: string | undefined
+): Selected<P> {
+  if (raw === undefined || raw === '') return { ...plan, selection: null };
+  let pattern: RegExp;
+  try {
+    pattern = new RegExp(raw);
+  } catch (error) {
+    throw new Error(`visual: VISUAL_PAGES must be a regular expression, got "${raw}" (${String(error)})`, { cause: error });
+  }
+  const targets = plan.targets.filter((target) => pattern.test(target.path));
+  if (targets.length === 0) {
+    throw new Error(`visual: VISUAL_PAGES="${raw}" matches none of the ${plan.targets.length} page(s) in this set`);
+  }
+  const skipped = plan.targets
+    .filter((target) => !pattern.test(target.path))
+    .map((target): [string, string] => [target.path, `not selected by VISUAL_PAGES=${raw}`]);
+  return {
+    ...plan,
+    targets,
+    uncovered: [...plan.uncovered, ...skipped],
+    selection: { pattern: raw, slugs: targets.map((target) => target.slug) }
+  };
+}
+
+/**
  * The state segments one page/theme/viewport contributes, given how many hover targets it offered.
  *
  * A PAGE OFFERING NONE STILL CONTRIBUTES `hover-0`, recorded with the target `none`. That keeps the

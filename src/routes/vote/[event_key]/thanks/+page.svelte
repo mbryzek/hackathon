@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
@@ -76,16 +77,10 @@
         </p>
 
         <div class="space-y-3">
-          <a
-            href={ORGANIZER_FORM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="organizer-cta"
-            class="block w-full rounded-lg bg-yellow-400 px-6 py-3 font-bold text-gray-900 transition-colors hover:bg-yellow-500"
-          >
+          <Button variant="vote" href={ORGANIZER_FORM_URL} external fullWidth testId="organizer-cta">
             Learn more
             <span class="sr-only">(opens in a new tab)</span>
-          </a>
+          </Button>
 
           <a
             href={DONATION_URL}

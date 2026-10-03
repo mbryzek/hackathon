@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
   import { urls } from '$lib/urls';
   import { eventStatusBadgeClass, eventStatusLabel, formatDate } from '$lib/utils/eventDisplay';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
@@ -16,15 +17,13 @@
       <h1 class="text-2xl font-bold text-gray-900">Events</h1>
       <p class="mt-1 text-gray-600">Manage voting events</p>
     </div>
-    <a
-      href={urls.voteAdminEventsNew}
-      class="inline-flex items-center justify-center rounded-lg bg-yellow-400 px-6 py-3 font-bold text-gray-900 transition-colors hover:bg-yellow-500"
-    >
-      <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-      </svg>
-      New Event
-    </a>
+    <Button variant="vote" href={urls.voteAdminEventsNew} label="New Event">
+      {#snippet icon()}
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+      {/snippet}
+    </Button>
   </div>
 
   {#if error}
@@ -41,12 +40,7 @@
       </svg>
       <h3 class="mb-2 text-lg font-semibold text-gray-900">No events yet</h3>
       <p class="mb-6 text-gray-600">Create your first voting event to get started.</p>
-      <a
-        href={urls.voteAdminEventsNew}
-        class="inline-flex items-center rounded-lg bg-yellow-400 px-4 py-2 font-bold text-gray-900 transition-colors hover:bg-yellow-500"
-      >
-        Create Event
-      </a>
+      <Button variant="vote" size="sm" href={urls.voteAdminEventsNew} label="Create Event" />
     </div>
   {:else}
     <div class="overflow-hidden rounded-xl bg-white shadow-sm">
