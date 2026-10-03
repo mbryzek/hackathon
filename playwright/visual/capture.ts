@@ -152,8 +152,16 @@ export class NavigatedAway extends Error {
   /** Where the document went instead. */
   readonly to: string;
 
-  constructor(from: string, to: string) {
-    super(`the document left ${from} for ${to} during its own capture`);
+  /**
+   * `replaced` is the same url served as a NEW DOCUMENT, which is a navigation that moves nothing a
+   * url can show. See `refuseIfNavigated`.
+   */
+  constructor(from: string, to: string, replaced = false) {
+    super(
+      replaced
+        ? `the document at ${from} was replaced by a new document during its own capture`
+        : `the document left ${from} for ${to} during its own capture`
+    );
     this.name = 'NavigatedAway';
     this.from = from;
     this.to = to;
@@ -211,9 +219,57 @@ async function throughNavigation<T>(page: Page, body: () => Promise<T>): Promise
  * `page.url()` is a local read of what playwright already knows -- no round trip and no execution
  * context -- so it is asked on both sides of every shot, exactly as `structure` is asked on both
  * sides of every raster.
+ *
+ * A NEW DOCUMENT AT THE SAME URL IS THE SAME FAILURE, AND THE URL CANNOT SEE IT (ISS-15888). A dev
+ * server's full page reload -- vite's dependency optimizer finishing on a cold server, a regenerated
+ * `.svelte-kit` module -- replaces the document without moving the url, and a client-rendered page
+ * then spends seconds as an empty shell before it mounts again. Measured on trips' A/A: one context
+ * of the checklist preview fitted itself to the empty shell, shot rest and focus as two
+ * byte-identical PNGs of the bare viewport with no focus target, and recorded both beside a height
+ * read after the page had mounted again. So the document is counted as well (`documentOf`), and a
+ * page whose count has moved since it settled is refused exactly as a page whose url has.
  */
 export function refuseIfNavigated(page: Page, settledAt: string): void {
   if (page.url() !== settledAt) throw new NavigatedAway(settledAt, page.url());
+  refuseIfReplaced(page);
+}
+
+/** Raise `NavigatedAway` when the page is no longer showing the document it last settled. */
+function refuseIfReplaced(page: Page): void {
+  const settled = settledDocuments.get(page);
+  if (settled !== undefined && documentOf(page) !== settled) throw new NavigatedAway(page.url(), page.url(), true);
+}
+
+/** How many documents each page's main frame has asked for, counted as each request leaves. */
+const documentRequests = new WeakMap<Page, number>();
+
+/** `documentOf` at the moment each page last became quiet: the document every shot of it is of. */
+const settledDocuments = new WeakMap<Page, number>();
+
+/**
+ * Count every document `page` asks for from now on.
+ *
+ * A NAVIGATION REQUEST OF THE MAIN FRAME, BECAUSE THAT IS WHAT A NEW DOCUMENT IS. A reload, a
+ * `location` assignment and a server redirect each issue one; a SvelteKit client navigation and a
+ * `history.replaceState` issue none and replace no document, and the url check already covers the
+ * first of those. Counted when the request LEAVES rather than when the new document commits, so the
+ * count has moved before anything can be read off the document it is fetching.
+ *
+ * A local read, like `page.url()`, so `refuseIfNavigated` stays one without a round trip.
+ */
+function watchDocuments(page: Page): void {
+  if (documentRequests.has(page)) return;
+  documentRequests.set(page, 0);
+  page.on('request', (request) => {
+    if (!request.isNavigationRequest()) return;
+    if (request.frame() !== page.mainFrame()) return;
+    documentRequests.set(page, documentOf(page) + 1);
+  });
+}
+
+/** Which document `page` is on, as a count of the ones it has asked for. */
+function documentOf(page: Page): number {
+  return documentRequests.get(page) ?? 0;
 }
 
 /**
@@ -889,10 +945,11 @@ async function awaitMedia(page: Page): Promise<void> {
 export async function settle(page: Page, path: string, timeoutMs = SETTLE_TIMEOUT_MS): Promise<boolean> {
   try {
     freshDocument(page);
+    watchDocuments(page);
     await page.goto(path, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
     if (await quiet(page, timeoutMs)) return true;
     console.warn(
-      `visual: ${path} did not settle: its webfont never loaded, or a foreign image never answered its size probe, in ${RELOAD_ATTEMPTS} document(s)`
+      `visual: ${path} did not settle: its webfont never loaded, a foreign image never answered its size probe, or the server kept replacing the document, in ${RELOAD_ATTEMPTS} document(s)`
     );
     return false;
   } catch (error) {
@@ -956,16 +1013,43 @@ export async function settledPage(context: BrowserContext, path: string): Promis
  * the `document.scrollWidth` read immediately after it died with `Execution context was destroyed,
  * most likely because of a navigation`. A shot that survived that race would be worse -- a
  * screenshot of a page that no longer exists, recorded under the redirecting route's key.
+ *
+ * QUIET IS A PROPERTY OF ONE DOCUMENT (ISS-15888). A reload the dev server sends in the middle of
+ * the wait leaves the url where it was and every wait already passed answering about the document
+ * it replaced, so the page would be called settled while it is an empty shell. A wait whose
+ * document was replaced under it is therefore started again on the new one, and the document that
+ * finally answers is recorded as the one every shot of this page is of (`refuseIfNavigated`).
  */
 async function quiet(page: Page, timeoutMs: number): Promise<boolean> {
+  for (let replaced = 0; replaced < RELOAD_ATTEMPTS; replaced += 1) {
+    const settled = await quietOnce(page, timeoutMs);
+    if (settled === null) return false;
+    if (documentOf(page) === settled) {
+      settledDocuments.set(page, settled);
+      return true;
+    }
+    console.warn(`visual: ${page.url()} was replaced by a new document while it settled; settling that one instead`);
+  }
+  return false;
+}
+
+/**
+ * `quiet` on whichever document the page is showing, answering WHICH document that was -- the
+ * count after the last navigation this function made itself -- or `null` if it never got quiet.
+ */
+async function quietOnce(page: Page, timeoutMs: number): Promise<number | null> {
+  // The document the caller navigated to, moved on only by a reload this function makes itself, so
+  // that a document SOMETHING ELSE asked for, at any point in the wait, counts as a replacement.
+  let document = documentOf(page);
   for (let attempt = 0; ; attempt += 1) {
     await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     await loadDeclaredFaces(page);
     await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     if ((await awaitMeasurable(page)) !== 'stale') break;
-    if (attempt + 1 >= RELOAD_ATTEMPTS) return false;
+    if (attempt + 1 >= RELOAD_ATTEMPTS) return null;
     freshDocument(page);
     await page.reload({ waitUntil: 'domcontentloaded', timeout: timeoutMs });
+    document = documentOf(page);
   }
   await awaitMedia(page);
   await page.waitForLoadState('networkidle', { timeout: timeoutMs });
@@ -980,7 +1064,7 @@ async function quiet(page: Page, timeoutMs: number): Promise<boolean> {
     await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     await loadDeclaredFaces(page);
   }
-  return true;
+  return document;
 }
 
 /**
@@ -1128,6 +1212,9 @@ export async function hoverTargetCount(page: Page, limit: number): Promise<{ sho
       },
       { selector: HOVER_SELECTOR, fold: foldOf(page) }
     );
+    // The count decides the context's KEY SET and is kept across a re-settle, so a count taken off
+    // a document that was replaced under it -- an empty shell, offering nothing -- must not escape.
+    refuseIfReplaced(page);
     return { shots: Math.min(total, limit), total };
   });
 }
@@ -1478,21 +1565,6 @@ export async function dumpStyles(page: Page): Promise<StyleDump> {
     return encodeStyles(raw.props, raw.elements as RawElement[]);
   });
 }
-/**
- * The document's own full size, in css pixels.
- *
- * DIAGNOSTIC ONLY -- `manifest.ts` says so, and the sha of the png is the whole verdict. It is here
- * rather than inline in `parity.spec.ts` so that it is guarded like every other read of the page:
- * it was the call site ISS-10052 was measured at, for no reason other than being the one page
- * operation the spec performed for itself, and a diagnostic must never be the thing that costs a
- * capture a page.
- */
-export async function documentSize(page: Page): Promise<{ width: number; height: number }> {
-  return throughNavigation(page, async () =>
-    page.evaluate(() => ({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight }))
-  );
-}
-
 /** The id of the stylesheet planted for the duration of one shot. See `screenshotFrozen`. */
 const FREEZE_ID = '__visual_freeze__';
 
@@ -1657,6 +1729,21 @@ export async function screenshotFrozen(page: Page): Promise<Buffer | ShotFailure
   }
 }
 
+/**
+ * The png's size, or `null` when it is not the size `fitToDocument` measured the document at.
+ *
+ * THE RASTER IS THE VIEWPORT AND THE VIEWPORT IS THE MEASUREMENT, so the two can only disagree when
+ * something resized the page between the fit and the raster -- and then the png is not of the
+ * document the shot is filed as. That is `disturbed`'s shape, a page that moved across its own
+ * raster, and it takes `disturbed`'s repair: the fit and the state applied again (ISS-15888).
+ */
+function rasterOf(page: Page, png: Buffer): { width: number; height: number } | null {
+  const size = imageSize(png);
+  const measured = fitted.get(page);
+  if (size === null || measured === undefined) return null;
+  return size.width === measured.width && size.height === measured.height ? size : null;
+}
+
 /** How many documents a single shot is allowed to need before it is given up on. */
 const SHOT_ATTEMPTS = 3;
 
@@ -1672,11 +1759,18 @@ const SHOT_ATTEMPTS = 3;
  */
 const RETAKES = 4;
 
-/** One shot: what the state was applied to, and the png. */
+/** One shot: what the state was applied to, the png, and the size of the png. */
 export interface Shot {
   /** The element `applyState` targeted, or `none` where the page offered none. */
   target: string;
   png: Buffer;
+  /**
+   * The png's own size, which is the document's size as `fitToDocument` measured it: a shot whose
+   * raster is any other size is refused rather than returned. So the manifest's size is the size
+   * of the image its sha is of, by construction (ISS-15888).
+   */
+  width: number;
+  height: number;
 }
 
 /**
@@ -1730,7 +1824,14 @@ export async function captureShot(page: Page, state: StateName, index = 0): Prom
           continue;
         }
         const shot = await screenshotFrozen(page);
-        if (typeof shot !== 'string') return { target, png: shot };
+        if (typeof shot !== 'string') {
+          // A shot of a document that has since been replaced is of no document this page shows.
+          refuseIfReplaced(page);
+          const size = rasterOf(page, shot);
+          if (size !== null) return { target, png: shot, ...size };
+          last = 'disturbed';
+          continue;
+        }
         last = shot;
         if (shot === 'metrics') break;
       }
