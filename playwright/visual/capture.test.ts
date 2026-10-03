@@ -42,6 +42,8 @@ interface Journal {
   clears: number;
   /** How many frames the hover fixed-point check read. */
   hoverReads: number;
+  /** Every reload, hydration wait and screenshot, in order. */
+  events: ('reload' | 'hydrated' | 'screenshot')[];
   /** Every viewport the page was given, in order, and what had happened by then. */
   resizes: { width: number; height: number; screenshotsBefore: number; statesBefore: number }[];
   /** The fold each target search was told to choose above. */
@@ -102,7 +104,7 @@ function stubPage(
     unreachable?: boolean;
   } = {}
 ): { page: Page; journal: Journal; seal: PointerSeal } {
-  const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0, hoverReads: 0, resizes: [], folds: [] };
+  const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0, hoverReads: 0, events: [], resizes: [], folds: [] };
   // One answer per frame the fixed-point check reads, the last one repeating.
   const hoverAnswers = typeof options.hoverHolds === 'boolean' ? [options.hoverHolds] : (options.hoverHolds ?? [true]);
   const seal: PointerSeal = { atScreenshot: [], atPointerMove: [], sealed: false };
@@ -163,7 +165,9 @@ function stubPage(
     },
     waitForTimeout: async (): Promise<void> => undefined,
     waitForLoadState: async (): Promise<void> => undefined,
-    waitForFunction: async (): Promise<void> => undefined,
+    waitForFunction: async (fn: unknown): Promise<void> => {
+      if (String(fn).includes('getElementById')) journal.events.push('hydrated');
+    },
     url: (): string => url,
     viewportSize: (): { width: number; height: number } => viewport,
     setViewportSize: async (size: { width: number; height: number }): Promise<void> => {
@@ -172,9 +176,11 @@ function stubPage(
     },
     reload: async (): Promise<void> => {
       journal.reloads += 1;
+      journal.events.push('reload');
     },
     screenshot: async (): Promise<Buffer> => {
       journal.screenshots += 1;
+      journal.events.push('screenshot');
       seal.atScreenshot.push(seal.sealed);
       return Buffer.from('png');
     }
@@ -319,6 +325,20 @@ describe('captureShot', () => {
     expect(journal.reloads).toBe(2);
     expect(journal.screenshots).toBe(journal.statesApplied);
     expect(journal.screenshots).toBeGreaterThan(3);
+  });
+
+  /**
+   * A RELOADED DOCUMENT IS SHOT HYDRATED OR NOT AT ALL. `networkidle` says the modules arrived, not
+   * that the root has mounted, and under load a reloaded document was shot as the server rendered it
+   * (ISS-15877).
+   */
+  it('waits for every reloaded document to hydrate before shooting it', async () => {
+    const { page, journal } = stubPage([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]);
+    await captureShot(page, 'hover', 3);
+    expect(journal.reloads).toBe(2);
+    journal.events.forEach((event, at) => {
+      if (event === 'reload') expect(journal.events[at + 1]).toBe('hydrated');
+    });
   });
 
   /**
