@@ -1,8 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { SESSION_COOKIE } from '$lib/config';
 import { urls } from '$lib/urls';
 import { adminApi } from '$lib/server/adminApi';
+import { clearSessionCookie } from '$lib/server/adminSession';
 
 /**
  * Logging out is destructive, so it must never happen on a GET. `app.html` sets
@@ -34,7 +34,7 @@ export const actions = {
       await adminApi.logout(sessionId);
     }
 
-    cookies.delete(SESSION_COOKIE, { path: '/' });
+    clearSessionCookie(cookies);
     throw redirect(303, urls.voteAdminLogin);
   }
 } satisfies Actions;

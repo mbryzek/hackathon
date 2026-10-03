@@ -11,6 +11,7 @@ import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { SESSION_COOKIE, config } from '$lib/config';
 import { SECURITY_HEADERS } from '$lib/security-headers';
 import { adminApi } from '$lib/server/adminApi';
+import { clearSessionCookie } from '$lib/server/adminSession';
 
 const ADMIN_PATH_PREFIX = '/vote/admin';
 
@@ -39,7 +40,7 @@ async function resolveAdminSession(event: Parameters<Handle>[0]['event']): Promi
   const response = await adminApi.getSession(sessionId);
 
   if (response.status === 401) {
-    event.cookies.delete(SESSION_COOKIE, { path: '/' });
+    clearSessionCookie(event.cookies);
     return;
   }
 
