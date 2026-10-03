@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
   import { onMount } from 'svelte';
   import Spinner from '$lib/components/Spinner.svelte';
   import { goto } from '$app/navigation';
@@ -67,12 +68,9 @@
       </div>
       <h2 class="mb-2 text-xl font-bold text-gray-900">Error</h2>
       <p class="text-gray-600">{error}</p>
-      <button
-        onclick={() => fetchOpenEvents()}
-        class="mt-4 rounded-lg bg-yellow-400 px-4 py-2 font-semibold text-gray-900 transition-colors hover:bg-yellow-500"
-      >
-        Try Again
-      </button>
+      <div class="mt-4">
+        <Button variant="vote" size="sm" onclick={() => fetchOpenEvents()} label="Try Again" />
+      </div>
     </div>
   {:else if events.length === 0}
     <!-- No events -->

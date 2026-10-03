@@ -1,9 +1,9 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
   import { page } from '$app/state';
   import { enhance } from '$app/forms';
   import { urls } from '$lib/urls';
   import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
-  import Spinner from '$lib/components/Spinner.svelte';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import type { ActionData, PageData } from './$types';
 
@@ -82,20 +82,9 @@ Code Helper,AI-powered coding assistant`;
       </div>
 
       <div class="flex gap-3">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          class="rounded-lg bg-yellow-400 px-6 py-3 font-bold text-gray-900 transition-colors hover:bg-yellow-500 disabled:opacity-50"
-        >
-          {#if isSubmitting}
-            <span class="inline-flex items-center">
-              <Spinner class="mr-2 -ml-1" />
-              Adding Projects...
-            </span>
-          {:else}
-            Add Projects
-          {/if}
-        </button>
+        <Button variant="vote" type="submit" loading={isSubmitting}>
+          {isSubmitting ? 'Adding Projects...' : 'Add Projects'}
+        </Button>
         <a href={urls.voteAdminEventProjects(eventId)} class="px-6 py-3 text-gray-600 transition-colors hover:text-gray-900"> Cancel </a>
       </div>
     </form>
