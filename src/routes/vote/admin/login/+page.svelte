@@ -1,5 +1,6 @@
 <script lang="ts">
-  import Spinner from '$lib/components/Spinner.svelte';
+  import AuthCard from '$lib/components/AuthCard.svelte';
+  import AuthSubmit from '$lib/components/AuthSubmit.svelte';
   import { enhance } from '$app/forms';
   import { createSubmitting } from '$lib/utils/submitting.svelte';
   import { urls } from '$lib/urls';
@@ -17,78 +18,52 @@
       email = form.email;
     }
   });
-  const submitting = createSubmitting();
 
   // Get error message from form errors
   let error = $derived(form?.errors?.[0]?.message || null);
+
+  const submitting = createSubmitting();
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
-  <div class="w-full max-w-md">
-    <div class="rounded-xl bg-white p-8 shadow-lg">
-      <div class="mb-8 text-center">
-        <img class="mx-auto mb-4 h-16 w-auto" src="/assets/bt-cs-logo.png" alt="Bergen Tech Hackathon" />
-        <h1 class="text-2xl font-bold text-gray-900">Vote Admin Login</h1>
-        <p class="mt-2 text-gray-600">Sign in to manage voting events</p>
-      </div>
-
-      <form method="POST" use:enhance={submitting.enhance} class="space-y-6">
-        <div>
-          <label for="email" class="mb-2 block text-sm font-medium text-gray-700"> Email </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            bind:value={email}
-            placeholder="admin@example.com"
-            class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
-            autocomplete="email"
-            disabled={submitting.active}
-          />
-        </div>
-
-        <div>
-          <label for="password" class="mb-2 block text-sm font-medium text-gray-700"> Password </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            bind:value={password}
-            placeholder="Enter your password"
-            class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
-            autocomplete="current-password"
-            disabled={submitting.active}
-          />
-          <p class="mt-2 text-right text-sm">
-            <a href={urls.passwordResetRequest} class="text-gray-600 underline transition-colors hover:text-gray-900">
-              Forgot your password?
-            </a>
-          </p>
-        </div>
-
-        {#if error}
-          <ErrorBanner {error} />
-        {/if}
-
-        <button
-          type="submit"
-          disabled={submitting.active || !email.trim() || !password}
-          class="w-full rounded-lg bg-gray-900 px-6 py-3 font-bold text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {#if submitting.active}
-            <span class="inline-flex items-center justify-center gap-2">
-              <Spinner />
-              Signing in...
-            </span>
-          {:else}
-            Sign In
-          {/if}
-        </button>
-      </form>
+<AuthCard heading="Vote Admin Login" intro="Sign in to manage voting events" returnHome>
+  <form method="POST" use:enhance={submitting.enhance} class="space-y-6">
+    <div>
+      <label for="email" class="mb-2 block text-sm font-medium text-gray-700"> Email </label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        bind:value={email}
+        placeholder="admin@example.com"
+        class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
+        autocomplete="email"
+        disabled={submitting.active}
+      />
     </div>
 
-    <p class="mt-6 text-center text-sm text-gray-500">
-      <a href={urls.index} class="transition-colors hover:text-gray-700"> Return to Hackathon Site </a>
-    </p>
-  </div>
-</div>
+    <div>
+      <label for="password" class="mb-2 block text-sm font-medium text-gray-700"> Password </label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        bind:value={password}
+        placeholder="Enter your password"
+        class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
+        autocomplete="current-password"
+        disabled={submitting.active}
+      />
+      <p class="mt-2 text-right text-sm">
+        <a href={urls.passwordResetRequest} class="text-gray-600 underline transition-colors hover:text-gray-900">
+          Forgot your password?
+        </a>
+      </p>
+    </div>
+
+    {#if error}
+      <ErrorBanner {error} />
+    {/if}
+
+    <AuthSubmit label="Sign In" busyLabel="Signing in..." busy={submitting.active} disabled={!email.trim() || !password} />
+  </form>
+</AuthCard>
