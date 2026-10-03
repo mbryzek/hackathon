@@ -1649,8 +1649,9 @@ export type ShotFailure =
   /** A `ch` on this page does not currently mean what the stylesheet says it means. */
   | 'metrics'
   /**
-   * The document changed across its own raster, or a focus came back without its `:focus-visible`
-   * ring, so the png would not be of the state it was asked for. Re-applied on the same document.
+   * The document changed across its own raster, a hovered target was not `:hover` on both sides of
+   * it, or a focus came back without its `:focus-visible` ring, so the png would not be of the state
+   * it was asked for. Re-applied on the same document.
    */
   | 'disturbed'
   /** The hover moves its own target out from under the pointer, so the state is never at rest. */
@@ -1734,13 +1735,23 @@ export type ShotFailure =
  * stays for what can still move a document across its own raster without a resize -- a timer, a
  * late stylesheet, a node the app mounts on its own schedule.
  *
+ * A HOVER SHOT ASKS WHETHER ITS TARGET IS STILL `:hover` ON BOTH SIDES OF THE RASTER as well
+ * (ISS-15884). `hoverHolds` is asked before the freeze stylesheet goes in, and a hover can still
+ * go between that answer and the png: measured on trips' A/A, one `button.grid.h-9` on one preview
+ * page shot with its `hover:` background and colour on one capture and at rest on the other, with
+ * the fixed-point check passing on both. The url and the structure were the same on both sides of
+ * that raster, so neither read could see it; only asking the target can. A target that is not
+ * `:hover` on either side is `disturbed` -- a shot of rest filed under a hover key is a page that
+ * moved across its own raster, and it takes that repair: the state applied again on this document.
+ * Not `unstable`, which is a verdict about the page that a single lost read cannot support.
+ *
  * The two failures are told apart because their repairs are opposites. `metrics` needs a FRESH
  * DOCUMENT -- a `ch` is resolved at layout and kept, so nothing short of reloading clears it.
  * `disturbed` needs the STATE PUT BACK on the document that is already there, and a reload is the
  * wrong instrument for it: it costs a navigation and lands back in the same coin flip. See
  * `captureShot`.
  */
-export async function screenshotFrozen(page: Page): Promise<Buffer | ShotFailure> {
+export async function screenshotFrozen(page: Page, hovered = false): Promise<Buffer | ShotFailure> {
   await page.evaluate(
     ({ id, css, seal }) => {
       (window as unknown as Record<string, unknown>)[seal] = true;
@@ -1760,12 +1771,14 @@ export async function screenshotFrozen(page: Page): Promise<Buffer | ShotFailure
     // Read LAST before the raster and FIRST after it, with nothing of the harness's own in
     // between: `freshCh` and `chWidth` each plant a probe element and take it away again, so a
     // reading taken across one of them would be comparing the document with the harness in it.
+    if (hovered && !(await stillHovered(page, 'before'))) return 'disturbed';
     const beforeStructure = await structure(page);
     // The VIEWPORT, which `fitToDocument` has made the document's measured size: a full-page
     // shot would resize for the raster wherever the document has outgrown that, and that resize is
     // what took the state away.
     const png = await page.screenshot({ fullPage: false, animations: 'disabled', caret: 'hide', scale: 'css', type: 'png' });
     if ((await structure(page)) !== beforeStructure) return 'disturbed';
+    if (hovered && !(await stillHovered(page, 'after'))) return 'disturbed';
     if ((await awaitMeasurable(page)) !== 'ok') return 'metrics';
     if (Math.abs((await chWidth(page)) - beforeCh) > 0.5) return 'metrics';
     return png;
@@ -1786,6 +1799,34 @@ export async function screenshotFrozen(page: Page): Promise<Buffer | ShotFailure
       )
       .catch(() => undefined);
   }
+}
+
+/**
+ * Whether the target `applyState` hovered is still in the document and still `:hover`, read once.
+ *
+ * ONE READ, NOT `hoverHolds`' FRAMES: this is not asking whether the hover is a fixed point, which
+ * `applyState` has already established, but whether it was still in force at one instant -- the
+ * raster's. It reads nothing `structure` or the style dump can see and mutates nothing, so it can
+ * sit next to the structure read without the harness appearing in either.
+ *
+ * A LOST HOVER SAYS WHICH SIDE IT WAS LOST ON, and what is `:hover` instead, for the same reason
+ * `hoverHolds` logs its reasons: a retake hides it from the manifest, and a hover that is lost on
+ * every retake is a defect to chase.
+ */
+async function stillHovered(page: Page, side: 'before' | 'after'): Promise<boolean> {
+  const lost = await page.evaluate(
+    ({ key }) => {
+      const target = (window as unknown as Record<string, unknown>)[key] as Element | undefined;
+      if (target === undefined || !target.isConnected) return 'the target is no longer in the document';
+      if (target.matches(':hover')) return null;
+      const hovered = Array.from(document.querySelectorAll(':hover')).at(-1);
+      return `not :hover (hovering ${hovered === undefined ? 'nothing' : hovered.nodeName.toLowerCase()})`;
+    },
+    { key: HOVER_TARGET_KEY }
+  );
+  if (lost === null) return true;
+  console.warn(`visual: ${page.url()} hover lost ${side} the raster: ${lost}`);
+  return false;
 }
 
 /**
@@ -1856,7 +1897,8 @@ export interface Shot {
  * it again. RE-APPLYING IS THE WHOLE OF IT AND A BARE SECOND SCREENSHOT WOULD FIX NOTHING: once a
  * hover-mounted node has been torn down the pointer never moves again, so it does not come back on
  * its own. Measured directly -- eight consecutive shots of one hovered chart band, the bubble gone
- * from the fourth onward.
+ * from the fourth onward. A hover whose target was not `:hover` on both sides of its raster is
+ * retaken the same way (ISS-15884).
  */
 export async function captureShot(page: Page, state: StateName, index = 0): Promise<Shot | ShotFailure> {
   return throughNavigation(page, async () => {
@@ -1887,7 +1929,9 @@ export async function captureShot(page: Page, state: StateName, index = 0): Prom
           last = 'disturbed';
           continue;
         }
-        const shot = await screenshotFrozen(page);
+        // A hover shot is asked whether its target is still hovered across the raster; a page that
+        // offered no target has nothing to ask (ISS-15884).
+        const shot = await screenshotFrozen(page, state === 'hover' && target !== 'none');
         if (typeof shot !== 'string') {
           // A shot of a document that has since been replaced is of no document this page shows.
           refuseIfReplaced(page);

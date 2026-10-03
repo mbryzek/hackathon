@@ -47,6 +47,8 @@ interface Journal {
   clears: number;
   /** How many frames the hover fixed-point check read. */
   hoverReads: number;
+  /** How many times the hovered target was asked whether it was still `:hover`, either side of a raster. */
+  rasterHoverReads: number;
   /** Every reload, hydration wait and screenshot, in order. */
   events: ('reload' | 'hydrated' | 'screenshot')[];
   /** Every viewport the page was given, in order, and what had happened by then. */
@@ -131,6 +133,8 @@ function stubPage(
     rasters?: readonly ({ width: number; height: number } | null)[];
     /** Called at the n-th wait the harness makes, which is where a document can be replaced under it. */
     onWait?: (wait: number) => void;
+    /** Whether the target is still `:hover` at the n-th read either side of a raster; always, by default. */
+    rasterHover?: readonly boolean[];
   } = {}
 ): { page: Page; journal: Journal; seal: PointerSeal; newDocument: () => void } {
   const journal: Journal = {
@@ -139,6 +143,7 @@ function stubPage(
     reloads: 0,
     clears: 0,
     hoverReads: 0,
+    rasterHoverReads: 0,
     events: [],
     resizes: [],
     folds: [],
@@ -190,6 +195,12 @@ function stubPage(
       journal.hoverReads += 1;
       // The check answers why it failed, or nothing when it held.
       return holds === true ? null : 'not :hover';
+    }
+    // The single read either side of a raster, which asks `:hover` and not what is under the pointer.
+    if (source.includes(':hover')) {
+      const holds = options.rasterHover?.[journal.rasterHoverReads] ?? true;
+      journal.rasterHoverReads += 1;
+      return holds ? null : 'not :hover';
     }
     if (source.includes('cssText')) return { width: chWidth(), em: 1 };
     if (source.includes('getElementById') && source.includes('getComputedStyle')) return { width: chWidth(), em: 1 };
@@ -430,6 +441,37 @@ describe('captureShot', () => {
     await captureShot(page, 'hover', 3);
     expect(journal.statesApplied).toBe(2);
     expect(journal.clears).toBe(1);
+  });
+
+  /**
+   * A HOVER CAN GO BETWEEN THE FIXED-POINT CHECK AND THE PNG (ISS-15884). Measured on trips' A/A: one
+   * button shot hovered on one capture and at rest on the other, with the check passing on both and
+   * the structure equal across both rasters. So the target is asked whether it is still `:hover` on
+   * each side of the raster, and a shot that fails either is retaken as a disturbed one is.
+   */
+  it('retakes a hover shot whose target lost :hover across the raster', async () => {
+    const { page, journal } = stubPage([1, 1, 1, 1], { rasterHover: [true, false, true, true] });
+    expect(taken(await captureShot(page, 'hover', 3)).target).toBe('rect');
+    expect(journal).toMatchObject({ screenshots: 2, statesApplied: 2, clears: 1, reloads: 0, rasterHoverReads: 4 });
+  });
+
+  it('does not shoot a hover whose target lost :hover before the raster', async () => {
+    const { page, journal } = stubPage([1, 1], { rasterHover: [false, true, true] });
+    expect(taken(await captureShot(page, 'hover', 3)).target).toBe('rect');
+    expect(journal).toMatchObject({ screenshots: 1, statesApplied: 2, clears: 1, reloads: 0 });
+  });
+
+  it('never records a hover shot whose target is never still hovered at the raster', async () => {
+    const { page, journal } = stubPage([1, 1], { rasterHover: Array.from({ length: 64 }, () => false) });
+    expect(await captureShot(page, 'hover', 3)).toBe('disturbed');
+    expect(journal.screenshots).toBe(0);
+  });
+
+  it('does not ask a rest or focus shot whether anything is hovered', async () => {
+    const { page, journal } = stubPage([1, 1, 1, 1], { rasterHover: [false, false] });
+    taken(await captureShot(page, 'rest'));
+    taken(await captureShot(page, 'focus', 0));
+    expect(journal.rasterHoverReads).toBe(0);
   });
 
   it('reloads only after the retakes on one document are spent', async () => {
