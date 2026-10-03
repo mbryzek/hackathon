@@ -23,6 +23,13 @@ import { isTenantSession, type SessionState } from '../../generated/com-bryzek-p
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 
 /**
+ * The path the session cookie is scoped to. A browser deletes a cookie only when the delete
+ * names the same path (and domain) it was set with, so the set and every clear read this one
+ * value.
+ */
+const SESSION_COOKIE_PATH = '/';
+
+/**
  * Remembers a session id in this browser.
  *
  * One place, because three different flows now mint a session — signing in, activating an
@@ -32,12 +39,20 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
  */
 export function setSessionCookie(cookies: Cookies, sessionId: string): void {
   cookies.set(SESSION_COOKIE, sessionId, {
-    path: '/',
+    path: SESSION_COOKIE_PATH,
     httpOnly: true,
     sameSite: 'lax',
     secure: config.isProduction,
     maxAge: SESSION_MAX_AGE_SECONDS
   });
+}
+
+/**
+ * Makes this browser forget its session id, with the options `setSessionCookie` wrote it under —
+ * a delete whose path differs from the set's leaves the cookie in place.
+ */
+export function clearSessionCookie(cookies: Cookies): void {
+  cookies.delete(SESSION_COOKIE, { path: SESSION_COOKIE_PATH });
 }
 
 /**
@@ -87,7 +102,7 @@ export function requireSessionId({ locals }: SessionEvent): string {
  * and straight back to the page that cannot load.
  */
 function sessionExpired(cookies: Cookies): never {
-  cookies.delete(SESSION_COOKIE, { path: '/' });
+  clearSessionCookie(cookies);
   throw redirect(303, urls.voteAdminLogin);
 }
 
