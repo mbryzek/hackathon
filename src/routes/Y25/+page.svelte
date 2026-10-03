@@ -112,7 +112,7 @@
     <div class="mt-8">
       <h2 class="mb-6 text-2xl font-semibold text-gray-800">By the Numbers</h2>
       <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {#each stats as stat, i}
+        {#each stats as stat, i (stat.label)}
           <StatCard value={stat.value} label={stat.label} highlight={i === 0} />
         {/each}
       </div>

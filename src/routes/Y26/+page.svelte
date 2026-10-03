@@ -78,7 +78,7 @@
     <div class="mt-4">
       <h3 class="mb-4 text-xl font-semibold text-gray-800">A few example projects</h3>
       <ul class="space-y-3">
-        {#each projects as project}
+        {#each projects as project (project)}
           <li class="flex items-start gap-3 font-light text-gray-800">
             <span class="mt-1 text-yellow-500">&#9679;</span>
             {project}
@@ -91,7 +91,7 @@
     <div class="mt-8">
       <h2 class="mb-6 text-2xl font-semibold text-gray-800">By the Numbers</h2>
       <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {#each stats as stat, i}
+        {#each stats as stat, i (stat.label)}
           <StatCard value={stat.value} label={stat.label} highlight={i === 0} />
         {/each}
       </div>

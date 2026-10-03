@@ -110,7 +110,7 @@
   <div
     class="xs:grid-cols-2 mx-auto mt-6 grid max-w-sm grid-cols-1 gap-x-4 gap-y-8 sm:max-w-none sm:grid-cols-2 sm:gap-8 md:grid-cols-3 md:gap-10 lg:grid-cols-3 lg:gap-12 xl:grid-cols-4 2xl:grid-cols-5"
   >
-    {#each displayPhotos as photo, index}
+    {#each displayPhotos as photo, index (photo)}
       <div class="group relative">
         <button
           type="button"
@@ -120,7 +120,7 @@
         >
           <!-- Skeleton loader -->
           {#if !loadedImages.has(index)}
-            <div class="absolute inset-0 animate-pulse rounded-lg bg-gray-200"></div>
+            <span class="absolute inset-0 animate-pulse rounded-lg bg-gray-200"></span>
           {/if}
           <img
             src={photo}
@@ -130,7 +130,7 @@
             onload={() => handleImageLoad(index)}
           />
           <!-- Hover overlay -->
-          <div class="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/10">
+          <span class="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/10">
             <svg
               class="h-10 w-10 text-white opacity-0 drop-shadow-lg transition-opacity duration-300 group-hover:opacity-100"
               fill="none"
@@ -144,7 +144,7 @@
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
               />
             </svg>
-          </div>
+          </span>
         </button>
       </div>
     {/each}

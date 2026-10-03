@@ -38,7 +38,7 @@
 
   <!-- Benefits -->
   <ul class="space-y-3 mb-6 grow">
-    {#each benefits as benefit}
+    {#each benefits as benefit (benefit)}
       <li class="flex items-start gap-3">
         <svg class="h-5 w-5 {checkClasses} mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />

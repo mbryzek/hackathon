@@ -110,7 +110,7 @@
           <!-- Desktop Navigation -->
           <div class="hidden md:block">
             <div class="space-x-4 ml-10 flex items-baseline">
-              {#each sections as section}
+              {#each sections as section (section.name)}
                 {@const active = isActive(section) || hasActiveChild(section)}
                 {#if section.children.length === 0}
                   <a
@@ -158,7 +158,7 @@
                       class="invisible absolute top-full left-0 w-48 pt-2 opacity-0 transition-all duration-200 ease-out group-hover:visible group-hover:opacity-100"
                     >
                       <div class="overflow-hidden rounded-md bg-gray-800 shadow-lg ring-1 ring-black/5">
-                        {#each section.children as child, i}
+                        {#each section.children as child, i (child.name)}
                           {@const childActive = page.url.pathname === child.href}
                           <a
                             href={child.href}
@@ -194,7 +194,7 @@
             <span class="sr-only">{mobileMenuOpen ? 'Close menu' : 'Open menu'}</span>
 
             <!-- Animated hamburger/close icon -->
-            <div class="relative h-6 w-6">
+            <span class="relative block h-6 w-6">
               <span
                 class="absolute top-1 left-0 h-0.5 w-6 bg-current transition-all duration-300 ease-in-out {mobileMenuOpen
                   ? 'translate-y-1.5 rotate-45'
@@ -210,7 +210,7 @@
                   ? '-translate-y-1.5 -rotate-45'
                   : ''}"
               ></span>
-            </div>
+            </span>
           </button>
         </div>
       </div>
@@ -224,7 +224,7 @@
         : 'max-h-0 opacity-0'}"
     >
       <div class="space-y-1 border-t border-gray-700 bg-gray-800 px-2 pt-2 pb-3">
-        {#each sections as section}
+        {#each sections as section (section.name)}
           {@const active = isActive(section) || hasActiveChild(section)}
           <div>
             <a
@@ -250,7 +250,7 @@
             </a>
             {#if section.children.length > 0}
               <div class="space-y-1 mt-1 pl-4">
-                {#each section.children as child}
+                {#each section.children as child (child.name)}
                   {@const childActive = page.url.pathname === child.href}
                   <a
                     href={child.href}

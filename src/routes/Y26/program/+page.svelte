@@ -98,7 +98,7 @@
     <div>
       <h2 class="mb-6 text-2xl font-semibold text-gray-800">Schedule</h2>
       <div class="ml-2 border-l-2 border-yellow-300">
-        {#each schedule as item}
+        {#each schedule as item (item.time)}
           <div class="relative flex items-start gap-4 py-3 pl-6">
             <span class="absolute top-4 left-[-5px] h-2 w-2 rounded-full bg-yellow-500"></span>
             <span class="w-24 shrink-0 text-sm font-semibold text-yellow-600">{item.time}</span>
@@ -212,7 +212,7 @@
         You don't need to build the most complex project to win. Here's what past winners and judges say makes a great hackathon project:
       </p>
       <ol class="space-y-4">
-        {#each tips as tip, i}
+        {#each tips as tip, i (tip.title)}
           <li class="flex items-start gap-4">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-yellow-500 text-sm font-bold text-white"
               >{i + 1}</span

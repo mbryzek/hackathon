@@ -91,7 +91,7 @@
       </div>
 
       <div class="relative grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {#each sponsorshipTiers as tier}
+        {#each sponsorshipTiers as tier (tier.name)}
           <PricingTier
             name={tier.name}
             cost={tier.cost}

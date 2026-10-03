@@ -81,7 +81,7 @@
     <div>
       <h2 class="mb-4 text-xl font-semibold text-gray-800">Awards</h2>
       <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {#each topAwards as award}
+        {#each topAwards as award (award.title)}
           <div class="rounded-lg border border-yellow-300 bg-yellow-50 px-5 py-4">
             <div class="mb-1 flex items-baseline justify-between">
               <h3 class="font-semibold text-gray-800">{award.title}</h3>
@@ -94,7 +94,7 @@
 
       <h3 class="mb-3 text-lg font-semibold text-gray-800">Additional Awards</h3>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {#each additionalAwards as award}
+        {#each additionalAwards as award (award.title)}
           <div class="rounded-lg border border-gray-200 px-5 py-4">
             <div class="mb-1 flex items-baseline justify-between">
               <h3 class="font-semibold text-gray-800">{award.title}</h3>

@@ -45,7 +45,7 @@
           </tr>
         </thead>
         <tbody>
-          {#each sizes as size}
+          {#each sizes as size (size.label)}
             <tr class="border-b border-gray-100">
               <td class="py-3 pr-4 font-medium text-gray-900">{size.label}</td>
               <td class="py-3 pr-4 text-gray-600">{size.dimensions}</td>
@@ -65,7 +65,7 @@
       </p>
 
       <div class="mb-4 flex gap-2">
-        {#each sizes as size, i}
+        {#each sizes as size, i (size.label)}
           <button
             class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors {encouragementSize === i
               ? 'bg-gray-900 text-white'
@@ -139,7 +139,7 @@
       </p>
 
       <div class="mb-4 flex gap-2">
-        {#each sizes as size, i}
+        {#each sizes as size, i (size.label)}
           <button
             class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors {businessSize === i
               ? 'bg-gray-900 text-white'

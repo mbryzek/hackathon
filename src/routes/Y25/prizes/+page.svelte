@@ -32,7 +32,7 @@
       {/snippet}
 
       <div class="grid gap-4 sm:grid-cols-2">
-        {#each overallPrizes as prize}
+        {#each overallPrizes as prize (prize.title)}
           <div class="rounded-lg border-l-4 border-yellow-500 bg-gray-50 p-4 transition-colors duration-200 hover:bg-gray-100">
             <div class="mb-2 flex items-start justify-between gap-2">
               <h3 class="text-lg font-bold text-gray-900">{prize.title}</h3>
@@ -65,7 +65,7 @@
       {/snippet}
 
       <div class="grid gap-4 sm:grid-cols-2">
-        {#each additionalPrizes as prize}
+        {#each additionalPrizes as prize (prize.title)}
           <div class="rounded-lg border-l-4 border-blue-500 bg-gray-50 p-4 transition-colors duration-200 hover:bg-gray-100">
             <div class="mb-2 flex items-start justify-between gap-2">
               <h3 class="text-lg font-bold text-gray-900">{prize.title}</h3>
