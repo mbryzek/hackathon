@@ -40,6 +40,11 @@
  *     the gap, the chip shrinks and wraps back. That page flickers in a real browser too, and
  *     which half of the flicker a raster catches is timing. It is recorded as `unstable`, which is
  *     the same answer on every run, rather than shot. See `applyState`.
+ *   - WHETHER A FOCUS DRAWS ITS RING. A scripted `focus()` matches `:focus-visible` or not by the
+ *     document's input history -- Chromium's modality heuristic -- not by anything on the page, so
+ *     the same focus shot rendered the UA ring on one capture and no ring on the next (ISS-15883).
+ *     Keyboard modality is set before every focus, and a focus that still comes back without its
+ *     ring is retaken rather than shot. See `KEYBOARD_MODALITY_KEY`.
  *   - FONTS, asked at the LAST POSSIBLE MOMENT and answered on both sides of every shot.
  *     `document.fonts.ready` plus every declared face LOADED is where it starts, since a shot
  *     taken before a self-hosted face swaps in is a shot of the fallback
@@ -90,7 +95,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import type { Browser, BrowserContext, Cookie, Page, Route } from '@playwright/test';
+import type { Browser, BrowserContext, Cookie, Page, Request, Route } from '@playwright/test';
 import { settleTimeout, type StateName, type ThemeName, type Viewport } from './matrix.ts';
 import { encodeStyles, type RawElement, type StyleDump } from './styles.ts';
 
@@ -147,8 +152,16 @@ export class NavigatedAway extends Error {
   /** Where the document went instead. */
   readonly to: string;
 
-  constructor(from: string, to: string) {
-    super(`the document left ${from} for ${to} during its own capture`);
+  /**
+   * `replaced` is the same url served as a NEW DOCUMENT, which is a navigation that moves nothing a
+   * url can show. See `refuseIfNavigated`.
+   */
+  constructor(from: string, to: string, replaced = false) {
+    super(
+      replaced
+        ? `the document at ${from} was replaced by a new document during its own capture`
+        : `the document left ${from} for ${to} during its own capture`
+    );
     this.name = 'NavigatedAway';
     this.from = from;
     this.to = to;
@@ -206,9 +219,57 @@ async function throughNavigation<T>(page: Page, body: () => Promise<T>): Promise
  * `page.url()` is a local read of what playwright already knows -- no round trip and no execution
  * context -- so it is asked on both sides of every shot, exactly as `structure` is asked on both
  * sides of every raster.
+ *
+ * A NEW DOCUMENT AT THE SAME URL IS THE SAME FAILURE, AND THE URL CANNOT SEE IT (ISS-15888). A dev
+ * server's full page reload -- vite's dependency optimizer finishing on a cold server, a regenerated
+ * `.svelte-kit` module -- replaces the document without moving the url, and a client-rendered page
+ * then spends seconds as an empty shell before it mounts again. Measured on trips' A/A: one context
+ * of the checklist preview fitted itself to the empty shell, shot rest and focus as two
+ * byte-identical PNGs of the bare viewport with no focus target, and recorded both beside a height
+ * read after the page had mounted again. So the document is counted as well (`documentOf`), and a
+ * page whose count has moved since it settled is refused exactly as a page whose url has.
  */
 export function refuseIfNavigated(page: Page, settledAt: string): void {
   if (page.url() !== settledAt) throw new NavigatedAway(settledAt, page.url());
+  refuseIfReplaced(page);
+}
+
+/** Raise `NavigatedAway` when the page is no longer showing the document it last settled. */
+function refuseIfReplaced(page: Page): void {
+  const settled = settledDocuments.get(page);
+  if (settled !== undefined && documentOf(page) !== settled) throw new NavigatedAway(page.url(), page.url(), true);
+}
+
+/** How many documents each page's main frame has asked for, counted as each request leaves. */
+const documentRequests = new WeakMap<Page, number>();
+
+/** `documentOf` at the moment each page last became quiet: the document every shot of it is of. */
+const settledDocuments = new WeakMap<Page, number>();
+
+/**
+ * Count every document `page` asks for from now on.
+ *
+ * A NAVIGATION REQUEST OF THE MAIN FRAME, BECAUSE THAT IS WHAT A NEW DOCUMENT IS. A reload, a
+ * `location` assignment and a server redirect each issue one; a SvelteKit client navigation and a
+ * `history.replaceState` issue none and replace no document, and the url check already covers the
+ * first of those. Counted when the request LEAVES rather than when the new document commits, so the
+ * count has moved before anything can be read off the document it is fetching.
+ *
+ * A local read, like `page.url()`, so `refuseIfNavigated` stays one without a round trip.
+ */
+function watchDocuments(page: Page): void {
+  if (documentRequests.has(page)) return;
+  documentRequests.set(page, 0);
+  page.on('request', (request) => {
+    if (!request.isNavigationRequest()) return;
+    if (request.frame() !== page.mainFrame()) return;
+    documentRequests.set(page, documentOf(page) + 1);
+  });
+}
+
+/** Which document `page` is on, as a count of the ones it has asked for. */
+function documentOf(page: Page): number {
+  return documentRequests.get(page) ?? 0;
 }
 
 /**
@@ -393,6 +454,78 @@ export function imageSize(bytes: Buffer): { width: number; height: number } | nu
   return null;
 }
 
+/** What one fetch of a foreign image came back with, or `null` when nothing came back at all. */
+export interface FetchedImage {
+  status: number;
+  headers: Record<string, string>;
+  body: Buffer;
+}
+
+/**
+ * What `stubForeignMedia` learned about a foreign image: its size, a real answer that is not one
+ * (served as it came back), or nothing it may paint.
+ */
+export type ImageMeasurement =
+  { kind: 'sized'; width: number; height: number } | ({ kind: 'unsized' } & FetchedImage) | { kind: 'unreachable' };
+
+/** How many times a foreign image's size is asked for before its page is reloaded instead. */
+const MEASURE_ATTEMPTS = 3;
+
+/** How long to wait before the n-th retry of a measurement: 0.5s, then 1s. */
+const MEASURE_BACKOFF_MS = 500;
+
+/**
+ * THE SIZE OF A FOREIGN IMAGE, ASKED UNTIL THE HOST GIVES AN ANSWER THAT IS ABOUT THE IMAGE.
+ *
+ * Nothing coming back, and a 5xx or a 429, are answers about the HOST and its minute: they are
+ * asked again, after a pause, and `unreachable` is what is left when every attempt was one. A 2xx
+ * that is not a PNG or JPEG, and any other status, are answers about the IMAGE -- the same on every
+ * run -- and are returned `unsized` at once, to be served as they came back.
+ *
+ * `pause` is a parameter so the tests do not wait out the backoff.
+ */
+export async function measureForeignImage(
+  probe: () => Promise<FetchedImage | null>,
+  pause: (ms: number) => Promise<void> = async (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+): Promise<ImageMeasurement> {
+  for (let attempt = 0; attempt < MEASURE_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) await pause(MEASURE_BACKOFF_MS * attempt);
+    const fetched = await probe();
+    if (fetched === null || fetched.status >= 500 || fetched.status === 429) continue;
+    const size = fetched.status >= 200 && fetched.status < 300 ? imageSize(fetched.body) : null;
+    return size === null ? { kind: 'unsized', ...fetched } : { kind: 'sized', ...size };
+  }
+  return { kind: 'unreachable' };
+}
+
+/**
+ * Pages whose CURRENT document asked for a foreign image `stubForeignMedia` could not measure.
+ *
+ * Kept on this side rather than in the page, because the page cannot tell a refused probe from an
+ * image that is broken for real. Cleared by every navigation this module makes (`freshDocument`),
+ * since a fresh document asks for every image again.
+ */
+const unmeasured = new WeakSet<Page>();
+
+/** Mark the page that asked for `request` as carrying an image the harness may not paint. */
+export function markUnmeasured(request: Request): void {
+  try {
+    unmeasured.add(request.frame().page());
+  } catch {
+    // A request with no frame -- a service worker's -- belongs to no document that is shot.
+  }
+}
+
+/** Whether `page`'s current document is carrying an image `stubForeignMedia` refused. */
+export function hasUnmeasuredImage(page: Page): boolean {
+  return unmeasured.has(page);
+}
+
+/** Forget the mark, immediately before `page` is given a document that will ask for every image again. */
+function freshDocument(page: Page): void {
+  unmeasured.delete(page);
+}
+
 /**
  * REPLACE EVERY CROSS-ORIGIN IMAGE WITH A FLAT RECTANGLE OF ITS OWN SIZE (ISS-9327).
  *
@@ -425,8 +558,17 @@ export function imageSize(bytes: Buffer): { width: number; height: number } | nu
  *
  * THE SIZE IS LEARNED ONCE AND CACHED ON DISK, so the second capture of an A/B does not re-fetch
  * the images and -- more importantly -- cannot learn a different answer if the host has a bad
- * minute. A url whose bytes cannot be read at all is passed through: a broken image is a real
- * rendering and both sides get it.
+ * minute. An image the host answered with something that is not a PNG or JPEG -- another format, a
+ * 404 -- is served exactly as it came back, which is the same answer on every run.
+ *
+ * AN IMAGE THAT CANNOT BE MEASURED AT ALL IS NEVER PAINTED (ISS-15866). Whether the host answers
+ * the probe is a property of its minute and of the runner's load, not of the page, so passing the
+ * request through painted the real photograph on the capture that found the cache cold and the stub
+ * on the one that found it warm -- measured on hackathon as every state of one page differing in an
+ * A/A. So the probe is asked again (`measureForeignImage`), and an image still unmeasured is
+ * refused and its page marked: `metrics` reads the mark as `stale`, the document is reloaded and the
+ * shot retaken, and a page whose image never answers is dropped rather than shot -- exactly what a
+ * face that failed to arrive is. See `serveCached` for the same rule applied to a font.
  */
 async function stubForeignMedia(context: BrowserContext, baseUrl: string): Promise<void> {
   const origin = new URL(baseUrl).origin;
@@ -452,16 +594,25 @@ async function stubForeignMedia(context: BrowserContext, baseUrl: string): Promi
       return;
     }
     const file = join(directory, `${createHash('sha256').update(request.url()).digest('hex').slice(0, 32)}.json`);
-    const size = await (async (): Promise<{ width: number; height: number } | null> => {
-      if (existsSync(file)) return JSON.parse(readFileSync(file, 'utf8')) as { width: number; height: number };
-      const response = await route.fetch().catch(() => null);
-      const bytes = response === null ? null : await response.body().catch(() => null);
-      const measured = bytes === null ? null : imageSize(bytes);
-      if (measured !== null) writeFileSync(file, JSON.stringify(measured));
+    const size = await (async (): Promise<ImageMeasurement> => {
+      if (existsSync(file)) return { kind: 'sized', ...(JSON.parse(readFileSync(file, 'utf8')) as { width: number; height: number }) };
+      const measured = await measureForeignImage(async () => {
+        const response = await route.fetch().catch(() => null);
+        const body = response === null ? null : await response.body().catch(() => null);
+        return response === null || body === null ? null : { status: response.status(), headers: response.headers(), body };
+      });
+      if (measured.kind === 'sized') writeFileSync(file, JSON.stringify({ width: measured.width, height: measured.height }));
       return measured;
     })();
-    if (size === null) {
-      await route.fallback();
+    if (size.kind === 'unreachable') {
+      markUnmeasured(request);
+      await route.abort('failed');
+      return;
+    }
+    if (size.kind === 'unsized') {
+      // The body is already decoded, so the host's `content-encoding` and `content-length` would lie about it.
+      const contentType = size.headers['content-type'] ?? 'application/octet-stream';
+      await route.fulfill({ status: size.status, headers: { 'content-type': contentType, 'cache-control': 'no-store' }, body: size.body });
       return;
     }
     await route.fulfill({
@@ -672,11 +823,14 @@ type Metrics = 'ok' | 'no-face' | 'stale';
  * 88ch` on that page is wrong, waiting does not fix it and neither does loading the face — the
  * resolution has already been made. Only a fresh document has none. A face that FAILED to load is
  * `stale` too, and asked first: the document will not fetch it again, and the probe measures the
- * fallback's `0` as happily as the real one's. See `faceFailed`.
+ * fallback's `0` as happily as the real one's. See `faceFailed`. So is a document carrying a foreign
+ * image the harness could not measure and refused, which only a fresh document asks for again. See
+ * `stubForeignMedia`.
  *
  * A document with no planted probe can only be asked the first question and is answered on that.
  */
 async function metrics(page: Page): Promise<Metrics> {
+  if (hasUnmeasuredImage(page)) return 'stale';
   if (await faceFailed(page)) return 'stale';
   const fresh = await freshCh(page);
   if (Math.abs(fresh.width - fresh.em * 50) <= 0.5) return 'no-face';
@@ -790,9 +944,13 @@ async function awaitMedia(page: Page): Promise<void> {
  */
 export async function settle(page: Page, path: string, timeoutMs = SETTLE_TIMEOUT_MS): Promise<boolean> {
   try {
+    freshDocument(page);
+    watchDocuments(page);
     await page.goto(path, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
     if (await quiet(page, timeoutMs)) return true;
-    console.warn(`visual: ${path} did not settle: its webfont never loaded in ${RELOAD_ATTEMPTS} document(s)`);
+    console.warn(
+      `visual: ${path} did not settle: its webfont never loaded, a foreign image never answered its size probe, or the server kept replacing the document, in ${RELOAD_ATTEMPTS} document(s)`
+    );
     return false;
   } catch (error) {
     // Which wait ran out is what tells the runner's load from a page that is broken, so it is said.
@@ -855,16 +1013,44 @@ export async function settledPage(context: BrowserContext, path: string): Promis
  * the `document.scrollWidth` read immediately after it died with `Execution context was destroyed,
  * most likely because of a navigation`. A shot that survived that race would be worse -- a
  * screenshot of a page that no longer exists, recorded under the redirecting route's key.
+ *
+ * QUIET IS A PROPERTY OF ONE DOCUMENT (ISS-15888). A reload the dev server sends in the middle of
+ * the wait leaves the url where it was and every wait already passed answering about the document
+ * it replaced, so the page would be called settled while it is an empty shell. A wait whose
+ * document was replaced under it is therefore started again on the new one, and the document that
+ * finally answers is recorded as the one every shot of this page is of (`refuseIfNavigated`).
  */
 async function quiet(page: Page, timeoutMs: number): Promise<boolean> {
+  for (let replaced = 0; replaced < RELOAD_ATTEMPTS; replaced += 1) {
+    const settled = await quietOnce(page, timeoutMs);
+    if (settled === null) return false;
+    if (documentOf(page) === settled) {
+      settledDocuments.set(page, settled);
+      return true;
+    }
+    console.warn(`visual: ${page.url()} was replaced by a new document while it settled; settling that one instead`);
+  }
+  return false;
+}
+
+/**
+ * `quiet` on whichever document the page is showing, answering WHICH document that was -- the
+ * count after the last navigation this function made itself -- or `null` if it never got quiet.
+ */
+async function quietOnce(page: Page, timeoutMs: number): Promise<number | null> {
+  // The document the caller navigated to, moved on only by a reload this function makes itself, so
+  // that a document SOMETHING ELSE asked for, at any point in the wait, counts as a replacement.
+  let document = documentOf(page);
   for (let attempt = 0; ; attempt += 1) {
     await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     await hydrated(page, timeoutMs);
     await loadDeclaredFaces(page);
     await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     if ((await awaitMeasurable(page)) !== 'stale') break;
-    if (attempt + 1 >= RELOAD_ATTEMPTS) return false;
+    if (attempt + 1 >= RELOAD_ATTEMPTS) return null;
+    freshDocument(page);
     await page.reload({ waitUntil: 'domcontentloaded', timeout: timeoutMs });
+    document = documentOf(page);
   }
   await awaitMedia(page);
   await page.waitForLoadState('networkidle', { timeout: timeoutMs });
@@ -879,7 +1065,7 @@ async function quiet(page: Page, timeoutMs: number): Promise<boolean> {
     await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     await loadDeclaredFaces(page);
   }
-  return true;
+  return document;
 }
 
 /**
@@ -991,6 +1177,7 @@ async function canonicalize(page: Page): Promise<void> {
 /** A fresh document of the same url, for a page that is carrying a resolution it cannot reproduce. */
 async function reload(page: Page): Promise<boolean> {
   try {
+    freshDocument(page);
     await page.reload({ waitUntil: 'domcontentloaded', timeout: SETTLE_TIMEOUT_MS });
     return await quiet(page, SETTLE_TIMEOUT_MS);
   } catch {
@@ -1047,6 +1234,9 @@ export async function hoverTargetCount(page: Page, limit: number): Promise<{ sho
       },
       { selector: HOVER_SELECTOR, fold: foldOf(page) }
     );
+    // The count decides the context's KEY SET and is kept across a re-settle, so a count taken off
+    // a document that was replaced under it -- an empty shell, offering nothing -- must not escape.
+    refuseIfReplaced(page);
     return { shots: Math.min(total, limit), total };
   });
 }
@@ -1192,6 +1382,20 @@ const HOVER_GRID = 8;
 const HOVER_TARGET_KEY = '__visual_hover_target__';
 
 /**
+ * THE KEY PRESSED IMMEDIATELY BEFORE EVERY `focus`, so the focus is a keyboard focus (ISS-15883).
+ *
+ * Chromium decides whether a scripted `focus()` matches `:focus-visible` from the document's input
+ * history: a keydown since the last pointer press makes it match, a pointer press makes it not. That
+ * history is the harness's own earlier states and whatever the page did on load, so the ring was a
+ * coin the page did not flip. A keydown pins it. Shift, because a keydown carrying Control, Alt or
+ * Meta is a shortcut rather than keyboard navigation and does NOT set the modality, measured; and
+ * because Shift on its own has no default action and moves no focus, as Tab would. Not
+ * `FocusOptions.focusVisible`: measured honoured by Chromium 151 and ignored by Chromium 141, and
+ * these repos pin different playwright versions, so it would pin the ring in some copies only.
+ */
+export const KEYBOARD_MODALITY_KEY = 'Shift';
+
+/**
  * Put the page into `state`, and say what it was applied to.
  *
  * BOTH TARGETS ARE CONSTRAINED TO THE FOLD, the viewport the page was opened at, and are chosen in
@@ -1199,7 +1403,8 @@ const HOVER_TARGET_KEY = '__visual_hover_target__';
  * by then (`fitToDocument`), so `window.innerHeight` is the whole document and is not the test.
  * Playwright's own `focus()`/`hover()` scroll the element into view, which would move a fixed
  * header inside the very screenshot being compared; `hover` is therefore a raw mouse move to the
- * element's centre, and `focus` passes `preventScroll`.
+ * element's centre, and `focus` passes `preventScroll`. `focus` is a KEYBOARD focus, so that it
+ * draws the `:focus-visible` ring on every run; see `KEYBOARD_MODALITY_KEY`.
  *
  * `index` SKIPS THAT MANY ELIGIBLE ELEMENTS FIRST, which is how `hover` becomes one shot per
  * element rather than one per page: `hoverTargetCount` says how many there are and `parity.spec.ts`
@@ -1221,6 +1426,8 @@ const HOVER_TARGET_KEY = '__visual_hover_target__';
  *     is left over the row. Both halves of that alternation fail the check, on every frame it
  *     is read, so it is the same answer on every run. Retaking cannot repair it and neither can reloading: the state asked for
  *     does not exist to be shot.
+ *   - `disturbed`: the target took focus without matching `:focus-visible`, so the shot would be of
+ *     a focus with no ring. `captureShot` retakes it, as it does a shot its own raster disturbed.
  *   - `unreachable`: no point of the target inside the fold hits anything at all. A target
  *     covered by another element is NOT this: a chart's marks sit under one transparent plot-wide
  *     hit area that picks the mark from the pointer's position, so the pointer goes to the
@@ -1231,6 +1438,7 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
   if (state === 'rest') return (await awaitMeasurable(page)) === 'ok' ? 'n/a' : 'metrics';
 
   const selector = state === 'focus' ? FOCUS_SELECTOR : HOVER_SELECTOR;
+  if (state === 'focus') await page.keyboard.press(KEYBOARD_MODALITY_KEY);
 
   const found = await page.evaluate(
     ({ selector: sel, wantFocus, skip, fold, key, grid }) => {
@@ -1252,7 +1460,10 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
         }
         if (wantFocus) {
           (element as HTMLElement).focus({ preventScroll: true });
-          return { description: describe(element), x: 0, y: 0 };
+          // A page that moves focus on its own is shot as it is; one that took the focus without
+          // the ring is not the state asked for.
+          const ring = document.activeElement !== element || element.matches(':focus-visible');
+          return { description: describe(element), x: 0, y: 0, ring };
         }
         // The first point, in a fixed order, at which the pointer is over this element and not
         // over something beside or above it: each line box's centre, then a grid over the box.
@@ -1287,6 +1498,7 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
 
   if (found === null) return 'none';
   if (found.x === null || found.y === null) return 'unreachable';
+  if (found.ring === false) return 'disturbed';
   if (state === 'hover') await page.mouse.move(found.x, found.y);
   await page.waitForTimeout(SETTLE_MS);
   if ((await awaitMeasurable(page)) !== 'ok') return 'metrics';
@@ -1412,21 +1624,6 @@ export async function dumpStyles(page: Page): Promise<StyleDump> {
     return encodeStyles(raw.props, raw.elements as RawElement[]);
   });
 }
-/**
- * The document's own full size, in css pixels.
- *
- * DIAGNOSTIC ONLY -- `manifest.ts` says so, and the sha of the png is the whole verdict. It is here
- * rather than inline in `parity.spec.ts` so that it is guarded like every other read of the page:
- * it was the call site ISS-10052 was measured at, for no reason other than being the one page
- * operation the spec performed for itself, and a diagnostic must never be the thing that costs a
- * capture a page.
- */
-export async function documentSize(page: Page): Promise<{ width: number; height: number }> {
-  return throughNavigation(page, async () =>
-    page.evaluate(() => ({ width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight }))
-  );
-}
-
 /** The id of the stylesheet planted for the duration of one shot. See `screenshotFrozen`. */
 const FREEZE_ID = '__visual_freeze__';
 
@@ -1451,7 +1648,10 @@ const FREEZE_CSS = `*, *::before, *::after, *::backdrop {
 export type ShotFailure =
   /** A `ch` on this page does not currently mean what the stylesheet says it means. */
   | 'metrics'
-  /** The document changed across its own raster, so the png is not of the state it was asked for. */
+  /**
+   * The document changed across its own raster, or a focus came back without its `:focus-visible`
+   * ring, so the png would not be of the state it was asked for. Re-applied on the same document.
+   */
   | 'disturbed'
   /** The hover moves its own target out from under the pointer, so the state is never at rest. */
   | 'unstable'
@@ -1588,6 +1788,21 @@ export async function screenshotFrozen(page: Page): Promise<Buffer | ShotFailure
   }
 }
 
+/**
+ * The png's size, or `null` when it is not the size `fitToDocument` measured the document at.
+ *
+ * THE RASTER IS THE VIEWPORT AND THE VIEWPORT IS THE MEASUREMENT, so the two can only disagree when
+ * something resized the page between the fit and the raster -- and then the png is not of the
+ * document the shot is filed as. That is `disturbed`'s shape, a page that moved across its own
+ * raster, and it takes `disturbed`'s repair: the fit and the state applied again (ISS-15888).
+ */
+function rasterOf(page: Page, png: Buffer): { width: number; height: number } | null {
+  const size = imageSize(png);
+  const measured = fitted.get(page);
+  if (size === null || measured === undefined) return null;
+  return size.width === measured.width && size.height === measured.height ? size : null;
+}
+
 /** How many documents a single shot is allowed to need before it is given up on. */
 const SHOT_ATTEMPTS = 3;
 
@@ -1603,11 +1818,18 @@ const SHOT_ATTEMPTS = 3;
  */
 const RETAKES = 4;
 
-/** One shot: what the state was applied to, and the png. */
+/** One shot: what the state was applied to, the png, and the size of the png. */
 export interface Shot {
   /** The element `applyState` targeted, or `none` where the page offered none. */
   target: string;
   png: Buffer;
+  /**
+   * The png's own size, which is the document's size as `fitToDocument` measured it: a shot whose
+   * raster is any other size is refused rather than returned. So the manifest's size is the size
+   * of the image its sha is of, by construction (ISS-15888).
+   */
+  width: number;
+  height: number;
 }
 
 /**
@@ -1653,10 +1875,27 @@ export async function captureShot(page: Page, state: StateName, index = 0): Prom
           last = 'metrics';
           break;
         }
-        // The same answer however often it is asked, so it is returned rather than retaken.
-        if (target === 'unstable' || target === 'unreachable') return target;
+        // The same answer however often it is asked, so it is returned rather than retaken -- unless
+        // the document was replaced while it was asked, when it is an answer about no document this
+        // page shows: a hover read across a dev server's reload finds its target gone (ISS-15877).
+        if (target === 'unstable' || target === 'unreachable') {
+          refuseIfReplaced(page);
+          return target;
+        }
+        // A focus without its ring is re-applied to this document, as a disturbed raster is.
+        if (target === 'disturbed') {
+          last = 'disturbed';
+          continue;
+        }
         const shot = await screenshotFrozen(page);
-        if (typeof shot !== 'string') return { target, png: shot };
+        if (typeof shot !== 'string') {
+          // A shot of a document that has since been replaced is of no document this page shows.
+          refuseIfReplaced(page);
+          const size = rasterOf(page, shot);
+          if (size !== null) return { target, png: shot, ...size };
+          last = 'disturbed';
+          continue;
+        }
         last = shot;
         if (shot === 'metrics') break;
       }

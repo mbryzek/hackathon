@@ -22,7 +22,6 @@ import type { Page } from '@playwright/test';
 import {
   captureShot,
   clearState,
-  documentSize,
   dumpStyles,
   hoverTargetCount,
   NAVIGATION_ATTEMPTS,
@@ -230,10 +229,12 @@ for (const page of plan.targets) {
                  * card as this, not as a stylesheet change.
                  */
                 const styles = await dumpStyles(open);
-                const size = await documentSize(open);
                 writeFile(paths.png(plan.out, key), shot.png);
                 writeStyles(plan.out, key, styles);
-                entries[key] = { sha256: sha256(shot.png), width: size.width, height: size.height, target: shot.target };
+                // The size of the png, which `captureShot` has checked is the size the document was
+                // measured at. A size read off the page afterwards is of whatever the page has
+                // become since, and can disagree with the image the row's sha is of (ISS-15888).
+                entries[key] = { sha256: sha256(shot.png), width: shot.width, height: shot.height, target: shot.target };
                 await clearState(open);
               }
             }
