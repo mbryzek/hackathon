@@ -102,7 +102,7 @@
             onclick={() => selectEvent(event)}
             class="w-full rounded-lg border border-gray-200 bg-gray-50 p-4 text-left transition-all duration-200 hover:border-yellow-400 hover:bg-yellow-50"
           >
-            <h3 class="font-semibold text-gray-900">{event.name}</h3>
+            <span class="block font-semibold text-gray-900">{event.name}</span>
           </button>
         {/each}
       </div>

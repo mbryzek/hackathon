@@ -51,7 +51,7 @@
 
 <div class="mx-auto max-w-7xl bg-white px-4 sm:px-6 lg:px-8">
   <div class="mx-auto mt-6 grid max-w-none grid-cols-1 gap-8 md:grid-cols-2">
-    {#each displayVideos as video, index}
+    {#each displayVideos as video, index (video.url)}
       <div class="video-container group">
         <div class="relative w-full overflow-hidden rounded-xl bg-gray-900 shadow-md transition-all duration-300 hover:shadow-xl">
           <!-- Video element -->
@@ -78,19 +78,19 @@
               aria-label="Play video: {video.title}"
             >
               <!-- Play button circle -->
-              <div
+              <span
                 class="flex h-20 w-20 items-center justify-center rounded-full bg-[rgb(255_255_255_/_0.9)] shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:bg-white"
               >
                 {#if loadingVideos.has(index)}
                   <!-- Loading spinner -->
-                  <div class="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-yellow-500"></div>
+                  <span class="block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-yellow-500"></span>
                 {:else}
                   <!-- Play icon -->
                   <svg class="ml-1 h-10 w-10 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 {/if}
-              </div>
+              </span>
             </button>
           {/if}
         </div>

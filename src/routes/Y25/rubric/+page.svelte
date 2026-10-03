@@ -82,7 +82,7 @@
         </div>
         <div class="px-6 py-4">
           <div class="flex flex-col gap-y-4">
-            {#each executionRubric as item}
+            {#each executionRubric as item (item.score)}
               <div class="flex gap-x-4">
                 <div class="min-w-8 font-bold text-yellow-600">{item.score}</div>
                 <div>{item.description}</div>
@@ -99,7 +99,7 @@
         </div>
         <div class="px-6 py-4">
           <div class="flex flex-col gap-y-4">
-            {#each ambitionRubric as item}
+            {#each ambitionRubric as item (item.score)}
               <div class="flex gap-x-4">
                 <div class="min-w-8 font-bold text-yellow-600">{item.score}</div>
                 <div>{item.description}</div>

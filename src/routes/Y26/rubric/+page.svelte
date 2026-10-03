@@ -143,7 +143,7 @@
     <div>
       <h2 class="mb-3 text-xl font-semibold text-gray-800">Scoring Summary</h2>
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {#each rubricSections as section}
+        {#each rubricSections as section (section.title)}
           <div class="rounded-lg border border-gray-200 px-4 py-3 text-center">
             <div class="text-sm font-semibold text-gray-800">{section.title}</div>
             <div class="mt-1 font-bold text-yellow-600">{section.subtitle}</div>
@@ -156,7 +156,7 @@
     <div>
       <h2 class="mb-4 text-xl font-semibold text-gray-800">Judging Rubric</h2>
       <div class="flex flex-col gap-y-6">
-        {#each rubricSections as section}
+        {#each rubricSections as section (section.title)}
           <div class="overflow-hidden rounded-lg border border-gray-200">
             <div class="border-b border-gray-200 bg-gray-100 px-6 py-4">
               <h3 class="text-lg font-semibold text-yellow-600">
@@ -166,7 +166,7 @@
             </div>
             <div class="px-6 py-4">
               <div class="flex flex-col gap-y-4">
-                {#each section.items as item}
+                {#each section.items as item (item.score)}
                   <div class="flex gap-x-4">
                     <div class="min-w-10 font-bold text-yellow-600">{item.score}</div>
                     <div class="text-gray-800">{item.description}</div>

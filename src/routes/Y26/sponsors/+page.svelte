@@ -32,7 +32,7 @@
     <div class="mb-10">
       <h2 class="mb-4 text-center text-lg font-semibold tracking-wide text-gray-600 uppercase">Lead Sponsor</h2>
       <div class="flex justify-center">
-        {#each leadSponsors as sponsor}
+        {#each leadSponsors as sponsor (sponsor.name)}
           <div class="w-full max-w-md">
             {@render sponsorCard(sponsor, true)}
           </div>
@@ -43,7 +43,7 @@
 
   {#if otherSponsors.length > 0}
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 md:grid-cols-4">
-      {#each otherSponsors as sponsor}
+      {#each otherSponsors as sponsor (sponsor.name)}
         {@render sponsorCard(sponsor, false)}
       {/each}
     </div>
