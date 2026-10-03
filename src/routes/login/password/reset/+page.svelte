@@ -6,6 +6,7 @@
    * who mistyped their address is not left waiting for a mail that is never coming.
    */
   import { enhance } from '$app/forms';
+  import { createSubmitting } from '$lib/utils/submitting.svelte';
   import AuthCard from '$lib/components/AuthCard.svelte';
   import AuthNotice from '$lib/components/AuthNotice.svelte';
   import AuthSubmit from '$lib/components/AuthSubmit.svelte';
@@ -15,7 +16,7 @@
 
   let { form }: { form: ActionData } = $props();
 
-  let isSubmitting = $state(false);
+  const submitting = createSubmitting();
 </script>
 
 <svelte:head>
@@ -32,17 +33,7 @@
       mail if you ask more than once.
     </AuthNotice>
   {:else}
-    <form
-      method="POST"
-      use:enhance={() => {
-        isSubmitting = true;
-        return async ({ update }) => {
-          await update();
-          isSubmitting = false;
-        };
-      }}
-      class="space-y-6"
-    >
+    <form method="POST" use:enhance={submitting.enhance} class="space-y-6">
       {#if form?.error}
         <ErrorBanner error={form.error} />
       {/if}
@@ -57,11 +48,11 @@
           placeholder="admin@example.com"
           class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
           autocomplete="email"
-          disabled={isSubmitting}
+          disabled={submitting.active}
         />
       </div>
 
-      <AuthSubmit label="Email me a reset link" busyLabel="Sending..." busy={isSubmitting} />
+      <AuthSubmit label="Email me a reset link" busyLabel="Sending..." busy={submitting.active} />
     </form>
   {/if}
 

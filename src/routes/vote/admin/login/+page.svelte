@@ -2,6 +2,7 @@
   import AuthCard from '$lib/components/AuthCard.svelte';
   import AuthSubmit from '$lib/components/AuthSubmit.svelte';
   import { enhance } from '$app/forms';
+  import { createSubmitting } from '$lib/utils/submitting.svelte';
   import { urls } from '$lib/urls';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import type { ActionData } from './$types';
@@ -17,24 +18,15 @@
       email = form.email;
     }
   });
-  let isSubmitting = $state(false);
 
   // Get error message from form errors
   let error = $derived(form?.errors?.[0]?.message || null);
+
+  const submitting = createSubmitting();
 </script>
 
 <AuthCard heading="Vote Admin Login" intro="Sign in to manage voting events" returnHome>
-  <form
-    method="POST"
-    use:enhance={() => {
-      isSubmitting = true;
-      return async ({ update }) => {
-        await update();
-        isSubmitting = false;
-      };
-    }}
-    class="space-y-6"
-  >
+  <form method="POST" use:enhance={submitting.enhance} class="space-y-6">
     <div>
       <label for="email" class="mb-2 block text-sm font-medium text-gray-700"> Email </label>
       <input
@@ -45,7 +37,7 @@
         placeholder="admin@example.com"
         class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
         autocomplete="email"
-        disabled={isSubmitting}
+        disabled={submitting.active}
       />
     </div>
 
@@ -59,7 +51,7 @@
         placeholder="Enter your password"
         class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
         autocomplete="current-password"
-        disabled={isSubmitting}
+        disabled={submitting.active}
       />
       <p class="mt-2 text-right text-sm">
         <a href={urls.passwordResetRequest} class="text-gray-600 underline transition-colors hover:text-gray-900">
@@ -72,6 +64,6 @@
       <ErrorBanner {error} />
     {/if}
 
-    <AuthSubmit label="Sign In" busyLabel="Signing in..." busy={isSubmitting} disabled={!email.trim() || !password} />
+    <AuthSubmit label="Sign In" busyLabel="Signing in..." busy={submitting.active} disabled={!email.trim() || !password} />
   </form>
 </AuthCard>

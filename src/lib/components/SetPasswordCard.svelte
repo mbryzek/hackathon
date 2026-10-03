@@ -9,6 +9,7 @@
    * has no password restrictions, and what the platform will accept is the platform's to say.
    */
   import { enhance } from '$app/forms';
+  import { createSubmitting } from '$lib/utils/submitting.svelte';
   import AuthCard from '$lib/components/AuthCard.svelte';
   import AuthSubmit from '$lib/components/AuthSubmit.svelte';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
@@ -24,21 +25,11 @@
 
   let { heading, intro = '', submitLabel, error = null }: Props = $props();
 
-  let isSubmitting = $state(false);
+  const submitting = createSubmitting();
 </script>
 
 <AuthCard {heading} {intro}>
-  <form
-    method="POST"
-    use:enhance={() => {
-      isSubmitting = true;
-      return async ({ update }) => {
-        await update();
-        isSubmitting = false;
-      };
-    }}
-    class="space-y-6"
-  >
+  <form method="POST" use:enhance={submitting.enhance} class="space-y-6">
     {#if error}
       <ErrorBanner {error} />
     {/if}
@@ -51,7 +42,7 @@
         name="password"
         class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
         autocomplete="new-password"
-        disabled={isSubmitting}
+        disabled={submitting.active}
       />
     </div>
 
@@ -63,10 +54,10 @@
         name="password_confirmation"
         class="w-full rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400"
         autocomplete="new-password"
-        disabled={isSubmitting}
+        disabled={submitting.active}
       />
     </div>
 
-    <AuthSubmit label={submitLabel} busyLabel="Saving..." busy={isSubmitting} />
+    <AuthSubmit label={submitLabel} busyLabel="Saving..." busy={submitting.active} />
   </form>
 </AuthCard>
