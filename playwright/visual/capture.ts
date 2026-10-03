@@ -1279,9 +1279,10 @@ const HOVER_TARGET_KEY = '__visual_hover_target__';
  * history: a keydown since the last pointer press makes it match, a pointer press makes it not. That
  * history is the harness's own earlier states and whatever the page did on load, so the ring was a
  * coin the page did not flip. A keydown pins it. Shift, because a keydown carrying Control, Alt or
- * Meta is a shortcut rather than keyboard navigation and does NOT set the modality -- measured, as
- * is `FocusOptions.focusVisible`, which this Chromium ignores in both directions -- and because
- * Shift on its own has no default action and moves no focus, as Tab would.
+ * Meta is a shortcut rather than keyboard navigation and does NOT set the modality, measured; and
+ * because Shift on its own has no default action and moves no focus, as Tab would. Not
+ * `FocusOptions.focusVisible`: measured honoured by Chromium 151 and ignored by Chromium 141, and
+ * these repos pin different playwright versions, so it would pin the ring in some copies only.
  */
 export const KEYBOARD_MODALITY_KEY = 'Shift';
 
