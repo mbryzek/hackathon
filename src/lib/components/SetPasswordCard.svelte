@@ -9,8 +9,9 @@
    * has no password restrictions, and what the platform will accept is the platform's to say.
    */
   import { enhance } from '$app/forms';
+  import AuthCard from '$lib/components/AuthCard.svelte';
+  import AuthSubmit from '$lib/components/AuthSubmit.svelte';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
-  import Spinner from '$lib/components/Spinner.svelte';
 
   interface Props {
     heading: string;
@@ -26,17 +27,7 @@
   let isSubmitting = $state(false);
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-12 sm:px-6 lg:px-8">
-  <div class="w-full max-w-md">
-    <div class="rounded-xl bg-white p-8 shadow-lg">
-      <div class="mb-8 text-center">
-        <img class="mx-auto mb-4 h-16 w-auto" src="/assets/bt-cs-logo.png" alt="Bergen Tech Hackathon" />
-        <h1 class="text-2xl font-bold text-gray-900">{heading}</h1>
-        {#if intro}
-          <p class="mt-2 text-gray-600">{intro}</p>
-        {/if}
-      </div>
-
+<AuthCard {heading} {intro}>
       <form
         method="POST"
         use:enhance={() => {
@@ -76,21 +67,6 @@
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          class="w-full rounded-lg bg-gray-900 px-6 py-3 font-bold text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {#if isSubmitting}
-            <span class="inline-flex items-center justify-center gap-2">
-              <Spinner />
-              Saving...
-            </span>
-          {:else}
-            {submitLabel}
-          {/if}
-        </button>
+        <AuthSubmit label={submitLabel} busyLabel="Saving..." busy={isSubmitting} />
       </form>
-    </div>
-  </div>
-</div>
+</AuthCard>
