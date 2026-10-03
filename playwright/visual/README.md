@@ -25,20 +25,40 @@ others.
 #    different working trees. NODE_OPTIONS is not optional: this site shuffles its galleries
 #    during SSR, so without it the server serves a different document to every request. See
 #    server-determinism.mjs.
+#    On a random port bound to 127.0.0.1 -- see "Capture from the url `dev agent serve` prints".
 # RESTART THE SERVER AFTER EVERY EDIT -- see "The server has to be cold" below.
+PORT=$((20000 + RANDOM % 20000))
 NODE_OPTIONS="--import $PWD/playwright/visual/server-determinism.mjs" \
-  npm run dev -- --port 5744 --strictPort
+  dev agent serve --label visual --url http://127.0.0.1:$PORT -- npm run dev -- --host 127.0.0.1 --port $PORT --strictPort
+#    -> started `visual` (pid ...) — http://127.0.0.1:<port>   <- the url every command below uses
 
-# 2. Capture.
-VISUAL_SET=static VISUAL_BASE_URL=http://localhost:5744 VISUAL_OUT=../visual/baseline \
+# 2. Capture, from the url step 1 PRINTED.
+VISUAL_SET=static VISUAL_BASE_URL=http://127.0.0.1:<port> VISUAL_OUT=../visual/baseline \
   npm run visual:capture
 
 # 3. Compare two capture directories. Non-zero exit on any difference.
 npm run visual:compare -- ../visual/baseline ../visual/candidate
+
+# Stop it -- and restart it the same way after any edit.
+dev agent serve stop visual
 ```
 
 `VISUAL_OUT` should be **outside the repo** — a capture of the static set is a few hundred
 megabytes of full-page PNGs.
+
+### Capture from the url `dev agent serve` prints, never a port you chose
+
+A runner is shared, and every session on it running the same harness reaches for the same
+constant. A fixed port is therefore a port a sibling may already hold, and `localhost` makes it
+worse: it resolves to both `::1` and `127.0.0.1`, so a server bound on one address family and a
+sibling's bound on the other share the number, and the capture photographs whichever answered.
+Nothing fails. The capture is complete and self-consistent, and the compare reports every shot
+mismatched with element counts differing, which reads as a catastrophic CSS regression.
+
+So the server gets a random port and an explicit `--host 127.0.0.1`, the capture names
+`127.0.0.1` too, and `dev agent serve` checks with the kernel that the listener on that port is
+this server before it prints the url. `--strictPort` makes a taken port fail rather than drift,
+and `serve` names who holds it; pick another port and start again.
 
 ## The A/A gate comes first, always
 
@@ -46,8 +66,8 @@ Before a capture is allowed to judge anything, capture the **same server twice**
 two. Every hash must match.
 
 ```sh
-VISUAL_SET=static VISUAL_BASE_URL=http://localhost:5744 VISUAL_OUT=../visual/aa1 npm run visual:capture
-VISUAL_SET=static VISUAL_BASE_URL=http://localhost:5744 VISUAL_OUT=../visual/aa2 npm run visual:capture
+VISUAL_SET=static VISUAL_BASE_URL=http://127.0.0.1:<port> VISUAL_OUT=../visual/aa1 npm run visual:capture
+VISUAL_SET=static VISUAL_BASE_URL=http://127.0.0.1:<port> VISUAL_OUT=../visual/aa2 npm run visual:capture
 npm run visual:compare -- ../visual/aa1 ../visual/aa2
 ```
 
@@ -56,6 +76,16 @@ unseeded `Math.random()` — and it gets fixed in `capture.ts` before the harnes
 change. Skipping this step is how a parity harness comes to report a number that means nothing:
 without it, a green A/B is indistinguishable from a harness whose noise happens to be zero today,
 and a red A/B is indistinguishable from noise.
+
+### `setup.ts` checks it is capturing this app
+
+Before anything else, `setup.ts` fetches the base url, following redirects as the browser will, and
+refuses the capture unless the document carries `APP_MARKER`: a comment this repo's `src/app.html`
+puts in every page it serves, exported from `plan.ts`. A server that answered is not evidence it is
+this app's, because the address-family collision above serves a sibling's app on the url you typed.
+`setup.test.ts` pins that `src/app.html` still carries the marker. The check tells this app from any
+other; it cannot tell two working trees of this app apart, which is what the random port and the url
+`serve` prints are for.
 
 ## The server has to be cold
 
@@ -296,3 +326,23 @@ The head of `matrix.ts` (themes, viewports, states), `pages.ts` (how the two set
 the routes tree), `plan.ts` (which set one capture is doing), `files.ts`, `server-determinism.mjs`,
 `pages.test.ts` and this file. Everything else is a `dry-copy` region shared with `account` and
 `playbook-admin`, and must not be edited in one repo alone.
+
+## Capturing a subset of the pages
+
+`VISUAL_PAGES` is a regular expression matched against each page's url path; a capture takes only
+the pages it matches. Use it when a full capture will not fit the time you have: a full capture of
+a large set is hours, not minutes (trips' preview set, 119 pages and 5602 shots, took 2.2 to 2.3
+hours on a shared runner), and the A/A gate plus an A/B is three captures.
+
+```sh
+VISUAL_PAGES='^/(admin|settings)' VISUAL_SET=... VISUAL_BASE_URL=... VISUAL_OUT=../visual/aa2 \
+  npm run visual:capture
+npm run visual:compare -- ../visual/aa1 ../visual/aa2
+```
+
+The pages it leaves out are recorded in the manifest's `uncovered` list, not as dropped renderings,
+so the capture finishes green. `visual:compare` narrows a comparison to the pages both captures
+selected and prints how many shots on each side lay outside that scope, so a full capture of main
+compared with a sampled one is an A/A gate over the sample. Do not narrow a capture with
+playwright's `--grep` instead: the teardown still expects a shard from every planned page, so every
+page `--grep` skipped is recorded as dropped and the compare refuses the capture.

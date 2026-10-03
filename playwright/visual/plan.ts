@@ -9,7 +9,16 @@
 import { readFileSync } from 'node:fs';
 import { liveTargets, routeTemplates, staticTargets, isSetName, type RouteFacts, type SetName } from './pages.ts';
 import { listFiles } from './files.ts';
-import { hoverLimit, type PageTarget } from './matrix.ts';
+import { hoverLimit, selectPages, type PageTarget, type Selected } from './matrix.ts';
+
+/**
+ * WHICH APP THIS IS, in a form the served document can be asked for (ISS-15766).
+ *
+ * `setup.ts` refuses a capture of a server whose base document does not carry it, because a server
+ * that answered is not evidence it is this app's. `src/app.html` carries it, so every page this app
+ * serves does; `setup.test.ts` pins that.
+ */
+export const APP_MARKER = '<!-- visual-parity app: hackathon -->';
 
 export interface CapturePlan {
   set: SetName;
@@ -79,7 +88,7 @@ function dynamicRoots(): string[] {
   return [...new Set(roots)].sort();
 }
 
-export function capturePlan(): CapturePlan {
+function unselectedPlan(): CapturePlan {
   const setName = required('VISUAL_SET');
   if (!isSetName(setName)) throw new Error(`visual: VISUAL_SET must be "static" or "live", got "${setName}"`);
   const baseUrl = required('VISUAL_BASE_URL');
@@ -94,4 +103,9 @@ export function capturePlan(): CapturePlan {
   }
   const { targets, uncovered } = liveTargets(routeTemplates(pages), seeds());
   return { set: setName, baseUrl, out, targets, uncovered, hoverLimit: hovers };
+}
+
+/** The plan every reader shares, narrowed by `VISUAL_PAGES` when it is set (ISS-15761; see `selectPages`). */
+export function capturePlan(): Selected<CapturePlan> {
+  return selectPages(unselectedPlan(), process.env['VISUAL_PAGES']);
 }

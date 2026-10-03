@@ -1,8 +1,8 @@
+// dry-copy: sveltekit/playwright-backend-unreachable-test — every copy of this region must match; `dev repo copies` checks it (ISS-15745)
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
-import { backendUnreachable, explainingFetch } from './backendUnreachable';
-import { config } from './config';
+import { BACKEND_BASE_URL, backendUnreachable, explainingFetch } from './backendUnreachable';
 
 /**
  * What a spec is told when the e2e backend goes away mid-suite.
@@ -56,7 +56,7 @@ describe('backendUnreachable', () => {
 
     expect(explained).toBeDefined();
     // The url a reader has to go and look at, not the one the spec happened to be calling.
-    expect(explained?.message).toContain(config.BACKEND_BASE_URL);
+    expect(explained?.message).toContain(BACKEND_BASE_URL);
     expect(explained?.message).toContain('ECONNREFUSED');
     // The one artifact that holds what the container did before it stopped.
     expect(explained?.message).toContain('backend.log');
@@ -110,3 +110,4 @@ describe('explainingFetch', () => {
     await expect(explainingFetch(await closedUrl())).rejects.toThrow(/is not answering/);
   });
 });
+// dry-copy-end

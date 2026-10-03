@@ -38,7 +38,7 @@
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div
-    class="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs"
+    class="fixed inset-0 z-50 flex animate-fade-in items-center justify-center bg-black/80 backdrop-blur-xs"
     onclick={handleBackdropClick}
     role="dialog"
     aria-modal="true"
@@ -50,7 +50,7 @@
          of the corner of this card — and because `animate-scale-in` applies a transform (which
          does establish a containing block) for only 0.2s with no fill-mode, the button started
          in the right place and then jumped away as the animation ended. -->
-    <div class="{sizeClasses[size]} animate-scale-in relative mx-4 w-full">
+    <div class="{sizeClasses[size]} relative mx-4 w-full animate-scale-in">
       <!-- Close button -->
       <button
         type="button"

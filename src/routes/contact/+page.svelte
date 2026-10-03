@@ -29,7 +29,7 @@
 </script>
 
 <Shell title="Contact The Hackathon Organizers">
-  <div class="mx-auto space-y-8 max-w-2xl px-4 py-8">
+  <div class="mx-auto max-w-2xl space-y-8 px-4 py-8">
     <!-- Introduction -->
     <p class="text-center text-lg font-light text-gray-800">
       The Bergen Tech Hackathon is run by Bergen Youth Enrichment, a 501(c)(3) non-profit organization which is 100% volunteer-run.

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
   import { navigating, page } from '$app/state';
   import { applyAction, enhance } from '$app/forms';
   import { FileType, VoterType } from '$lib/api/client';
@@ -173,13 +174,9 @@
             </div>
           </div>
           <div class="flex gap-3">
-            <button
-              type="submit"
-              disabled={isGenerating}
-              class="rounded-lg bg-yellow-400 px-4 py-2 font-bold text-gray-900 transition-colors hover:bg-yellow-500 disabled:opacity-50"
-            >
+            <Button variant="vote" size="sm" type="submit" loading={isGenerating}>
               {isGenerating ? 'Generating...' : 'Generate Codes'}
-            </button>
+            </Button>
             <button
               type="button"
               onclick={() => (showGenerateForm = false)}
@@ -192,16 +189,13 @@
       </div>
     {:else}
       <div class="flex flex-wrap gap-4">
-        <button
-          type="button"
-          onclick={() => (showGenerateForm = true)}
-          class="inline-flex items-center rounded-lg bg-yellow-400 px-6 py-3 font-bold text-gray-900 transition-colors hover:bg-yellow-500"
-        >
-          <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          Generate Codes
-        </button>
+        <Button variant="vote" onclick={() => (showGenerateForm = true)} label="Generate Codes">
+          {#snippet icon()}
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+          {/snippet}
+        </Button>
 
         <!--
           One form, two submit buttons: the button's own name/value picks the format, so the

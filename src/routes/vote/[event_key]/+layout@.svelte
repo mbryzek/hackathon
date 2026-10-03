@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
   import type { Snippet } from 'svelte';
   import { invalidateAll } from '$app/navigation';
   import Shell from '$lib/components/Shell.svelte';
@@ -50,14 +51,11 @@
         </div>
         <h2 class="mb-2 text-xl font-bold text-gray-900">Couldn't load this event</h2>
         <p class="text-gray-600">Check your connection and try again.</p>
-        <button
-          type="button"
-          onclick={retry}
-          disabled={isRetrying}
-          class="mt-4 rounded-lg bg-yellow-400 px-4 py-2 font-semibold text-gray-900 transition-colors hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isRetrying ? 'Retrying...' : 'Try Again'}
-        </button>
+        <div class="mt-4">
+          <Button variant="vote" size="sm" onclick={retry} loading={isRetrying}>
+            {isRetrying ? 'Retrying...' : 'Try Again'}
+          </Button>
+        </div>
       </div>
     </div>
   {:else}
