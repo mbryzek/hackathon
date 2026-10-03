@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Spinner from '$lib/components/Spinner.svelte';
+  import Button from '$lib/components/Button.svelte';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
@@ -185,20 +185,9 @@
           <ErrorBanner {error} class="text-center" />
         {/if}
 
-        <button
-          type="submit"
-          disabled={isVerifying}
-          class="w-full rounded-lg bg-yellow-400 px-6 py-4 text-lg font-bold text-gray-900 transition-colors hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {#if isVerifying}
-            <span class="inline-flex items-center justify-center gap-2">
-              <Spinner />
-              Verifying...
-            </span>
-          {:else}
-            Verify Code
-          {/if}
-        </button>
+        <Button variant="vote" size="lg" type="submit" fullWidth loading={isVerifying}>
+          {isVerifying ? 'Verifying...' : 'Verify Code'}
+        </Button>
       </form>
     </div>
   {:else if verification}
@@ -322,21 +311,9 @@
 
       <!-- Submit button -->
       <div class="rounded-xl bg-white p-6 shadow-lg">
-        <button
-          type="button"
-          onclick={handleSubmit}
-          disabled={!canSubmit || isSubmitting}
-          class="w-full rounded-lg bg-yellow-400 px-6 py-4 text-lg font-bold text-gray-900 shadow-md transition-colors hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {#if isSubmitting}
-            <span class="inline-flex items-center justify-center gap-2">
-              <Spinner />
-              Submitting Vote...
-            </span>
-          {:else}
-            Submit Vote
-          {/if}
-        </button>
+        <Button variant="vote" size="lg" fullWidth onclick={handleSubmit} disabled={!canSubmit} loading={isSubmitting}>
+          {isSubmitting ? 'Submitting Vote...' : 'Submit Vote'}
+        </Button>
       </div>
     </div>
   {/if}
