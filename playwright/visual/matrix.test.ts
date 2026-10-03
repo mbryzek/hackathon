@@ -6,12 +6,14 @@ import {
   DEFAULT_SHOT_BUDGET_MS,
   hoverLimit,
   pageTargets,
+  selectPages,
   shotBudget,
   settleTimeout,
   shotKey,
   shotsFor,
   shotStates,
   slugOf,
+  slugOfKey,
   STATES,
   THEMES,
   VIEWPORTS
@@ -192,6 +194,52 @@ describe('settleTimeout', () => {
    */
   it('is a lever rather than a constant, which is the whole of what it is for', () => {
     expect(settleTimeout('90000')).not.toBe(DEFAULT_SETTLE_TIMEOUT_MS);
+  });
+});
+
+describe('slugOfKey', () => {
+  it('recovers the page from every key shotKey writes', () => {
+    for (const page of pageTargets(['/', '/dev/preview/clubDetail', '/a-b/c'])) {
+      for (const shot of shotsFor(page, 2)) expect(slugOfKey(shot.key)).toBe(page.slug);
+    }
+  });
+});
+
+/**
+ * `VISUAL_PAGES` (ISS-15761). What it must get right is where the pages it leaves out are written
+ * down: `uncovered`, which changes no verdict, and never a smaller target list the teardown then
+ * reads as pages that did not finish.
+ */
+describe('selectPages', () => {
+  const plan = () => ({
+    set: 'live',
+    targets: pageTargets(['/', '/trips', '/trips/abc', '/settings']),
+    uncovered: [['/x/[y]', 'no seed']] as [string, string][]
+  });
+
+  it('keeps every page, and records no selection, when unset', () => {
+    expect(selectPages(plan(), undefined)).toEqual({ ...plan(), selection: null });
+    expect(selectPages(plan(), '')).toEqual({ ...plan(), selection: null });
+  });
+
+  it('keeps the pages whose path the pattern matches and records the rest as uncovered', () => {
+    const selected = selectPages(plan(), '^/trips');
+    expect(selected.targets.map((target) => target.path)).toEqual(['/trips', '/trips/abc']);
+    expect(selected.uncovered).toEqual([
+      ['/x/[y]', 'no seed'],
+      ['/', 'not selected by VISUAL_PAGES=^/trips'],
+      ['/settings', 'not selected by VISUAL_PAGES=^/trips']
+    ]);
+    expect(selected.selection).toEqual({ pattern: '^/trips', slugs: ['trips', 'trips-abc'] });
+    expect(selected.set).toBe('live');
+  });
+
+  it('refuses a pattern that does not parse', () => {
+    expect(() => selectPages(plan(), '(')).toThrow(/VISUAL_PAGES must be a regular expression/);
+  });
+
+  it('refuses a pattern that selects nothing, rather than capturing an empty set', () => {
+    expect(() => selectPages(plan(), '^/nowhere')).toThrow(/matches none of the 4 page\(s\)/);
   });
 });
 // dry-copy-end

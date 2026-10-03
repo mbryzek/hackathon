@@ -296,3 +296,23 @@ The head of `matrix.ts` (themes, viewports, states), `pages.ts` (how the two set
 the routes tree), `plan.ts` (which set one capture is doing), `files.ts`, `server-determinism.mjs`,
 `pages.test.ts` and this file. Everything else is a `dry-copy` region shared with `account` and
 `playbook-admin`, and must not be edited in one repo alone.
+
+## Capturing a subset of the pages
+
+`VISUAL_PAGES` is a regular expression matched against each page's url path; a capture takes only
+the pages it matches. Use it when a full capture will not fit the time you have: a full capture of
+a large set is hours, not minutes (trips' preview set, 119 pages and 5602 shots, took 2.2 to 2.3
+hours on a shared runner), and the A/A gate plus an A/B is three captures.
+
+```sh
+VISUAL_PAGES='^/(admin|settings)' VISUAL_SET=... VISUAL_BASE_URL=... VISUAL_OUT=../visual/aa2 \
+  npm run visual:capture
+npm run visual:compare -- ../visual/aa1 ../visual/aa2
+```
+
+The pages it leaves out are recorded in the manifest's `uncovered` list, not as dropped renderings,
+so the capture finishes green. `visual:compare` narrows a comparison to the pages both captures
+selected and prints how many shots on each side lay outside that scope, so a full capture of main
+compared with a sampled one is an A/A gate over the sample. Do not narrow a capture with
+playwright's `--grep` instead: the teardown still expects a shard from every planned page, so every
+page `--grep` skipped is recorded as dropped and the compare refuses the capture.

@@ -14,6 +14,7 @@
  * itself rather than a rendering difference.
  */
 // dry-copy: visual-parity/manifest — every copy of this region must match; `dev repo copies` checks it
+import { slugOfKey, type Selection } from './matrix.ts';
 
 /** One shot's row in the manifest. */
 export interface ManifestEntry {
@@ -72,6 +73,12 @@ export interface Manifest {
    * exists to stop anybody writing.
    */
   dropped: Dropped[];
+  /**
+   * The `VISUAL_PAGES` subset this capture was narrowed to, or `null` when it took every page in its
+   * set. The pages it left out are in `uncovered`; this is what `scopeToSelection` reads so that a
+   * sampled capture can be compared against a full one over the pages both of them took.
+   */
+  selection: Selection | null;
   entries: Record<string, ManifestEntry>;
 }
 
@@ -144,6 +151,44 @@ export function compareManifests(a: Manifest, b: Manifest): Comparison {
  */
 export function complete(manifest: Manifest): boolean {
   return manifest.dropped.length === 0;
+}
+
+/** Two manifests narrowed to the pages both captures selected, and what that left out of each. */
+export interface Scoped {
+  a: Manifest;
+  b: Manifest;
+  /** The slugs compared, or `null` when neither side was a `VISUAL_PAGES` subset and nothing was narrowed. */
+  pages: string[] | null;
+  /** How many of A's and B's shots fell outside those pages and were not compared. */
+  outsideA: number;
+  outsideB: number;
+}
+
+/**
+ * Narrow two captures to the pages BOTH of them selected (ISS-15761).
+ *
+ * A side with no selection took every page, so the scope is the other side's selection, or the
+ * intersection of the two when both are subsets. The shots a subset never asked for are left out
+ * of the comparison rather than reported as present on one side only -- that is the whole point of
+ * selecting -- and the counts are returned so `compare.ts` can say how much went uncompared.
+ *
+ * NOTHING INSIDE THE SCOPE IS FORGIVEN. A page the subset selected that the other side has no shots
+ * for is still a key on one side only, and a capture's `dropped` list is read off the unscoped
+ * manifest, so a hole anywhere still fails the compare.
+ */
+export function scopeToSelection(a: Manifest, b: Manifest): Scoped {
+  if (!a.selection && !b.selection) return { a, b, pages: null, outsideA: 0, outsideB: 0 };
+  const selected = [a.selection, b.selection].filter((selection): selection is Selection => Boolean(selection));
+  const pages = selected
+    .map((selection) => new Set(selection.slugs))
+    .reduce((kept, next) => new Set([...kept].filter((slug) => next.has(slug))));
+  const narrow = (manifest: Manifest): [Manifest, number] => {
+    const inside = Object.entries(manifest.entries).filter(([key]) => pages.has(slugOfKey(key)));
+    return [{ ...manifest, entries: Object.fromEntries(inside) }, Object.keys(manifest.entries).length - inside.length];
+  };
+  const [scopedA, outsideA] = narrow(a);
+  const [scopedB, outsideB] = narrow(b);
+  return { a: scopedA, b: scopedB, pages: [...pages].sort(), outsideA, outsideB };
 }
 
 /** True when the two captures are byte-for-byte identical over a non-empty set of shots. */

@@ -43,5 +43,6 @@ export default async function globalSetup(): Promise<void> {
       `(plus one per hover target, up to ${plan.hoverLimit} each) -> ${plan.out}`
   );
   if (plan.uncovered.length > 0) console.log(`visual: ${plan.uncovered.length} route(s) uncovered; see manifest.json`);
+  if (plan.selection) console.log(`visual: VISUAL_PAGES=${plan.selection.pattern} selects ${plan.targets.length} page(s)`);
 }
 // dry-copy-end
