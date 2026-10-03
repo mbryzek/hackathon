@@ -1,7 +1,18 @@
 // dry-copy: visual-parity/capture-test — every copy of this region must match; `dev repo copies` checks it
-import type { Page } from '@playwright/test';
+import type { Page, Request } from '@playwright/test';
 import { describe, expect, it } from 'vitest';
-import { canonicalStyleOrder, captureShot, documentSize, NavigatedAway, refuseIfNavigated, type Shot } from './capture.ts';
+import {
+  canonicalStyleOrder,
+  captureShot,
+  documentSize,
+  type FetchedImage,
+  hasUnmeasuredImage,
+  markUnmeasured,
+  measureForeignImage,
+  NavigatedAway,
+  refuseIfNavigated,
+  type Shot
+} from './capture.ts';
 
 /*
  * WHAT A SHOT DOES WHEN THE PAGE MOVES UNDER IT (ISS-9986).
@@ -73,6 +84,11 @@ interface Interrupt {
   to?: string;
 }
 
+/** A request the stub page made, as the image route sees one. */
+function requestFrom(page: Page): Request {
+  return { frame: () => ({ page: () => page }) } as unknown as Request;
+}
+
 /**
  * A page that answers everything `captureShot` asks, and reports its structure as `structures[n]`
  * for the n-th time it is asked.
@@ -84,7 +100,15 @@ interface Interrupt {
  */
 function stubPage(
   structures: readonly number[],
-  options: { chWidth?: () => number; interrupt?: Interrupt; hoverHolds?: boolean; faceFailed?: boolean; unreachable?: boolean } = {}
+  options: {
+    chWidth?: () => number;
+    interrupt?: Interrupt;
+    hoverHolds?: boolean;
+    faceFailed?: boolean;
+    unreachable?: boolean;
+    /** What the fresh document does on arriving, which is where a foreign image is asked for again. */
+    onReload?: (page: Page) => void;
+  } = {}
 ): { page: Page; journal: Journal; seal: PointerSeal } {
   const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0, resizes: [], folds: [] };
   const seal: PointerSeal = { atScreenshot: [], atPointerMove: [], sealed: false };
@@ -150,6 +174,7 @@ function stubPage(
     },
     reload: async (): Promise<void> => {
       journal.reloads += 1;
+      options.onReload?.(page as unknown as Page);
     },
     screenshot: async (): Promise<Buffer> => {
       journal.screenshots += 1;
@@ -228,6 +253,27 @@ describe('captureShot', () => {
    */
   it('reloads rather than shooting a document whose webfont failed to load', async () => {
     const { page, journal } = stubPage([1, 1, 1, 1, 1, 1], { faceFailed: true });
+    expect(await captureShot(page, 'rest')).toBe('metrics');
+    expect(journal.screenshots).toBe(0);
+    expect(journal.reloads).toBeGreaterThanOrEqual(2);
+  });
+
+  /**
+   * A FOREIGN IMAGE WHOSE SIZE PROBE NEVER ANSWERED IS A FAILED FACE BY ANOTHER NAME (ISS-15866). The
+   * request was refused rather than painted, so the document is carrying a broken image the other
+   * side of an A/B may not have -- and only a fresh document asks for it again.
+   */
+  it('reloads and retakes a document that refused a foreign image it could not measure', async () => {
+    const { page, journal } = stubPage([1, 1]);
+    markUnmeasured(requestFrom(page));
+    taken(await captureShot(page, 'rest'));
+    expect(journal).toMatchObject({ screenshots: 1, reloads: 1 });
+    expect(hasUnmeasuredImage(page)).toBe(false);
+  });
+
+  it('drops the shot rather than taking one while every document refuses the image', async () => {
+    const { page, journal } = stubPage([1, 1], { onReload: (reloaded) => markUnmeasured(requestFrom(reloaded)) });
+    markUnmeasured(requestFrom(page));
     expect(await captureShot(page, 'rest')).toBe('metrics');
     expect(journal.screenshots).toBe(0);
     expect(journal.reloads).toBeGreaterThanOrEqual(2);
@@ -421,6 +467,63 @@ describe('refuseIfNavigated', () => {
     expect(() => refuseIfNavigated(page, 'http://localhost/members')).toThrow(NavigatedAway);
   });
 });
+/*
+ * WHAT A FOREIGN IMAGE'S SIZE PROBE IS ALLOWED TO CONCLUDE (ISS-15866).
+ *
+ * The stub is only reproducible if the probe's answer is about the IMAGE. A host that did not
+ * answer, or answered 5xx, said something about its own minute -- so it is asked again, and an
+ * image it never answers for is never handed to the page to paint.
+ */
+describe('measureForeignImage', () => {
+  /** The first 24 bytes of a 640x480 PNG, which is all `imageSize` reads. */
+  const PNG = Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]),
+    Buffer.from([0, 0, 2, 128, 0, 0, 1, 224, 8])
+  ]);
+  const ok = (body: Buffer, status = 200): FetchedImage => ({ status, headers: { 'content-type': 'image/png' }, body });
+  const noPause = async (): Promise<void> => undefined;
+
+  /** A probe answering `answers` in order, and counting how often it was asked. */
+  function probe(answers: readonly (FetchedImage | null)[]): { fetch: () => Promise<FetchedImage | null>; asked: () => number } {
+    let asked = 0;
+    return {
+      fetch: async () => {
+        const answer = answers[Math.min(asked, answers.length - 1)] ?? null;
+        asked += 1;
+        return answer;
+      },
+      asked: () => asked
+    };
+  }
+
+  it('measures the image on the first answer', async () => {
+    const host = probe([ok(PNG)]);
+    expect(await measureForeignImage(host.fetch, noPause)).toEqual({ kind: 'sized', width: 640, height: 480 });
+    expect(host.asked()).toBe(1);
+  });
+
+  /** The defect: one probe lost to the runner's load used to paint the real photograph. */
+  it('asks again when the host did not answer, rather than handing the page the real image', async () => {
+    const host = probe([null, ok(Buffer.alloc(0), 503), ok(PNG)]);
+    expect(await measureForeignImage(host.fetch, noPause)).toEqual({ kind: 'sized', width: 640, height: 480 });
+    expect(host.asked()).toBe(3);
+  });
+
+  it('gives up as unreachable when no attempt is answered', async () => {
+    const host = probe([null]);
+    expect(await measureForeignImage(host.fetch, noPause)).toEqual({ kind: 'unreachable' });
+    expect(host.asked()).toBe(3);
+  });
+
+  it('serves an answer about the image itself as it came back, without asking again', async () => {
+    const missing = probe([ok(Buffer.from('not found'), 404)]);
+    expect(await measureForeignImage(missing.fetch, noPause)).toMatchObject({ kind: 'unsized', status: 404 });
+    expect(missing.asked()).toBe(1);
+    const webp = probe([ok(Buffer.from('RIFF....WEBP'))]);
+    expect(await measureForeignImage(webp.fetch, noPause)).toMatchObject({ kind: 'unsized', status: 200 });
+  });
+});
+
 /*
  * THE ORDER THE DEV SERVER'S STYLESHEETS ARE PUT IN (ISS-15642).
  *

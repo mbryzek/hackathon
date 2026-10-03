@@ -90,7 +90,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import type { Browser, BrowserContext, Cookie, Page, Route } from '@playwright/test';
+import type { Browser, BrowserContext, Cookie, Page, Request, Route } from '@playwright/test';
 import { settleTimeout, type StateName, type ThemeName, type Viewport } from './matrix.ts';
 import { encodeStyles, type RawElement, type StyleDump } from './styles.ts';
 
@@ -393,6 +393,78 @@ export function imageSize(bytes: Buffer): { width: number; height: number } | nu
   return null;
 }
 
+/** What one fetch of a foreign image came back with, or `null` when nothing came back at all. */
+export interface FetchedImage {
+  status: number;
+  headers: Record<string, string>;
+  body: Buffer;
+}
+
+/**
+ * What `stubForeignMedia` learned about a foreign image: its size, a real answer that is not one
+ * (served as it came back), or nothing it may paint.
+ */
+export type ImageMeasurement =
+  { kind: 'sized'; width: number; height: number } | ({ kind: 'unsized' } & FetchedImage) | { kind: 'unreachable' };
+
+/** How many times a foreign image's size is asked for before its page is reloaded instead. */
+const MEASURE_ATTEMPTS = 3;
+
+/** How long to wait before the n-th retry of a measurement: 0.5s, then 1s. */
+const MEASURE_BACKOFF_MS = 500;
+
+/**
+ * THE SIZE OF A FOREIGN IMAGE, ASKED UNTIL THE HOST GIVES AN ANSWER THAT IS ABOUT THE IMAGE.
+ *
+ * Nothing coming back, and a 5xx or a 429, are answers about the HOST and its minute: they are
+ * asked again, after a pause, and `unreachable` is what is left when every attempt was one. A 2xx
+ * that is not a PNG or JPEG, and any other status, are answers about the IMAGE -- the same on every
+ * run -- and are returned `unsized` at once, to be served as they came back.
+ *
+ * `pause` is a parameter so the tests do not wait out the backoff.
+ */
+export async function measureForeignImage(
+  probe: () => Promise<FetchedImage | null>,
+  pause: (ms: number) => Promise<void> = async (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+): Promise<ImageMeasurement> {
+  for (let attempt = 0; attempt < MEASURE_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) await pause(MEASURE_BACKOFF_MS * attempt);
+    const fetched = await probe();
+    if (fetched === null || fetched.status >= 500 || fetched.status === 429) continue;
+    const size = fetched.status >= 200 && fetched.status < 300 ? imageSize(fetched.body) : null;
+    return size === null ? { kind: 'unsized', ...fetched } : { kind: 'sized', ...size };
+  }
+  return { kind: 'unreachable' };
+}
+
+/**
+ * Pages whose CURRENT document asked for a foreign image `stubForeignMedia` could not measure.
+ *
+ * Kept on this side rather than in the page, because the page cannot tell a refused probe from an
+ * image that is broken for real. Cleared by every navigation this module makes (`freshDocument`),
+ * since a fresh document asks for every image again.
+ */
+const unmeasured = new WeakSet<Page>();
+
+/** Mark the page that asked for `request` as carrying an image the harness may not paint. */
+export function markUnmeasured(request: Request): void {
+  try {
+    unmeasured.add(request.frame().page());
+  } catch {
+    // A request with no frame -- a service worker's -- belongs to no document that is shot.
+  }
+}
+
+/** Whether `page`'s current document is carrying an image `stubForeignMedia` refused. */
+export function hasUnmeasuredImage(page: Page): boolean {
+  return unmeasured.has(page);
+}
+
+/** Forget the mark, immediately before `page` is given a document that will ask for every image again. */
+function freshDocument(page: Page): void {
+  unmeasured.delete(page);
+}
+
 /**
  * REPLACE EVERY CROSS-ORIGIN IMAGE WITH A FLAT RECTANGLE OF ITS OWN SIZE (ISS-9327).
  *
@@ -425,8 +497,17 @@ export function imageSize(bytes: Buffer): { width: number; height: number } | nu
  *
  * THE SIZE IS LEARNED ONCE AND CACHED ON DISK, so the second capture of an A/B does not re-fetch
  * the images and -- more importantly -- cannot learn a different answer if the host has a bad
- * minute. A url whose bytes cannot be read at all is passed through: a broken image is a real
- * rendering and both sides get it.
+ * minute. An image the host answered with something that is not a PNG or JPEG -- another format, a
+ * 404 -- is served exactly as it came back, which is the same answer on every run.
+ *
+ * AN IMAGE THAT CANNOT BE MEASURED AT ALL IS NEVER PAINTED (ISS-15866). Whether the host answers
+ * the probe is a property of its minute and of the runner's load, not of the page, so passing the
+ * request through painted the real photograph on the capture that found the cache cold and the stub
+ * on the one that found it warm -- measured on hackathon as every state of one page differing in an
+ * A/A. So the probe is asked again (`measureForeignImage`), and an image still unmeasured is
+ * refused and its page marked: `metrics` reads the mark as `stale`, the document is reloaded and the
+ * shot retaken, and a page whose image never answers is dropped rather than shot -- exactly what a
+ * face that failed to arrive is. See `serveCached` for the same rule applied to a font.
  */
 async function stubForeignMedia(context: BrowserContext, baseUrl: string): Promise<void> {
   const origin = new URL(baseUrl).origin;
@@ -452,16 +533,25 @@ async function stubForeignMedia(context: BrowserContext, baseUrl: string): Promi
       return;
     }
     const file = join(directory, `${createHash('sha256').update(request.url()).digest('hex').slice(0, 32)}.json`);
-    const size = await (async (): Promise<{ width: number; height: number } | null> => {
-      if (existsSync(file)) return JSON.parse(readFileSync(file, 'utf8')) as { width: number; height: number };
-      const response = await route.fetch().catch(() => null);
-      const bytes = response === null ? null : await response.body().catch(() => null);
-      const measured = bytes === null ? null : imageSize(bytes);
-      if (measured !== null) writeFileSync(file, JSON.stringify(measured));
+    const size = await (async (): Promise<ImageMeasurement> => {
+      if (existsSync(file)) return { kind: 'sized', ...(JSON.parse(readFileSync(file, 'utf8')) as { width: number; height: number }) };
+      const measured = await measureForeignImage(async () => {
+        const response = await route.fetch().catch(() => null);
+        const body = response === null ? null : await response.body().catch(() => null);
+        return response === null || body === null ? null : { status: response.status(), headers: response.headers(), body };
+      });
+      if (measured.kind === 'sized') writeFileSync(file, JSON.stringify({ width: measured.width, height: measured.height }));
       return measured;
     })();
-    if (size === null) {
-      await route.fallback();
+    if (size.kind === 'unreachable') {
+      markUnmeasured(request);
+      await route.abort('failed');
+      return;
+    }
+    if (size.kind === 'unsized') {
+      // The body is already decoded, so the host's `content-encoding` and `content-length` would lie about it.
+      const contentType = size.headers['content-type'] ?? 'application/octet-stream';
+      await route.fulfill({ status: size.status, headers: { 'content-type': contentType, 'cache-control': 'no-store' }, body: size.body });
       return;
     }
     await route.fulfill({
@@ -672,11 +762,14 @@ type Metrics = 'ok' | 'no-face' | 'stale';
  * 88ch` on that page is wrong, waiting does not fix it and neither does loading the face — the
  * resolution has already been made. Only a fresh document has none. A face that FAILED to load is
  * `stale` too, and asked first: the document will not fetch it again, and the probe measures the
- * fallback's `0` as happily as the real one's. See `faceFailed`.
+ * fallback's `0` as happily as the real one's. See `faceFailed`. So is a document carrying a foreign
+ * image the harness could not measure and refused, which only a fresh document asks for again. See
+ * `stubForeignMedia`.
  *
  * A document with no planted probe can only be asked the first question and is answered on that.
  */
 async function metrics(page: Page): Promise<Metrics> {
+  if (hasUnmeasuredImage(page)) return 'stale';
   if (await faceFailed(page)) return 'stale';
   const fresh = await freshCh(page);
   if (Math.abs(fresh.width - fresh.em * 50) <= 0.5) return 'no-face';
@@ -790,9 +883,12 @@ async function awaitMedia(page: Page): Promise<void> {
  */
 export async function settle(page: Page, path: string, timeoutMs = SETTLE_TIMEOUT_MS): Promise<boolean> {
   try {
+    freshDocument(page);
     await page.goto(path, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
     if (await quiet(page, timeoutMs)) return true;
-    console.warn(`visual: ${path} did not settle: its webfont never loaded in ${RELOAD_ATTEMPTS} document(s)`);
+    console.warn(
+      `visual: ${path} did not settle: its webfont never loaded, or a foreign image never answered its size probe, in ${RELOAD_ATTEMPTS} document(s)`
+    );
     return false;
   } catch (error) {
     // Which wait ran out is what tells the runner's load from a page that is broken, so it is said.
@@ -863,6 +959,7 @@ async function quiet(page: Page, timeoutMs: number): Promise<boolean> {
     await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     if ((await awaitMeasurable(page)) !== 'stale') break;
     if (attempt + 1 >= RELOAD_ATTEMPTS) return false;
+    freshDocument(page);
     await page.reload({ waitUntil: 'domcontentloaded', timeout: timeoutMs });
   }
   await awaitMedia(page);
@@ -969,6 +1066,7 @@ async function canonicalize(page: Page): Promise<void> {
 /** A fresh document of the same url, for a page that is carrying a resolution it cannot reproduce. */
 async function reload(page: Page): Promise<boolean> {
   try {
+    freshDocument(page);
     await page.reload({ waitUntil: 'domcontentloaded', timeout: SETTLE_TIMEOUT_MS });
     return await quiet(page, SETTLE_TIMEOUT_MS);
   } catch {
