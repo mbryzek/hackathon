@@ -75,7 +75,7 @@
     </p>
 
     <!-- Projects Section -->
-    <div class="mt-4">
+    <div>
       <h3 class="mb-4 text-xl font-semibold text-gray-800">A few example projects</h3>
       <ul class="space-y-3">
         {#each projects as project}
@@ -88,7 +88,7 @@
     </div>
 
     <!-- By the Numbers Section -->
-    <div class="mt-8">
+    <div>
       <h2 class="mb-6 text-2xl font-semibold text-gray-800">By the Numbers</h2>
       <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
         {#each stats as stat, i}
@@ -98,7 +98,7 @@
     </div>
 
     <!-- Download CTA -->
-    <div class="mt-8 text-center">
+    <div class="text-center">
       <Button href={urls.y26EventSummary} label="Download our 2026 event summary" external />
     </div>
   </div>
