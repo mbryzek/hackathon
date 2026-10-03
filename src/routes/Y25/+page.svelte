@@ -18,7 +18,7 @@
 </script>
 
 <Shell title="2025 Hackathon Event Summary">
-  <div class="mx-auto space-y-6 max-w-3xl px-4 py-8 text-lg leading-relaxed">
+  <div class="mx-auto max-w-3xl space-y-6 px-4 py-8 text-lg leading-relaxed">
     <!-- Callout Boxes - responsive stack on mobile -->
     <div class="flex flex-col gap-4 sm:flex-row">
       <CalloutBox title="Date & Time">
@@ -54,7 +54,7 @@
     </p>
 
     <!-- Projects Section -->
-    <div class="mt-4">
+    <div>
       <h3 class="mb-4 text-xl font-semibold text-gray-800">Projects</h3>
       <ul class="space-y-3">
         <li class="flex items-start gap-3 font-light text-gray-800">
@@ -109,7 +109,7 @@
     </div>
 
     <!-- By the Numbers Section -->
-    <div class="mt-8">
+    <div>
       <h2 class="mb-6 text-2xl font-semibold text-gray-800">By the Numbers</h2>
       <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
         {#each stats as stat, i}
@@ -119,7 +119,7 @@
     </div>
 
     <!-- Group Photo -->
-    <div class="mt-8">
+    <div>
       <img class="w-full rounded-lg shadow-lg" src={urls.y25GroupPhoto} alt="All participants gathered together at the 2025 hackathon" />
     </div>
   </div>

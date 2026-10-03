@@ -18,7 +18,7 @@
   const status = $derived(form?.status ?? event?.status);
 </script>
 
-<div class="animate-fade-in mx-auto max-w-2xl">
+<div class="mx-auto max-w-2xl animate-fade-in">
   <div class="mb-8">
     <a href={urls.voteAdminEvent(eventId)} class="inline-flex items-center gap-1 text-gray-600 transition-colors hover:text-gray-900">
       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -109,7 +109,7 @@
 
           <!-- Desktop Navigation -->
           <div class="hidden md:block">
-            <div class="space-x-4 ml-10 flex items-baseline">
+            <div class="ml-10 flex items-baseline space-x-4">
               {#each sections as section}
                 {@const active = isActive(section) || hasActiveChild(section)}
                 {#if section.children.length === 0}
@@ -145,7 +145,7 @@
                       {section.name}
                       <!-- Dropdown chevron -->
                       <svg
-                        class="h-4 w-4 transition-transform duration-200 group-hover:rotate-180"
+                        class="h-4 w-4 transition-transform duration-200 group-focus-within:rotate-180 group-[:hover]:rotate-180"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -153,9 +153,11 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                       </svg>
                     </a>
-                    <!-- Dropdown menu with smooth transition -->
+                    <!-- Dropdown menu. It opens on a bare :hover rather than hover:, which applies only on a
+                         device that can hover, because on a touch tablet at md width a tap is the only way
+                         to reach a year's sub-pages; focus-within opens it from the keyboard. -->
                     <div
-                      class="invisible absolute top-full left-0 w-48 pt-2 opacity-0 transition-all duration-200 ease-out group-hover:visible group-hover:opacity-100"
+                      class="invisible absolute top-full left-0 w-48 pt-2 opacity-0 transition-all duration-200 ease-out group-focus-within:visible group-focus-within:opacity-100 group-[:hover]:visible group-[:hover]:opacity-100"
                     >
                       <div class="overflow-hidden rounded-md bg-gray-800 shadow-lg ring-1 ring-black/5">
                         {#each section.children as child, i}
@@ -249,7 +251,7 @@
               {/if}
             </a>
             {#if section.children.length > 0}
-              <div class="space-y-1 mt-1 pl-4">
+              <div class="mt-1 space-y-1 pl-4">
                 {#each section.children as child}
                   {@const childActive = page.url.pathname === child.href}
                   <a
