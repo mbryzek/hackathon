@@ -22,24 +22,43 @@
  *   - ANIMATION AND TRANSITION. `reducedMotion: 'reduce'` at the context, playwright's own
  *     `animations: 'disabled'` at the screenshot, and a settle after each state change that
  *     outlasts the stylesheet's longest declared transition.
- *   - THE SHOT ITSELF, which resizes the viewport and can destroy the very state being shot. A
- *     full-page screenshot renders the document at its own height, and Chromium is briefly at
- *     other sizes on the way there and back -- 1x1 among them, measured. A page that mounts
- *     something on hover sees a reflow, loses the pointer, and tears that node down on its own
- *     grace period; whether the teardown lands before the raster is a coin flip on machine load.
- *     So the DOM's structure is read on both sides of the screenshot and a shot whose page moved
- *     across its own raster is retaken rather than recorded. See `screenshotFrozen`. The stylesheet is NOT patched with an
- *     injected `transition: none` rule: that would change the CSSOM the computed-style dump then
- *     reads, and the dump is meant to describe the page, not the harness.
- *   - FONTS, in three places, because one is not enough. `document.fonts.ready` plus every
- *     declared face LOADED, since a shot taken before a self-hosted face swaps in is a shot of the
- *     fallback metrics. Then a RELOAD when the document turns out to have laid itself out before
- *     the face arrived, because a `ch` resolved then is kept for the life of that document. Then
- *     the same question again before EVERY shot, because the face can go away mid-page. See
- *     `settle`, `metrics` and `captureShot`. THIS APP DECLARES NO `@font-face` — its stack is Inter
- *     with system fallbacks — so all three are inert here and are kept for the reason the whole
- *     module is: the region below is shared byte for byte with the repos that do self-host one,
- *     and a probe that measures an installed font is a correct answer, not a skipped one.
+ *   - THE SHOT ITSELF, which would resize the viewport and destroy the very state being shot. A
+ *     full-page screenshot of a document taller than the viewport renders it at its own height,
+ *     and Chromium is briefly at other sizes on the way there and back -- 1x1 among them,
+ *     measured. Every resize re-decides what is under the pointer, so a hover lost there is lost
+ *     to the raster. So the viewport is made the document's own size BEFORE a state is applied,
+ *     and the shot is of that viewport, which needs no resize. See `fitToDocument`. Every pointer
+ *     event is also SEALED off from the page for the length of the shot, for any resize Chromium
+ *     still makes on its own: at 1x1 it dispatches `pointerout`/`mouseleave` at a pointer that
+ *     never moved, and a page that mounts something on hover tears it down. The DOM's structure
+ *     is still read on both sides of the screenshot, and a shot whose page moved across its own
+ *     raster is retaken rather than recorded. See `screenshotFrozen`. The stylesheet is NOT
+ *     patched with an injected `transition: none` rule: that would change the CSSOM the
+ *     computed-style dump then reads, and the dump is meant to describe the page, not the harness.
+ *   - A HOVER THAT IS NOT A FIXED POINT. A `hover:` rule that widens its own target can move it
+ *     out from under the pointer -- a chip that grows wraps to the next line, the pointer is over
+ *     the gap, the chip shrinks and wraps back. That page flickers in a real browser too, and
+ *     which half of the flicker a raster catches is timing. It is recorded as `unstable`, which is
+ *     the same answer on every run, rather than shot. See `applyState`.
+ *   - FONTS, asked at the LAST POSSIBLE MOMENT and answered on both sides of every shot.
+ *     `document.fonts.ready` plus every declared face LOADED is where it starts, since a shot
+ *     taken before a self-hosted face swaps in is a shot of the fallback
+ *     metrics. That is not enough on its own and never was: a `ch` is resolved AT LAYOUT and kept,
+ *     so a document that laid itself out without the face goes on being that wide however loaded
+ *     the face is by the time anything asks. So a `100ch` box is planted before the first layout
+ *     and kept for the LIFE of the document, and "does the box the page was laid out with still
+ *     measure what a box created now measures" is asked immediately before AND immediately after
+ *     the screenshot -- planting the freeze stylesheet is a whole-tree style recalc, and one that
+ *     lands while the face is momentarily gone re-resolves every `ch` on the page to `0.5em` after
+ *     every earlier check has passed. A shot that cannot be taken on honest metrics is not
+ *     recorded on the wrong ones: the document is reloaded and the shot retaken. See `metrics`,
+ *     `screenshotFrozen` and `captureShot`. A face served from another host is kept on disk after
+ *     its first fetch, so whether that host answers is not a property of the capture, and a face
+ *     that failed anyway is a reload rather than a shot on the fallback. See `serveCached`.
+ *     THIS APP DECLARES NO `@font-face` — its stack is Inter with system fallbacks — so all of this
+ *     is inert here and is kept for the reason the whole module is: the region below is shared byte
+ *     for byte with the repos that do self-host one, and a probe that measures an installed font is
+ *     a correct answer, not a skipped one.
  *   - THE THEME KEY. `themedContext` writes `localStorage['playbook-theme']` before the first byte
  *     of the document runs. Nothing in this app reads it; see `matrix.ts` on why the axis is kept.
  *   - THE COLOUR SCHEME. Pinned to `light` at the context. This app has no dark mode at all, so
@@ -69,9 +88,9 @@
  */
 // dry-copy: visual-parity/capture — every copy of this region must match; `dev repo copies` checks it
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import type { Browser, BrowserContext, Cookie, Page } from '@playwright/test';
+import type { Browser, BrowserContext, Cookie, Page, Route } from '@playwright/test';
 import { settleTimeout, type StateName, type ThemeName, type Viewport } from './matrix.ts';
 import { encodeStyles, type RawElement, type StyleDump } from './styles.ts';
 
@@ -286,6 +305,64 @@ function cacheDir(): string {
   return join(dirname(process.env['VISUAL_OUT'] ?? '.'), 'image-sizes');
 }
 
+/** The foreign resource types a capture is served from disk rather than from their host. */
+const CACHED_TYPES = new Set(['font', 'stylesheet']);
+
+/** What a cached response was served with, beside its body. */
+interface CachedResponse {
+  contentType: string;
+}
+
+/**
+ * SERVE A CROSS-ORIGIN FONT OR STYLESHEET FROM DISK, fetching it from its host only the first time.
+ *
+ * A WEBFONT THAT FAILS TO ARRIVE IS A WHOLE CONTEXT ON THE WRONG FACE, and nothing about the
+ * failure is visible in the computed style: the family is still the one the stylesheet names, and
+ * the system font it falls back to has a `0` glyph, so the `ch` check in `metrics` measures a real
+ * font and passes. Measured on playbook-app, whose face is served by Google Fonts: one context in
+ * two captures of one server under load had every text box 3 to 8 percent wider -- a tab label
+ * 141.734px on one side and 148.719px on the other -- and aborting the font host's requests by hand
+ * reproduces those widths to the thousandth. Whether that host answers inside the settle is a
+ * property of the runner's egress and its load, not of either stylesheet.
+ *
+ * SO THE BYTES ARE KEPT, as `stubForeignMedia` keeps an image's size and for the same two reasons:
+ * the second capture of an A/B cannot get a different answer from the first, and neither can depend
+ * on the host having a good minute. The stylesheet is kept as well as the font, because the
+ * `@font-face` rules it declares are what decide which file each weight comes from.
+ *
+ * WRITTEN BY RENAME, because several workers and both sides of an A/B can ask for one url at once,
+ * and a reader must never see half a font. A response that does not come back is passed through
+ * untouched: the browser's own request fails or succeeds on its own, and a face that fails is
+ * caught by `metrics` rather than shot.
+ */
+async function serveCached(route: Route, directory: string): Promise<void> {
+  const base = join(directory, createHash('sha256').update(route.request().url()).digest('hex').slice(0, 32));
+  const headers = (contentType: string): Record<string, string> => ({
+    'content-type': contentType,
+    // A font is a CORS fetch, and a face whose response carries no grant is refused.
+    'access-control-allow-origin': '*',
+    'cache-control': 'no-store'
+  });
+  if (existsSync(`${base}.json`) && existsSync(`${base}.body`)) {
+    const cached = JSON.parse(readFileSync(`${base}.json`, 'utf8')) as CachedResponse;
+    await route.fulfill({ status: 200, headers: headers(cached.contentType), body: readFileSync(`${base}.body`) });
+    return;
+  }
+  const response = await route.fetch().catch(() => null);
+  const body = response === null || !response.ok() ? null : await response.body().catch(() => null);
+  if (response === null || body === null) {
+    await route.fallback();
+    return;
+  }
+  const contentType = response.headers()['content-type'] ?? 'application/octet-stream';
+  const temporary = `${base}.${process.pid}.tmp`;
+  writeFileSync(temporary, body);
+  renameSync(temporary, `${base}.body`);
+  writeFileSync(temporary, JSON.stringify({ contentType } satisfies CachedResponse));
+  renameSync(temporary, `${base}.json`);
+  await route.fulfill({ status: 200, headers: headers(contentType), body });
+}
+
 /**
  * `width`/`height` out of a PNG or JPEG header, without decoding the image.
  *
@@ -356,11 +433,18 @@ async function stubForeignMedia(context: BrowserContext, baseUrl: string): Promi
   const directory = cacheDir();
   mkdirSync(directory, { recursive: true });
 
+  const responses = join(directory, 'responses');
+  mkdirSync(responses, { recursive: true });
+
   await context.route('**/*', async (route) => {
     const request = route.request();
     const foreign = !request.url().startsWith(origin);
     if (foreign && request.resourceType() === 'media') {
       await route.abort();
+      return;
+    }
+    if (foreign && request.method() === 'GET' && CACHED_TYPES.has(request.resourceType())) {
+      await serveCached(route, responses);
       return;
     }
     if (!foreign || request.resourceType() !== 'image') {
@@ -493,10 +577,10 @@ const RELOAD_ATTEMPTS = 3;
  * than twice.
  *
  * WHAT IT CANNOT SEE is a pure `:hover` pseudo-class -- a button whose only reaction is a CSS rule
- * puts nothing in the DOM, so a pointer that came off it during the raster is invisible here.
- * Nothing short of comparing two rasters can see that, and it has not been measured: the hover
- * shots the A/A gate reported as differing were, every one of them, a node present on one side and
- * absent on the other.
+ * puts nothing in the DOM, so a pointer that came off it during the raster is invisible here. That
+ * is why the raster is given nothing to resize (`fitToDocument`), which is what took the pointer
+ * off in the first place, and why a hover that takes its own target out from under the pointer is
+ * refused before the shot rather than detected after it (`applyState`).
  *
  * The class attribute is NOT sorted, unlike `dumpStyles`'s. The two readings compared here are of
  * one document seconds apart, so nothing has re-sorted anything in between, and the ORDER moving
@@ -547,6 +631,24 @@ async function chWidth(page: Page): Promise<number> {
   return planted === null ? (await freshCh(page)).width : planted.width;
 }
 
+/**
+ * Whether any face the document declares FAILED to load.
+ *
+ * A failed face is not retried by the document that declared it, and the text it was for is laid
+ * out on whatever the family list falls back to -- which the `ch` probe cannot tell from the real
+ * face when the fallback has a `0` glyph, as every system font does. See `serveCached` for the
+ * measurement. Only a fresh document asks for the face again, so this reads as `stale`.
+ */
+async function faceFailed(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    let failed = false;
+    document.fonts.forEach((face) => {
+      if (face.status === 'error') failed = true;
+    });
+    return failed;
+  });
+}
+
 /** What the page's font-relative units are currently resolving against. See `metrics`. */
 type Metrics = 'ok' | 'no-face' | 'stale';
 
@@ -568,11 +670,14 @@ type Metrics = 'ok' | 'no-face' | 'stale';
  * first layout does not agree with it: Chromium resolves a font-relative unit at layout and keeps
  * the result, so the document is carrying widths it can no longer reproduce. Every `max-width:
  * 88ch` on that page is wrong, waiting does not fix it and neither does loading the face — the
- * resolution has already been made. Only a fresh document has none.
+ * resolution has already been made. Only a fresh document has none. A face that FAILED to load is
+ * `stale` too, and asked first: the document will not fetch it again, and the probe measures the
+ * fallback's `0` as happily as the real one's. See `faceFailed`.
  *
  * A document with no planted probe can only be asked the first question and is answered on that.
  */
 async function metrics(page: Page): Promise<Metrics> {
+  if (await faceFailed(page)) return 'stale';
   const fresh = await freshCh(page);
   if (Math.abs(fresh.width - fresh.em * 50) <= 0.5) return 'no-face';
   const planted = await plantedCh(page);
@@ -686,8 +791,12 @@ async function awaitMedia(page: Page): Promise<void> {
 export async function settle(page: Page, path: string, timeoutMs = SETTLE_TIMEOUT_MS): Promise<boolean> {
   try {
     await page.goto(path, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
-    return await quiet(page, timeoutMs);
-  } catch {
+    if (await quiet(page, timeoutMs)) return true;
+    console.warn(`visual: ${path} did not settle: its webfont never loaded in ${RELOAD_ATTEMPTS} document(s)`);
+    return false;
+  } catch (error) {
+    // Which wait ran out is what tells the runner's load from a page that is broken, so it is said.
+    console.warn(`visual: ${path} did not settle within ${timeoutMs}ms: ${String(error).split('\n')[0]}`);
     return false;
   }
 }
@@ -897,35 +1006,178 @@ const FOCUS_SELECTOR = 'input:not([type=hidden]), select, textarea, [contentedit
  */
 export async function hoverTargetCount(page: Page, limit: number): Promise<{ shots: number; total: number }> {
   return throughNavigation(page, async () => {
-    const total = await page.evaluate((selector) => {
-      // The eligibility test `applyState` applies, counted rather than acted on. Written twice
-      // because both copies run INSIDE the page, where nothing this module defines exists.
-      let count = 0;
-      for (const element of Array.from(document.querySelectorAll(selector))) {
-        if ((element as HTMLInputElement).disabled) continue;
-        const rect = element.getBoundingClientRect();
-        const onScreen =
-          rect.width > 0 &&
-          rect.height > 0 &&
-          rect.top >= 0 &&
-          rect.left >= 0 &&
-          rect.bottom <= window.innerHeight &&
-          rect.right <= window.innerWidth;
-        if (onScreen) count += 1;
-      }
-      return count;
-    }, HOVER_SELECTOR);
+    // Counted on the page `applyState` will act on: fitted to the document, with the targets
+    // chosen above the fold. A count taken on any other layout can disagree with it.
+    await fitToDocument(page);
+    const total = await page.evaluate(
+      ({ selector, fold }) => {
+        // The eligibility test `applyState` applies, counted rather than acted on. Written twice
+        // because both copies run INSIDE the page, where nothing this module defines exists.
+        let count = 0;
+        for (const element of Array.from(document.querySelectorAll(selector))) {
+          if ((element as HTMLInputElement).disabled) continue;
+          const rect = element.getBoundingClientRect();
+          const onScreen =
+            rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.left >= 0 && rect.bottom <= fold.height && rect.right <= fold.width;
+          if (onScreen) count += 1;
+        }
+        return count;
+      },
+      { selector: HOVER_SELECTOR, fold: foldOf(page) }
+    );
     return { shots: Math.min(total, limit), total };
   });
 }
 
 /**
+ * The viewport each page was opened at, which is the FOLD every state's target is chosen above.
+ *
+ * KEPT RATHER THAN READ, because `fitToDocument` changes the viewport for the length of every shot
+ * and `window.innerHeight` then answers with the whole document. The first harness call on a page
+ * is made at the context's own viewport, so that is what is remembered.
+ */
+const folds = new WeakMap<Page, { width: number; height: number }>();
+
+function foldOf(page: Page): { width: number; height: number } {
+  const known = folds.get(page);
+  if (known !== undefined) return known;
+  const viewport = page.viewportSize();
+  if (viewport === null) throw new Error('visual: a capture page has no viewport; themedContext always sets one');
+  folds.set(page, viewport);
+  return viewport;
+}
+
+/** What each page measured at its fold, which is the viewport every shot of it is taken at. */
+const fitted = new WeakMap<Page, { width: number; height: number }>();
+
+/**
+ * Make the viewport the document's own size, BEFORE a state is applied to it.
+ *
+ * A FULL-PAGE SCREENSHOT OF A DOCUMENT TALLER THAN THE VIEWPORT RESIZES THE VIEWPORT FOR THE RASTER.
+ * Playwright passes `captureBeyondViewport` to Chromium, which re-lays the page out at the
+ * document's size, shoots, and puts it back -- and every one of those layouts re-decides what is
+ * under the pointer. A hover is lost there and, because the pointer never moves again, stays lost
+ * or comes back depending on how far the raster got before the next frame. Measured on
+ * playbook-app's team-hub-tab: the boundary events of one raster were `mouseout` from the hovered
+ * chip, `mouseover` of its row, `resize`, and back again, and two captures of one server
+ * disagreed on that shot by exactly that. A page that mounts a node on hover tears it down in the
+ * same gap, which is the `disturbed` retake loop in `captureShot`; on a loaded runner the retakes
+ * ran out.
+ *
+ * SO THE RESIZE HAPPENS FIRST, WHILE THERE IS NO STATE FOR IT TO DESTROY. The page is measured at
+ * the fold exactly as playwright measures it for a full-page shot, and given a viewport of that size;
+ * `screenshotFrozen` then shoots the viewport, which needs no resize. That is the shot a full-page
+ * screenshot always took -- the page laid out at the size it measured at the fold, clipped to that
+ * size -- and only the order has changed: resize, then state, then raster.
+ *
+ * THE CLIP IS THE MEASURED SIZE, NOT THE DOCUMENT'S SIZE AFTER THE FIT, because a page sized
+ * against its own viewport grows when the viewport does. Every `/dev-viz` page is: its shell is
+ * `min-height: 100dvh` under a header, so the document is always the viewport plus the header, and
+ * fitting the viewport to that document again never converges. A full-page screenshot clipped it
+ * at the measured size as well.
+ *
+ * MEASURED ONCE PER DOCUMENT, BEFORE IT HAS EVER BEEN RESIZED, and kept. A document shrunk back to
+ * the fold does not answer honestly for several frames: an element already laid out against
+ * `100dvh` keeps the old viewport's height after `innerHeight` and a freshly created `100dvh` box
+ * both report the new one. Measured on team-approval-group at tablet width, the document read
+ * 1448px for three frames after shrinking from 1400 to 1024 and 1256px from then on; two A/A
+ * captures that measured after every shot disagreed by exactly the shell's header on 30 shots. The
+ * size of the document at the fold is a property of the page, so the first reading -- taken on a
+ * page that has been at the fold since it loaded -- is the one every later shot uses. A reload in
+ * `captureShot` keeps it: the reloaded page is the same page.
+ */
+async function fitToDocument(page: Page): Promise<void> {
+  let size = fitted.get(page);
+  if (size === undefined) {
+    const fold = foldOf(page);
+    await resizeTo(page, fold);
+    const measured = await stableDocumentSize(page);
+    size = { width: Math.max(measured.width, fold.width), height: Math.max(measured.height, fold.height) };
+    fitted.set(page, size);
+  }
+  await resizeTo(page, size);
+}
+
+/** How many frame pairs a document's size may keep changing for after a resize before it is taken. */
+const SIZE_READS = 10;
+
+/**
+ * Give the page `size` and return once it is laid out at it, with two frames for anything that
+ * resizes itself in a `ResizeObserver` to have run.
+ */
+async function resizeTo(page: Page, size: { width: number; height: number }): Promise<void> {
+  const current = page.viewportSize();
+  if (current !== null && current.width === size.width && current.height === size.height) return;
+  await page.setViewportSize(size);
+  await page.waitForFunction(({ width, height }) => window.innerWidth === width && window.innerHeight === height, size, {
+    timeout: SETTLE_TIMEOUT_MS
+  });
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+}
+
+/**
+ * Playwright's own full-page size (`_fullPageSize`), read until two readings two frames apart
+ * agree: a chart that redraws from a `ResizeObserver` can take more than one frame to settle on a
+ * height, and a size read in the middle of that is a different clip on every run.
+ */
+async function stableDocumentSize(page: Page): Promise<{ width: number; height: number }> {
+  const read = async (): Promise<{ width: number; height: number }> =>
+    page.evaluate(async () => {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      const body = document.body as HTMLElement | null;
+      const root = document.documentElement;
+      return {
+        width: Math.max(
+          body?.scrollWidth ?? 0,
+          root.scrollWidth,
+          body?.offsetWidth ?? 0,
+          root.offsetWidth,
+          body?.clientWidth ?? 0,
+          root.clientWidth
+        ),
+        height: Math.max(
+          body?.scrollHeight ?? 0,
+          root.scrollHeight,
+          body?.offsetHeight ?? 0,
+          root.offsetHeight,
+          body?.clientHeight ?? 0,
+          root.clientHeight
+        )
+      };
+    });
+  let size = await read();
+  for (let attempt = 0; attempt < SIZE_READS; attempt += 1) {
+    const next = await read();
+    if (next.width === size.width && next.height === size.height) return next;
+    size = next;
+  }
+  return size;
+}
+
+/**
+ * How finely `applyState` searches a hover target's box for a point that is over it, per side.
+ *
+ * THE CENTRE OF THE BOX IS OFTEN NOT ON THE ELEMENT. A donut segment's box is centred in the hole
+ * (financial's "Open Play" band), and a link that wraps onto two lines is centred in the gap
+ * between its line boxes (team-trust's activity rows) -- so a pointer sent to the centre hovers
+ * the background, and the shot filed as that element's hover is a shot of nothing in particular.
+ * Each line box's centre is tried first, then an eight-by-eight grid over the box, in a fixed
+ * order, so the point chosen is the same on every run of the same layout.
+ */
+const HOVER_GRID = 8;
+
+/** Where `applyState` keeps the element it hovered, for the fixed-point check after the settle. */
+const HOVER_TARGET_KEY = '__visual_hover_target__';
+
+/**
  * Put the page into `state`, and say what it was applied to.
  *
- * BOTH TARGETS ARE CONSTRAINED TO THE INITIAL VIEWPORT, and are chosen in document order among
- * elements that are visible and enabled. Playwright's own `focus()`/`hover()` scroll the element
- * into view, which would move a fixed header inside the very screenshot being compared; `hover` is
- * therefore a raw mouse move to the element's centre, and `focus` passes `preventScroll`.
+ * BOTH TARGETS ARE CONSTRAINED TO THE FOLD, the viewport the page was opened at, and are chosen in
+ * document order among elements that are visible and enabled. The page is fitted to the document
+ * by then (`fitToDocument`), so `window.innerHeight` is the whole document and is not the test.
+ * Playwright's own `focus()`/`hover()` scroll the element into view, which would move a fixed
+ * header inside the very screenshot being compared; `hover` is therefore a raw mouse move to the
+ * element's centre, and `focus` passes `preventScroll`.
  *
  * `index` SKIPS THAT MANY ELIGIBLE ELEMENTS FIRST, which is how `hover` becomes one shot per
  * element rather than one per page: `hoverTargetCount` says how many there are and `parity.spec.ts`
@@ -935,17 +1187,31 @@ export async function hoverTargetCount(page: Page, limit: number): Promise<{ sho
  *
  * `none` is a legitimate answer — a page with no button has no hover state — and it is recorded in
  * the manifest rather than hidden, because "the same page offered a different target after the
- * upgrade" is itself a finding. `null` is the other answer and is not legitimate: it means a `ch`
- * on this page does not currently mean what the stylesheet says it means, so there is nothing
- * honest to record. `captureShot` reloads and asks again. See `metrics`.
+ * upgrade" is itself a finding. Two failures can come back instead:
+ *
+ *   - `metrics`: a `ch` on this page does not currently mean what the stylesheet says it means,
+ *     so there is nothing honest to record. `captureShot` reloads and asks again. See `metrics`.
+ *   - `unstable`: the hover is not a FIXED POINT. Once the page has settled, either the target is
+ *     no longer `:hover` or the pointer is no longer over it -- the `hover:` rule moved the element
+ *     out from under the pointer, and the page alternates between the two layouts on every frame
+ *     that re-decides what is under it. Measured on team-hub-tab's phone filter chips, where
+ *     hovering a chip reveals its "only" link, the chip wraps onto the next line, and the pointer
+ *     is left over the row. Both halves of that alternation fail the check, so it is the same
+ *     answer on every run. Retaking cannot repair it and neither can reloading: the state asked for
+ *     does not exist to be shot.
+ *   - `unreachable`: no point of the target inside the fold hits anything at all. A target
+ *     covered by another element is NOT this: a chart's marks sit under one transparent plot-wide
+ *     hit area that picks the mark from the pointer's position, so the pointer goes to the
+ *     target's first point and the fixed-point check is asked of whatever receives it. See
+ *     `HOVER_GRID` for how the point is chosen.
  */
-export async function applyState(page: Page, state: StateName, index = 0): Promise<string | null> {
-  if (state === 'rest') return (await awaitMeasurable(page)) === 'ok' ? 'n/a' : null;
+export async function applyState(page: Page, state: StateName, index = 0): Promise<string | ShotFailure> {
+  if (state === 'rest') return (await awaitMeasurable(page)) === 'ok' ? 'n/a' : 'metrics';
 
   const selector = state === 'focus' ? FOCUS_SELECTOR : HOVER_SELECTOR;
 
   const found = await page.evaluate(
-    ({ selector: sel, wantFocus, skip }) => {
+    ({ selector: sel, wantFocus, skip, fold, key, grid }) => {
       const describe = (element: Element): string => {
         const id = element.id ? `#${element.id}` : '';
         const testId = element.getAttribute('data-testid');
@@ -956,12 +1222,7 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
         if ((element as HTMLInputElement).disabled) continue;
         const rect = element.getBoundingClientRect();
         const onScreen =
-          rect.width > 0 &&
-          rect.height > 0 &&
-          rect.top >= 0 &&
-          rect.left >= 0 &&
-          rect.bottom <= window.innerHeight &&
-          rect.right <= window.innerWidth;
+          rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.left >= 0 && rect.bottom <= fold.height && rect.right <= fold.width;
         if (!onScreen) continue;
         if (skipped < skip) {
           skipped += 1;
@@ -971,17 +1232,66 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
           (element as HTMLElement).focus({ preventScroll: true });
           return { description: describe(element), x: 0, y: 0 };
         }
-        return { description: describe(element), x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        // The first point, in a fixed order, at which the pointer is over this element and not
+        // over something beside or above it: each line box's centre, then a grid over the box.
+        const candidates: [number, number][] = Array.from(element.getClientRects()).map((box) => [
+          box.left + box.width / 2,
+          box.top + box.height / 2
+        ]);
+        for (let column = 1; column < grid; column += 1) {
+          for (let row = 1; row < grid; row += 1) {
+            candidates.push([rect.left + (rect.width * column) / grid, rect.top + (rect.height * row) / grid]);
+          }
+        }
+        const inFold = candidates.filter(([x, y]) => x >= 0 && y >= 0 && x <= fold.width && y <= fold.height);
+        const hits = inFold.flatMap(([x, y]) => {
+          const hit = document.elementFromPoint(x, y);
+          return hit === null ? [] : [{ x, y, hit }];
+        });
+        // Every point covered is not every point unreachable. A chart's marks sit under one
+        // transparent plot-wide hit area that picks the mark from the pointer's position, so what
+        // covers the first point IS the mark's hover, and it is what the fixed-point check asks.
+        const chosen = hits.find((point) => element.contains(point.hit)) ?? hits[0];
+        if (chosen === undefined) return { description: describe(element), x: null, y: null };
+        // A property on the window, not an attribute on the element: nothing a selector, the
+        // structure fingerprint or the style dump reads can see it.
+        (window as unknown as Record<string, unknown>)[key] = element.contains(chosen.hit) ? element : chosen.hit;
+        return { description: describe(element), x: chosen.x, y: chosen.y };
       }
       return null;
     },
-    { selector, wantFocus: state === 'focus', skip: index }
+    { selector, wantFocus: state === 'focus', skip: index, fold: foldOf(page), key: HOVER_TARGET_KEY, grid: HOVER_GRID }
   );
 
   if (found === null) return 'none';
+  if (found.x === null || found.y === null) return 'unreachable';
   if (state === 'hover') await page.mouse.move(found.x, found.y);
   await page.waitForTimeout(SETTLE_MS);
-  return (await awaitMeasurable(page)) === 'ok' ? found.description : null;
+  if ((await awaitMeasurable(page)) !== 'ok') return 'metrics';
+  if (state === 'hover' && !(await hoverHolds(page, { x: found.x, y: found.y }))) return 'unstable';
+  return found.description;
+}
+
+/**
+ * Whether the hovered target is still `:hover` AND still under the pointer. The target here is
+ * what `applyState` held: the element itself, or the element covering it that receives the pointer.
+ *
+ * BOTH, because each half of a self-cancelling hover fails a different one. While the `hover:` rule
+ * is applied the element has moved and the pointer is over something else; once the browser has
+ * noticed, the element is back under the pointer and no longer `:hover`. `elementFromPoint` forces
+ * the layout the hover state implies, so the reading is of the page as it would be rastered.
+ * `contains` rather than equality: the pointer over the icon inside a button is over the button.
+ */
+async function hoverHolds(page: Page, at: { x: number; y: number }): Promise<boolean> {
+  return page.evaluate(
+    ({ x, y, key }) => {
+      const target = (window as unknown as Record<string, unknown>)[key] as Element | undefined;
+      if (target === undefined || !target.isConnected) return false;
+      const hit = document.elementFromPoint(x, y);
+      return target.matches(':hover') && hit !== null && target.contains(hit);
+    },
+    { x: at.x, y: at.y, key: HOVER_TARGET_KEY }
+  );
 }
 
 /** Undo whatever `applyState` did, so the next state starts from rest rather than from the last one. */
@@ -1083,7 +1393,11 @@ export type ShotFailure =
   /** A `ch` on this page does not currently mean what the stylesheet says it means. */
   | 'metrics'
   /** The document changed across its own raster, so the png is not of the state it was asked for. */
-  | 'disturbed';
+  | 'disturbed'
+  /** The hover moves its own target out from under the pointer, so the state is never at rest. */
+  | 'unstable'
+  /** No point of the target inside the fold is under the pointer: something covers all of it. */
+  | 'unreachable';
 
 /**
  * The shot, taken with the page's animations removed and then put back.
@@ -1156,6 +1470,11 @@ export type ShotFailure =
  * MOVED ACROSS ITS OWN RASTER DOES NOT DEPICT THE STATE IT WOULD BE FILED UNDER, whichever half of
  * the raster caught the truth, so it is reported rather than recorded.
  *
+ * `fitToDocument` takes the resize out of the raster, which is what makes this check rare rather
+ * than routine: the shot is of the viewport, which is already the document's measured size. It
+ * stays for what can still move a document across its own raster without a resize -- a timer, a
+ * late stylesheet, a node the app mounts on its own schedule.
+ *
  * The two failures are told apart because their repairs are opposites. `metrics` needs a FRESH
  * DOCUMENT -- a `ch` is resolved at layout and kept, so nothing short of reloading clears it.
  * `disturbed` needs the STATE PUT BACK on the document that is already there, and a reload is the
@@ -1183,7 +1502,10 @@ export async function screenshotFrozen(page: Page): Promise<Buffer | ShotFailure
     // between: `freshCh` and `chWidth` each plant a probe element and take it away again, so a
     // reading taken across one of them would be comparing the document with the harness in it.
     const beforeStructure = await structure(page);
-    const png = await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide', scale: 'css', type: 'png' });
+    // The VIEWPORT, which `fitToDocument` has made the document's measured size: a full-page
+    // shot would resize for the raster wherever the document has outgrown that, and that resize is
+    // what took the state away.
+    const png = await page.screenshot({ fullPage: false, animations: 'disabled', caret: 'hide', scale: 'css', type: 'png' });
     if ((await structure(page)) !== beforeStructure) return 'disturbed';
     if ((await awaitMeasurable(page)) !== 'ok') return 'metrics';
     if (Math.abs((await chWidth(page)) - beforeCh) > 0.5) return 'metrics';
@@ -1244,6 +1566,9 @@ export interface Shot {
  * page's own eligible elements rather than a coordinate, so the reloaded document resolves it to
  * the same element without anything having to be re-measured across the reload.
  *
+ * AN `unstable` OR `unreachable` HOVER IS RETURNED AT ONCE. It is a property of the page, not of the attempt, so
+ * neither a retake nor a reload can produce a shot of it. See `applyState`.
+ *
  * A SHOT DISTURBED BY ITS OWN RASTER IS RETAKEN ON THIS DOCUMENT, and the inner loop is that. The
  * repair is not a reload -- the document is fine, it is the STATE that the screenshot's viewport
  * transient took away -- so `clearState` puts the pointer back off-target and `applyState` opens
@@ -1262,11 +1587,15 @@ export async function captureShot(page: Page, state: StateName, index = 0): Prom
       if (attempt > 0 && !(await reload(page))) return last;
       for (let retake = 0; retake < RETAKES; retake += 1) {
         if (retake > 0) await clearState(page);
+        // At rest, so the resize has no state to destroy. See `fitToDocument`.
+        await fitToDocument(page);
         const target = await applyState(page, state, index);
-        if (target === null) {
+        if (target === 'metrics') {
           last = 'metrics';
           break;
         }
+        // The same answer however often it is asked, so it is returned rather than retaken.
+        if (target === 'unstable' || target === 'unreachable') return target;
         const shot = await screenshotFrozen(page);
         if (typeof shot !== 'string') return { target, png: shot };
         last = shot;

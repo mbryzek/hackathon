@@ -32,7 +32,14 @@ interface Journal {
   statesApplied: number;
   reloads: number;
   clears: number;
+  /** Every viewport the page was given, in order, and what had happened by then. */
+  resizes: { width: number; height: number; screenshotsBefore: number; statesBefore: number }[];
+  /** The fold each target search was told to choose above. */
+  folds: { width: number; height: number }[];
 }
+
+/** The viewport every stub page is opened at, which is the fold its targets are chosen above. */
+const FOLD = { width: 1280, height: 720 };
 
 /**
  * Whether the page's pointer events were sealed at each moment that matters, so a test can say the
@@ -77,12 +84,13 @@ interface Interrupt {
  */
 function stubPage(
   structures: readonly number[],
-  options: { chWidth?: () => number; interrupt?: Interrupt } = {}
+  options: { chWidth?: () => number; interrupt?: Interrupt; hoverHolds?: boolean; faceFailed?: boolean; unreachable?: boolean } = {}
 ): { page: Page; journal: Journal; seal: PointerSeal } {
-  const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0 };
+  const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0, resizes: [], folds: [] };
   const seal: PointerSeal = { atScreenshot: [], atPointerMove: [], sealed: false };
   let structureReads = 0;
   let url = SETTLED_URL;
+  let viewport = { ...FOLD };
   const chWidth = options.chWidth ?? ((): number => 56);
 
   const evaluate = async (fn: unknown, arg?: unknown): Promise<unknown> => {
@@ -100,13 +108,16 @@ function stubPage(
       return undefined;
     }
     if (source.includes('scrollWidth')) return { width: 1280, height: 4096 };
+    if (source.includes('face.status')) return options.faceFailed ?? false;
     // The stylesheet-order read: a page with no dev-server stylesheets, so nothing is moved.
     if (source.includes('data-vite-dev-id')) return [];
     // The order matters: several of these read a box, and only one of them is the target finder.
     if (source.includes('wantFocus')) {
       journal.statesApplied += 1;
-      return { description: 'rect', x: 10, y: 20 };
+      journal.folds.push((arg as { fold: { width: number; height: number } }).fold);
+      return options.unreachable === true ? { description: 'rect', x: null, y: null } : { description: 'rect', x: 10, y: 20 };
     }
+    if (source.includes('elementFromPoint')) return options.hoverHolds ?? true;
     if (source.includes('cssText')) return { width: chWidth(), em: 1 };
     if (source.includes('getElementById') && source.includes('getComputedStyle')) return { width: chWidth(), em: 1 };
     if (source.includes('tagName')) {
@@ -130,7 +141,13 @@ function stubPage(
     },
     waitForTimeout: async (): Promise<void> => undefined,
     waitForLoadState: async (): Promise<void> => undefined,
+    waitForFunction: async (): Promise<void> => undefined,
     url: (): string => url,
+    viewportSize: (): { width: number; height: number } => viewport,
+    setViewportSize: async (size: { width: number; height: number }): Promise<void> => {
+      viewport = { ...size };
+      journal.resizes.push({ ...size, screenshotsBefore: journal.screenshots, statesBefore: journal.statesApplied });
+    },
     reload: async (): Promise<void> => {
       journal.reloads += 1;
     },
@@ -147,7 +164,90 @@ describe('captureShot', () => {
   it('takes one screenshot when the document does not move across the raster', async () => {
     const { page, journal } = stubPage([1, 1]);
     expect(taken(await captureShot(page, 'hover', 3)).target).toBe('rect');
-    expect(journal).toEqual({ screenshots: 1, statesApplied: 1, reloads: 0, clears: 0 });
+    expect(journal).toMatchObject({ screenshots: 1, statesApplied: 1, reloads: 0, clears: 0 });
+  });
+
+  /**
+   * THE RESIZE COMES BEFORE THE STATE. A full-page screenshot of a document taller than the
+   * viewport re-lays the page out at the document's size for the raster, and every one of those
+   * layouts re-decides what is under the pointer -- so a hover applied first is lost to the shot.
+   * Giving the page its document's size while it is at rest is what leaves the raster nothing to
+   * resize.
+   */
+  it('gives the page its document size before the state is applied, so the raster has nothing to resize', async () => {
+    const { page, journal } = stubPage([1, 1]);
+    taken(await captureShot(page, 'hover', 3));
+    // The stub's document is 1280x4096 against a 1280x720 fold.
+    expect(journal.resizes).toContainEqual({ width: 1280, height: 4096, screenshotsBefore: 0, statesBefore: 0 });
+    expect(page.viewportSize()).toEqual({ width: 1280, height: 4096 });
+  });
+
+  /**
+   * A DOCUMENT SHRUNK BACK TO THE FOLD DOES NOT ANSWER HONESTLY FOR SEVERAL FRAMES -- an element laid
+   * out against `100dvh` keeps the old height -- so the size is read once, on a page that has never
+   * been resized, and every later shot of that page is taken at it.
+   */
+  it('measures the document once, at the fold, and does not shrink the page back for the next shot', async () => {
+    const { page, journal } = stubPage([1, 1, 1, 1]);
+    taken(await captureShot(page, 'rest'));
+    taken(await captureShot(page, 'hover', 2));
+    expect(journal.resizes.map(({ width, height }) => ({ width, height }))).toEqual([{ width: 1280, height: 4096 }]);
+  });
+
+  /**
+   * AND THE TARGET IS STILL CHOSEN ABOVE THE FOLD the page was opened at. Once the viewport is the
+   * whole document, `window.innerHeight` is the whole document too, and testing against it would
+   * put the pointer on elements a visitor has to scroll to.
+   */
+  it('chooses the target above the fold the page was opened at, not the fitted viewport', async () => {
+    const { page, journal } = stubPage([1, 1, 1, 1]);
+    taken(await captureShot(page, 'hover', 3));
+    taken(await captureShot(page, 'hover', 4));
+    expect(journal.folds).toEqual([FOLD, FOLD]);
+  });
+
+  /**
+   * A HOVER THAT IS NOT A FIXED POINT IS AN ANSWER, NOT A FAILURE TO RETRY. A `hover:` rule that
+   * moves its own target out from under the pointer alternates between two layouts for as long as
+   * the pointer stays there, and which one a raster catches is timing. Neither a retake nor a
+   * reload changes that, so neither may be spent on it, and nothing may be shot.
+   */
+  it('reports a hover that moves its target out from under the pointer as unstable, without shooting it', async () => {
+    const { page, journal } = stubPage([1, 1], { hoverHolds: false });
+    expect(await captureShot(page, 'hover', 3)).toBe('unstable');
+    expect(journal.screenshots).toBe(0);
+    expect(journal.reloads).toBe(0);
+    expect(journal.statesApplied).toBe(1);
+  });
+
+  /**
+   * A WEBFONT THAT FAILED TO ARRIVE IS NOT A MOMENTARY GAP. The document does not fetch the face
+   * again and lays the text out on the fallback, whose `0` glyph the `ch` probe measures as happily
+   * as the real one's -- so the only repair is a fresh document, and the shot must never be taken
+   * on the fallback in the meantime.
+   */
+  it('reloads rather than shooting a document whose webfont failed to load', async () => {
+    const { page, journal } = stubPage([1, 1, 1, 1, 1, 1], { faceFailed: true });
+    expect(await captureShot(page, 'rest')).toBe('metrics');
+    expect(journal.screenshots).toBe(0);
+    expect(journal.reloads).toBeGreaterThanOrEqual(2);
+  });
+
+  /**
+   * A TARGET NO POINT OF WHICH INSIDE THE FOLD HITS ANYTHING HAS NO HOVER STATE TO SHOOT. A target
+   * merely covered is not this: the finder hovers whatever covers it, as a chart's plot-wide hit
+   * area is its marks' hover.
+   */
+  it('reports a target with no point inside the fold as unreachable, without shooting it', async () => {
+    const { page, journal } = stubPage([1, 1], { unreachable: true });
+    expect(await captureShot(page, 'hover', 3)).toBe('unreachable');
+    expect(journal.screenshots).toBe(0);
+    expect(journal.reloads).toBe(0);
+  });
+
+  it('does not ask a focus state whether the pointer holds it', async () => {
+    const { page } = stubPage([1, 1], { hoverHolds: false });
+    expect(taken(await captureShot(page, 'focus', 0)).target).toBe('rect');
   });
 
   /**
