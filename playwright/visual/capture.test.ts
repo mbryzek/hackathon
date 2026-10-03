@@ -1,7 +1,15 @@
 // dry-copy: visual-parity/capture-test — every copy of this region must match; `dev repo copies` checks it
 import type { Page } from '@playwright/test';
 import { describe, expect, it } from 'vitest';
-import { canonicalStyleOrder, captureShot, documentSize, NavigatedAway, refuseIfNavigated, type Shot } from './capture.ts';
+import {
+  canonicalStyleOrder,
+  captureShot,
+  documentSize,
+  HOVER_HOLD_FRAMES,
+  NavigatedAway,
+  refuseIfNavigated,
+  type Shot
+} from './capture.ts';
 
 /*
  * WHAT A SHOT DOES WHEN THE PAGE MOVES UNDER IT (ISS-9986).
@@ -32,6 +40,8 @@ interface Journal {
   statesApplied: number;
   reloads: number;
   clears: number;
+  /** How many frames the hover fixed-point check read. */
+  hoverReads: number;
   /** Every viewport the page was given, in order, and what had happened by then. */
   resizes: { width: number; height: number; screenshotsBefore: number; statesBefore: number }[];
   /** The fold each target search was told to choose above. */
@@ -84,9 +94,17 @@ interface Interrupt {
  */
 function stubPage(
   structures: readonly number[],
-  options: { chWidth?: () => number; interrupt?: Interrupt; hoverHolds?: boolean; faceFailed?: boolean; unreachable?: boolean } = {}
+  options: {
+    chWidth?: () => number;
+    interrupt?: Interrupt;
+    hoverHolds?: boolean | readonly boolean[];
+    faceFailed?: boolean;
+    unreachable?: boolean;
+  } = {}
 ): { page: Page; journal: Journal; seal: PointerSeal } {
-  const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0, resizes: [], folds: [] };
+  const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0, hoverReads: 0, resizes: [], folds: [] };
+  // One answer per frame the fixed-point check reads, the last one repeating.
+  const hoverAnswers = typeof options.hoverHolds === 'boolean' ? [options.hoverHolds] : (options.hoverHolds ?? [true]);
   const seal: PointerSeal = { atScreenshot: [], atPointerMove: [], sealed: false };
   let structureReads = 0;
   let url = SETTLED_URL;
@@ -117,7 +135,11 @@ function stubPage(
       journal.folds.push((arg as { fold: { width: number; height: number } }).fold);
       return options.unreachable === true ? { description: 'rect', x: null, y: null } : { description: 'rect', x: 10, y: 20 };
     }
-    if (source.includes('elementFromPoint')) return options.hoverHolds ?? true;
+    if (source.includes('elementFromPoint')) {
+      const answer = hoverAnswers[Math.min(journal.hoverReads, hoverAnswers.length - 1)];
+      journal.hoverReads += 1;
+      return answer;
+    }
     if (source.includes('cssText')) return { width: chWidth(), em: 1 };
     if (source.includes('getElementById') && source.includes('getComputedStyle')) return { width: chWidth(), em: 1 };
     if (source.includes('tagName')) {
@@ -218,6 +240,19 @@ describe('captureShot', () => {
     expect(journal.screenshots).toBe(0);
     expect(journal.reloads).toBe(0);
     expect(journal.statesApplied).toBe(1);
+    expect(journal.hoverReads).toBe(HOVER_HOLD_FRAMES);
+  });
+
+  /**
+   * ONE READ IS A RACE, NOT A VERDICT. Under load the first read after the settle can land before
+   * the browser has re-resolved hover state, so a hover that IS a fixed point reads as broken once
+   * (ISS-15877). Only a check that fails on every frame it is read is a hover that cancels itself.
+   */
+  it('shoots a hover whose fixed-point check fails on its first frames and then holds', async () => {
+    const { page, journal } = stubPage([1, 1], { hoverHolds: [false, false, true] });
+    expect(taken(await captureShot(page, 'hover', 3)).target).toBe('rect');
+    expect(journal.hoverReads).toBe(3);
+    expect(journal.screenshots).toBe(1);
   });
 
   /**

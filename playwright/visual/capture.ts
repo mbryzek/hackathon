@@ -1196,8 +1196,8 @@ const HOVER_TARGET_KEY = '__visual_hover_target__';
  *     out from under the pointer, and the page alternates between the two layouts on every frame
  *     that re-decides what is under it. Measured on team-hub-tab's phone filter chips, where
  *     hovering a chip reveals its "only" link, the chip wraps onto the next line, and the pointer
- *     is left over the row. Both halves of that alternation fail the check, so it is the same
- *     answer on every run. Retaking cannot repair it and neither can reloading: the state asked for
+ *     is left over the row. Both halves of that alternation fail the check, on every frame it
+ *     is read, so it is the same answer on every run. Retaking cannot repair it and neither can reloading: the state asked for
  *     does not exist to be shot.
  *   - `unreachable`: no point of the target inside the fold hits anything at all. A target
  *     covered by another element is NOT this: a chart's marks sit under one transparent plot-wide
@@ -1273,25 +1273,47 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
 }
 
 /**
- * Whether the hovered target is still `:hover` AND still under the pointer. The target here is
- * what `applyState` held: the element itself, or the element covering it that receives the pointer.
+ * How many animation frames `hoverHolds` reads before it calls a hover unstable.
+ *
+ * ONE READ IS A RACE, NOT A VERDICT. Under load the read can land before Chromium has re-resolved
+ * hover state for the layout the page has settled into, so a target that IS a fixed point reads as
+ * not `:hover` once and is recorded unstable -- measured on rallyd's A/A, where the same header link
+ * was unstable in one capture and shot in the other (ISS-15877). A hover that genuinely cancels
+ * itself alternates between two layouts that each fail the check, so it fails on EVERY frame, and
+ * reading it this many times costs that case nothing but the frames.
+ */
+export const HOVER_HOLD_FRAMES = 12;
+
+/**
+ * Whether the hovered target is still `:hover` AND still under the pointer on any of the next
+ * `HOVER_HOLD_FRAMES` animation frames. The target here is what `applyState` held: the element
+ * itself, or the element covering it that receives the pointer.
  *
  * BOTH, because each half of a self-cancelling hover fails a different one. While the `hover:` rule
  * is applied the element has moved and the pointer is over something else; once the browser has
  * noticed, the element is back under the pointer and no longer `:hover`. `elementFromPoint` forces
  * the layout the hover state implies, so the reading is of the page as it would be rastered.
  * `contains` rather than equality: the pointer over the icon inside a button is over the button.
+ *
+ * ONE FRAME PER READ, each read its own `evaluate` after its own `requestAnimationFrame`, so a
+ * frame on which the page re-decides what is under the pointer lands between two reads rather than
+ * inside one.
  */
 async function hoverHolds(page: Page, at: { x: number; y: number }): Promise<boolean> {
-  return page.evaluate(
-    ({ x, y, key }) => {
-      const target = (window as unknown as Record<string, unknown>)[key] as Element | undefined;
-      if (target === undefined || !target.isConnected) return false;
-      const hit = document.elementFromPoint(x, y);
-      return target.matches(':hover') && hit !== null && target.contains(hit);
-    },
-    { x: at.x, y: at.y, key: HOVER_TARGET_KEY }
-  );
+  for (let frame = 0; frame < HOVER_HOLD_FRAMES; frame += 1) {
+    const holds = await page.evaluate(
+      async ({ x, y, key }) => {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        const target = (window as unknown as Record<string, unknown>)[key] as Element | undefined;
+        if (target === undefined || !target.isConnected) return false;
+        const hit = document.elementFromPoint(x, y);
+        return target.matches(':hover') && hit !== null && target.contains(hit);
+      },
+      { x: at.x, y: at.y, key: HOVER_TARGET_KEY }
+    );
+    if (holds) return true;
+  }
+  return false;
 }
 
 /** Undo whatever `applyState` did, so the next state starts from rest rather than from the last one. */
