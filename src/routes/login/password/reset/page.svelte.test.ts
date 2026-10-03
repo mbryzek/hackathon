@@ -38,6 +38,7 @@ describe('the forgot-password page', () => {
     const target = render({ error: null, email: 'admin@example.com', sent: true } as ActionData);
 
     expect(target.querySelector('form')).toBeNull();
+    expect(target.querySelector('[role="status"]')?.textContent).toContain('a link to reset the password is on its way');
   });
 
   it('keeps the address and shows the message when the request was refused', async () => {
@@ -47,9 +48,13 @@ describe('the forgot-password page', () => {
     expect(target.querySelector<HTMLInputElement>('input[name="email"]')?.value).toBe('oops');
   });
 
-  it('offers a way back to sign in', async () => {
-    const hrefs = [...render(null).querySelectorAll('a')].map((a) => a.getAttribute('href'));
+  it.each([
+    ['before', null],
+    ['after', { error: null, email: 'admin@example.com', sent: true } as ActionData]
+  ])('offers the same way back to sign in %s the request', async (_when, form) => {
+    const back = [...render(form).querySelectorAll('a')].filter((a) => a.getAttribute('href') === urls.voteAdminLogin);
 
-    expect(hrefs).toContain(urls.voteAdminLogin);
+    expect(back.length).toBe(1);
+    expect(back[0]?.className).toContain('underline');
   });
 });
