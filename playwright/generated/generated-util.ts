@@ -338,3 +338,35 @@ export async function handleApiCallWithTimeout<T>(
     clearTimeout(timer);
   }
 }
+
+// ============================================================================
+// Request headers
+// ============================================================================
+
+export interface RequestHeaderOptions {
+  /** True in production, where no bypass header is ever sent. */
+  isProduction: boolean;
+  /**
+   * Further headers sent only off production, beside `X-Bypass-Rate-Limit` - an app
+   * whose Playwright runs also trip the dev-only N+1 detector passes
+   * `{ 'X-Bypass-N1-Detection': 'true' }`.
+   */
+  extraBypassHeaders?: Record<string, string>;
+}
+
+/** The headers that exempt a request from rate limiting off production, and nothing in production. */
+export function rateLimitBypassHeaders(options: RequestHeaderOptions): Record<string, string> {
+  if (options.isProduction) {
+    return {};
+  }
+  return { 'X-Bypass-Rate-Limit': 'true', ...options.extraBypassHeaders };
+}
+
+/** The headers that authenticate a call as the signed-in user, plus the bypass headers. */
+export function sessionHeaders(sessionId: string | undefined, options: RequestHeaderOptions): Record<string, string> {
+  const bypass = rateLimitBypassHeaders(options);
+  if (!sessionId) {
+    return bypass;
+  }
+  return { ...bypass, session_id: sessionId };
+}
