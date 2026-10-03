@@ -1043,6 +1043,7 @@ async function quietOnce(page: Page, timeoutMs: number): Promise<number | null> 
   let document = documentOf(page);
   for (let attempt = 0; ; attempt += 1) {
     await page.waitForLoadState('networkidle', { timeout: timeoutMs });
+    await hydrated(page, timeoutMs);
     await loadDeclaredFaces(page);
     await page.waitForLoadState('networkidle', { timeout: timeoutMs });
     if ((await awaitMeasurable(page)) !== 'stale') break;
@@ -1065,6 +1066,27 @@ async function quietOnce(page: Page, timeoutMs: number): Promise<number | null> 
     await loadDeclaredFaces(page);
   }
   return document;
+}
+
+/**
+ * The element SvelteKit's root component mounts in its own `onMount`, so its presence says the
+ * document has hydrated. Every repo this harness is copied into is a SvelteKit app and none turns
+ * client-side rendering off, so every page it captures mounts one.
+ */
+const HYDRATED_MARKER_ID = 'svelte-announcer';
+
+/**
+ * Wait until SvelteKit has hydrated the document.
+ *
+ * `networkidle` IS NOT HYDRATION. It says the module graph has finished FETCHING; evaluating it
+ * and mounting the root come after, on the main thread, and a document can be shot in between as
+ * the server rendered it. Measured on rallyd's A/A (ISS-15877): a page the dev server reloaded under
+ * the capture was shot with the footer's year from the server's clock rather than the pinned one,
+ * and no `#svelte-announcer`, while every other shot of the same page carried both. A page that
+ * never hydrates times out here, and `settle` records it as a page that did not settle.
+ */
+async function hydrated(page: Page, timeoutMs: number): Promise<void> {
+  await page.waitForFunction((id) => document.getElementById(id) !== null, HYDRATED_MARKER_ID, { timeout: timeoutMs });
 }
 
 /**
@@ -1401,8 +1423,8 @@ export const KEYBOARD_MODALITY_KEY = 'Shift';
  *     out from under the pointer, and the page alternates between the two layouts on every frame
  *     that re-decides what is under it. Measured on team-hub-tab's phone filter chips, where
  *     hovering a chip reveals its "only" link, the chip wraps onto the next line, and the pointer
- *     is left over the row. Both halves of that alternation fail the check, so it is the same
- *     answer on every run. Retaking cannot repair it and neither can reloading: the state asked for
+ *     is left over the row. Both halves of that alternation fail the check, on every frame it
+ *     is read, so it is the same answer on every run. Retaking cannot repair it and neither can reloading: the state asked for
  *     does not exist to be shot.
  *   - `disturbed`: the target took focus without matching `:focus-visible`, so the shot would be of
  *     a focus with no ring. `captureShot` retakes it, as it does a shot its own raster disturbed.
@@ -1480,30 +1502,67 @@ export async function applyState(page: Page, state: StateName, index = 0): Promi
   if (state === 'hover') await page.mouse.move(found.x, found.y);
   await page.waitForTimeout(SETTLE_MS);
   if ((await awaitMeasurable(page)) !== 'ok') return 'metrics';
-  if (state === 'hover' && !(await hoverHolds(page, { x: found.x, y: found.y }))) return 'unstable';
+  if (state === 'hover' && !(await hoverHolds(page, { x: found.x, y: found.y }, found.description))) return 'unstable';
   return found.description;
 }
 
 /**
- * Whether the hovered target is still `:hover` AND still under the pointer. The target here is
- * what `applyState` held: the element itself, or the element covering it that receives the pointer.
+ * How many animation frames `hoverHolds` reads before it calls a hover unstable.
+ *
+ * ONE READ IS A SAMPLE, NOT A VERDICT. Anything still settling when it is taken -- hover state
+ * Chromium has not re-resolved yet, a document finishing its hydration -- reads a target that IS a
+ * fixed point as broken once, and a single read records it unstable (ISS-15877). A hover that
+ * genuinely cancels itself alternates between two layouts that each fail the check, so it fails on
+ * EVERY frame, and reading it this many times costs that case nothing but the frames.
+ */
+export const HOVER_HOLD_FRAMES = 12;
+
+/**
+ * Whether the hovered target is still `:hover` AND still under the pointer on any of the next
+ * `HOVER_HOLD_FRAMES` animation frames. The target here is what `applyState` held: the element
+ * itself, or the element covering it that receives the pointer.
  *
  * BOTH, because each half of a self-cancelling hover fails a different one. While the `hover:` rule
  * is applied the element has moved and the pointer is over something else; once the browser has
  * noticed, the element is back under the pointer and no longer `:hover`. `elementFromPoint` forces
  * the layout the hover state implies, so the reading is of the page as it would be rastered.
  * `contains` rather than equality: the pointer over the icon inside a button is over the button.
+ *
+ * ONE FRAME PER READ, each read its own `evaluate` after its own `requestAnimationFrame`, so a
+ * frame on which the page re-decides what is under the pointer lands between two reads rather than
+ * inside one.
+ *
+ * EACH FAILED READ SAYS WHICH HALF FAILED, and a hover recorded unstable logs every distinct reason.
+ * The manifest records only the verdict, and a verdict that differs between two captures of one
+ * server is a harness defect that cannot be chased without knowing what the page looked like.
  */
-async function hoverHolds(page: Page, at: { x: number; y: number }): Promise<boolean> {
-  return page.evaluate(
-    ({ x, y, key }) => {
-      const target = (window as unknown as Record<string, unknown>)[key] as Element | undefined;
-      if (target === undefined || !target.isConnected) return false;
-      const hit = document.elementFromPoint(x, y);
-      return target.matches(':hover') && hit !== null && target.contains(hit);
-    },
-    { x: at.x, y: at.y, key: HOVER_TARGET_KEY }
-  );
+async function hoverHolds(page: Page, at: { x: number; y: number }, description: string): Promise<boolean> {
+  const reasons = new Set<string>();
+  for (let frame = 0; frame < HOVER_HOLD_FRAMES; frame += 1) {
+    const reason = await page.evaluate(
+      async ({ x, y, key }) => {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        const describe = (element: Element | null | undefined): string => {
+          if (element === null || element === undefined) return 'nothing';
+          const id = element.id ? `#${element.id}` : '';
+          return `${element.tagName.toLowerCase()}${id}`;
+        };
+        const target = (window as unknown as Record<string, unknown>)[key] as Element | undefined;
+        if (target === undefined || !target.isConnected) return 'the target is no longer in the document';
+        const hit = document.elementFromPoint(x, y);
+        const holdsHover = target.matches(':hover');
+        const underPointer = hit !== null && target.contains(hit);
+        if (holdsHover && underPointer) return null;
+        const hovered = Array.from(document.querySelectorAll(':hover')).at(-1);
+        return `${holdsHover ? '' : 'not :hover (hovering ' + describe(hovered) + '); '}${underPointer ? '' : 'pointer over ' + describe(hit)}`;
+      },
+      { x: at.x, y: at.y, key: HOVER_TARGET_KEY }
+    );
+    if (reason === null) return true;
+    reasons.add(reason);
+  }
+  console.warn(`visual: ${page.url()} hover on ${description} at (${at.x}, ${at.y}) never held: ${Array.from(reasons).join(' | ')}`);
+  return false;
 }
 
 /** Undo whatever `applyState` did, so the next state starts from rest rather than from the last one. */
@@ -1816,8 +1875,13 @@ export async function captureShot(page: Page, state: StateName, index = 0): Prom
           last = 'metrics';
           break;
         }
-        // The same answer however often it is asked, so it is returned rather than retaken.
-        if (target === 'unstable' || target === 'unreachable') return target;
+        // The same answer however often it is asked, so it is returned rather than retaken -- unless
+        // the document was replaced while it was asked, when it is an answer about no document this
+        // page shows: a hover read across a dev server's reload finds its target gone (ISS-15877).
+        if (target === 'unstable' || target === 'unreachable') {
+          refuseIfReplaced(page);
+          return target;
+        }
         // A focus without its ring is re-applied to this document, as a disturbed raster is.
         if (target === 'disturbed') {
           last = 'disturbed';

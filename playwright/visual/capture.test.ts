@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canonicalStyleOrder,
   captureShot,
+  HOVER_HOLD_FRAMES,
   KEYBOARD_MODALITY_KEY,
   type FetchedImage,
   hasUnmeasuredImage,
@@ -44,6 +45,10 @@ interface Journal {
   statesApplied: number;
   reloads: number;
   clears: number;
+  /** How many frames the hover fixed-point check read. */
+  hoverReads: number;
+  /** Every reload, hydration wait and screenshot, in order. */
+  events: ('reload' | 'hydrated' | 'screenshot')[];
   /** Every viewport the page was given, in order, and what had happened by then. */
   resizes: { width: number; height: number; screenshotsBefore: number; statesBefore: number }[];
   /** The fold each target search was told to choose above. */
@@ -115,7 +120,7 @@ function stubPage(
   options: {
     chWidth?: () => number;
     interrupt?: Interrupt;
-    hoverHolds?: boolean;
+    hoverHolds?: boolean | readonly boolean[];
     faceFailed?: boolean;
     unreachable?: boolean;
     /** Whether the n-th focus comes back matching `:focus-visible`; every one does by default. */
@@ -128,7 +133,19 @@ function stubPage(
     onWait?: (wait: number) => void;
   } = {}
 ): { page: Page; journal: Journal; seal: PointerSeal; newDocument: () => void } {
-  const journal: Journal = { screenshots: 0, statesApplied: 0, reloads: 0, clears: 0, resizes: [], folds: [], keys: [] };
+  const journal: Journal = {
+    screenshots: 0,
+    statesApplied: 0,
+    reloads: 0,
+    clears: 0,
+    hoverReads: 0,
+    events: [],
+    resizes: [],
+    folds: [],
+    keys: []
+  };
+  // One answer per frame the fixed-point check reads, the last one repeating.
+  const hoverAnswers = typeof options.hoverHolds === 'boolean' ? [options.hoverHolds] : (options.hoverHolds ?? [true]);
   const seal: PointerSeal = { atScreenshot: [], atPointerMove: [], sealed: false };
   let structureReads = 0;
   let waits = 0;
@@ -168,7 +185,12 @@ function stubPage(
       if (options.unreachable === true) return { description: 'rect', x: null, y: null };
       return { description: 'rect', x: 10, y: 20, ring: options.ring?.(journal.statesApplied) ?? true };
     }
-    if (source.includes('elementFromPoint')) return options.hoverHolds ?? true;
+    if (source.includes('elementFromPoint')) {
+      const holds = hoverAnswers[Math.min(journal.hoverReads, hoverAnswers.length - 1)];
+      journal.hoverReads += 1;
+      // The check answers why it failed, or nothing when it held.
+      return holds === true ? null : 'not :hover';
+    }
     if (source.includes('cssText')) return { width: chWidth(), em: 1 };
     if (source.includes('getElementById') && source.includes('getComputedStyle')) return { width: chWidth(), em: 1 };
     if (source.includes('tagName')) {
@@ -200,7 +222,9 @@ function stubPage(
       waits += 1;
     },
     waitForLoadState: async (): Promise<void> => undefined,
-    waitForFunction: async (): Promise<void> => undefined,
+    waitForFunction: async (fn: unknown): Promise<void> => {
+      if (String(fn).includes('getElementById')) journal.events.push('hydrated');
+    },
     url: (): string => url,
     mainFrame: (): object => mainFrame,
     on: (event: string, listener: (request: Request) => void): void => {
@@ -216,11 +240,13 @@ function stubPage(
     },
     reload: async (): Promise<void> => {
       journal.reloads += 1;
+      journal.events.push('reload');
       newDocument();
       options.onReload?.(page as unknown as Page);
     },
     screenshot: async (): Promise<Buffer> => {
       journal.screenshots += 1;
+      journal.events.push('screenshot');
       seal.atScreenshot.push(seal.sealed);
       return pngOf(options.rasters?.[journal.screenshots - 1] ?? viewport);
     }
@@ -286,6 +312,19 @@ describe('captureShot', () => {
     expect(journal.screenshots).toBe(0);
     expect(journal.reloads).toBe(0);
     expect(journal.statesApplied).toBe(1);
+    expect(journal.hoverReads).toBe(HOVER_HOLD_FRAMES);
+  });
+
+  /**
+   * ONE READ IS A RACE, NOT A VERDICT. Under load the first read after the settle can land before
+   * the browser has re-resolved hover state, so a hover that IS a fixed point reads as broken once
+   * (ISS-15877). Only a check that fails on every frame it is read is a hover that cancels itself.
+   */
+  it('shoots a hover whose fixed-point check fails on its first frames and then holds', async () => {
+    const { page, journal } = stubPage([1, 1], { hoverHolds: [false, false, true] });
+    expect(taken(await captureShot(page, 'hover', 3)).target).toBe('rect');
+    expect(journal.hoverReads).toBe(3);
+    expect(journal.screenshots).toBe(1);
   });
 
   /**
@@ -402,6 +441,20 @@ describe('captureShot', () => {
     expect(journal.reloads).toBe(2);
     expect(journal.screenshots).toBe(journal.statesApplied);
     expect(journal.screenshots).toBeGreaterThan(3);
+  });
+
+  /**
+   * A RELOADED DOCUMENT IS SHOT HYDRATED OR NOT AT ALL. `networkidle` says the modules arrived, not
+   * that the root has mounted, and under load a reloaded document was shot as the server rendered it
+   * (ISS-15877).
+   */
+  it('waits for every reloaded document to hydrate before shooting it', async () => {
+    const { page, journal } = stubPage([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]);
+    await captureShot(page, 'hover', 3);
+    expect(journal.reloads).toBe(2);
+    journal.events.forEach((event, at) => {
+      if (event === 'reload') expect(journal.events[at + 1]).toBe('hydrated');
+    });
   });
 
   /**
@@ -552,6 +605,15 @@ describe('a page whose document is replaced at the same url', () => {
     expect(await settle(page, SETTLED_URL)).toBe(true);
     newDocument();
     await expect(captureShot(page, 'rest')).rejects.toBeInstanceOf(NavigatedAway);
+  });
+
+  /** A hover read across a reload finds its target gone, which says nothing about the hover. */
+  it('refuses an unstable hover read off a document replaced while it was read', async () => {
+    const { page, newDocument } = stubPage([1, 1], { hoverHolds: false });
+    expect(await settle(page, SETTLED_URL)).toBe(true);
+    const read = captureShot(page, 'hover', 3);
+    newDocument();
+    await expect(read).rejects.toBeInstanceOf(NavigatedAway);
   });
 
   it('settles the replacement when the replacement arrives during the settle', async () => {
