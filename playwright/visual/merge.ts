@@ -72,6 +72,7 @@ export default async function globalTeardown(): Promise<void> {
     hoverLimit: plan.hoverLimit,
     uncovered,
     dropped,
+    selection: plan.selection,
     entries: Object.fromEntries(Object.entries(entries).sort(([a], [b]) => a.localeCompare(b)))
   };
   writeFile(paths.manifest(plan.out), JSON.stringify(manifest, null, 2));
@@ -82,6 +83,8 @@ export default async function globalTeardown(): Promise<void> {
   );
   if (manifest.uncovered.length > 0)
     console.log(`visual: ${manifest.uncovered.length} uncovered route(s)/page(s) recorded in the manifest`);
+  if (plan.selection)
+    console.log(`visual: a VISUAL_PAGES subset (${plan.selection.pattern}); the pages it left out are uncovered, not dropped`);
 
   /*
    * THE COUNT ABOVE CANNOT SAY THIS, and that is why the line below is separate and why it throws.
