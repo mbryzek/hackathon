@@ -223,6 +223,26 @@ const CH_PROBE_ID = '__visual_ch_probe__';
 /** Off-flow, zero-height and unpainted, so a box that stays in the document is in no screenshot. */
 const CH_PROBE_STYLE = 'position:absolute;top:-9999px;left:-9999px;width:100ch;height:0;visibility:hidden;pointer-events:none';
 
+/**
+ * The window property that, while `true`, keeps every pointer event away from the page. Set and
+ * cleared by `screenshotFrozen`; the listener that reads it is installed by `DETERMINISM_INIT`.
+ */
+const POINTER_SEAL = '__visual_pointer_sealed__';
+
+/** What Chromium dispatches at a pointer whose page moved under it, without the pointer moving. */
+const SEALED_POINTER_EVENTS = [
+  'pointerover',
+  'pointerenter',
+  'pointerout',
+  'pointerleave',
+  'pointermove',
+  'mouseover',
+  'mouseenter',
+  'mouseout',
+  'mouseleave',
+  'mousemove'
+];
+
 /** Applied identically to both sides. See the class comment for why each line is here. */
 const DETERMINISM_INIT = `(() => {
   // Seeded LCG, not crypto: the only requirement is that two runs agree.
@@ -239,6 +259,18 @@ const DETERMINISM_INIT = `(() => {
     probe.style.cssText = ${JSON.stringify(CH_PROBE_STYLE)};
     document.body.appendChild(probe);
   });
+  // Installed before any page script runs, so it is the FIRST capture-phase listener on the window
+  // and stopImmediatePropagation keeps a sealed event from every listener the page adds -- on the
+  // window, on the root a framework delegates to, and on the element itself. See screenshotFrozen.
+  for (const type of ${JSON.stringify(SEALED_POINTER_EVENTS)}) {
+    window.addEventListener(
+      type,
+      (event) => {
+        if (window[${JSON.stringify(POINTER_SEAL)}] === true) event.stopImmediatePropagation();
+      },
+      { capture: true }
+    );
+  }
 })();`;
 
 /**
@@ -1100,8 +1132,29 @@ export type ShotFailure =
  * shots, every one of them the tooltip present on one side and absent on the other at the same
  * key, with no computed-style difference anywhere.
  *
- * A SHOT WHOSE PAGE MOVED ACROSS ITS OWN RASTER DOES NOT DEPICT THE STATE IT WOULD BE FILED UNDER,
- * whichever half of the raster caught the truth, so it is reported rather than recorded.
+ * THE TEARDOWN IS AN EVENT, AND THE EVENT IS SEALED OFF (ISS-15799). Logged from inside the page
+ * across a disturbed shot: `pointerout` and `mouseout` on the hovered band, `mouseleave` on the
+ * root, the bubble removed, all in the same millisecond as `resize` to 1x1 -- the pointer is
+ * outside a 1x1 viewport -- then `pointerover` on the band again once the viewport is back. The
+ * pointer never moved; the page moved under it. So from the moment the freeze stylesheet goes in
+ * until it comes out, `DETERMINISM_INIT`'s first-registered window listener swallows every pointer
+ * and mouse boundary or move event before the page can see one. The harness itself moves the
+ * pointer only in `applyState` and `clearState`, both outside that window, so nothing sealed is an
+ * input anybody gave. Unsealed, this was every hover shot of `/dev-viz?page=court` and `member` on
+ * a runner at load 25-48, twelve raster attempts each, and roughly one shot in three of a hovered
+ * band at load 10. It is also the A/A half of the same defect: the `pointerover` that follows
+ * re-mounts the bubble, so a structure read taken after it matches the one taken before the raster
+ * and a png of the torn-down state is RECORDED -- the shots two captures of one cold server
+ * disagreed on, which no structure check can catch.
+ *
+ * Sealing the pointer is also why planting the freeze stylesheet cannot take a hover state away:
+ * removing an entrance animation can move the hovered element out from under a pointer that never
+ * moved, which is the same synthetic boundary event by a different route.
+ *
+ * THE STRUCTURE CHECK STAYS, for what an event seal cannot reach -- a `ResizeObserver` that
+ * re-renders a chart at the 1x1 width, which is a callback and not an event. A SHOT WHOSE PAGE
+ * MOVED ACROSS ITS OWN RASTER DOES NOT DEPICT THE STATE IT WOULD BE FILED UNDER, whichever half of
+ * the raster caught the truth, so it is reported rather than recorded.
  *
  * The two failures are told apart because their repairs are opposites. `metrics` needs a FRESH
  * DOCUMENT -- a `ch` is resolved at layout and kept, so nothing short of reloading clears it.
@@ -1111,13 +1164,14 @@ export type ShotFailure =
  */
 export async function screenshotFrozen(page: Page): Promise<Buffer | ShotFailure> {
   await page.evaluate(
-    ({ id, css }) => {
+    ({ id, css, seal }) => {
+      (window as unknown as Record<string, unknown>)[seal] = true;
       const style = document.createElement('style');
       style.id = id;
       style.textContent = css;
       document.head.appendChild(style);
     },
-    { id: FREEZE_ID, css: FREEZE_CSS }
+    { id: FREEZE_ID, css: FREEZE_CSS, seal: POINTER_SEAL }
   );
   await canonicalize(page);
   await page.waitForTimeout(SETTLE_MS);
@@ -1140,8 +1194,16 @@ export async function screenshotFrozen(page: Page): Promise<Buffer | ShotFailure
     // `evaluate` fails is the one where something more interesting has already gone wrong -- a
     // context destroyed by a navigation, which `captureShot`'s caller repairs by name and cannot
     // repair at all if the reason arrives as a bare cleanup failure. A document that is going away
-    // takes the stylesheet with it regardless.
-    await page.evaluate(({ id }) => document.getElementById(id)?.remove(), { id: FREEZE_ID }).catch(() => undefined);
+    // takes the stylesheet, and the seal, with it regardless.
+    await page
+      .evaluate(
+        ({ id, seal }) => {
+          document.getElementById(id)?.remove();
+          (window as unknown as Record<string, unknown>)[seal] = false;
+        },
+        { id: FREEZE_ID, seal: POINTER_SEAL }
+      )
+      .catch(() => undefined);
   }
 }
 
