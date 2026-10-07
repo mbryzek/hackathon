@@ -1,0 +1,23 @@
+# Dependabot here exists to carry IGNORE rules, not to schedule version updates:
+# `open-pull-requests-limit: 0` turns version updates off, and security updates —
+# enabled in the repo settings — still honour the `ignore` list below.
+#
+# `cookie` past 0.x and `@sveltejs/kit` 3 are one change. Kit 2 pins `cookie ^0.6.0`,
+# so the only resolution dependabot finds for the `cookie` advisory is a Kit 3 major
+# bump, and Kit 3 refuses `svelte.config.js` at `svelte-kit sync` — every such PR turns
+# `main` red (ISS-15631, ISS-16903). The Kit 3 migration is ISS-15633; it deletes
+# these ignores in the same pull request.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: '@sveltejs/kit'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@sveltejs/adapter-cloudflare'
+        update-types: ['version-update:semver-major']
+      - dependency-name: cookie
+        versions: ['>=0.7.0']
