@@ -15,9 +15,9 @@ updates:
       interval: weekly
     open-pull-requests-limit: 0
     ignore:
-      - dependency-name: "@sveltejs/kit"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@sveltejs/adapter-cloudflare"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: '@sveltejs/kit'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@sveltejs/adapter-cloudflare'
+        update-types: ['version-update:semver-major']
       - dependency-name: cookie
-        versions: [">=0.7.0"]
+        versions: ['>=0.7.0']
