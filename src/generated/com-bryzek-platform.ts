@@ -760,6 +760,7 @@ export interface CreateTenantSessionLoginsOptions {
 export interface CreateTenantSessionSignupsOptions {
   tenantId: string;
   body: SignupForm;
+  inviteToken?: string;
   headers?: Record<string, string>;
   signal?: AbortSignal;
 }
@@ -1260,7 +1261,12 @@ export class ApiClient {
   }
 
   async createTenantSessionSignups(params: CreateTenantSessionSignupsOptions): Promise<SessionState> {
-    const url = `${this.baseUrl}/tenant/${encodeURIComponent(params.tenantId)}/session/signups`;
+    const queryParts: string[] = [];
+    if (params.inviteToken !== undefined && params.inviteToken !== null) {
+      queryParts.push(`invite_token=${encodeURIComponent(params.inviteToken)}`);
+    }
+    const queryString = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
+    const url = `${this.baseUrl}/tenant/${encodeURIComponent(params.tenantId)}/session/signups${queryString}`;
 
     const response = await this.request(
       url,
