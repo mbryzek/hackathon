@@ -225,6 +225,16 @@ export interface LoginForm {
   password: string;
 }
 
+/**
+ * A host a login token may be redirected to, and the tenant it signs people in to. The sign-in app resolves the tenant from the destination host through this, so its screens and URLs name no tenant.
+ */
+export interface LoginHost {
+  host: string;
+  tenant_id: string;
+  /** Whether the sign-in app offers "Create an account" (/signup) for this host. True only for a tenant that takes registrations, which land pending until an admin activates them. */
+  registration: boolean;
+}
+
 export interface LoginLinkRequestForm {
   email: string;
   /** Relative path on the tenant frontend to land on after the token exchange; validated server-side (relative-only). */
@@ -580,6 +590,13 @@ export interface UserSecondaryForm {
   rallyd?: RallydRatingForm[];
 }
 
+/**
+ * Body for PUT /users/:id/status.
+ */
+export interface UserStatusForm {
+  status: UserStatus;
+}
+
 // ============================================================================
 // Union Types
 // ============================================================================
@@ -684,6 +701,11 @@ import { ApiException, Util } from './generated-util.ts';
 import type { ApiClientOptions } from './generated-util.ts';
 
 export interface UpdateEmailVerificationByTokenOptions {
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+}
+
+export interface GetLoginHostByHostOptions {
   headers?: Record<string, string>;
   signal?: AbortSignal;
 }
@@ -847,6 +869,13 @@ export interface UpdateUserRoleByIdAndRoleOptions {
   signal?: AbortSignal;
 }
 
+export interface UpdateUserStatusByIdOptions {
+  id: string;
+  body: UserStatusForm;
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+}
+
 export interface UpdateUserPasswordByIdOptions {
   id: string;
   body: UserPasswordForm;
@@ -972,6 +1001,30 @@ export class ApiClient {
 
     if (response.status === 204) {
       return;
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+  }
+
+  async getLoginHostByHost(host: string, options?: GetLoginHostByHostOptions): Promise<LoginHost> {
+    const url = `${this.baseUrl}/login/hosts/${encodeURIComponent(host)}`;
+
+    const response = await this.request(
+      url,
+      {
+        method: 'GET'
+      },
+      'application/json',
+      options?.headers || {},
+      options?.signal
+    );
+
+    if (response.status === 200) {
+      return await Util.mustParse<LoginHost>(response, 'LoginHost');
     }
 
     if (response.status === 404) {
@@ -1655,6 +1708,39 @@ export class ApiClient {
       url,
       {
         method: 'PUT'
+      },
+      'application/json',
+      params.headers || {},
+      params.signal
+    );
+
+    if (response.status === 200) {
+      return await Util.mustParse<User>(response, 'User');
+    }
+
+    if (response.status === 401) {
+      throw new UnauthorizedErrorResponse(response);
+    }
+
+    if (response.status === 404) {
+      throw new VoidResponse(response);
+    }
+
+    if (response.status === 422) {
+      throw new ValidationErrorsResponse(response);
+    }
+
+    throw new ApiException(response, `Request failed with status ${response.status}`);
+  }
+
+  async updateUserStatusById(params: UpdateUserStatusByIdOptions): Promise<User> {
+    const url = `${this.baseUrl}/users/${encodeURIComponent(params.id)}/status`;
+
+    const response = await this.request(
+      url,
+      {
+        method: 'PUT',
+        body: JSON.stringify(params.body)
       },
       'application/json',
       params.headers || {},
