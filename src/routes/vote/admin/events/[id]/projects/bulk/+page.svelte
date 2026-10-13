@@ -2,8 +2,8 @@
   import Button from '#lib/components/Button.svelte';
   import { page } from '$app/state';
   import { enhance } from '$app/forms';
-  import { createSubmitting } from '#lib/utils/submitting.svelte.js';
-  import { urls } from '#lib/urls.js';
+  import { createSubmitting } from '#lib/utils/submitting.svelte.ts';
+  import { urls } from '#lib/urls.ts';
   import EventAdminTabs from '#lib/components/EventAdminTabs.svelte';
   import ErrorBanner from '#lib/components/ErrorBanner.svelte';
   import type { ActionData, PageData } from './$types';

@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SESSION_COOKIE } from '#lib/config.js';
-import { urls } from '#lib/urls.js';
-import { expectRedirect, fakeCookies } from '#lib/test/requestEvent.js';
+import { SESSION_COOKIE } from '#lib/config.ts';
+import { urls } from '#lib/urls.ts';
+import { expectRedirect, fakeCookies } from '#lib/test/requestEvent.ts';
 
 /** Only `adminApi.logout` is reached by the action; nothing else in the admin API is needed. */
 const logout = vi.fn();
-vi.mock('#lib/server/adminApi.js', async () => {
-  const { mockAdminApi } = await import('#lib/test/adminApiMock.js');
+vi.mock('#lib/server/adminApi.ts', async () => {
+  const { mockAdminApi } = await import('#lib/test/adminApiMock.ts');
   return mockAdminApi({ logout: (sessionId: string) => logout(sessionId) });
 });
 

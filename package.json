@@ -54,13 +54,14 @@
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
     "vite": "^8.0.16",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "wrangler": "^4.118.0"
   },
   "overrides": {
     "sharp@0.35.4": "0.35.5"
   },
   "imports": {
-    "#lib": "./src/lib/index.js",
-    "#lib/*": "./src/lib/*"
+    "#lib/*": "./src/lib/*",
+    "#generated/*": "./src/generated/*"
   }
 }

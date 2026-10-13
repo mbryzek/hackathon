@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
-import { urls } from '#lib/urls.js';
+import { urls } from '#lib/urls.ts';
 
 /**
  * The auth gate for every admin route.
@@ -9,7 +9,7 @@ import { urls } from '#lib/urls.js';
  * id — as page data, which put the credential the httpOnly cookie exists to hide into the
  * hydration payload of every admin page, where any script could read it (ISS-788). The id now
  * stays on the server: each page's own `load` and actions read it from the cookie via
- * `#lib/server/adminSession.js` and hand the browser the answers instead.
+ * `#lib/server/adminSession.ts` and hand the browser the answers instead.
  */
 export const load: LayoutServerLoad = async ({ locals, url }) => {
   // Don't require auth for login page

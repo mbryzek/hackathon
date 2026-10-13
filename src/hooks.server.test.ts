@@ -1,11 +1,11 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { handle, handleError } from './hooks.server';
-import { SECURITY_HEADERS } from '#lib/security-headers.js';
-import { SESSION_COOKIE } from '#lib/config.js';
-import type { AdminSession, ApiResponse } from '#lib/api/client.js';
-import { okStatus } from '#lib/test/adminApiMock.js';
-import { fakeCookies, type DeletedCookie } from '#lib/test/requestEvent.js';
+import { SECURITY_HEADERS } from '#lib/security-headers.ts';
+import { SESSION_COOKIE } from '#lib/config.ts';
+import type { AdminSession, ApiResponse } from '#lib/api/client.ts';
+import { okStatus } from '#lib/test/adminApiMock.ts';
+import { fakeCookies, type DeletedCookie } from '#lib/test/requestEvent.ts';
 
 type HandleInput = Parameters<Handle>[0];
 
@@ -17,8 +17,8 @@ type SessionResponse = Promise<ApiResponse<AdminSession>>;
 
 const getSession = vi.fn<(sessionId: string) => SessionResponse>();
 
-vi.mock('#lib/server/adminApi.js', async () => {
-  const { mockAdminApi } = await import('#lib/test/adminApiMock.js');
+vi.mock('#lib/server/adminApi.ts', async () => {
+  const { mockAdminApi } = await import('#lib/test/adminApiMock.ts');
   return mockAdminApi({ getSession: (sessionId: string) => getSession(sessionId) });
 });
 

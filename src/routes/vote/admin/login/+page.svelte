@@ -2,8 +2,8 @@
   import AuthCard from '#lib/components/AuthCard.svelte';
   import AuthSubmit from '#lib/components/AuthSubmit.svelte';
   import { enhance } from '$app/forms';
-  import { createSubmitting } from '#lib/utils/submitting.svelte.js';
-  import { urls } from '#lib/urls.js';
+  import { createSubmitting } from '#lib/utils/submitting.svelte.ts';
+  import { urls } from '#lib/urls.ts';
   import ErrorBanner from '#lib/components/ErrorBanner.svelte';
   import type { ActionData } from './$types';
 

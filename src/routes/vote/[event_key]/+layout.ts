@@ -1,5 +1,5 @@
 import type { LayoutLoad } from './$types';
-import { isApiError, voteApi } from '#lib/api/client.js';
+import { isApiError, voteApi } from '#lib/api/client.ts';
 
 // Dynamic routes cannot be prerendered
 export const prerender = false;

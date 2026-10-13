@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { shuffle } from '#lib/utils/shuffle.js';
+  import { shuffle } from '#lib/utils/shuffle.ts';
 
   export interface VideoInfo {
     url: string;

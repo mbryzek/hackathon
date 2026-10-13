@@ -1,7 +1,7 @@
 <script lang="ts">
   import EventForm from '#lib/components/EventForm.svelte';
   import { page } from '$app/state';
-  import { urls } from '#lib/urls.js';
+  import { urls } from '#lib/urls.ts';
   import ErrorBanner from '#lib/components/ErrorBanner.svelte';
   import type { ActionData, PageData } from './$types';
 

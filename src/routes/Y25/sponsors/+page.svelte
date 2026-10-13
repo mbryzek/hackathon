@@ -1,7 +1,7 @@
 <script lang="ts">
   import Shell from '#lib/components/Shell.svelte';
   import PhotoGallery from '#lib/components/PhotoGallery.svelte';
-  import { sponsorsY25 } from '#lib/data/sponsors-y25.js';
+  import { sponsorsY25 } from '#lib/data/sponsors-y25.ts';
 </script>
 
 <Shell title="2025 Sponsors">

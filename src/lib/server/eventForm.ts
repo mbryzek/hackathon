@@ -6,8 +6,8 @@
  * there is ONE list of allowed statuses and ONE validation vocabulary, so the same mistake gets
  * the same message whichever page the admin is on.
  */
-import { EventStatus } from '#lib/api/client.js';
-import { oneOf, trimmed } from '#lib/server/fields.js';
+import { EventStatus } from '#lib/api/client.ts';
+import { oneOf, trimmed } from '#lib/server/fields.ts';
 
 const EVENT_STATUSES = Object.values(EventStatus);
 

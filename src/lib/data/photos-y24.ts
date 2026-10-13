@@ -1,4 +1,4 @@
-import { staticAssets } from '#lib/staticAssets.js';
+import { staticAssets } from '#lib/staticAssets.ts';
 
 const filenames = [
   'IMG_0968.640.JPG',

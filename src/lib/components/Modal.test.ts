@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { createRawSnippet } from 'svelte';
-import { mountComponent } from '#lib/test/mount.js';
+import { mountComponent } from '#lib/test/mount.ts';
 import Modal from './Modal.svelte';
 
 const POSITIONED = ['relative', 'absolute', 'fixed', 'sticky'];

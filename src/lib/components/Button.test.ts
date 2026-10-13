@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import type { ComponentProps } from 'svelte';
-import { mountComponent } from '#lib/test/mount.js';
+import { mountComponent } from '#lib/test/mount.ts';
 import Button from './Button.svelte';
 
 type Props = ComponentProps<typeof Button>;

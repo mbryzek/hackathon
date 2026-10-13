@@ -2,9 +2,9 @@
   import Button from '#lib/components/Button.svelte';
   import { navigating, page } from '$app/state';
   import { applyAction, enhance } from '$app/forms';
-  import { FileType, VoterType } from '#lib/api/client.js';
-  import { CODES_PAGE_SIZE, MAX_CODES_TO_GENERATE, SEARCH_DEBOUNCE_MS } from '#lib/utils/constants.js';
-  import { VOTER_TYPE_OPTIONS, voterTypeBadgeClass, voterTypeLabel } from '#lib/utils/eventDisplay.js';
+  import { FileType, VoterType } from '#lib/api/client.ts';
+  import { CODES_PAGE_SIZE, MAX_CODES_TO_GENERATE, SEARCH_DEBOUNCE_MS } from '#lib/utils/constants.ts';
+  import { VOTER_TYPE_OPTIONS, voterTypeBadgeClass, voterTypeLabel } from '#lib/utils/eventDisplay.ts';
   import EventAdminTabs from '#lib/components/EventAdminTabs.svelte';
   import Spinner from '#lib/components/Spinner.svelte';
   import ErrorBanner from '#lib/components/ErrorBanner.svelte';
@@ -279,9 +279,8 @@
       method="GET"
       bind:this={filterForm}
       onsubmit={onFilterSubmit}
-      data-sveltekit-keepfocus
+      data-sveltekit-reset="false"
       data-sveltekit-replacestate
-      data-sveltekit-noscroll
       class="flex flex-wrap items-end gap-4"
     >
       <div class="min-w-48 flex-1">

@@ -1,5 +1,5 @@
 import type { VideoInfo } from '#lib/components/VideoGallery.svelte';
-import { staticAsset } from '#lib/staticAssets.js';
+import { staticAsset } from '#lib/staticAssets.ts';
 
 const videos: { title: string; filename: string }[] = [
   { title: 'Team 5: Net Reaper', filename: 'team5.mov' },

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import { mountComponent } from '#lib/test/mount.js';
-import { urls } from '#lib/urls.js';
+import { mountComponent } from '#lib/test/mount.ts';
+import { urls } from '#lib/urls.ts';
 import VerificationPage from './+page.svelte';
 import type { PageData } from './$types';
 

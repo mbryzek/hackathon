@@ -2,9 +2,9 @@
   import Button from '#lib/components/Button.svelte';
   import { page } from '$app/state';
   import { enhance } from '$app/forms';
-  import { urls } from '#lib/urls.js';
+  import { urls } from '#lib/urls.ts';
   import ErrorBanner from '#lib/components/ErrorBanner.svelte';
-  import type { Project } from '#lib/api/client.js';
+  import type { Project } from '#lib/api/client.ts';
   import EventAdminTabs from '#lib/components/EventAdminTabs.svelte';
   import Spinner from '#lib/components/Spinner.svelte';
   import type { ActionData, PageData } from './$types';

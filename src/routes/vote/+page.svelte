@@ -3,8 +3,8 @@
   import { onMount } from 'svelte';
   import Spinner from '#lib/components/Spinner.svelte';
   import { goto } from '$app/navigation';
-  import { urls } from '#lib/urls.js';
-  import { isApiError, voteApi, type Event } from '#lib/api/client.js';
+  import { urls } from '#lib/urls.ts';
+  import { isApiError, voteApi, type Event } from '#lib/api/client.ts';
 
   let events = $state<Event[]>([]);
   let isLoading = $state(true);

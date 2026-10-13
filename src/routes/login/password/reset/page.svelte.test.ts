@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { mountComponent } from '#lib/test/mount.js';
-import { urls } from '#lib/urls.js';
+import { mountComponent } from '#lib/test/mount.ts';
+import { urls } from '#lib/urls.ts';
 import ForgotPasswordPage from './+page.svelte';
 import type { ActionData } from './$types';
 

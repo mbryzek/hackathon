@@ -2,7 +2,7 @@
   import Shell from '#lib/components/Shell.svelte';
   import Card from '#lib/components/Card.svelte';
   import Button from '#lib/components/Button.svelte';
-  import { urls } from '#lib/urls.js';
+  import { urls } from '#lib/urls.ts';
 
   interface ScheduleItem {
     time: string;

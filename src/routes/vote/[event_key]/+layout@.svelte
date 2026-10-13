@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from '#lib/components/Button.svelte';
   import type { Snippet } from 'svelte';
-  import { invalidateAll } from '$app/navigation';
+  import { refreshAll } from '$app/navigation';
   import Shell from '#lib/components/Shell.svelte';
   import type { LayoutData } from './$types';
 
@@ -20,7 +20,7 @@
   async function retry() {
     isRetrying = true;
     try {
-      await invalidateAll();
+      await refreshAll();
     } finally {
       isRetrying = false;
     }

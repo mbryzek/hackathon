@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
-import { dataOr } from '#lib/api/client.js';
-import { adminApi } from '#lib/server/adminApi.js';
-import { firstError, requireSessionId } from '#lib/server/adminSession.js';
+import { dataOr } from '#lib/api/client.ts';
+import { adminApi } from '#lib/server/adminApi.ts';
+import { firstError, requireSessionId } from '#lib/server/adminSession.ts';
 
 export const load: PageServerLoad = async (event) => {
   const sessionId = requireSessionId(event);

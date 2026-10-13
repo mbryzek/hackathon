@@ -1,8 +1,8 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { enhance } from '$app/forms';
-  import { urls } from '#lib/urls.js';
-  import { eventStatusBadgeClass, eventStatusLabel, formatDateTime } from '#lib/utils/eventDisplay.js';
+  import { urls } from '#lib/urls.ts';
+  import { eventStatusBadgeClass, eventStatusLabel, formatDateTime } from '#lib/utils/eventDisplay.ts';
   import EventAdminTabs from '#lib/components/EventAdminTabs.svelte';
   import Modal from '#lib/components/Modal.svelte';
   import ErrorBanner from '#lib/components/ErrorBanner.svelte';

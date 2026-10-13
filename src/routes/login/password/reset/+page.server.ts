@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions } from './$types';
-import { isApiError, safeErrorStatus } from '#lib/api/client.js';
-import { platformApi } from '#lib/server/platformApi.js';
+import { isApiError, safeErrorStatus } from '#lib/api/client.ts';
+import { platformApi } from '#lib/server/platformApi.ts';
 
 /**
  * "I forgot my password" — the request half of the reset the platform mails. Its landing page is

@@ -1,7 +1,7 @@
 <script lang="ts">
   /**
    * Takes a new password for the reset the link identifies. Every outcome of the submission is a
-   * redirect or a message on the form (see `#lib/server/setPassword.js`), including the token
+   * redirect or a message on the form (see `#lib/server/setPassword.ts`), including the token
    * turning out to be spent or expired — which is the only way this page can learn that.
    */
   import SetPasswordCard from '#lib/components/SetPasswordCard.svelte';

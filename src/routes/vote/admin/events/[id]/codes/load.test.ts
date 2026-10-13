@@ -1,9 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { VoterType, type ApiResponse, type Code } from '#lib/api/client.js';
-import { CODES_PAGE_SIZE } from '#lib/utils/constants.js';
-import { ok } from '#lib/test/adminApiMock.js';
-import { aCode } from '#lib/test/fixtures.js';
-import { loadEvent } from '#lib/test/requestEvent.js';
+import { VoterType, type ApiResponse, type Code } from '#lib/api/client.ts';
+import { CODES_PAGE_SIZE } from '#lib/utils/constants.ts';
+import { ok } from '#lib/test/adminApiMock.ts';
+import { aCode } from '#lib/test/fixtures.ts';
+import { loadEvent } from '#lib/test/requestEvent.ts';
 
 /**
  * The codes list is fetched here rather than from the browser (ISS-788), which moved the filters
@@ -13,8 +13,8 @@ import { loadEvent } from '#lib/test/requestEvent.js';
 
 const getCodes = vi.fn();
 
-vi.mock('#lib/server/adminApi.js', async () => {
-  const { mockAdminApi } = await import('#lib/test/adminApiMock.js');
+vi.mock('#lib/server/adminApi.ts', async () => {
+  const { mockAdminApi } = await import('#lib/test/adminApiMock.ts');
   return mockAdminApi({ getCodes: (...args: Parameters<typeof getCodes>) => getCodes(...args) });
 });
 

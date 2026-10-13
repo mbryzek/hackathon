@@ -10,9 +10,9 @@
   import Spinner from '#lib/components/Spinner.svelte';
   import ErrorBanner from '#lib/components/ErrorBanner.svelte';
   import { enhance } from '$app/forms';
-  import { createSubmitting } from '#lib/utils/submitting.svelte.js';
-  import type { EventStatus } from '#lib/api/client.js';
-  import { EVENT_STATUS_OPTIONS } from '#lib/utils/eventDisplay.js';
+  import { createSubmitting } from '#lib/utils/submitting.svelte.ts';
+  import type { EventStatus } from '#lib/api/client.ts';
+  import { EVENT_STATUS_OPTIONS } from '#lib/utils/eventDisplay.ts';
 
   interface Props {
     name: string;

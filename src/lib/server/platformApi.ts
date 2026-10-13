@@ -17,8 +17,8 @@
  * pins the set.
  */
 
-import { config, TENANT_ID } from '#lib/config.js';
-import { handleApiCall, type ApiResponse } from '#lib/api/client.js';
+import { config, TENANT_ID } from '#lib/config.ts';
+import { handleApiCall, type ApiResponse } from '#lib/api/client.ts';
 import { ApiClient as PlatformClient, type SessionState, type UserActivation } from '../../generated/com-bryzek-platform';
 
 /** A client for one call. None of these operations carries a credential of its own. */

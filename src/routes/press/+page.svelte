@@ -1,6 +1,6 @@
 <script lang="ts">
   import Shell from '#lib/components/Shell.svelte';
-  import { pressReleases } from '#lib/data/press.js';
+  import { pressReleases } from '#lib/data/press.ts';
 </script>
 
 <Shell title="Press">

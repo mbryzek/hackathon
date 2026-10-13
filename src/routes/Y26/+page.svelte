@@ -3,7 +3,7 @@
   import CalloutBox from '#lib/components/CalloutBox.svelte';
   import Button from '#lib/components/Button.svelte';
   import StatCard from '#lib/components/StatCard.svelte';
-  import { urls } from '#lib/urls.js';
+  import { urls } from '#lib/urls.ts';
 
   const stats = [
     { value: '130', label: 'Students' },

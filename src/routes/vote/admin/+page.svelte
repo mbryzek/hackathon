@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from '#lib/components/Button.svelte';
-  import { urls } from '#lib/urls.js';
-  import { eventStatusBadgeClass, eventStatusLabel, formatDate } from '#lib/utils/eventDisplay.js';
+  import { urls } from '#lib/urls.ts';
+  import { eventStatusBadgeClass, eventStatusLabel, formatDate } from '#lib/utils/eventDisplay.ts';
   import ErrorBanner from '#lib/components/ErrorBanner.svelte';
   import type { PageData } from './$types';
 

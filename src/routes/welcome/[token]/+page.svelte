@@ -1,7 +1,7 @@
 <script lang="ts">
   /**
    * The invitation: name the account being activated, then take a first password. Every outcome
-   * of the submission is a redirect (see `#lib/server/setPassword.js`), so this page renders the
+   * of the submission is a redirect (see `#lib/server/setPassword.ts`), so this page renders the
    * invitation and the form and nothing else.
    */
   import AuthCard from '#lib/components/AuthCard.svelte';

@@ -6,12 +6,12 @@ import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
  * Sets the security headers on every response the worker renders, establishes the admin
  * session for /vote/admin pages, and logs every unexpected server error under an id the error
  * page shows the user. Prerendered pages and static assets never reach this hook —
- * see `#lib/security-headers.js` for how they are covered.
+ * see `#lib/security-headers.ts` for how they are covered.
  */
-import { SESSION_COOKIE, config } from '#lib/config.js';
-import { SECURITY_HEADERS } from '#lib/security-headers.js';
-import { adminApi } from '#lib/server/adminApi.js';
-import { clearSessionCookie } from '#lib/server/adminSession.js';
+import { SESSION_COOKIE, config } from '#lib/config.ts';
+import { SECURITY_HEADERS } from '#lib/security-headers.ts';
+import { adminApi } from '#lib/server/adminApi.ts';
+import { clearSessionCookie } from '#lib/server/adminSession.ts';
 
 const ADMIN_PATH_PREFIX = '/vote/admin';
 

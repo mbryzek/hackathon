@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mount, unmount, flushSync } from 'svelte';
-import { EventStatus } from '#lib/api/client.js';
+import { EventStatus } from '#lib/api/client.ts';
 import EventForm from './EventForm.svelte';
 
 vi.mock('$app/forms', () => ({ enhance: () => ({ destroy() {} }) }));

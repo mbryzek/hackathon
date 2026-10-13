@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
  * API is stubbed so a call to any of it would be a visible failure rather than a real request.
  */
 const requestPasswordReset = vi.fn();
-vi.mock('#lib/server/platformApi.js', () => ({
+vi.mock('#lib/server/platformApi.ts', () => ({
   platformApi: {
     requestPasswordReset: (email: string) => requestPasswordReset(email),
     verifyEmail: () => Promise.reject(new Error('not part of this page')),

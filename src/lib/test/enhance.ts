@@ -18,7 +18,7 @@ export function captureEnhance(_form: HTMLFormElement, submit?: SubmitFunction):
 
 export interface Submission {
   /** Applies the result through `update`, which resolves or — with `fail` — rejects. */
-  settle: (fail?: Error) => Promise<{ reset?: boolean; invalidateAll?: boolean } | undefined>;
+  settle: (fail?: Error) => Promise<{ reset?: boolean; refreshAll?: boolean } | undefined>;
 }
 
 /** Starts a submission of the form last enhanced. */
@@ -38,8 +38,8 @@ export async function submit(): Promise<Submission> {
 
   return {
     settle: async (fail) => {
-      let options: { reset?: boolean; invalidateAll?: boolean } | undefined;
-      const update = (opts?: { reset?: boolean; invalidateAll?: boolean }) => {
+      let options: { reset?: boolean; refreshAll?: boolean } | undefined;
+      const update = (opts?: { reset?: boolean; refreshAll?: boolean }) => {
         options = opts;
         return fail ? Promise.reject(fail) : Promise.resolve();
       };
