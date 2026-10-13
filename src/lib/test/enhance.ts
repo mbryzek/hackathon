@@ -43,7 +43,8 @@ export async function submit(): Promise<Submission> {
         options = opts;
         return fail ? Promise.reject(fail) : Promise.resolve();
       };
-      if (after) await after({ action, formData, formElement, result: { type: 'success', status: 200 }, update });
+      if (after)
+        await after({ action, formData, formElement, result: { type: 'success', status: 200, location: action.pathname }, update });
       return options;
     }
   };

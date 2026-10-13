@@ -142,17 +142,17 @@ describe('handle', () => {
 type HandleErrorInput = Parameters<HandleServerError>[0];
 
 /** The hook reads the request's method and path and the route id, so the event is faked down to those. */
-function failure(pathname: string, error: unknown = new Error('boom')): HandleErrorInput {
+function eventAt(pathname: string): HandleErrorInput['event'] {
   return {
-    error,
-    status: 500,
-    message: 'Internal Error',
-    event: {
-      url: new URL(`https://hackathon.bergen.tech${pathname}`),
-      request: new Request(`https://hackathon.bergen.tech${pathname}`),
-      route: { id: '/vote/[event_key]' }
-    }
-  } as unknown as HandleErrorInput;
+    url: new URL(`https://hackathon.bergen.tech${pathname}`),
+    request: new Request(`https://hackathon.bergen.tech${pathname}`),
+    route: { id: '/vote/[event_key]' }
+  } as unknown as HandleErrorInput['event'];
+}
+
+/** Something this app's own code threw: the one kind that is a fault. */
+function failure(pathname: string, error: unknown = new Error('boom')): HandleErrorInput {
+  return { kind: 'unknown', error, event: eventAt(pathname) };
 }
 
 describe('handleError', () => {
@@ -165,11 +165,9 @@ describe('handleError', () => {
     expect(result?.errorId).toMatch(/^[0-9a-f-]{36}$/);
     expect(consoleError).toHaveBeenCalledWith('[Server Error]', {
       errorId: result?.errorId,
-      status: 500,
       method: 'GET',
       path: '/vote/spring',
       route: '/vote/[event_key]',
-      message: 'Internal Error',
       error
     });
     consoleError.mockRestore();
@@ -185,13 +183,21 @@ describe('handleError', () => {
     consoleError.mockRestore();
   });
 
-  it('does not log a missing browser icon, which every crawler requests', async () => {
+  /**
+   * SvelteKit hands this hook every error, expected ones included. Returning nothing keeps the
+   * status and message it already gave them, so a 404 renders as a 404 and carries no reference.
+   */
+  it.each<[string, HandleErrorInput]>([
+    ['an unmatched route', { kind: 'framework', error: { status: 404, message: 'Not Found' }, event: eventAt('/favicon.ico') }],
+    ['an error() this app threw', { kind: 'app', error: { status: 404, message: 'Event not found' }, event: eventAt('/vote/spring') }],
+    ['a validation failure', { kind: 'validation', error: { status: 400, message: 'Bad Request' }, issues: [], event: eventAt('/vote') }]
+  ])('neither logs nor overrides %s', async (_name, caught) => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    const result = await handleError(failure('/favicon.ico'));
+    const result = await handleError(caught);
 
+    expect(result).toBeUndefined();
     expect(consoleError).not.toHaveBeenCalled();
-    expect(result?.errorId).toBeDefined();
     consoleError.mockRestore();
   });
 });

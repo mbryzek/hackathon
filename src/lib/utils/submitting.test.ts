@@ -13,7 +13,7 @@ function enhanceInput() {
 }
 
 function afterInput(update: (opts?: { reset?: boolean; refreshAll?: boolean }) => Promise<void>) {
-  return { ...enhanceInput(), result: { type: 'success' as const, status: 200 }, update };
+  return { ...enhanceInput(), result: { type: 'success' as const, status: 200, location: '/' }, update };
 }
 
 describe('createSubmitting', () => {

@@ -1,12 +1,13 @@
 /// <reference types="vitest/config" />
 import adapter from '@sveltejs/adapter-cloudflare';
-
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-
-import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
+import { defineConfig } from 'vite';
+
+/** Set by vitest in the process that loads this config. */
+const IS_TEST_RUN = process.env['VITEST'] !== undefined;
 
 export default defineConfig({
   // Tailwind 4 through its own vite plugin rather than through postcss: it compiles with
@@ -14,6 +15,8 @@ export default defineConfig({
   // postcss.config.js and no autoprefixer. First in the list, as the plugin's own docs require.
   plugins: [
     tailwindcss(),
+    // SvelteKit takes its configuration here; there is no svelte.config.js. `#lib` and
+    // `#generated` are subpath imports declared in package.json, not aliases declared here.
     sveltekit({
       preprocess: vitePreprocess(),
       // No `routes` option: it only ever generated `_routes.json`, which is how a Cloudflare
@@ -21,10 +24,11 @@ export default defineConfig({
       // with static assets (`main` + `[assets]` in wrangler.toml), where the asset server
       // answers what it has and the Worker gets the rest — so the adapter reads the option
       // nowhere and passing one would read as routing configuration that does nothing.
-      // Not under vitest. The adapter's own Vite plugin starts wrangler's platform proxy, a
-      // `workerd` process, for every Vite server, and a test run is one: the proxy keeps the
-      // run from exiting until vitest gives up on it.
-      ...(process.env['VITEST'] ? {} : { adapter: adapter() })
+      //
+      // Not under vitest. The adapter's own Vite plugin starts wrangler's platform proxy — a
+      // `workerd` process — for every Vite server, and a test run is one: no test reads
+      // `event.platform`, and the proxy keeps the run from exiting until vitest gives up on it.
+      ...(IS_TEST_RUN ? {} : { adapter: adapter() })
     })
   ],
   resolve: {
@@ -34,7 +38,7 @@ export default defineConfig({
     // Under vitest, resolve Svelte to its client build so component tests can `mount()` a component
     // into jsdom. Without this the server build is loaded and mount() throws
     // `lifecycle_function_unavailable`. Guarded by VITEST so the app's own build is untouched.
-    ...(process.env['VITEST'] ? { conditions: ['browser'] } : {})
+    ...(IS_TEST_RUN ? { conditions: ['browser'] } : {})
   },
   test: {
     // The visual parity harness's own units (`playwright/visual/*.test.ts`) run here too: they
