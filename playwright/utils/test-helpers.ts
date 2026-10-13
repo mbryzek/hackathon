@@ -11,6 +11,7 @@ import { explainingFetch } from '../backendUnreachable';
 import type { WaitForElementOptions } from '../types';
 import { ApiClient } from '../generated/com-bryzek-playwright-vote';
 import type { TestEvent, TestEventForm } from '../generated/com-bryzek-playwright-vote';
+import type { AdminSession } from '../generated/com-bryzek-vote-admin';
 
 /**
  * Generated API client instance for playwright endpoints
@@ -287,6 +288,24 @@ export async function createTestEvent(options: Partial<TestEventForm> = {}): Pro
       ...(status !== undefined ? { status: status } : {})
     }
   });
+}
+
+/**
+ * The vote admin's session cookie. Mirrors `SESSION_COOKIE` in src/lib/config.ts, which this
+ * project cannot import.
+ */
+export const ADMIN_SESSION_COOKIE = 'vote_session_id';
+
+/**
+ * API Helper: create a hackathon admin with a session, and sign `page` in as them by setting the
+ * session cookie the admin login would have set.
+ */
+export async function signInAsAdmin(page: Page): Promise<AdminSession> {
+  const admin = await apiClient.createPlaywrightVoteAdminAndSession(config.TENANT_ID);
+  await page
+    .context()
+    .addCookies([{ name: ADMIN_SESSION_COOKIE, value: admin.session.id, url: config.FRONTEND_BASE_URL, httpOnly: true, sameSite: 'Lax' }]);
+  return admin;
 }
 
 /**

@@ -41,6 +41,7 @@ export const urls = {
   // Admin routes
   voteAdminLogin: '/vote/admin/login',
   voteAdminLogout: '/vote/admin/logout',
+  voteAdminProfile: '/vote/admin/profile',
   voteAdmin: '/vote/admin',
   voteAdminEventsNew: '/vote/admin/events/new',
   voteAdminEvent: (id: string) => `/vote/admin/events/${id}`,
