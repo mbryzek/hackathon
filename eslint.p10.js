@@ -1,11 +1,11 @@
 // The Power-of-Ten rules for the TypeScript side, as a rule set rather than prose (ISS-5755).
 //
-// THIS FILE IS THE CANONICAL COPY. Every `svelte.config.js` repo in the fleet carries it
-// verbatim at its own root as `eslint.p10.js`, so a rule change is edited here and copied
-// out once per repo rather than reinvented eleven times; comparing this file's checksum
-// against each repo's copy is the whole answer to whether they are in step. A repo's own
-// `eslint.config.js` spreads these sets into its blocks and adds whatever else it needs —
-// the shared part is the floor, never the ceiling.
+// THIS FILE IS THE CANONICAL COPY. Every SvelteKit repo in the fleet (`dev repo list
+// --family sveltekit`) carries it verbatim at its own root as `eslint.p10.js`, so a rule
+// change is edited here and copied out once per repo rather than reinvented in each;
+// comparing this file's checksum against each repo's copy is the whole answer to whether
+// they are in step. A repo's own `eslint.config.js` spreads these sets into its blocks and
+// adds whatever else it needs — the shared part is the floor, never the ceiling.
 //
 // THE RULES ONLY BITE BECAUSE `npm run lint` RUNS INSIDE `npm run check`, and `ci/build.sh`
 // runs `npm run check`. An eslint config nothing invokes is decorative; the gate is that
