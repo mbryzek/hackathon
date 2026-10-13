@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { urls } from '$lib/urls';
+  import { urls } from '#lib/urls.js';
 
   interface Props {
     eventId: string;

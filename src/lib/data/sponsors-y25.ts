@@ -1,4 +1,4 @@
-import { staticAssets } from '$lib/staticAssets';
+import { staticAssets } from '#lib/staticAssets.js';
 
 const filenames = ['mek-review.png', 'costco.jpg', 'catalano-coffee.jpg', 'francesca.jpg', 'sunrise.png', 'west-clinton.jpg', 'bryzek.jpg'];
 

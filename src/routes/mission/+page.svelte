@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Shell from '$lib/components/Shell.svelte';
-  import Button from '$lib/components/Button.svelte';
-  import { urls } from '$lib/urls';
+  import Shell from '#lib/components/Shell.svelte';
+  import Button from '#lib/components/Button.svelte';
+  import { urls } from '#lib/urls.js';
 </script>
 
 <Shell title="Our Vision & Mission">

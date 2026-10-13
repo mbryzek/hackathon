@@ -1,8 +1,8 @@
 <script lang="ts">
-  import EventForm from '$lib/components/EventForm.svelte';
+  import EventForm from '#lib/components/EventForm.svelte';
   import { page } from '$app/state';
-  import { urls } from '$lib/urls';
-  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { urls } from '#lib/urls.js';
+  import ErrorBanner from '#lib/components/ErrorBanner.svelte';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();

@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { page } from '$app/state';
-  import { urls } from '$lib/urls';
+  import { urls } from '#lib/urls.js';
 
   interface Props {
     title: string;

@@ -2,7 +2,7 @@
   import '../../../app.css';
   import type { Snippet } from 'svelte';
   import { page } from '$app/state';
-  import { urls } from '$lib/urls';
+  import { urls } from '#lib/urls.js';
 
   interface Props {
     children: Snippet;

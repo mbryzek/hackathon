@@ -1,11 +1,11 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { invalidateAll } from '$app/navigation';
-  import { type ProjectTally, type Tally } from '$lib/api/client';
-  import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
-  import { visibilityAwareInterval } from '$lib/utils/polling';
-  import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
-  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { type ProjectTally, type Tally } from '#lib/api/client.js';
+  import { RESULTS_REFRESH_INTERVAL_MS } from '#lib/utils/constants.js';
+  import { visibilityAwareInterval } from '#lib/utils/polling.js';
+  import EventAdminTabs from '#lib/components/EventAdminTabs.svelte';
+  import ErrorBanner from '#lib/components/ErrorBanner.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();

@@ -10,9 +10,9 @@
  */
 
 import { fail, redirect, type ActionFailure, type Cookies } from '@sveltejs/kit';
-import { isApiError, safeErrorStatus, type ApiResponse } from '$lib/api/client';
-import { startAdminSessionIfAdmin } from '$lib/server/adminSession';
-import { urls } from '$lib/urls';
+import { isApiError, safeErrorStatus, type ApiResponse } from '#lib/api/client.js';
+import { startAdminSessionIfAdmin } from '#lib/server/adminSession.js';
+import { urls } from '#lib/urls.js';
 import type { SessionState } from '../../generated/com-bryzek-platform';
 
 /** What a failed submission hands back to the page. */

@@ -1,10 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { dataOr, safeErrorStatus } from '$lib/api/client';
-import { adminApi } from '$lib/server/adminApi';
-import { firstError, requireSessionId } from '$lib/server/adminSession';
-import { parseEventForm } from '$lib/server/eventForm';
-import { urls } from '$lib/urls';
+import { dataOr, safeErrorStatus } from '#lib/api/client.js';
+import { adminApi } from '#lib/server/adminApi.js';
+import { firstError, requireSessionId } from '#lib/server/adminSession.js';
+import { parseEventForm } from '#lib/server/eventForm.js';
+import { urls } from '#lib/urls.js';
 
 export const load: PageServerLoad = async (event) => {
   const response = await adminApi.getEvent(requireSessionId(event), event.params.id);

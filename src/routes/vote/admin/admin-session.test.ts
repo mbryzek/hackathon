@@ -1,9 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { SESSION_COOKIE } from '$lib/config';
-import { urls } from '$lib/urls';
-import { ok } from '$lib/test/adminApiMock';
-import { aCode } from '$lib/test/fixtures';
-import { expectRedirect, fakeCookies, loadEvent, TEST_SESSION_ID } from '$lib/test/requestEvent';
+import { SESSION_COOKIE } from '#lib/config.js';
+import { urls } from '#lib/urls.js';
+import { ok } from '#lib/test/adminApiMock.js';
+import { aCode } from '#lib/test/fixtures.js';
+import { expectRedirect, fakeCookies, loadEvent, TEST_SESSION_ID } from '#lib/test/requestEvent.js';
 
 /**
  * The invariant this file exists for: the admin session id never leaves the server.
@@ -16,8 +16,8 @@ import { expectRedirect, fakeCookies, loadEvent, TEST_SESSION_ID } from '$lib/te
 
 const getCodes = vi.fn();
 
-vi.mock('$lib/server/adminApi', async () => {
-  const { mockAdminApi } = await import('$lib/test/adminApiMock');
+vi.mock('#lib/server/adminApi.js', async () => {
+  const { mockAdminApi } = await import('#lib/test/adminApiMock.js');
   return mockAdminApi({ getCodes: (...args: Parameters<typeof getCodes>) => getCodes(...args) });
 });
 

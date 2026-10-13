@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
-import { anEvent, anEventResults } from '$lib/test/fixtures';
-import { mountComponent, settle } from '$lib/test/mount';
+import { RESULTS_REFRESH_INTERVAL_MS } from '#lib/utils/constants.js';
+import { anEvent, anEventResults } from '#lib/test/fixtures.js';
+import { mountComponent, settle } from '#lib/test/mount.js';
 import ResultsPage from './+page.svelte';
 import type { PageData } from './$types';
 

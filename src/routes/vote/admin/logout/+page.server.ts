@@ -1,8 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { urls } from '$lib/urls';
-import { adminApi } from '$lib/server/adminApi';
-import { clearSessionCookie } from '$lib/server/adminSession';
+import { urls } from '#lib/urls.js';
+import { adminApi } from '#lib/server/adminApi.js';
+import { clearSessionCookie } from '#lib/server/adminSession.js';
 
 /**
  * Logging out is destructive, so it must never happen on a GET. `app.html` sets

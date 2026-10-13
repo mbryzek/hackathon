@@ -8,7 +8,7 @@
  *
  * Every one takes `overrides`, so a test states only the field it is about.
  *
- * The types and enums come straight from `$generated`, not through `$lib/api/client`: a test
+ * The types and enums come straight from `$generated`, not through `#lib/api/client.js`: a test
  * that mocks the client module (the vote pages do — they fake `voteApi`) would otherwise take
  * the enums away from the fixtures with it.
  */

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Shell from '$lib/components/Shell.svelte';
+  import Shell from '#lib/components/Shell.svelte';
 
   interface Award {
     title: string;

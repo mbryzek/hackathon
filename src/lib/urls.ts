@@ -1,4 +1,4 @@
-import { staticAsset, staticFile } from '$lib/staticAssets';
+import { staticAsset, staticFile } from '#lib/staticAssets.js';
 
 export const urls = {
   index: '/',

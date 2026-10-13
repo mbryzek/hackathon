@@ -1,6 +1,6 @@
 import type { Actions } from './$types';
-import { platformApi } from '$lib/server/platformApi';
-import { submitNewPassword } from '$lib/server/setPassword';
+import { platformApi } from '#lib/server/platformApi.js';
+import { submitNewPassword } from '#lib/server/setPassword.js';
 
 /**
  * Where the "Reset your password" link the platform mails lands.

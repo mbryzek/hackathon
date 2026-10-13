@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { EventStatus } from '$lib/api/client';
+import { EventStatus } from '#lib/api/client.js';
 import { parseEventForm } from './eventForm';
 
 function formData(fields: Record<string, string>): FormData {

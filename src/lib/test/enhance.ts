@@ -1,3 +1,5 @@
+import type { SubmitFunction } from '$app/forms';
+
 /**
  * Driving a form's `use:enhance` callback by hand, the way SvelteKit would around a submission.
  *
@@ -6,9 +8,6 @@
  * to fail applying one, which is how a test shows a form re-enables itself after an action that
  * threw.
  */
-
-import type { SubmitFunction } from '@sveltejs/kit';
-
 let captured: SubmitFunction | undefined;
 
 /** The `$app/forms` `enhance` mock: records the callback the form was enhanced with. */

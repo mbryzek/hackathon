@@ -9,7 +9,7 @@
    * so the card shows the logo alone and centres its content.
    */
   import type { Snippet } from 'svelte';
-  import { urls } from '$lib/urls';
+  import { urls } from '#lib/urls.js';
 
   interface Props {
     heading?: string;

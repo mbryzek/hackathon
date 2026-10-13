@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { flushSync } from 'svelte';
-import { VoterType } from '$lib/api/client';
-import { SEARCH_DEBOUNCE_MS } from '$lib/utils/constants';
-import { aCode, aCodeSummary, anEvent } from '$lib/test/fixtures';
-import { mountComponent } from '$lib/test/mount';
+import { VoterType } from '#lib/api/client.js';
+import { SEARCH_DEBOUNCE_MS } from '#lib/utils/constants.js';
+import { aCode, aCodeSummary, anEvent } from '#lib/test/fixtures.js';
+import { mountComponent } from '#lib/test/mount.js';
 import CodesPage from './+page.svelte';
 import type { PageData } from './$types';
 

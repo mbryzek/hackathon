@@ -1,8 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { isApiError, safeErrorStatus } from '$lib/api/client';
-import { adminApi } from '$lib/server/adminApi';
-import { setSessionCookie } from '$lib/server/adminSession';
+import { isApiError, safeErrorStatus } from '#lib/api/client.js';
+import { adminApi } from '#lib/server/adminApi.js';
+import { setSessionCookie } from '#lib/server/adminSession.js';
 
 /**
  * `locals.adminSession` is set only for a session the API confirmed (see `src/hooks.server.ts`),

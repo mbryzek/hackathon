@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Event } from '$lib/api/client';
-import { anEvent } from '$lib/test/fixtures';
+import type { Event } from '#lib/api/client.js';
+import { anEvent } from '#lib/test/fixtures.js';
 
 const getOpenEvents = vi.fn();
 // `importOriginal` keeps the real `isApiError`: the load under test reads the response
 // through it, and a factory that replaced the whole module would leave it undefined.
-vi.mock(import('$lib/api/client'), async (importOriginal) => {
+vi.mock(import('#lib/api/client.js'), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, voteApi: { ...actual.voteApi, getOpenEvents: () => getOpenEvents() } };
 });

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte';
-  import { urls } from '$lib/urls';
-  import { eventStatusBadgeClass, eventStatusLabel, formatDate } from '$lib/utils/eventDisplay';
-  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import Button from '#lib/components/Button.svelte';
+  import { urls } from '#lib/urls.js';
+  import { eventStatusBadgeClass, eventStatusLabel, formatDate } from '#lib/utils/eventDisplay.js';
+  import ErrorBanner from '#lib/components/ErrorBanner.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();

@@ -1,4 +1,4 @@
-import { staticAssets } from '$lib/staticAssets';
+import { staticAssets } from '#lib/staticAssets.js';
 
 const filenames = [
   'mek-review.png',

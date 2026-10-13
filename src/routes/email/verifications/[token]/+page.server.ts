@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
-import { isApiSuccess } from '$lib/api/client';
-import { platformApi } from '$lib/server/platformApi';
+import { isApiSuccess } from '#lib/api/client.js';
+import { platformApi } from '#lib/server/platformApi.js';
 
 /**
  * Where the "Verify your email" link the platform mails lands.

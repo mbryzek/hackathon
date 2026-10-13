@@ -1,11 +1,11 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { FileType, VoterType } from '$lib/api/client';
-import { dataOr, isApiError, safeErrorStatus } from '$lib/api/client';
-import { adminApi } from '$lib/server/adminApi';
-import { firstError, requireSessionId } from '$lib/server/adminSession';
-import { integer, oneOf, optionalBoolean, optionalText, trimmed } from '$lib/server/fields';
-import { CODES_PAGE_SIZE, MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
+import { FileType, VoterType } from '#lib/api/client.js';
+import { dataOr, isApiError, safeErrorStatus } from '#lib/api/client.js';
+import { adminApi } from '#lib/server/adminApi.js';
+import { firstError, requireSessionId } from '#lib/server/adminSession.js';
+import { integer, oneOf, optionalBoolean, optionalText, trimmed } from '#lib/server/fields.js';
+import { CODES_PAGE_SIZE, MAX_CODES_TO_GENERATE } from '#lib/utils/constants.js';
 
 const VOTER_TYPES = Object.values(VoterType);
 const FILE_TYPES = Object.values(FileType);

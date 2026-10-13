@@ -1,7 +1,7 @@
 <script lang="ts">
-  import EventForm from '$lib/components/EventForm.svelte';
-  import { urls } from '$lib/urls';
-  import { EventStatus } from '$lib/api/client';
+  import EventForm from '#lib/components/EventForm.svelte';
+  import { urls } from '#lib/urls.js';
+  import { EventStatus } from '#lib/api/client.js';
   import type { ActionData } from './$types';
 
   let { form }: { form: ActionData } = $props();

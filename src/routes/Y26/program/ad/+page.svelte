@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Shell from '$lib/components/Shell.svelte';
-  import Button from '$lib/components/Button.svelte';
+  import Shell from '#lib/components/Shell.svelte';
+  import Button from '#lib/components/Button.svelte';
 
   interface SizeOption {
     label: string;

@@ -1,10 +1,10 @@
 <script lang="ts">
-  import AuthCard from '$lib/components/AuthCard.svelte';
-  import AuthSubmit from '$lib/components/AuthSubmit.svelte';
+  import AuthCard from '#lib/components/AuthCard.svelte';
+  import AuthSubmit from '#lib/components/AuthSubmit.svelte';
   import { enhance } from '$app/forms';
-  import { createSubmitting } from '$lib/utils/submitting.svelte';
-  import { urls } from '$lib/urls';
-  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { createSubmitting } from '#lib/utils/submitting.svelte.js';
+  import { urls } from '#lib/urls.js';
+  import ErrorBanner from '#lib/components/ErrorBanner.svelte';
   import type { ActionData } from './$types';
 
   let { form }: { form: ActionData } = $props();

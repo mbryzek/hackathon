@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { flushSync } from 'svelte';
-import { mountComponent } from '$lib/test/mount';
+import { mountComponent } from '#lib/test/mount.js';
 import PhotoGallery from './PhotoGallery.svelte';
 
 const PHOTOS = ['/a.jpg', '/b.jpg', '/c.jpg', '/d.jpg', '/e.jpg'];

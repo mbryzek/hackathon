@@ -1,4 +1,4 @@
-import { config } from '$lib/config';
+import { config } from '#lib/config.js';
 import {
   ApiClient as VoteApiClient,
   type Vote,
@@ -80,9 +80,9 @@ export function safeErrorStatus(status: number): number {
 }
 
 /**
- * The admin half of the API lives in `$lib/server/adminApi` and is deliberately not
+ * The admin half of the API lives in `#lib/server/adminApi.js` and is deliberately not
  * reachable from here: every admin call needs the session id out of the httpOnly cookie,
- * and SvelteKit refuses to bundle a `$lib/server` module into browser code. Only the
+ * and SvelteKit refuses to bundle a `#lib/server` module into browser code. Only the
  * public vote endpoints below — which take no credentials — run in the browser.
  */
 const voteApiClient = new VoteApiClient({ baseUrl: config.apiBaseUrl });

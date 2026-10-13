@@ -1,8 +1,8 @@
 <script lang="ts">
-  import Shell from '$lib/components/Shell.svelte';
-  import Button from '$lib/components/Button.svelte';
-  import Card from '$lib/components/Card.svelte';
-  import PricingTier from '$lib/components/PricingTier.svelte';
+  import Shell from '#lib/components/Shell.svelte';
+  import Button from '#lib/components/Button.svelte';
+  import Card from '#lib/components/Card.svelte';
+  import PricingTier from '#lib/components/PricingTier.svelte';
 
   const sponsorshipTiers = [
     {

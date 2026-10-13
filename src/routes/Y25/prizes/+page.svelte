@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Shell from '$lib/components/Shell.svelte';
-  import Card from '$lib/components/Card.svelte';
-  import { overallPrizes, additionalPrizes } from '$lib/data/prizes-y25';
+  import Shell from '#lib/components/Shell.svelte';
+  import Card from '#lib/components/Card.svelte';
+  import { overallPrizes, additionalPrizes } from '#lib/data/prizes-y25.js';
 </script>
 
 <Shell title="2025 Prizes">
