@@ -3,7 +3,7 @@
    * The submit button of a signed-out form. While `busy` it shows a spinner and `busyLabel`
    * ("Signing in...") and is disabled; the page owns the flag, since the page owns the form.
    */
-  import Spinner from '$lib/components/Spinner.svelte';
+  import Spinner from '#lib/components/Spinner.svelte';
 
   interface Props {
     label: string;

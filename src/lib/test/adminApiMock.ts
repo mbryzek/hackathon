@@ -1,5 +1,5 @@
 /**
- * One mock of `$lib/server/adminApi`, for every test that needs one.
+ * One mock of `#lib/server/adminApi.ts`, for every test that needs one.
  *
  * The default answers every operation successfully with a fixture, so a test declares only the
  * calls it is about. It is typed as the real `adminApi`, which is the whole point: rename an
@@ -9,14 +9,14 @@
  * `vi.mock` factories are hoisted above every import, so reach this through a dynamic import
  * inside an async factory:
  *
- *     vi.mock('$lib/server/adminApi', async () => {
- *       const { mockAdminApi } = await import('$lib/test/adminApiMock');
+ *     vi.mock('#lib/server/adminApi.ts', async () => {
+ *       const { mockAdminApi } = await import('#lib/test/adminApiMock.ts');
  *       return mockAdminApi({ getCodes: (...args) => getCodes(...args) });
  *     });
  */
 
-import type { AdminSession, ApiResponse } from '$lib/api/client';
-import type { adminApi } from '$lib/server/adminApi';
+import type { AdminSession, ApiResponse } from '#lib/api/client.ts';
+import type { adminApi } from '#lib/server/adminApi.ts';
 import { aCode, aCodeSummary, aFile, anEvent, anEventResults, aProject } from './fixtures';
 
 export type AdminApi = typeof adminApi;
@@ -24,7 +24,7 @@ export type AdminApi = typeof adminApi;
 /** A successful answer carrying `data`. */
 export const ok = <T>(data: T): Promise<ApiResponse<T>> => Promise.resolve({ data, status: 200 });
 
-/** A failed answer, in the shape `$lib/api/client` turns every client error into. */
+/** A failed answer, in the shape `#lib/api/client.ts` turns every client error into. */
 export const apiError = (status: number, message: string): Promise<ApiResponse<never>> =>
   Promise.resolve({ errors: [{ message }], status });
 
@@ -73,7 +73,7 @@ function defaultAdminApi(): AdminApi {
   };
 }
 
-/** The module shape `vi.mock('$lib/server/adminApi', ...)` must return. */
+/** The module shape `vi.mock('#lib/server/adminApi.ts', ...)` must return. */
 export function mockAdminApi(overrides: Partial<AdminApi> = {}): { adminApi: AdminApi } {
   return { adminApi: { ...defaultAdminApi(), ...overrides } };
 }

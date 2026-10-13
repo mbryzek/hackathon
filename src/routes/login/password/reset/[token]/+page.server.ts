@@ -1,6 +1,6 @@
 import type { Actions } from './$types';
-import { platformApi } from '$lib/server/platformApi';
-import { submitNewPassword } from '$lib/server/setPassword';
+import { platformApi } from '#lib/server/platformApi.ts';
+import { submitNewPassword } from '#lib/server/setPassword.ts';
 
 /**
  * Where the "Reset your password" link the platform mails lands.

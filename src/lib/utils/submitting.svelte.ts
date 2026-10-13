@@ -1,3 +1,5 @@
+import type { SubmitFunction } from '$app/forms';
+
 /**
  * The "this form's action is in flight" flag every form here disables itself with.
  *
@@ -8,11 +10,8 @@
  *
  * `run` is the same flag for a submit that is not a form action (a client-side API call).
  */
-
-import type { SubmitFunction } from '@sveltejs/kit';
-
 /** What `update()` takes: whether to reset the form, and whether to invalidate all loads. */
-export type UpdateOptions = { reset?: boolean; invalidateAll?: boolean };
+export type UpdateOptions = { reset?: boolean; refreshAll?: boolean };
 
 export interface Submitting {
   /** True from submit until the result has been applied, or the attempt failed. */

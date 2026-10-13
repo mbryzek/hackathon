@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
-import { isApiError } from '$lib/api/client';
-import { platformApi } from '$lib/server/platformApi';
-import { submitNewPassword } from '$lib/server/setPassword';
+import { isApiError } from '#lib/api/client.ts';
+import { platformApi } from '#lib/server/platformApi.ts';
+import { submitNewPassword } from '#lib/server/setPassword.ts';
 
 /**
  * Where the invitation link the platform mails lands — "Welcome, choose a password".

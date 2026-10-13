@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Shell from '$lib/components/Shell.svelte';
-  import { sponsorsY26 } from '$lib/data/sponsors-y26';
+  import Shell from '#lib/components/Shell.svelte';
+  import { sponsorsY26 } from '#lib/data/sponsors-y26.ts';
 
   const leadSponsors = $derived(sponsorsY26.filter((s) => s.isLead));
   const otherSponsors = $derived(sponsorsY26.filter((s) => !s.isLead));

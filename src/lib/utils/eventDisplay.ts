@@ -1,4 +1,4 @@
-import { EventStatus, VoterType } from '$lib/api/client';
+import { EventStatus, VoterType } from '#lib/api/client.ts';
 
 /**
  * Display metadata for the generated `EventStatus` / `VoterType` enums.

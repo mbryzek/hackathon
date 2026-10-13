@@ -14,7 +14,7 @@ declare global {
     interface Locals {
       /**
        * The admin session id from the httpOnly cookie. Server-side only, and never returned
-       * as page data — see `$lib/server/adminSession` and ISS-788.
+       * as page data — see `#lib/server/adminSession.ts` and ISS-788.
        */
       adminSession?: AdminSession | undefined;
     }

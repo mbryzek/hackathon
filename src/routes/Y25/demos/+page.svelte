@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Shell from '$lib/components/Shell.svelte';
-  import VideoGallery from '$lib/components/VideoGallery.svelte';
-  import { videosY25 } from '$lib/data/videos-y25';
+  import Shell from '#lib/components/Shell.svelte';
+  import VideoGallery from '#lib/components/VideoGallery.svelte';
+  import { videosY25 } from '#lib/data/videos-y25.ts';
 </script>
 
 <Shell title="2025 Demos">

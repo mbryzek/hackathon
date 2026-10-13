@@ -6,8 +6,8 @@
  * an address, or choosing a first password precisely because they cannot sign in. The token in
  * the URL is the whole credential, and it is single-use.
  *
- * It still lives under `$lib/server`, for the same reason `adminApi` does: SvelteKit refuses to
- * bundle a `$lib/server` module into browser code, so the token these calls carry cannot end up
+ * It still lives under `#lib/server`, for the same reason `adminApi` does: SvelteKit refuses to
+ * bundle a `#lib/server` module into browser code, so the token these calls carry cannot end up
  * in a hydration payload by a later edit. The pages that use it are `+page.server.ts` loads and
  * form actions, which is where a link's token arrives anyway.
  *
@@ -17,8 +17,8 @@
  * pins the set.
  */
 
-import { config, TENANT_ID } from '$lib/config';
-import { handleApiCall, type ApiResponse } from '$lib/api/client';
+import { config, TENANT_ID } from '#lib/config.ts';
+import { handleApiCall, type ApiResponse } from '#lib/api/client.ts';
 import { ApiClient as PlatformClient, type SessionState, type UserActivation } from '../../generated/com-bryzek-platform';
 
 /** A client for one call. None of these operations carries a credential of its own. */

@@ -8,14 +8,21 @@
  *
  * Every one takes `overrides`, so a test states only the field it is about.
  *
- * The types and enums come straight from `$generated`, not through `$lib/api/client`: a test
+ * The types and enums come straight from `$generated`, not through `#lib/api/client.ts`: a test
  * that mocks the client module (the vote pages do — they fake `voteApi`) would otherwise take
  * the enums away from the fixtures with it.
  */
 
-import { EventStatus, VoterType, type Event as VoteEvent, type Project, type ProjectVote, type Vote } from '$generated/com-bryzek-vote-api';
-import type { Code, CodeSummary, EventResults, ProjectTally, Tally } from '$generated/com-bryzek-vote-admin';
-import { FileType, type File } from '$generated/com-bryzek-platform-storage';
+import {
+  EventStatus,
+  VoterType,
+  type Event as VoteEvent,
+  type Project,
+  type ProjectVote,
+  type Vote
+} from '#generated/com-bryzek-vote-api.ts';
+import type { Code, CodeSummary, EventResults, ProjectTally, Tally } from '#generated/com-bryzek-vote-admin.ts';
+import { FileType, type File } from '#generated/com-bryzek-platform-storage.ts';
 
 /** Nothing asserts on a timestamp; one constant keeps them out of the way. */
 const TIMESTAMP = '2026-01-01T00:00:00Z';

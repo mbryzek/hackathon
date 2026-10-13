@@ -1,18 +1,18 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
-import { anEvent, anEventResults } from '$lib/test/fixtures';
-import { mountComponent, settle } from '$lib/test/mount';
+import { RESULTS_REFRESH_INTERVAL_MS } from '#lib/utils/constants.ts';
+import { anEvent, anEventResults } from '#lib/test/fixtures.ts';
+import { mountComponent, settle } from '#lib/test/mount.ts';
 import ResultsPage from './+page.svelte';
 import type { PageData } from './$types';
 
 /**
- * The tallies arrive from the page's `load` and a refresh is `invalidateAll()` (ISS-788 — the
+ * The tallies arrive from the page's `load` and a refresh is `refreshAll()` (ISS-788 — the
  * session id stays on the server, so the browser never fetches results itself). So a poll is
- * observable here as an `invalidateAll` call, not as an API call.
+ * observable here as an `refreshAll` call, not as an API call.
  */
-const invalidateAll = vi.fn(() => Promise.resolve());
-vi.mock('$app/navigation', () => ({ invalidateAll: () => invalidateAll() }));
+const refreshAll = vi.fn(() => Promise.resolve());
+vi.mock('$app/navigation', () => ({ refreshAll: () => refreshAll() }));
 vi.mock('$app/state', () => ({ page: { params: { id: 'evt-1' } } }));
 
 /** Student projects deliberately out-scale the parent ones, so a per-category max would differ. */
@@ -73,7 +73,7 @@ function setHidden(hidden: boolean): void {
 }
 
 beforeEach(() => {
-  invalidateAll.mockClear();
+  refreshAll.mockClear();
 });
 
 afterEach(() => {
@@ -149,7 +149,7 @@ describe('results auto-refresh', () => {
 
     vi.advanceTimersByTime(RESULTS_REFRESH_INTERVAL_MS * 3);
     await settle();
-    expect(invalidateAll).not.toHaveBeenCalled();
+    expect(refreshAll).not.toHaveBeenCalled();
   });
 
   it('refreshes immediately when auto-refresh is turned on', async () => {
@@ -157,17 +157,17 @@ describe('results auto-refresh', () => {
     await render();
 
     await setAutoRefresh(true);
-    expect(invalidateAll).toHaveBeenCalledTimes(1);
+    expect(refreshAll).toHaveBeenCalledTimes(1);
   });
 
   it('polls exactly once per interval', async () => {
     vi.useFakeTimers();
     await render();
     await setAutoRefresh(true);
-    invalidateAll.mockClear();
+    refreshAll.mockClear();
 
     // Exactly one refresh per tick. The immediate poll runs inside the $effect, so the effect must
-    // not read anything invalidateAll replaces — otherwise each refresh re-runs it and re-polls.
+    // not read anything refreshAll replaces — otherwise each refresh re-runs it and re-polls.
     //
     // Advanced asynchronously so the microtask queue drains between the two interval callbacks, as
     // it does under real timers. The synchronous `advanceTimersByTime` runs both in one burst with
@@ -175,25 +175,25 @@ describe('results auto-refresh', () => {
     // poller's in-flight guard then skips the second tick rather than stacking a refresh on it.
     await vi.advanceTimersByTimeAsync(RESULTS_REFRESH_INTERVAL_MS * 2);
     await settle();
-    expect(invalidateAll).toHaveBeenCalledTimes(2);
+    expect(refreshAll).toHaveBeenCalledTimes(2);
   });
 
   it('stops polling while the tab is hidden and resumes when it comes back', async () => {
     vi.useFakeTimers();
     await render();
     await setAutoRefresh(true);
-    invalidateAll.mockClear();
+    refreshAll.mockClear();
 
     setHidden(true);
     vi.advanceTimersByTime(RESULTS_REFRESH_INTERVAL_MS * 10);
     await settle();
     // Results sit on a projector for a whole event; an admin who switches tabs with auto-refresh
     // on used to keep hitting the endpoint every 5s with nobody looking at the answer.
-    expect(invalidateAll).not.toHaveBeenCalled();
+    expect(refreshAll).not.toHaveBeenCalled();
 
     setHidden(false);
     await settle();
-    expect(invalidateAll).toHaveBeenCalledTimes(1);
+    expect(refreshAll).toHaveBeenCalledTimes(1);
   });
 
   it('stops polling when auto-refresh is turned back off', async () => {
@@ -202,10 +202,10 @@ describe('results auto-refresh', () => {
     await setAutoRefresh(true);
 
     await setAutoRefresh(false);
-    invalidateAll.mockClear();
+    refreshAll.mockClear();
 
     vi.advanceTimersByTime(RESULTS_REFRESH_INTERVAL_MS * 3);
     await settle();
-    expect(invalidateAll).not.toHaveBeenCalled();
+    expect(refreshAll).not.toHaveBeenCalled();
   });
 });

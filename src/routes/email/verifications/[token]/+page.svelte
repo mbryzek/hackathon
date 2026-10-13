@@ -3,8 +3,8 @@
    * Reports what happened to the verification link. The token was already spent by `load`, so
    * this page only names the outcome and points at the one next step that makes sense for it.
    */
-  import AuthCard from '$lib/components/AuthCard.svelte';
-  import AuthNotice from '$lib/components/AuthNotice.svelte';
+  import AuthCard from '#lib/components/AuthCard.svelte';
+  import AuthNotice from '#lib/components/AuthNotice.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();

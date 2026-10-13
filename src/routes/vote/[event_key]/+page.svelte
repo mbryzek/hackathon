@@ -1,12 +1,12 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte';
+  import Button from '#lib/components/Button.svelte';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { urls } from '$lib/urls';
-  import { isApiError, voteApi, VoterType, type Vote } from '$lib/api/client';
-  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
-  import { createSubmitting } from '$lib/utils/submitting.svelte';
+  import { urls } from '#lib/urls.ts';
+  import { isApiError, voteApi, VoterType, type Vote } from '#lib/api/client.ts';
+  import ErrorBanner from '#lib/components/ErrorBanner.svelte';
+  import { createSubmitting } from '#lib/utils/submitting.svelte.ts';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();

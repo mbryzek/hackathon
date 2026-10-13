@@ -2,13 +2,13 @@
  * The admin API, callable only from server code.
  *
  * Every operation here authenticates with the admin session id, which is held in an
- * httpOnly cookie. Living under `$lib/server` is what keeps that true: SvelteKit refuses
- * to bundle a `$lib/server` module into browser code, so a page that wants admin data has
+ * httpOnly cookie. Living under `#lib/server` is what keeps that true: SvelteKit refuses
+ * to bundle a `#lib/server` module into browser code, so a page that wants admin data has
  * to ask a `load`/action for it rather than fetching it from the browser with the raw
- * session id in hand. See `$lib/server/adminSession` for how the id is read.
+ * session id in hand. See `#lib/server/adminSession.ts` for how the id is read.
  */
 
-import { config } from '$lib/config';
+import { config } from '#lib/config.ts';
 import {
   handleApiCall,
   type ApiResponse,
@@ -22,7 +22,7 @@ import {
   type Project,
   type EventStatus,
   type VoterType
-} from '$lib/api/client';
+} from '#lib/api/client.ts';
 import { ApiClient as VoteAdminClient } from '../../generated/com-bryzek-vote-admin';
 
 /**

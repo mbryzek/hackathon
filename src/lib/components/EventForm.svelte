@@ -7,12 +7,12 @@
    * key-from-name mirroring create-only: it lives in the page and reaches here as `onNameInput`.
    * An edit that silently rewrote a live event's key would break every outstanding /vote/<key> link.
    */
-  import Spinner from '$lib/components/Spinner.svelte';
-  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import Spinner from '#lib/components/Spinner.svelte';
+  import ErrorBanner from '#lib/components/ErrorBanner.svelte';
   import { enhance } from '$app/forms';
-  import { createSubmitting } from '$lib/utils/submitting.svelte';
-  import type { EventStatus } from '$lib/api/client';
-  import { EVENT_STATUS_OPTIONS } from '$lib/utils/eventDisplay';
+  import { createSubmitting } from '#lib/utils/submitting.svelte.ts';
+  import type { EventStatus } from '#lib/api/client.ts';
+  import { EVENT_STATUS_OPTIONS } from '#lib/utils/eventDisplay.ts';
 
   interface Props {
     name: string;

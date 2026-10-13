@@ -1,10 +1,10 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte';
+  import Button from '#lib/components/Button.svelte';
   import { onMount } from 'svelte';
-  import Spinner from '$lib/components/Spinner.svelte';
+  import Spinner from '#lib/components/Spinner.svelte';
   import { goto } from '$app/navigation';
-  import { urls } from '$lib/urls';
-  import { isApiError, voteApi, type Event } from '$lib/api/client';
+  import { urls } from '#lib/urls.ts';
+  import { isApiError, voteApi, type Event } from '#lib/api/client.ts';
 
   let events = $state<Event[]>([]);
   let isLoading = $state(true);

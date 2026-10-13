@@ -1,10 +1,10 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte';
-  import Spinner from '$lib/components/Spinner.svelte';
+  import Button from '#lib/components/Button.svelte';
+  import Spinner from '#lib/components/Spinner.svelte';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import { urls } from '$lib/urls';
-  import { isApiSuccess, voteApi, VoterType, type Project } from '$lib/api/client';
+  import { urls } from '#lib/urls.ts';
+  import { isApiSuccess, voteApi, VoterType, type Project } from '#lib/api/client.ts';
 
   const ORGANIZER_FORM_URL = 'https://forms.gle/zh6AKeEaa415QdTp8';
   const DONATION_URL = 'https://donorbox.org/2026-bt-hackathon';

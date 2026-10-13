@@ -1,11 +1,11 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { invalidateAll } from '$app/navigation';
-  import { type ProjectTally, type Tally } from '$lib/api/client';
-  import { RESULTS_REFRESH_INTERVAL_MS } from '$lib/utils/constants';
-  import { visibilityAwareInterval } from '$lib/utils/polling';
-  import EventAdminTabs from '$lib/components/EventAdminTabs.svelte';
-  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { refreshAll } from '$app/navigation';
+  import { type ProjectTally, type Tally } from '#lib/api/client.ts';
+  import { RESULTS_REFRESH_INTERVAL_MS } from '#lib/utils/constants.ts';
+  import { visibilityAwareInterval } from '#lib/utils/polling.ts';
+  import EventAdminTabs from '#lib/components/EventAdminTabs.svelte';
+  import ErrorBanner from '#lib/components/ErrorBanner.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -27,7 +27,7 @@
   // hitting the endpoint every 5s for hours with nobody looking at the answer.
   //
   // This effect reads `autoRefresh` and nothing else. That matters: the poll calls
-  // `invalidateAll()`, which replaces `data` — if the effect read `data` (or anything derived from
+  // `refreshAll()`, which replaces `data` — if the effect read `data` (or anything derived from
   // it) the refresh would re-run the effect, which polls once immediately on start, and the page
   // would spin in a refresh loop instead of waiting out the interval.
   $effect(() => {
@@ -35,7 +35,7 @@
       return;
     }
 
-    return visibilityAwareInterval(() => invalidateAll(), RESULTS_REFRESH_INTERVAL_MS);
+    return visibilityAwareInterval(() => refreshAll(), RESULTS_REFRESH_INTERVAL_MS);
   });
 
   function togglePresentationMode() {

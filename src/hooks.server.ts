@@ -4,14 +4,14 @@
  * Sets the security headers on every response the worker renders, establishes the admin
  * session for /vote/admin pages, and logs every unexpected server error under an id the error
  * page shows the user. Prerendered pages and static assets never reach this hook —
- * see `$lib/security-headers` for how they are covered.
+ * see `#lib/security-headers.ts` for how they are covered.
  */
 
-import type { Handle, HandleServerError } from '@sveltejs/kit';
-import { SESSION_COOKIE, config } from '$lib/config';
-import { SECURITY_HEADERS } from '$lib/security-headers';
-import { adminApi } from '$lib/server/adminApi';
-import { clearSessionCookie } from '$lib/server/adminSession';
+import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
+import { SESSION_COOKIE, config } from '#lib/config.ts';
+import { SECURITY_HEADERS } from '#lib/security-headers.ts';
+import { adminApi } from '#lib/server/adminApi.ts';
+import { clearSessionCookie } from '#lib/server/adminSession.ts';
 
 const ADMIN_PATH_PREFIX = '/vote/admin';
 
@@ -61,28 +61,30 @@ export const handle: Handle = async ({ event, resolve }) => {
   return response;
 };
 
-const IGNORED_PATHS = ['/favicon.ico', '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png'];
-
 /**
- * Logs an unexpected server error as one `[Server Error]` line carrying the `errorId` the error
- * page shows. Workers Logs retains that line, so a user quoting the id names exactly one
- * failure in `dev obs worker-logs --app hackathon`. Errors thrown with `error()` are expected
- * and never reach this hook.
+ * Every error a request raises passes through here, expected ones included: an `error()` this
+ * app threw on purpose, a framework error such as an unmatched route, a validation failure.
+ * Those keep the status and message SvelteKit already gave them and are not logged — a 404 is
+ * traffic, not a fault.
+ *
+ * Only an unknown error — something thrown by this app's own code — is logged, as one
+ * `[Server Error]` line carrying the `errorId` the error page shows. Workers Logs retains that
+ * line, so a user quoting the id names exactly one failure in
+ * `dev obs worker-logs --app hackathon`.
  */
-export const handleError: HandleServerError = ({ error, event, status, message }) => {
+export const handleError: HandleServerError = (caught) => {
+  if (caught.kind !== 'unknown') return;
+
+  const { error, event } = caught;
   const errorId = crypto.randomUUID();
 
-  if (!IGNORED_PATHS.includes(event.url.pathname)) {
-    console.error('[Server Error]', {
-      errorId,
-      status,
-      method: event.request.method,
-      path: event.url.pathname,
-      route: event.route.id,
-      message,
-      error
-    });
-  }
+  console.error('[Server Error]', {
+    errorId,
+    method: event.request.method,
+    path: event.url.pathname,
+    route: event.route.id,
+    error
+  });
 
   return {
     message: config.isProduction

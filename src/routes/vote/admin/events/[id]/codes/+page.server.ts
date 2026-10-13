@@ -1,11 +1,12 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { FileType, VoterType } from '$lib/api/client';
-import { dataOr, isApiError, safeErrorStatus } from '$lib/api/client';
-import { adminApi } from '$lib/server/adminApi';
-import { firstError, requireSessionId } from '$lib/server/adminSession';
-import { integer, oneOf, optionalBoolean, optionalText, trimmed } from '$lib/server/fields';
-import { CODES_PAGE_SIZE, MAX_CODES_TO_GENERATE } from '$lib/utils/constants';
+import { FileType, VoterType } from '#lib/api/client.ts';
+import { dataOr, isApiError, safeErrorStatus } from '#lib/api/client.ts';
+import { config } from '#lib/config.ts';
+import { adminApi } from '#lib/server/adminApi.ts';
+import { firstError, requireSessionId } from '#lib/server/adminSession.ts';
+import { integer, oneOf, optionalBoolean, optionalText, trimmed } from '#lib/server/fields.ts';
+import { CODES_PAGE_SIZE, MAX_CODES_TO_GENERATE } from '#lib/utils/constants.ts';
 
 const VOTER_TYPES = Object.values(VoterType);
 const FILE_TYPES = Object.values(FileType);
@@ -109,6 +110,8 @@ export const actions = {
       return fail(500, { error: 'Failed to build the export' });
     }
 
-    throw redirect(303, response.data.url);
+    // The file is served by the platform API, which is another origin: SvelteKit refuses a
+    // redirect off this one unless the destination's origin is named.
+    throw redirect(303, response.data.url, { external: [new URL(config.apiBaseUrl).origin] });
   }
 } satisfies Actions;

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Shell from '$lib/components/Shell.svelte';
-  import Card from '$lib/components/Card.svelte';
+  import Shell from '#lib/components/Shell.svelte';
+  import Card from '#lib/components/Card.svelte';
 
   const email = 'bergenyouthenrichment@gmail.com';
   let copied = $state(false);

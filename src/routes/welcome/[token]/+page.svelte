@@ -1,12 +1,12 @@
 <script lang="ts">
   /**
    * The invitation: name the account being activated, then take a first password. Every outcome
-   * of the submission is a redirect (see `$lib/server/setPassword`), so this page renders the
+   * of the submission is a redirect (see `#lib/server/setPassword.ts`), so this page renders the
    * invitation and the form and nothing else.
    */
-  import AuthCard from '$lib/components/AuthCard.svelte';
-  import AuthNotice from '$lib/components/AuthNotice.svelte';
-  import SetPasswordCard from '$lib/components/SetPasswordCard.svelte';
+  import AuthCard from '#lib/components/AuthCard.svelte';
+  import AuthNotice from '#lib/components/AuthNotice.svelte';
+  import SetPasswordCard from '#lib/components/SetPasswordCard.svelte';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();

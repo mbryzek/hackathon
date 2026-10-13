@@ -42,11 +42,11 @@ pattern = "bthackathon.com/*"
 zone_name = "bthackathon.com"
 
 # NO [vars], and no VITE_* anywhere in this file. wrangler `[vars]` are RUNTIME Worker
-# bindings (`event.platform.env`); `import.meta.env`, which src/lib/config.ts is the
+# bindings (`import { env } from 'cloudflare:workers'`); `import.meta.env`, which src/lib/config.ts is the
 # only reader of, is inlined by Vite at BUILD time out of the dotenv files. So a VITE_*
 # set here reaches nothing and reads as configuration that works — .env / .env.production
-# is the single source of truth for client config, and nothing in src/ reads
-# `platform.env`.
+# is the single source of truth for client config, and nothing in src/ imports
+# `cloudflare:workers`.
 #
 # NO account_id either: the Cloudflare account is pinned by the deploy itself
 # (CLOUDFLARE_ACCOUNT_ID, resolved from the target's label in the env repo's

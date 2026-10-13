@@ -1,15 +1,15 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { anEvent } from '$lib/test/fixtures';
-import { mountComponent } from '$lib/test/mount';
-import { submit } from '$lib/test/enhance';
+import { anEvent } from '#lib/test/fixtures.ts';
+import { mountComponent } from '#lib/test/mount.ts';
+import { submit } from '#lib/test/enhance.ts';
 import BulkPage from './+page.svelte';
 import type { ActionData, PageData } from './$types';
 
 vi.mock('$app/state', () => ({
   page: { params: { id: 'evt-1' }, url: new URL('http://localhost/vote/admin/events/evt-1/projects/bulk') }
 }));
-vi.mock('$app/forms', async () => ({ enhance: (await import('$lib/test/enhance')).captureEnhance }));
+vi.mock('$app/forms', async () => ({ enhance: (await import('#lib/test/enhance.ts')).captureEnhance }));
 
 function render() {
   const data = { event: anEvent(), error: null } as unknown as PageData;

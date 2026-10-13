@@ -1,10 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
-import { isApiError, safeErrorStatus } from '$lib/api/client';
-import { adminApi } from '$lib/server/adminApi';
-import { firstError, requireSessionId } from '$lib/server/adminSession';
-import { parseEventForm } from '$lib/server/eventForm';
-import { urls } from '$lib/urls';
+import { isApiError, safeErrorStatus } from '#lib/api/client.ts';
+import { adminApi } from '#lib/server/adminApi.ts';
+import { firstError, requireSessionId } from '#lib/server/adminSession.ts';
+import { parseEventForm } from '#lib/server/eventForm.ts';
+import { urls } from '#lib/urls.ts';
 
 export const actions = {
   default: async (event) => {

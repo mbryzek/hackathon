@@ -1,3 +1,5 @@
+import type { SubmitFunction } from '$app/forms';
+
 /**
  * Driving a form's `use:enhance` callback by hand, the way SvelteKit would around a submission.
  *
@@ -6,9 +8,6 @@
  * to fail applying one, which is how a test shows a form re-enables itself after an action that
  * threw.
  */
-
-import type { SubmitFunction } from '@sveltejs/kit';
-
 let captured: SubmitFunction | undefined;
 
 /** The `$app/forms` `enhance` mock: records the callback the form was enhanced with. */
@@ -19,7 +18,7 @@ export function captureEnhance(_form: HTMLFormElement, submit?: SubmitFunction):
 
 export interface Submission {
   /** Applies the result through `update`, which resolves or — with `fail` — rejects. */
-  settle: (fail?: Error) => Promise<{ reset?: boolean; invalidateAll?: boolean } | undefined>;
+  settle: (fail?: Error) => Promise<{ reset?: boolean; refreshAll?: boolean } | undefined>;
 }
 
 /** Starts a submission of the form last enhanced. */
@@ -39,12 +38,13 @@ export async function submit(): Promise<Submission> {
 
   return {
     settle: async (fail) => {
-      let options: { reset?: boolean; invalidateAll?: boolean } | undefined;
-      const update = (opts?: { reset?: boolean; invalidateAll?: boolean }) => {
+      let options: { reset?: boolean; refreshAll?: boolean } | undefined;
+      const update = (opts?: { reset?: boolean; refreshAll?: boolean }) => {
         options = opts;
         return fail ? Promise.reject(fail) : Promise.resolve();
       };
-      if (after) await after({ action, formData, formElement, result: { type: 'success', status: 200 }, update });
+      if (after)
+        await after({ action, formData, formElement, result: { type: 'success', status: 200, location: action.pathname }, update });
       return options;
     }
   };

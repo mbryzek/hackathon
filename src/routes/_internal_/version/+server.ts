@@ -1,5 +1,4 @@
-import { json } from '@sveltejs/kit';
-import { PUBLIC_VERSION, PUBLIC_RELEASED_AT } from '$env/static/public';
+import { PUBLIC_VERSION, PUBLIC_RELEASED_AT } from '$app/env/public';
 import type { RequestHandler } from './$types';
 
 // PUBLIC_VERSION / PUBLIC_RELEASED_AT are exported into the build environment
@@ -7,7 +6,7 @@ import type { RequestHandler } from './$types';
 // in here at build time. Dev builds fall back to the empty defaults in .env.
 export const GET: RequestHandler = async () => {
   // dry-copy: sveltekit/version-endpoint-payload — every copy of this region must match; `dev repo copies` checks it (ISS-3894)
-  return json({
+  return Response.json({
     version: PUBLIC_VERSION || null,
     released_at: PUBLIC_RELEASED_AT || null
   });

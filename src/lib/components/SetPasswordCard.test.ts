@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { mountComponent } from '$lib/test/mount';
-import { submit } from '$lib/test/enhance';
+import { mountComponent } from '#lib/test/mount.ts';
+import { submit } from '#lib/test/enhance.ts';
 import SetPasswordCard from './SetPasswordCard.svelte';
 
-vi.mock('$app/forms', async () => ({ enhance: (await import('$lib/test/enhance')).captureEnhance }));
+vi.mock('$app/forms', async () => ({ enhance: (await import('#lib/test/enhance.ts')).captureEnhance }));
 
 describe('SetPasswordCard', () => {
   it('disables the form while the action is in flight and re-enables it after a failure', async () => {

@@ -5,15 +5,15 @@
  * It arrives in an httpOnly cookie precisely so that page scripts cannot read it, and it
  * must never be handed back out as page data — doing so put the same secret in the
  * hydration payload, where any script on the page could take it (ISS-788). So the id is
- * read here, used to call `$lib/server/adminApi`, and dropped; pages receive the answers,
+ * read here, used to call `#lib/server/adminApi.ts`, and dropped; pages receive the answers,
  * never the credential.
  */
 
 import { redirect, type Cookies } from '@sveltejs/kit';
-import { isApiError, isApiSuccess, type ApiResponse } from '$lib/api/client';
-import { SESSION_COOKIE, config } from '$lib/config';
-import { adminApi } from '$lib/server/adminApi';
-import { urls } from '$lib/urls';
+import { isApiError, isApiSuccess, type ApiResponse } from '#lib/api/client.ts';
+import { SESSION_COOKIE, config } from '#lib/config.ts';
+import { adminApi } from '#lib/server/adminApi.ts';
+import { urls } from '#lib/urls.ts';
 import { isTenantSession, type SessionState } from '../../generated/com-bryzek-platform';
 
 /**

@@ -12,8 +12,8 @@ function enhanceInput() {
   };
 }
 
-function afterInput(update: (opts?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>) {
-  return { ...enhanceInput(), result: { type: 'success' as const, status: 200 }, update };
+function afterInput(update: (opts?: { reset?: boolean; refreshAll?: boolean }) => Promise<void>) {
+  return { ...enhanceInput(), result: { type: 'success' as const, status: 200, location: '/' }, update };
 }
 
 describe('createSubmitting', () => {
@@ -37,8 +37,8 @@ describe('createSubmitting', () => {
   });
 
   it('passes its update options through, and none when given none', async () => {
-    const seen: Array<{ reset?: boolean; invalidateAll?: boolean } | undefined> = [];
-    const record = (opts?: { reset?: boolean; invalidateAll?: boolean }) => {
+    const seen: Array<{ reset?: boolean; refreshAll?: boolean } | undefined> = [];
+    const record = (opts?: { reset?: boolean; refreshAll?: boolean }) => {
       seen.push(opts);
       return Promise.resolve();
     };

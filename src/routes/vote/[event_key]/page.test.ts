@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type * as ApiClientModule from '$lib/api/client';
-import { aVote } from '$lib/test/fixtures';
-import { mountComponent, settle } from '$lib/test/mount';
+import type * as ApiClientModule from '#lib/api/client.ts';
+import { aVote } from '#lib/test/fixtures.ts';
+import { mountComponent, settle } from '#lib/test/mount.ts';
 import VotePage from './+page.svelte';
 import type { PageData } from './$types';
 
@@ -13,7 +13,7 @@ vi.mock('$app/state', () => ({
 
 /** Only `voteApi` is faked; the enums and types the page renders with stay real. */
 const verifyCode = vi.fn();
-vi.mock('$lib/api/client', async (importOriginal) => {
+vi.mock('#lib/api/client.ts', async (importOriginal) => {
   const actual = await importOriginal<typeof ApiClientModule>();
   return { ...actual, voteApi: { verifyCode: () => verifyCode() } };
 });

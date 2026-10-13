@@ -9,10 +9,10 @@
    * has no password restrictions, and what the platform will accept is the platform's to say.
    */
   import { enhance } from '$app/forms';
-  import { createSubmitting } from '$lib/utils/submitting.svelte';
-  import AuthCard from '$lib/components/AuthCard.svelte';
-  import AuthSubmit from '$lib/components/AuthSubmit.svelte';
-  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
+  import { createSubmitting } from '#lib/utils/submitting.svelte.ts';
+  import AuthCard from '#lib/components/AuthCard.svelte';
+  import AuthSubmit from '#lib/components/AuthSubmit.svelte';
+  import ErrorBanner from '#lib/components/ErrorBanner.svelte';
 
   interface Props {
     heading: string;

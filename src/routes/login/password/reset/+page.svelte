@@ -6,12 +6,12 @@
    * who mistyped their address is not left waiting for a mail that is never coming.
    */
   import { enhance } from '$app/forms';
-  import { createSubmitting } from '$lib/utils/submitting.svelte';
-  import AuthCard from '$lib/components/AuthCard.svelte';
-  import AuthNotice from '$lib/components/AuthNotice.svelte';
-  import AuthSubmit from '$lib/components/AuthSubmit.svelte';
-  import ErrorBanner from '$lib/components/ErrorBanner.svelte';
-  import { urls } from '$lib/urls';
+  import { createSubmitting } from '#lib/utils/submitting.svelte.ts';
+  import AuthCard from '#lib/components/AuthCard.svelte';
+  import AuthNotice from '#lib/components/AuthNotice.svelte';
+  import AuthSubmit from '#lib/components/AuthSubmit.svelte';
+  import ErrorBanner from '#lib/components/ErrorBanner.svelte';
+  import { urls } from '#lib/urls.ts';
   import type { ActionData } from './$types';
 
   let { form }: { form: ActionData } = $props();
