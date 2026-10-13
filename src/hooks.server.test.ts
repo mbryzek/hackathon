@@ -90,6 +90,19 @@ describe('handle', () => {
     expect(deletedCookies).toEqual([]);
   });
 
+  it('carries the admin name and email from the confirmed session, for the account menu', async () => {
+    getSession.mockImplementation(() =>
+      Promise.resolve({
+        data: { user: { person: { name: ' Ada Lovelace ', email: { address: 'ada@example.com' } } } } as AdminSession,
+        status: 200
+      })
+    );
+
+    const { locals } = await invoke('/vote/admin', { cookies: { [SESSION_COOKIE]: 'sess-1' } });
+
+    expect(locals.adminSession).toEqual({ id: 'sess-1', name: 'Ada Lovelace', email: 'ada@example.com' });
+  });
+
   it('leaves the session out of locals when the cookie is absent, without asking the API', async () => {
     const { locals } = await invoke('/vote/admin/events');
 

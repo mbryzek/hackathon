@@ -67,6 +67,14 @@ describe('the admin session id never reaches the browser', () => {
     expect(JSON.stringify(result ?? null)).not.toContain(TEST_SESSION_ID);
   });
 
+  it('admin layout hands the page the signed-in admin and nothing else of the session', async () => {
+    const load = await loadFn('./+layout.server.ts');
+    const locals: App.Locals = { adminSession: { id: TEST_SESSION_ID, name: 'Ada Lovelace', email: 'ada@example.com' } };
+    const event = { ...loadEvent({ url: 'http://localhost/vote/admin' }), locals };
+
+    expect(await load(event)).toEqual({ admin: { name: 'Ada Lovelace', email: 'ada@example.com' } });
+  });
+
   it('every admin load redirects to the login page when there is no session', async () => {
     for (const { path, url } of ADMIN_LOADS) {
       const load = await loadFn(path);

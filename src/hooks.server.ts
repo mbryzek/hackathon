@@ -12,6 +12,7 @@ import { SESSION_COOKIE, config } from '#lib/config.ts';
 import { SECURITY_HEADERS } from '#lib/security-headers.ts';
 import { adminApi } from '#lib/server/adminApi.ts';
 import { clearSessionCookie } from '#lib/server/adminSession.ts';
+import { isApiSuccess, type AdminSession as ApiAdminSession, type ApiResponse } from '#lib/api/client.ts';
 
 const ADMIN_PATH_PREFIX = '/vote/admin';
 
@@ -32,6 +33,9 @@ const ADMIN_PATH_PREFIX = '/vote/admin';
  *
  * Only a 401 signs the admin out. Any other failure keeps the session and lets the page's
  * own API calls surface the problem — a platform blip must not log every admin out.
+ *
+ * The same answer names the admin, so the account menu's name and email come from here rather
+ * than from a second call per page.
  */
 async function resolveAdminSession(event: Parameters<Handle>[0]['event']): Promise<void> {
   const sessionId = event.cookies.get(SESSION_COOKIE);
@@ -44,7 +48,18 @@ async function resolveAdminSession(event: Parameters<Handle>[0]['event']): Promi
     return;
   }
 
-  event.locals.adminSession = { id: sessionId };
+  event.locals.adminSession = { id: sessionId, ...identity(response) };
+}
+
+/** The admin's name and email from a confirmed session, or nothing when the API could not say. */
+function identity(response: ApiResponse<ApiAdminSession>): { name?: string; email?: string } {
+  if (!isApiSuccess(response)) return {};
+  // A body-less 2xx carries no `data` at runtime even though the envelope types it as present.
+  const session: ApiAdminSession | undefined = response.data;
+  const person = session?.user.person;
+  const name = person?.name?.trim();
+  const email = person?.email?.address.trim();
+  return { ...(name ? { name: name } : {}), ...(email ? { email: email } : {}) };
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
