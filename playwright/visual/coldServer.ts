@@ -33,8 +33,16 @@
  */
 const DEV_MODULE = /^\/(?:@fs\/|@id\/|@vite\/|src\/|node_modules\/|\.svelte-kit\/)/;
 
-/** Quoted references to such a url, in a served HTML document or a transformed module body. */
-const DEV_MODULE_REFERENCE = /["'`](\/(?:@fs\/|@id\/|@vite\/|src\/|node_modules\/|\.svelte-kit\/)[^"'`\s\\]*)/g;
+/**
+ * Quoted references to such a url, in a served HTML document or a transformed module body.
+ *
+ * ABSOLUTE OR RELATIVE TO THE DOCUMENT. A transformed module names its imports from the server
+ * root (`/node_modules/...`), and so does a SvelteKit 2 dev document. A SvelteKit 3 dev document
+ * does not: it writes its entry imports relative to the page (`./node_modules/...` at the root,
+ * `../../@fs/...` two segments down), so a pattern that wanted a leading `/` found nothing in it
+ * and the proof reported a dev server as one with no dev modules to check.
+ */
+const DEV_MODULE_REFERENCE = /["'`]((?:\/|(?:\.\.?\/)+)(?:@fs\/|@id\/|@vite\/|src\/|node_modules\/|\.svelte-kit\/)[^"'`\s\\]*)/g;
 
 /**
  * The stamp vite puts on an import of a module it has invalidated: `?t=<epoch ms>`.
@@ -55,12 +63,28 @@ const SCAN_LIMIT = 4000;
 /** How many of those fetches are in flight at once. */
 const SCAN_WORKERS = 12;
 
-/** Every module url a served body references, deduplicated, in the order they first appear. */
-export function devModuleReferences(body: string): string[] {
+/**
+ * The server-root path a reference names: an absolute one as written, a relative one resolved
+ * against the url of the document it was read from, the way the browser resolves it.
+ */
+function serverPath(reference: string, documentUrl: string): string {
+  if (reference.startsWith('/')) return reference;
+  const resolved = new URL(reference, documentUrl);
+  return resolved.pathname + resolved.search;
+}
+
+/**
+ * Every module url a served body references, as a server-root path, deduplicated, in the order
+ * they first appear. `documentUrl` is the url the body was served from -- after redirects, since
+ * that is the url a relative reference in it is relative to.
+ */
+export function devModuleReferences(body: string, documentUrl = 'http://localhost/'): string[] {
   const found = new Set<string>();
   for (const match of body.matchAll(DEV_MODULE_REFERENCE)) {
-    const url = match[1];
-    if (url !== undefined && DEV_MODULE.test(url)) found.add(url);
+    const reference = match[1];
+    if (reference === undefined) continue;
+    const url = serverPath(reference, documentUrl);
+    if (DEV_MODULE.test(url)) found.add(url);
   }
   return [...found];
 }
@@ -95,9 +119,12 @@ export interface ColdServerScan {
  * and the surface an operator edits between two captures. It is not the whole server: a module
  * reachable only from one preview route is not in this graph, which is why the README states the
  * rule as a rule the operator keeps rather than as one the harness enforces for them.
+ *
+ * `documentUrl` is the url `document` was served from, which is what its relative references
+ * resolve against; every module the crawl then fetches names its own imports from the root.
  */
-export async function scanForHmr(baseUrl: string, document: string): Promise<ColdServerScan> {
-  const queue = devModuleReferences(document);
+export async function scanForHmr(documentUrl: string, document: string): Promise<ColdServerScan> {
+  const queue = devModuleReferences(document, documentUrl);
   const seen = new Set(queue);
   const stamped = queue.filter(isHmrStamped);
   let scanned = 0;
@@ -107,7 +134,7 @@ export async function scanForHmr(baseUrl: string, document: string): Promise<Col
     scanned += batch.length;
     const bodies = await Promise.all(
       batch.map(async (url) => {
-        const response = await fetch(new URL(url, baseUrl)).catch(() => null);
+        const response = await fetch(new URL(url, documentUrl)).catch(() => null);
         // A module the server refuses is not evidence either way, and it is not this check's job
         // to have an opinion about it: the capture is about to open every page anyway.
         if (response === null || !response.ok) return '';
@@ -158,11 +185,12 @@ export async function assertColdServer(baseUrl: string, moment: ProofMoment = 'b
   // `redirect: 'follow'` and a fetch of its own, rather than reusing the reachability probe above:
   // that one is deliberately `manual`, so a base url that redirects to a login answers it with an
   // EMPTY body -- and an empty body crawls to zero modules and passes this proof for a reason that
-  // has nothing to do with the server being cold.
-  const document = await fetch(baseUrl)
-    .then(async (response) => response.text())
-    .catch(() => '');
-  const scan = await scanForHmr(baseUrl, document);
+  // has nothing to do with the server being cold. The url it landed on is kept with the body,
+  // because a SvelteKit 3 dev document's module references are relative to it.
+  const served = await fetch(baseUrl)
+    .then(async (response) => ({ url: response.url || baseUrl, document: await response.text() }))
+    .catch(() => ({ url: baseUrl, document: '' }));
+  const scan = await scanForHmr(served.url, served.document);
   const when = moment === 'before' ? '' : ' after the capture';
   if (scan.stamped.length === 0) {
     console.log(

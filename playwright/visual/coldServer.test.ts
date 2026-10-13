@@ -13,14 +13,29 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { assertColdServer, devModuleReferences, isHmrStamped, scanForHmr } from './coldServer.ts';
 
-/** A fetch answering a fixed url -> body map, and 404 for anything else. */
-function serve(bodies: Record<string, string>): void {
+/**
+ * A fetch answering a fixed url -> body map, and 404 for anything else. `redirects` maps a path to
+ * the path it lands on, which the response reports as its `url` the way a followed redirect does.
+ */
+function serve(bodies: Record<string, string>, redirects: Record<string, string> = {}): void {
   vi.stubGlobal('fetch', (input: string | URL) => {
-    const path = new URL(String(input), 'http://localhost:5391').pathname + new URL(String(input), 'http://localhost:5391').search;
-    const body = bodies[path];
-    if (body === undefined) return Promise.resolve({ ok: false, status: 404, text: () => Promise.resolve('') });
-    return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(body) });
+    const requested = new URL(String(input), 'http://localhost:5391');
+    const landed = new URL(redirects[requested.pathname] ?? requested.pathname + requested.search, requested);
+    const body = bodies[landed.pathname + landed.search];
+    if (body === undefined) return Promise.resolve({ ok: false, status: 404, url: landed.href, text: () => Promise.resolve('') });
+    return Promise.resolve({ ok: true, status: 200, url: landed.href, text: () => Promise.resolve(body) });
   });
+}
+
+/** The entry script a SvelteKit 3 dev server writes into a page, its imports relative to the page. */
+function kit3Document(up: string): string {
+  return `<link href="${up}_app/env.js" rel="modulepreload"><script>
+    import("${up}_app/env.js").then(({ env }) => {
+      import("${up}node_modules/@sveltejs/kit/src/runtime/client/entry.js").then(async (kit) => {
+        const app = await import("${up}@fs/work/app/.svelte-kit/generated/dev/client/app.js");
+      });
+    });
+  </script>`;
 }
 
 afterEach(() => {
@@ -45,6 +60,18 @@ describe('devModuleReferences', () => {
 
   it('ignores an asset url and a bare specifier', () => {
     expect(devModuleReferences('"/favicon.png" "svelte" "/api/clubs"')).toEqual([]);
+  });
+
+  /** SvelteKit 3 writes the entry imports relative to the page, so the proof has to resolve them. */
+  it('resolves a SvelteKit 3 document against the url it was served from', () => {
+    const modules = ['/node_modules/@sveltejs/kit/src/runtime/client/entry.js', '/@fs/work/app/.svelte-kit/generated/dev/client/app.js'];
+    expect(devModuleReferences(kit3Document('./'), 'http://localhost:5391/')).toEqual(modules);
+    expect(devModuleReferences(kit3Document('./'), 'http://localhost:5391/Y26')).toEqual(modules);
+    expect(devModuleReferences(kit3Document('../../'), 'http://localhost:5391/vote/admin/login')).toEqual(modules);
+  });
+
+  it('does not read a bare path with no leading slash or dot as a module url', () => {
+    expect(devModuleReferences('"src/app.css" "node_modules/x.js"')).toEqual([]);
   });
 });
 
@@ -108,6 +135,35 @@ describe('assertColdServer', () => {
   it('lets a cold dev server through', async () => {
     serve({ '/': 'import "/src/app.css";', '/src/app.css': '' });
     await expect(assertColdServer('http://localhost:5391/')).resolves.toBeUndefined();
+  });
+
+  /**
+   * A SvelteKit 3 page, reached through a redirect: its references are relative to where it
+   * landed, and a stamp two modules down is still found.
+   */
+  it('crawls a SvelteKit 3 dev document from the url the base url redirected to', async () => {
+    serve(
+      {
+        '/Y26': kit3Document('./'),
+        '/@fs/work/app/.svelte-kit/generated/dev/client/app.js': 'import "/src/routes/+layout.svelte";',
+        '/src/routes/+layout.svelte': 'import "/src/app.css?t=1757530000000";',
+        '/src/app.css?t=1757530000000': ''
+      },
+      { '/': '/Y26' }
+    );
+    await expect(assertColdServer('http://localhost:5391/')).rejects.toThrow(/src\/app\.css\?t=1757530000000/);
+  });
+
+  it('reports the modules it scanned on a cold SvelteKit 3 dev server', async () => {
+    serve({
+      '/': kit3Document('./'),
+      '/@fs/work/app/.svelte-kit/generated/dev/client/app.js': 'import "/src/app.css";',
+      '/src/app.css': ''
+    });
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    await expect(assertColdServer('http://localhost:5391/')).resolves.toBeUndefined();
+    expect(log.mock.calls[0]?.[0]).toMatch(/3 dev module\(s\) scanned, none carrying an HMR timestamp/);
+    log.mockRestore();
   });
 
   /** `npm run preview` serves a built bundle: no dev module urls, and no HMR to have happened. */
