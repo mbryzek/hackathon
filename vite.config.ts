@@ -15,8 +15,8 @@ export default defineConfig({
   // postcss.config.js and no autoprefixer. First in the list, as the plugin's own docs require.
   plugins: [
     tailwindcss(),
-    // SvelteKit takes its configuration here; there is no svelte.config.js. `#lib` and
-    // `#generated` are subpath imports declared in package.json, not aliases declared here.
+    // SvelteKit takes its whole configuration here. `#lib` and `#generated` are subpath
+    // imports declared in package.json, not aliases declared here.
     sveltekit({
       preprocess: vitePreprocess(),
       // No `routes` option: it only ever generated `_routes.json`, which is how a Cloudflare
