@@ -3,10 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Playwright config for the VISUAL PARITY HARNESS (`playwright/visual/`, ISS-9319; copied here under ISS-9327).
  *
- * A second config beside `playwright.config.ts`, because this is not a test suite. Nothing in
- * `playwright/visual` asserts anything, `ci/e2e.sh` runs `npm run test:e2e` and this directory is
- * not in that config's `testDir` (`./playwright/tests`), so a
- * capture only ever happens because somebody asked for one. That is the right default — a capture
+ * This is not a test suite. Nothing in `playwright/visual` asserts anything and no CI script runs
+ * it, so a capture only ever happens because somebody asked for one. That is the right default — a capture
  * is meaningless on its own, since the verdict is the comparison of two of them taken from two
  * different checkouts.
  *

@@ -8,8 +8,7 @@
     external?: boolean;
     onclick?: () => void;
     label?: string;
-    /** `vote` is the yellow-400 / gray-900 action used across the voting app. */
-    variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'vote';
+    variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
     size?: 'sm' | 'md' | 'lg';
     /** Only applies when rendered as a button; `submit` for a form's primary action. */
     type?: 'button' | 'submit';
@@ -40,7 +39,7 @@
   const baseClasses =
     'inline-flex items-center justify-center rounded-lg transition-all duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-offset-2';
 
-  /** The marketing variants share a raised, scaling look; `vote` is flat, bold and only recolours on hover. */
+  /** Every variant shares a raised, scaling look and differs only in colour. */
   const marketing = {
     extra: 'font-semibold shadow-md',
     hover: 'hover:scale-105 active:scale-100',
@@ -54,13 +53,7 @@
       ...marketing,
       colors: 'bg-transparent text-gray-700 hover:bg-gray-100 shadow-none focus:ring-gray-400 disabled:text-gray-400'
     },
-    danger: { ...marketing, colors: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-400 disabled:bg-red-300' },
-    vote: {
-      extra: 'font-bold',
-      hover: '',
-      inactive: 'cursor-not-allowed opacity-50',
-      colors: 'bg-yellow-400 text-gray-900 hover:bg-yellow-500 focus:ring-yellow-400'
-    }
+    danger: { ...marketing, colors: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-400 disabled:bg-red-300' }
   };
 
   const sizeClasses = {

@@ -3,8 +3,8 @@
  *
  * Two mechanisms deliver them, because two different things serve this site:
  *
- * - `src/hooks.server.ts` sets them on responses the SvelteKit worker renders — `/vote`,
- *   `/vote/admin`, `/_internal_/version`.
+ * - `src/hooks.server.ts` sets them on responses the SvelteKit worker renders —
+ *   `/_internal_/version` and the 404 page.
  * - `_headers` in the project root sets them on the prerendered marketing pages and the
  *   files in `static/`, which Cloudflare's asset server answers without running the
  *   worker, so the `handle` hook never runs for them, and the asset server does not apply

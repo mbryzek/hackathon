@@ -5,18 +5,18 @@
  * routes tree, so a page added to the site is a page the next parity capture judges, with nothing
  * edited here.
  *
- * TWO SETS, because this site has two rendering surfaces and only one of them is free:
+ * TWO SETS. This site has one rendering surface today, and every route on it is free:
  *
  *   - `static` — every route SvelteKit can render with NO BACKEND: no route parameter, no
  *     `+page.server.ts`, and not inside a subtree that turned prerendering off. That is exactly
- *     the set `npm run build` prerenders to html, and it is 22 of this site's 38 routes: the whole
+ *     the set `npm run build` prerenders to html, and it is every route this site has: the whole
  *     Y24/Y25/Y26 programme, the sponsor, prize, rubric, photo and demo pages, and
  *     mission/press/contact/donate. It needs `npm run dev` and nothing else, which is what makes
- *     it the set a CSS change is actually judged on — the same 22 pages render identically from
- *     any checkout, which is what an A/B requires.
- *   - `live` — every `+page.svelte` under `src/routes`, served against a real platform. That adds
- *     the voting and admin surface at the cost of a backend and a seeded event, and two runs
- *     against one differ in row ids and timestamps, which read as CSS regressions.
+ *     it the set a CSS change is actually judged on — the same pages render identically from any
+ *     checkout, which is what an A/B requires.
+ *   - `live` — every `+page.svelte` under `src/routes`, with `[param]` routes filled from seeds.
+ *     It is the shared harness's set for a site with a backend-served surface; this site has none,
+ *     so it captures what `static` does.
  *
  * A ROUTE THAT IS NOT CAPTURED IS REPORTED AS UNCOVERED, never silently dropped, and the reason
  * travels with it. The failure this exists to stop is a harness that quietly skips half the site

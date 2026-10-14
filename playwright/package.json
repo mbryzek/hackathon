@@ -1,6 +1,0 @@
-{
-  "name": "playwright-tests",
-  "type": "module",
-  "private": true,
-  "description": "Playwright test suite for Private Dinkers app"
-}

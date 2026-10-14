@@ -3,7 +3,6 @@ import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
-import path from 'path';
 import { defineConfig } from 'vite';
 
 /** Set by vitest in the process that loads this config. */
@@ -15,8 +14,8 @@ export default defineConfig({
   // postcss.config.js and no autoprefixer. First in the list, as the plugin's own docs require.
   plugins: [
     tailwindcss(),
-    // SvelteKit takes its whole configuration here. `#lib` and `#generated` are subpath
-    // imports declared in package.json, not aliases declared here.
+    // SvelteKit takes its whole configuration here. `#lib` is a subpath import declared in
+    // package.json, not an alias declared here.
     sveltekit({
       preprocess: vitePreprocess(),
       // No `routes` option: it only ever generated `_routes.json`, which is how a Cloudflare
@@ -32,9 +31,6 @@ export default defineConfig({
     })
   ],
   resolve: {
-    alias: {
-      url: path.resolve(__dirname, 'src/lib/url-shim.ts')
-    },
     // Under vitest, resolve Svelte to its client build so component tests can `mount()` a component
     // into jsdom. Without this the server build is loaded and mount() throws
     // `lifecycle_function_unavailable`. Guarded by VITEST so the app's own build is untouched.

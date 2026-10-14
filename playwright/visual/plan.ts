@@ -68,8 +68,8 @@ function seeds(): Record<string, string> {
  *
  * READ OUT OF THE MODULES RATHER THAN LISTED, because the whole point of `staticTargets` is that
  * the static set is the site's own answer to "what needs a backend" and not a second opinion about
- * it. `src/routes/vote/+layout.ts` is the only one today; a subtree that turns prerendering off
- * tomorrow drops out of the static set with nothing edited here.
+ * it. There is none today; a subtree that turns prerendering off tomorrow drops out of the
+ * static set with nothing edited here.
  *
  * A regex over the source rather than an import: these modules import `$app` and `$env` aliases
  * that only resolve inside a vite build, and the declaration is a top-level literal in every
