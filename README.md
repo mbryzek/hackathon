@@ -24,7 +24,8 @@ Sign up at <https://dash.cloudflare.com/sign-up>. The Free plan is enough.
 
 1. In the dashboard, **Add a domain** (or **Add a site**), enter `bthackathon.com`, and pick the Free plan.
    Cloudflare scans the domain's current DNS records and offers to import them; keep any you still
-   need (for example `signup`).
+   need (for example `signup`, the registration site, which runs elsewhere: see
+   [docs/signup-site.md](docs/signup-site.md)).
 2. Cloudflare shows two nameservers. At the domain's registrar, replace its nameservers with those two.
    The zone turns **Active** once the change has propagated, usually within an hour. A zone is active
    in only one Cloudflare account at a time, so the account that served it before stops serving it
@@ -108,3 +109,8 @@ hackathon > Deployments**, where **Rollback** puts an earlier one back.
   sign-in pages (`/vote`, `/login`, `/welcome`) call.
 - `scripts/deploy` runs `npm ci`, `npm run build` and `wrangler deploy` with the wrangler version
   pinned in `package-lock.json`. It needs no other tooling and reads nothing outside the repository.
+
+## The registration site
+
+`signup.bthackathon.com` is a separate application with its own repository and server.
+[docs/signup-site.md](docs/signup-site.md) says where it lives, what it holds and how to take it over.
