@@ -1,0 +1,103 @@
+{
+  "name": "playwright-vote",
+  "auth": "public",
+
+  "attributes": {
+    "controller": {
+      "helpers": "controllers.bryzek.playwright.PlaywrightControllerHelpers",
+      "args": "controllers.bryzek.playwright.PlaywrightControllerArgs",
+      "environments": ["development", "test"]
+    }
+  },
+
+  "imports": [
+    {
+      "uri": "https://app.apibuilder.io/bryzek/platform-error/latest/service.json"
+    },
+    {
+      "uri": "https://app.apibuilder.io/bryzek/vote-api/latest/service.json"
+    },
+    {
+      "uri": "https://app.apibuilder.io/bryzek/vote-admin/latest/service.json"
+    }
+  ],
+  "models": {
+    "playwright_vote": {
+    },
+    "test_event": {
+      "fields": [
+        {
+          "name": "event",
+          "type": "com.bryzek.vote.api.models.event"
+        },
+        {
+          "name": "student_codes",
+          "type": "[string]",
+          "minimum": 0
+        },
+        {
+          "name": "parent_codes",
+          "type": "[string]",
+          "minimum": 0
+        }
+      ]
+    },
+    "test_event_form": {
+      "fields": [
+        {
+          "name": "project_names",
+          "type": "[string]",
+          "minimum": 0
+        },
+        {
+          "name": "number_students",
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "name": "number_parents",
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "name": "status",
+          "type": "com.bryzek.vote.api.enums.event_status",
+          "required": false
+        }
+      ]
+    }
+  },
+  "resources": {
+    "playwright_vote": {
+      "path": "/:tenant_id/playwright",
+      "operations": [
+        {
+          "method": "POST",
+          "path": "/events",
+          "body": "test_event_form",
+          "responses": {
+            "201": {
+              "type": "test_event"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/admin/session",
+          "description": "Create a test hackathon admin with a session, for the browser suite of the vote admin. The suite sets the returned session id as the admin's session cookie, which signs it in without a password.",
+          "responses": {
+            "201": {
+              "type": "com.bryzek.vote.admin.models.admin_session"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

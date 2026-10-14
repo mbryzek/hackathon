@@ -1,0 +1,276 @@
+{
+  "name": "db-vote",
+  "imports": [
+    {
+      "uri": "https://app.apibuilder.io/bryzek/vote-api/latest/service.json"
+    }
+  ],
+  "attributes": {
+    "scala": {
+      "version": "3.4",
+      "package": "generated.db.vote"
+    },
+    "psql": {
+      "pkey": "id",
+      "hash_code": {},
+      "schema": "vote",
+      "audit": {
+        "created": {
+          "at": {
+            "type": "date-time-iso8601"
+          }
+        },
+        "updated": {
+          "at": {
+            "type": "date-time-iso8601"
+          },
+          "by": {
+            "name": "updated_by_user_id",
+            "type": "string"
+          }
+        }
+      },
+      "authorization": {
+        "unrestricted": "The hackathon vote app has no tenant dimension: vote-admin's auth scheme (`authorizeHackathonAdmin` / `authorizeHackathonAdminSession`, vote/app/controllers/VoteControllerHelpers.scala) hardcodes tenantId = Constants.Tenants.Hackathon, so every admin caller is by construction scoped to the one tenant these tables belong to -- there is no second tenant's rows to narrow away for event, project, code or vote. The public vote-api side (verify a code, cast a vote) is declared `auth: public` in spec/vote-api.json with no principal at all; the security boundary there is knowledge of the 6-digit code itself, checked in application logic against a single row, not row-level tenant/user scoping."
+      }
+    }
+  },
+  "models": {
+    "event": {
+      "description": "A voting event (e.g., hackathon-2024)",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "description": "URL-friendly slug for the event"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Display name for the event"
+        },
+        {
+          "name": "status",
+          "type": "com.bryzek.vote.api.enums.event_status",
+          "default": "draft"
+        },
+        {
+          "name": "deleted_at",
+          "type": "date-time-iso8601",
+          "required": false
+        },
+        {
+          "name": "deleted_by_user_id",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "attributes": {
+        "scala": {
+          "pkey_generator": {
+            "class": "com.bryzek.util.SecureIdGenerator",
+            "prefix": "evt"
+          },
+          "api_model": {
+            "type": "com.bryzek.vote.api.models.event"
+          }
+        },
+        "psql": {
+          "on_conflict": {
+            "fields": [
+              "key"
+            ]
+          },
+          "indexes": [
+            {
+              "fields": [
+                "status"
+              ]
+            }
+          ],
+          "constraints": [
+            {
+              "name": "events_deleted_ck",
+              "sql": "check ( (deleted_at is null and deleted_by_user_id is null) or (deleted_at is not null and deleted_by_user_id is not null) )"
+            }
+          ]
+        }
+      }
+    },
+    "project": {
+      "description": "A hackathon project that can be voted on",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "event_id",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "description": "Display order for the project",
+          "minimum": 0
+        }
+      ],
+      "attributes": {
+        "scala": {
+          "pkey_generator": {
+            "class": "com.bryzek.util.SecureIdGenerator",
+            "prefix": "prj"
+          },
+          "api_model": {
+            "type": "com.bryzek.vote.api.models.project"
+          }
+        },
+        "psql": {
+          "indexes": [
+            {
+              "fields": [
+                "event_id",
+                "position"
+              ]
+            }
+          ],
+          "foreign_keys": [
+            {
+              "fields": [
+                "event_id"
+              ],
+              "references": "vote.events"
+            }
+          ],
+          "constraints": [
+            {
+              "name": "projects_event_id_position_un",
+              "sql": "unique(event_id, position) deferrable initially deferred"
+            }
+          ]
+        }
+      }
+    },
+    "code": {
+      "description": "A unique voting code assigned to a voter",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "event_id",
+          "type": "string"
+        },
+        {
+          "name": "code",
+          "type": "string",
+          "description": "6-digit numeric code"
+        },
+        {
+          "name": "voter_type",
+          "type": "com.bryzek.vote.api.enums.voter_type"
+        }
+      ],
+      "attributes": {
+        "scala": {
+          "pkey_generator": {
+            "class": "com.bryzek.util.SecureIdGenerator",
+            "prefix": "vcd"
+          }
+        },
+        "psql": {
+          "indexes": [
+            {
+              "fields": [
+                "event_id",
+                "code"
+              ],
+              "unique": true
+            },
+            {
+              "fields": [
+                "voter_type"
+              ]
+            }
+          ],
+          "foreign_keys": [
+            {
+              "fields": [
+                "event_id"
+              ],
+              "references": "vote.events"
+            }
+          ]
+        }
+      }
+    },
+    "vote": {
+      "description": "A vote cast by a code for a project",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "code_id",
+          "type": "string"
+        },
+        {
+          "name": "project_id",
+          "type": "string"
+        }
+      ],
+      "attributes": {
+        "scala": {
+          "pkey_generator": {
+            "class": "com.bryzek.util.SecureIdGenerator",
+            "prefix": "vot"
+          }
+        },
+        "psql": {
+          "on_conflict": {
+            "fields": [
+              "code_id",
+              "project_id"
+            ]
+          },
+          "indexes": [
+            {
+              "fields": [
+                "project_id"
+              ]
+            }
+          ],
+          "foreign_keys": [
+            {
+              "fields": [
+                "code_id"
+              ],
+              "references": "vote.codes"
+            },
+            {
+              "fields": [
+                "project_id"
+              ],
+              "references": "vote.projects"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

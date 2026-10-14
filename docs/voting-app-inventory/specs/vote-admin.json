@@ -1,0 +1,703 @@
+{
+  "name": "vote-admin",
+  "auth": "hackathon_admin",
+  "base_url": "https://api.bthackathon.com",
+  "imports": [
+    {
+      "uri": "https://app.apibuilder.io/bryzek/platform-error/latest/service.json"
+    },
+    {
+      "uri": "https://app.apibuilder.io/bryzek/platform/latest/service.json"
+    },
+    {
+      "uri": "https://app.apibuilder.io/bryzek/platform-storage/latest/service.json"
+    },
+    {
+      "uri": "https://app.apibuilder.io/bryzek/vote-api/latest/service.json"
+    }
+  ],
+  "auth_schemes": [
+    {
+      "type": "hackathon_admin",
+      "description": "Request (session or platform token) where the user is an admin of the hackathon tenant",
+      "attributes": {
+        "controller": {
+          "principal": "_root_.core.util.AuthorizedRequest.TenantAdmin"
+        }
+      }
+    },
+    {
+      "type": "hackathon_admin_session",
+      "description": "Session-authenticated request where the user is an admin of the hackathon tenant. Yields the session itself, for the endpoints that read or revoke it.",
+      "attributes": {
+        "controller": {
+          "principal": "_root_.controllers.HackathonAdminSession"
+        }
+      }
+    }
+  ],
+  "attributes": {
+    "controller": {
+      "helpers": "controllers.VoteControllerHelpers"
+    }
+  },
+  "models": {
+    "admin_session": {
+      "description": "Current admin session",
+      "fields": [
+        {
+          "name": "session",
+          "type": "com.bryzek.platform.models.session_reference"
+        },
+        {
+          "name": "user",
+          "type": "com.bryzek.platform.models.user"
+        }
+      ]
+    },
+    "event_form": {
+      "fields": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "URL-friendly slug"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Display name"
+        },
+        {
+          "name": "status",
+          "type": "com.bryzek.vote.api.enums.event_status",
+          "required": false,
+          "default": "draft"
+        }
+      ]
+    },
+    "project_form": {
+      "fields": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "project_csv_form": {
+      "fields": [
+        {
+          "name": "data",
+          "type": "string"
+        },
+        {
+          "name": "delete_all_projects",
+          "type": "boolean"
+        }
+      ]
+    },
+    "project_reorder_form": {
+      "description": "Form to reorder projects",
+      "fields": [
+        {
+          "name": "project_ids",
+          "type": "[string]",
+          "description": "Project IDs in desired order"
+        }
+      ]
+    },
+    "code": {
+      "description": "A voting code",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "event",
+          "type": "com.bryzek.vote.api.models.event_reference"
+        },
+        {
+          "name": "code",
+          "type": "string"
+        },
+        {
+          "name": "voter_type",
+          "type": "com.bryzek.vote.api.enums.voter_type"
+        },
+        {
+          "name": "has_voted",
+          "type": "boolean"
+        },
+        {
+          "name": "created_at",
+          "type": "date-time-iso8601"
+        }
+      ]
+    },
+    "code_summary": {
+      "fields": [
+        {
+          "name": "total",
+          "type": "long"
+        },
+        {
+          "name": "student",
+          "type": "code_summary_type"
+        },
+        {
+          "name": "parent",
+          "type": "code_summary_type"
+        }
+      ]
+    },
+    "code_summary_type": {
+      "fields": [
+        {
+          "name": "codes",
+          "type": "long"
+        },
+        {
+          "name": "votes",
+          "type": "long"
+        }
+      ]
+    },
+    "code_generate_form": {
+      "description": "Form to generate voting codes",
+      "fields": [
+        {
+          "name": "voter_type",
+          "type": "com.bryzek.vote.api.enums.voter_type"
+        },
+        {
+          "name": "count",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Number of codes to generate"
+        }
+      ]
+    },
+    "code_export_form": {
+      "description": "Format selection + filters for a voting code export. The filters are the code list endpoint's filters and mean the same thing here, so an export always matches the table it was generated from. Only csv and pdf can be produced; any other format is rejected with a 422.",
+      "fields": [
+        {
+          "name": "format",
+          "type": "com.bryzek.platform.storage.enums.file_type",
+          "default": "csv"
+        },
+        {
+          "name": "voter_type",
+          "type": "com.bryzek.vote.api.enums.voter_type",
+          "required": false
+        },
+        {
+          "name": "has_voted",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "q",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "tally": {
+      "fields": [
+        {
+          "name": "total_votes",
+          "type": "long",
+          "minimum": 0
+        },
+        {
+          "name": "projects",
+          "type": "[project_tally]"
+        }
+      ]
+    },
+    "project_tally": {
+      "description": "Voting result for a project",
+      "fields": [
+        {
+          "name": "project",
+          "type": "com.bryzek.vote.api.models.project"
+        },
+        {
+          "name": "vote_count",
+          "type": "long",
+          "minimum": 0
+        }
+      ]
+    },
+    "event_results": {
+      "description": "Voting results for an event",
+      "fields": [
+        {
+          "name": "event",
+          "type": "com.bryzek.vote.api.models.event"
+        },
+        {
+          "name": "student",
+          "type": "tally"
+        },
+        {
+          "name": "parent",
+          "type": "tally"
+        }
+      ]
+    }
+  },
+  "resources": {
+    "admin_session": {
+      "path": "/vote/admin",
+      "auth": "hackathon_admin_session",
+      "operations": [
+        {
+          "method": "GET",
+          "path": "/session",
+          "description": "Get current admin session",
+          "responses": {
+            "200": {
+              "type": "admin_session"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/sessions/logins",
+          "description": "Login to admin",
+          "auth": "public",
+          "body": "com.bryzek.platform.models.login_form",
+          "responses": {
+            "201": {
+              "type": "admin_session"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/session",
+          "description": "Logout",
+          "responses": {
+            "204": {
+              "type": "unit"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            }
+          }
+        }
+      ]
+    },
+    "com.bryzek.vote.api.models.event": {
+      "path": "/vote/admin/events",
+      "operations": [
+        {
+          "method": "GET",
+          "parameters": [
+            {
+              "name": "id",
+              "type": "[string]",
+              "minimum": 0,
+              "maximum": 100,
+              "required": false
+            },
+            {
+              "name": "status",
+              "type": "[com.bryzek.vote.api.enums.event_status]",
+              "minimum": 0,
+              "maximum": 10,
+              "required": false
+            },
+            {
+              "name": "limit",
+              "type": "long",
+              "default": "100",
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "name": "offset",
+              "type": "long",
+              "default": "0",
+              "minimum": 0
+            }
+          ],
+          "responses": {
+            "200": {
+              "type": "[com.bryzek.vote.api.models.event]"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/:id",
+          "responses": {
+            "200": {
+              "type": "com.bryzek.vote.api.models.event"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "body": "event_form",
+          "responses": {
+            "201": {
+              "type": "com.bryzek.vote.api.models.event"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/:id",
+          "body": "event_form",
+          "responses": {
+            "200": {
+              "type": "com.bryzek.vote.api.models.event"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/:id",
+          "responses": {
+            "204": {
+              "type": "unit"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            }
+          }
+        }
+      ]
+    },
+    "com.bryzek.vote.api.models.project": {
+      "path": "/vote/admin/events/:event_id/projects",
+      "operations": [
+        {
+          "method": "GET",
+          "parameters": [
+            {
+              "name": "limit",
+              "type": "long",
+              "default": "100",
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "name": "offset",
+              "type": "long",
+              "default": "0",
+              "minimum": 0
+            }
+          ],
+          "responses": {
+            "200": {
+              "type": "[com.bryzek.vote.api.models.project]"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/:id",
+          "responses": {
+            "200": {
+              "type": "com.bryzek.vote.api.models.project"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "body": "project_form",
+          "responses": {
+            "201": {
+              "type": "com.bryzek.vote.api.models.project"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/csv",
+          "body": "project_csv_form",
+          "responses": {
+            "204": {
+              "type": "unit"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/:id",
+          "body": "project_form",
+          "responses": {
+            "200": {
+              "type": "com.bryzek.vote.api.models.project"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/:id",
+          "responses": {
+            "204": {
+              "type": "unit"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/reorder",
+          "body": "project_reorder_form",
+          "responses": {
+            "204": {
+              "type": "unit"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        }
+      ]
+    },
+    "code": {
+      "path": "/vote/admin/events/:event_id/codes",
+      "operations": [
+        {
+          "method": "GET",
+          "parameters": [
+            {
+              "name": "voter_type",
+              "type": "com.bryzek.vote.api.enums.voter_type",
+              "required": false
+            },
+            {
+              "name": "has_voted",
+              "type": "boolean",
+              "required": false
+            },
+            {
+              "name": "q",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "limit",
+              "type": "long",
+              "default": "100",
+              "minimum": 1,
+              "maximum": 100
+            },
+            {
+              "name": "offset",
+              "type": "long",
+              "default": "0",
+              "minimum": 0
+            }
+          ],
+          "responses": {
+            "200": {
+              "type": "[code]"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/summary",
+          "responses": {
+            "200": {
+              "type": "code_summary"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/generate",
+          "body": "code_generate_form",
+          "responses": {
+            "204": {
+              "type": "unit"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/exports",
+          "description": "Generate a CSV or PDF export of this event's voting codes. Writes the file to platform storage with a 1-day TTL and returns a signed URL the caller follows to download.",
+          "body": "code_export_form",
+          "responses": {
+            "201": {
+              "type": "com.bryzek.platform.storage.models.file"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/:id",
+          "responses": {
+            "204": {
+              "type": "unit"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            },
+            "422": {
+              "type": "[com.bryzek.platform.error.models.validation_error]"
+            }
+          }
+        }
+      ]
+    },
+    "event_results": {
+      "path": "/vote/admin/events/:event_id/results",
+      "operations": [
+        {
+          "method": "GET",
+          "description": "Get voting results for an event, sorted by vote count descending",
+          "responses": {
+            "200": {
+              "type": "event_results"
+            },
+            "401": {
+              "type": "com.bryzek.platform.error.models.unauthorized_error"
+            },
+            "404": {
+              "type": "unit"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
