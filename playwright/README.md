@@ -10,8 +10,8 @@ TypeScript-based end-to-end tests for the Private Dinkers application using [@pl
 - **Comprehensive test helpers** for API interactions and UI testing
 
 This code is held to the same standards as `src/`. `npm run check` type-checks it
-(`check:e2e`), loads it (`check:e2e:collect`), lints it (`lint`), and format-checks it
-(`format:check`) — see [Static checks](#static-checks) below. Only `playwright/generated/` is
+(`check:e2e`), loads it (`check:e2e:collect`) and lints it (`lint`); its formatting is
+reported by the advisory `scripts/check-format` (`format:check` by hand) — see [Static checks](#static-checks) below. Only `playwright/generated/` is
 exempt, because it is generated.
 
 ## Getting Started

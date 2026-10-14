@@ -105,7 +105,7 @@ esac
 npm ci
 
 # svelte-check + the Playwright tsconfig typecheck + `playwright test --list` +
-# eslint --max-warnings 0 + prettier --check + vitest. `npm run check` is the whole
+# eslint --max-warnings 0 + vitest. `npm run check` is the whole
 # gate in every SvelteKit repo in this fleet (ISS-3885), so there is deliberately no
 # second test step below — running the unit suite twice would double the slowest
 # part of this build for the same verdict.
@@ -116,6 +116,16 @@ npm ci
 # browser and starts no `webServer`. That is what makes it safe in CI while
 # `npm run test:e2e` below is not.
 npm run check
+
+# FORMATTING NEVER FAILS THIS BUILD (ISS-19427): a build fails only for a
+# functional problem, and an unformatted file behaves exactly as its formatted
+# copy does, so `npm run check` carries no `prettier --check`. `scripts/check-format`
+# (a copy of devops templates/ci/check-format, which runs `dev fmt report` — this
+# repo's own `node_modules/.bin/prettier --list-different .`) prints every
+# unformatted file and exits 0. The hygiene sweep runs it over `main` and fixes
+# what it finds; `npm run format` is the fix.
+# ci-advisory: scripts/check-format
+scripts/check-format || echo "check-format: could not measure this tree — advisory, nothing fails on it"
 
 # A NEW CORRECTNESS, SECURITY OR A11Y FINDING FAILS THIS BUILD (ISS-15600).
 # svelte-vitals reads the routes and components statically: an `{#each}` with no
