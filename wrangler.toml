@@ -4,9 +4,9 @@ compatibility_date = "2026-01-06"
 compatibility_flags = ["nodejs_compat"]
 
 # adapter-cloudflare writes its generated Worker here, and this is what makes the
-# deploy a WORKER rather than a Pages project: `dev release sveltekit` reads this
-# file and runs `wrangler deploy` when it declares `main`, `wrangler pages deploy`
-# when it declares `pages_build_output_dir`.
+# deploy a WORKER rather than a Pages project: `wrangler deploy` (scripts/deploy, and
+# `dev release sveltekit`, which reads this file and picks `wrangler deploy` when it
+# declares `main` and `wrangler pages deploy` when it declares `pages_build_output_dir`).
 main = ".svelte-kit/cloudflare/_worker.js"
 
 # Persist Workers Logs. Cloudflare retains nothing a Worker writes unless this block
@@ -32,9 +32,9 @@ head_sampling_rate = 1
 directory = ".svelte-kit/cloudflare"
 binding = "ASSETS"
 
-# Fixed, single-host route on the apex. bthackathon.com is a zone in the `personal`
-# Cloudflare account — the same account this Worker deploys to — and its apex record
-# is already proxied, so the route attaches to it and nothing else claims the host.
+# Fixed, single-host route on the apex. The route attaches to the bthackathon.com
+# zone in the account this Worker deploys to, and needs the apex record there to be
+# proxied (README.md, Deploying, step 2); nothing else claims the host.
 # www.bthackathon.com is not here: it is answered by a zone-level redirect to the
 # apex, which is not this Worker's to serve and does not move with it.
 [[routes]]
@@ -48,7 +48,8 @@ zone_name = "bthackathon.com"
 # is the single source of truth for client config, and nothing in src/ imports
 # `cloudflare:workers`.
 #
-# NO account_id either: the Cloudflare account is pinned by the deploy itself
-# (CLOUDFLARE_ACCOUNT_ID, resolved from the target's label in the env repo's
-# apps/hackathon/config.pkl), which keeps the account id out of a file every session
-# can read.
+# NO account_id either: the Cloudflare account is pinned by whoever deploys, through
+# CLOUDFLARE_ACCOUNT_ID — a repository secret for scripts/deploy and
+# .github/workflows/deploy.yml (README.md, Deploying), or the target's label in the
+# env repo's apps/hackathon/config.pkl for `dev release`. So this file names no
+# account and deploys unchanged into whichever one holds the bthackathon.com zone.
