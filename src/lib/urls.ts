@@ -27,26 +27,5 @@ export const urls = {
   mission: '/mission',
   donate: '/donate',
   press: '/press',
-  contact: '/contact',
-
-  // Voting routes
-  vote: '/vote',
-  voteEvent: (eventKey: string) => `/vote/${eventKey}`,
-  voteThanks: (eventKey: string) => `/vote/${eventKey}/thanks`,
-
-  // Password reset. The `/login/password/reset/<id>` landing page's path is the platform's to
-  // choose (see `src/routes/emailedLinkRoutes.test.ts`); the request page is its sibling.
-  passwordResetRequest: '/login/password/reset',
-
-  // Admin routes
-  voteAdminLogin: '/vote/admin/login',
-  voteAdminLogout: '/vote/admin/logout',
-  voteAdminProfile: '/vote/admin/profile',
-  voteAdmin: '/vote/admin',
-  voteAdminEventsNew: '/vote/admin/events/new',
-  voteAdminEvent: (id: string) => `/vote/admin/events/${id}`,
-  voteAdminEventProjects: (id: string) => `/vote/admin/events/${id}/projects`,
-  voteAdminEventCodes: (id: string) => `/vote/admin/events/${id}/codes`,
-  voteAdminEventResults: (id: string) => `/vote/admin/events/${id}/results`,
-  voteAdminEventProjectsBulk: (id: string) => `/vote/admin/events/${id}/projects/bulk`
+  contact: '/contact'
 } as const;

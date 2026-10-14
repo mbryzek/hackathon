@@ -41,61 +41,9 @@ ci_report() {                    # ci_report covered|not-run "<short phrase>"
   [ -z "${CI_COVERAGE_FILE:-}" ] || printf '%s\n' "$line" >>"$CI_COVERAGE_FILE"
 }
 
-# A HAND-WRITTEN CALL THE GENERATOR ALREADY EMITS FAILS THIS BUILD (ISS-3921).
-# A generated client method and a hand-written `fetch` to the same operation are
-# one wire contract expressed twice, and only the generated copy moves when the
-# spec does — the second drifts silently into a request the backend no longer
-# serves. Three repos hand-rolled the same data_url upload that way, each with a
-# comment claiming no generated method existed (ISS-3884).
-#
-# EXIT CODES ARE THE VERDICT: 0 clean, 1 findings, 2 the lint could not look.
-# Under `set -e` the last two both fail the build, and that is deliberate — "I
-# could not check" must never be reported as "I checked and it is fine". A call
-# the generated method genuinely cannot make is suppressed AT THE SITE with a
-# `codegen-lint-ignore: <reason>` comment, never by dropping this step.
-#
-# IT RUNS BEFORE `npm ci` because it is hermetic and takes about a second: it
-# reads only committed files — this repo's generated clients and its
-# `.api/config.pkl` — so it opens no network connection, needs nothing `npm ci`
-# installs, and adds nothing to `# ci-needs:`. `pkl` is the one binary it shells
-# out to, and every runner already has it for `api`. The directory is `$PWD` by
-# default, which is what makes it correct in a CI checkout whose directory is
-# named for the SLUG and names no app.
-dev codegen lint-consumers
-
-ci_report covered "dev codegen lint-consumers"
-
-# A GENERATED CLIENT BUILT FROM A SPEC NOBODY MERGED FAILS THIS BUILD (ISS-10269).
-# `dev api` resolves a sibling spec-owning clone under `~/code/ai/<feature>/` ahead of
-# anything merged, which is what makes a cross-repo change reviewable on one branch —
-# and the consumer half can then merge on its own while the spec it was generated from
-# is never pushed. trips shipped a reservation kind that way, and every booking of it
-# was refused as unrecognized (ISS-10261). Neither guard around it sees that: the push
-# guard asks whether a codegen run happened in this checkout, and one did, and
-# `dev codegen lint-consumers` asks about hand-written calls.
-#
-# IT JUDGES ONLY WHAT THE BRANCH ADDS — a contract symbol its copy of a generated file
-# declares that neither the fork point's copy nor a regeneration from the producers'
-# main mentions. So a producer spec the `codegen-sync` sweep has not carried over yet,
-# and a generator release, say nothing here; neither is anything the branch added. A
-# branch that changes no generated file pays one fetch and stops, so an ordinary pull
-# request costs almost nothing.
-#
-# EXIT 2 IS THE BOX, NEVER THE BRANCH — no fork point, a `dev repo` mirror or an
-# apibuilder that did not answer — and is mapped to 75 so the lane re-enqueues the head
-# instead of parking the pull request on a red nobody can act on. 1 is the branch.
-#
-# THE LEGITIMATE REFUSAL is the consumer half of an OPEN cross-repo change:
-# `DEV_REPO_PENDING=<producer>#<n> git push origin <branch>` measures this client
-# against the producer's pull request head and records the `pending:` label. The fleet's
-# own run sets nothing, so this pull request stays red until that one merges, which is
-# the order the two have to land in.
-rc=0; dev codegen landed || rc=$?
-case "$rc" in
-  0) ci_report covered "dev codegen landed" ;;
-  2) echo "ci/build.sh: dev codegen landed could not measure this head on this box" >&2; exit 75 ;;
-  *) exit "$rc" ;;
-esac
+# NO CODEGEN STEP. This site calls no API and carries no generated client, so
+# there is no `.api/config.pkl` for `dev codegen lint-consumers` or
+# `dev codegen landed` to read; both would answer "could not look".
 
 # `npm ci` rather than `npm install`: the lockfile is the contract, and a build
 # that silently resolved a different tree than the one committed is a green
@@ -104,17 +52,11 @@ esac
 # survives every clean.
 npm ci
 
-# svelte-check + the Playwright tsconfig typecheck + `playwright test --list` +
-# eslint --max-warnings 0 + vitest. `npm run check` is the whole
+# svelte-check + the Playwright tsconfig typecheck + eslint --max-warnings 0 +
+# vitest. `npm run check` is the whole
 # gate in every SvelteKit repo in this fleet (ISS-3885), so there is deliberately no
 # second test step below — running the unit suite twice would double the slowest
 # part of this build for the same verdict.
-#
-# `check:e2e:collect` inside there COLLECTS the Playwright suite without running
-# it — it loads playwright.config.ts and every spec, so a spec that fails to
-# import is caught here rather than at the next deploy, and it launches no
-# browser and starts no `webServer`. That is what makes it safe in CI while
-# `npm run test:e2e` below is not.
 npm run check
 
 # FORMATTING NEVER FAILS THIS BUILD (ISS-19427): a build fails only for a
@@ -174,16 +116,3 @@ ci_report covered "svelte-vitals (new correctness/security/a11y findings vs ${vi
 # tagged and pushed. playbook-admin 0.4.42 is what that looks like: tag pushed,
 # nothing deployed.
 npm run build
-
-# Deliberately NOT `npm run test:e2e`, and the reason has CHANGED (ISS-4028).
-#
-# It used to be that Playwright could not produce a verdict here at all: it needs a live
-# `platform`, and the released image would not serve one. That is fixed — `ci/e2e.sh` beside this
-# file runs the browser suite against a real backend, and it runs today.
-#
-# What keeps it out of THIS file is the gate. This script produces the `ci` status the merge lane
-# refuses to merge without; `ci/e2e.sh` produces `e2e`, which the lane does not read. These suites
-# had never run unattended before, so their flake rate is unmeasured, and an unmeasured flake
-# source inside `ci` parks pull requests that did nothing wrong. Moving them in here is a decision
-# earned by measured flake data (ISS-2180) — see "The browser suites are the second context" in
-# devops/docs/ci.md — and not something to do because the suite has looked fine.

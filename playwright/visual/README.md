@@ -131,19 +131,15 @@ and fails a capture whose server went hot while it ran.
 
 ## The two sets
 
-| `VISUAL_SET` | What it captures                                                                          | What it needs                                                             |
-| ------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `static`     | every route that renders with no backend — 22 pages, the set `npm run build` prerenders   | `npm run dev`, nothing else                                               |
-| `live`       | every `+page.svelte` under `src/routes`, with `[param]` routes filled from `VISUAL_SEEDS` | a platform serving `VITE_API_BASE_URL`, a seeded event, a signed-in admin |
+| `VISUAL_SET` | What it captures                                                                          | What it needs               |
+| ------------ | ----------------------------------------------------------------------------------------- | --------------------------- |
+| `static`     | every route that renders with no backend — the set `npm run build` prerenders             | `npm run dev`, nothing else |
+| `live`       | every `+page.svelte` under `src/routes`, with `[param]` routes filled from `VISUAL_SEEDS` | whatever those routes call  |
 
-`static` is the set a CSS change is judged on: it needs no backend, so the same 22 pages render
-identically from any checkout, which is exactly what an A/B requires. `live` adds the voting and
-admin surface at the cost of a backend — and two runs against one differ in row ids and timestamps,
-which read as CSS regressions, so a live A/B wants one container pinned across both captures.
-
-```sh
-VISUAL_SET=live VISUAL_SEEDS='{"event_key":"bths-2026","id":"1"}' ...
-```
+`static` is the set a CSS change is judged on: it needs no backend, so the same pages render
+identically from any checkout, which is exactly what an A/B requires. This site calls no backend
+and has no `[param]` route, so `live` captures the same pages; it stays because the harness is
+shared with repos that do have a backend-served surface.
 
 A route with no seeded value is **listed in `manifest.json` under `uncovered`**, never silently
 skipped. A harness that quietly drops half the site and reports "all equal" is worse than one that

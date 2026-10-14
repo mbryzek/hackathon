@@ -1,6 +1,6 @@
 # Response headers for everything Cloudflare's asset server serves directly: the
 # prerendered marketing pages and the files in static/. Responses the SvelteKit Worker
-# renders (/vote, /vote/admin, /_internal_/version) do NOT pass through this file — the
+# renders (/_internal_/version, the 404 page) do NOT pass through this file — the
 # asset server applies it to assets only — so src/hooks.server.ts sets the same headers
 # on those. Keep the two in sync; src/lib/security-headers.test.ts fails if they drift.
 #

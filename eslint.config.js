@@ -28,14 +28,11 @@ const noShorthandInConditionalSpread = [
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  // Global ignores — generated output and code that is not ours to lint, and nothing else.
-  //
-  // This list used to carry `*.config.js` and `*.config.ts`, meant for the build tooling at the
-  // repo root. That glob matches at any depth and by basename, so it also swallowed
-  // `playwright.config.ts` and `playwright/config.ts` — hand-written test code. The build tooling
-  // lints clean anyway, so the exemption bought nothing and hid two files. Lint everything.
+  // Global ignores — build output and code that is not ours to lint, and nothing else. No
+  // `*.config.*` glob: it matches at any depth and by basename, so it would also swallow
+  // hand-written harness code such as `playwright.visual.config.ts`. Lint everything.
   {
-    ignores: ['.svelte-kit/**', 'build/**', 'node_modules/**', 'src/generated/**', 'playwright/generated/**']
+    ignores: ['.svelte-kit/**', 'build/**', 'node_modules/**']
   },
 
   // Base ESLint recommended rules
@@ -46,7 +43,7 @@ export default [
   // ./tsconfig.json is a parse error, not a lint.
   {
     files: ['**/*.ts'],
-    ignores: ['**/*.svelte.ts', 'playwright/**', 'playwright.config.ts'],
+    ignores: ['**/*.svelte.ts', 'playwright/**', 'playwright.visual.config.ts'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -73,11 +70,12 @@ export default [
     }
   },
 
-  // Playwright end-to-end tests. Node-only (no browser globals: the code under test runs in the
-  // browser, this code drives it from node), typed against playwright/tsconfig.json, and covering
-  // playwright.config.ts because that file is part of the same suite.
+  // Playwright code (the visual parity harness). Node-only (no browser globals: the code under
+  // test runs in the browser, this code drives it from node), typed against
+  // playwright/tsconfig.json, and covering playwright.visual.config.ts because that file is part
+  // of the same harness.
   {
-    files: ['playwright/**/*.ts', 'playwright.config.ts', 'playwright.visual.config.ts'],
+    files: ['playwright/**/*.ts', 'playwright.visual.config.ts'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {

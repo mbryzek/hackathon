@@ -1,6 +1,13 @@
 # bthackathon.com
 
-The website of the BT Hackathon: a SvelteKit app deployed as a Cloudflare Worker.
+The website of the BT Hackathon: a SvelteKit app deployed as a Cloudflare Worker. Every page is
+prerendered, and the site calls no backend.
+
+The judging and voting app (`/vote`, `/vote/admin`), the sign-in, password reset, welcome and email
+verification pages, and the platform API clients they used have been removed.
+[`docs/voting-app-inventory.md`](docs/voting-app-inventory.md) describes all of it — every route,
+API call, data shape, email and event-day workflow, with screenshots and the API specs — so it can
+be rebuilt from scratch.
 
 ## Running it locally
 
@@ -105,8 +112,7 @@ hackathon > Deployments**, where **Rollback** puts an earlier one back.
 
 - `wrangler.toml` names the Worker (`hackathon`), the route (`bthackathon.com/*`) and the build
   directory. Nothing in it is specific to one Cloudflare account.
-- `.env.production` holds the build-time settings. `VITE_API_BASE_URL` is the backend the voting and
-  sign-in pages (`/vote`, `/login`, `/welcome`) call.
+- `.env.production` holds the build-time settings.
 - `scripts/deploy` runs `npm ci`, `npm run build` and `wrangler deploy` with the wrangler version
   pinned in `package-lock.json`. It needs no other tooling and reads nothing outside the repository.
 
