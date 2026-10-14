@@ -1,0 +1,132 @@
+{
+  "name": "vote-api",
+  "base_url": "https://api.bthackathon.com",
+  "auth": "public",
+  "imports": [
+    { "uri": "https://app.apibuilder.io/bryzek/platform-error/latest/service.json" }
+  ],
+
+  "enums": {
+    "event_status": {
+      "values": [
+        { "name": "draft" },
+        { "name": "open" },
+        { "name": "closed" }
+      ]
+    },
+    "voter_type": {
+      "values": [
+        { "name": "student" },
+        { "name": "parent" }
+      ]
+    }
+  },
+
+  "models": {
+    "event": {
+      "description": "A voting event",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "key", "type": "string" },
+        { "name": "name", "type": "string" },
+        { "name": "status", "type": "event_status" },
+        { "name": "created_at", "type": "date-time-iso8601" },
+        { "name": "updated_at", "type": "date-time-iso8601" }
+      ]
+    },
+
+    "event_reference": {
+      "fields": [
+        { "name": "id", "type": "string" }
+      ]
+    },
+
+    "project": {
+      "description": "A project",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "event", "type": "event_reference" },
+        { "name": "name", "type": "string" },
+        { "name": "description", "type": "string", "required": false },
+        { "name": "position", "type": "integer" },
+        { "name": "created_at", "type": "date-time-iso8601" },
+        { "name": "updated_at", "type": "date-time-iso8601" }
+      ]
+    },
+
+    "project_vote": {
+      "description": "A project with its voting state",
+      "fields": [
+        { "name": "project", "type": "project" },
+        { "name": "selected", "type": "boolean", "description": "Whether this project has been voted for by the current code" }
+      ]
+    },
+
+    "code_verification_form": {
+      "description": "Form to verify a voting code",
+      "fields": [
+        { "name": "code", "type": "string", "description": "6-digit voting code" }
+      ]
+    },
+
+    "vote": {
+      "description": "Response after verifying a voting code",
+      "fields": [
+        { "name": "voter_type", "type": "voter_type" },
+        { "name": "max_votes", "type": "integer", "description": "Maximum number of votes allowed (1 for students, 3 for parents)", "minimum": 1 },
+        { "name": "event", "type": "event" },
+        { "name": "projects", "type": "[project_vote]" }
+      ]
+    },
+
+    "vote_form": {
+      "description": "Form to submit votes",
+      "fields": [
+        { "name": "code", "type": "string", "description": "6-digit voting code" },
+        { "name": "project_ids", "type": "[string]", "description": "IDs of projects to vote for" }
+      ]
+    }
+  },
+
+  "resources": {
+    "event": {
+      "path": "/vote/events",
+      "operations": [
+        {
+          "method": "GET",
+          "path": "/all/open",
+          "responses": {
+            "200": { "type": "[event]" }
+          }
+        }
+      ]
+    },
+
+    "vote": {
+      "path": "/vote/events/:event_key",
+      "operations": [
+        {
+          "method": "POST",
+          "path": "/code/verifications",
+          "description": "Verify a voting code and return voting information",
+          "body": "code_verification_form",
+          "responses": {
+            "200": { "type": "vote" },
+            "404": { "type": "unit" },
+            "422": { "type": "[com.bryzek.platform.error.models.validation_error]" }
+          }
+        },
+        {
+          "method": "POST",
+          "description": "Submit votes for projects",
+          "body": "vote_form",
+          "responses": {
+            "200": { "type": "vote" },
+            "404": { "type": "unit" },
+            "422": { "type": "[com.bryzek.platform.error.models.validation_error]" }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -7,3 +7,5 @@ playwright-report/
 test-results/
 .vercel/
 .wrangler/
+# Verbatim copies of the platform API Builder specs; kept byte-identical to their source.
+docs/voting-app-inventory/specs/
