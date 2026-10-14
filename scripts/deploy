@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+#
+# Build this site and deploy it to Cloudflare, with nothing but Node, npm, git and a
+# Cloudflare API token. README.md, "Deploying", has the one-time account setup.
+#
+#   CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... scripts/deploy
+#
+# The same script is what .github/workflows/deploy.yml runs on every push to main, with
+# both values taken from the repository's Actions secrets.
+#
+# SELF-CONTAINED ON PURPOSE: it calls no `dev` command, reads no file outside this
+# checkout, and needs no `wrangler login`. Whoever holds a Cloudflare account and a
+# token for it can deploy from a fresh clone. Everything Cloudflare needs to know
+# about the Worker (its name, the bthackathon.com route, the asset directory) is in
+# wrangler.toml; the only thing it does not carry is the account, which is
+# CLOUDFLARE_ACCOUNT_ID here.
+#
+# Flags:
+#   --skip-install   reuse the node_modules already in the checkout instead of `npm ci`
+#   --dry-run        build and bundle, but upload nothing (`wrangler deploy --dry-run`)
+set -euo pipefail
+
+# No usage telemetry from a deploy.
+export WRANGLER_SEND_METRICS=false
+
+cd "$(dirname "$0")/.."
+
+skip_install=false
+dry_run=false
+for arg in "$@"; do
+  case "$arg" in
+    --skip-install) skip_install=true ;;
+    --dry-run) dry_run=true ;;
+    -h | --help)
+      sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    *)
+      echo "scripts/deploy: unknown argument: $arg (see --help)" >&2
+      exit 2
+      ;;
+  esac
+done
+
+fail() {
+  echo "scripts/deploy: $*" >&2
+  exit 1
+}
+
+# Both are required for a real deploy, and checked before anything is built, so a
+# missing secret costs seconds rather than a whole build. The account id is pinned
+# rather than looked up: a token that can see several accounts would otherwise make
+# wrangler ask which one, and there is nobody to answer in CI.
+if [ "$dry_run" = false ]; then
+  [ -n "${CLOUDFLARE_API_TOKEN:-}" ] ||
+    fail "CLOUDFLARE_API_TOKEN is not set. Create one from the 'Edit Cloudflare Workers' template (README.md, Deploying)."
+  [ -n "${CLOUDFLARE_ACCOUNT_ID:-}" ] ||
+    fail "CLOUDFLARE_ACCOUNT_ID is not set. It is on the Cloudflare dashboard's account home page (README.md, Deploying)."
+fi
+
+command -v node >/dev/null || fail "node is not installed. package.json 'engines' says which version."
+command -v npm >/dev/null || fail "npm is not installed."
+
+# What /_internal_/version reports, baked in at build time through SvelteKit's
+# static public env (src/env.ts). The commit is what identifies a build of this
+# repo, so it is the version; the time is when this deploy built it.
+sha=$(git rev-parse --short=12 HEAD 2>/dev/null || echo "unknown")
+if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+  version="${sha}-dirty"
+else
+  version="$sha"
+fi
+export PUBLIC_VERSION="$version"
+PUBLIC_RELEASED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+export PUBLIC_RELEASED_AT
+
+echo "==> Deploying hackathon $PUBLIC_VERSION"
+
+if [ "$skip_install" = false ]; then
+  echo "==> npm ci"
+  npm ci
+fi
+
+# A clean build: the adapter writes into .svelte-kit/cloudflare, and a file left
+# there by an earlier build would be uploaded as a static asset.
+echo "==> Building"
+rm -rf build .svelte-kit/cloudflare
+npm run build
+
+# The local wrangler from package-lock.json, never a global one, so the version
+# that deploys is the one this commit was tested with. `--tag` and `--message`
+# label the Worker version on the dashboard (Workers & Pages > hackathon >
+# Deployments) with the commit it was built from.
+deploy_args=(deploy --tag "$version" --message "Deploy $version")
+if [ "$dry_run" = true ]; then
+  deploy_args+=(--dry-run)
+fi
+
+echo "==> wrangler ${deploy_args[*]}"
+./node_modules/.bin/wrangler "${deploy_args[@]}"
+
+if [ "$dry_run" = true ]; then
+  echo "==> Dry run complete: nothing was uploaded."
+else
+  echo "==> Deployed $version. Check it with: curl -s https://bthackathon.com/_internal_/version"
+fi
