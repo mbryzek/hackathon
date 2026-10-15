@@ -14,6 +14,7 @@ import { assertColdServer } from './coldServer.ts';
 import { paths, writeFile } from './files.ts';
 import type { Dropped, Manifest, ManifestEntry } from './manifest.ts';
 import { capturePlan } from './plan.ts';
+import { captureProbe } from './setup.ts';
 
 interface Shard {
   entries: Record<string, ManifestEntry>;
@@ -109,7 +110,8 @@ export default async function globalTeardown(): Promise<void> {
    * shot taken across that moment is of a document that changed under the harness -- which no
    * per-shot check can see, since the shot is self-consistent. See `ProofMoment`.
    */
-  await assertColdServer(plan.baseUrl, 'after');
+  const probe = captureProbe(plan.baseUrl, plan.targets);
+  await assertColdServer(probe.url, 'after', probe.init);
 
   if (dropped.length > 0) {
     throw new Error(

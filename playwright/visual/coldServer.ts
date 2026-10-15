@@ -181,13 +181,14 @@ export type ProofMoment = 'before' | 'after';
  * with no HMR to have happened, and it references no dev module urls, so the crawl finds nothing
  * to follow and says so.
  */
-export async function assertColdServer(baseUrl: string, moment: ProofMoment = 'before'): Promise<void> {
+export async function assertColdServer(baseUrl: string, moment: ProofMoment = 'before', init: RequestInit = {}): Promise<void> {
   // `redirect: 'follow'` and a fetch of its own, rather than reusing the reachability probe above:
   // that one is deliberately `manual`, so a base url that redirects to a login answers it with an
   // EMPTY body -- and an empty body crawls to zero modules and passes this proof for a reason that
   // has nothing to do with the server being cold. The url it landed on is kept with the body,
-  // because a SvelteKit 3 dev document's module references are relative to it.
-  const served = await fetch(baseUrl)
+  // because a SvelteKit 3 dev document's module references are relative to it. `init` carries the
+  // capture's own cookies for the document alone; the modules it imports are served to anybody.
+  const served = await fetch(baseUrl, init)
     .then(async (response) => ({ url: response.url || baseUrl, document: await response.text() }))
     .catch(() => ({ url: baseUrl, document: '' }));
   const scan = await scanForHmr(served.url, served.document);

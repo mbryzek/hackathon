@@ -79,13 +79,20 @@ and a red A/B is indistinguishable from noise.
 
 ### `setup.ts` checks it is capturing this app
 
-Before anything else, `setup.ts` fetches the base url, following redirects as the browser will, and
-refuses the capture unless the document carries `APP_MARKER`: a comment this repo's `src/app.html`
+Before anything else, `setup.ts` fetches the first page the capture opens, with the cookies in
+`VISUAL_COOKIES` and following redirects as the browser will, and refuses the capture unless the
+document carries `APP_MARKER`: a comment this repo's `src/app.html`
 puts in every page it serves, exported from `plan.ts`. A server that answered is not evidence it is
 this app's, because the address-family collision above serves a sibling's app on the url you typed.
 `setup.test.ts` pins that `src/app.html` still carries the marker. The check tells this app from any
 other; it cannot tell two working trees of this app apart, which is what the random port and the url
 `serve` prints are for.
+
+It probes that page rather than the base url because an app whose sign-in lives in the account app
+redirects a signed-out request for its root to another origin, whose document carries the account
+app's marker. A page the set captures is the one document the harness photographs anyway: the
+`preview` set's entry needs no session, and a `live` set's guarded page gets the one the capture
+plants. ISS-19745
 
 ## The server has to be cold
 
@@ -112,11 +119,11 @@ annoying. The gate runs before anybody has edited anything, so it passes every s
 trusts the harness, and then edits the tree and re-captures from the server still running.
 
 So `setup.ts` refuses the capture instead. Before it clears the output directory it crawls the
-module graph the base url pulls in and looks for vite's `?t=<epoch ms>` stamp; finding one, it names
+module graph that first page pulls in and looks for vite's `?t=<epoch ms>` stamp; finding one, it names
 the modules and stops. The proof is reported either way, with the count of modules it walked, and
 `VISUAL_ALLOW_HOT_SERVER=1` captures anyway for an operator who has looked and disagrees.
 
-The crawl reaches what the base document imports — the stylesheet entry, the root layout and the
+The crawl reaches what that document imports — the stylesheet entry, the root layout and the
 shell, which is the surface a CSS-toolchain change is about. It is not the whole server, so the rule
 stays a rule the operator keeps: **restart the server after every edit, and do not touch the tree
 while a capture is running.**
