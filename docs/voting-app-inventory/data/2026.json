@@ -1,0 +1,901 @@
+{
+  "event": {
+    "id": "evt-ebcc0e89963a41c4a4fcd95577a1667fl1Z14L7G",
+    "key": "2026",
+    "name": "2026 BT Hackathon",
+    "status": "closed",
+    "created_at": "2026-04-16T21:03:32.924+00:00",
+    "updated_at": "2026-04-19T00:30:55.349+00:00"
+  },
+  "projects": [
+    {
+      "id": "prj-47e2d52f335b4b28a4e986e61617c244Fr8Sc6ay",
+      "name": "2\ufe0f\u20e3 Guys",
+      "description": null,
+      "position": 1,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-3851322ccea943b8b5c79e70cd60b730nS0aqU1A",
+      "name": "5star Coding",
+      "description": null,
+      "position": 2,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-9872529c9ed94886ac70dfb302d345bcA0kRfknA",
+      "name": "Chingis",
+      "description": null,
+      "position": 3,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-c955f92fa38d4f41a41bc935363bda66DAv33Y5L",
+      "name": "Codeonauts",
+      "description": null,
+      "position": 4,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-ce7cf8e0dec3409db89d564204cd3d8aBhzcwwUk",
+      "name": "Copilot Warriors",
+      "description": null,
+      "position": 5,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-33dfea876c0147728d6cb150e125b5a9oiYos5t7",
+      "name": "CyberGuild",
+      "description": null,
+      "position": 6,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-0d8b97caf4424dd9963d5cc5a52ec83ckQJIuQ0p",
+      "name": "DEEPseek",
+      "description": null,
+      "position": 7,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-740d44416e0f49c5ae9f582dbbf0b66aaIAipG7E",
+      "name": "djmc",
+      "description": null,
+      "position": 8,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-bcfcb934bc894766be283fb01152099dDy1kWdvy",
+      "name": "Engel's Army",
+      "description": null,
+      "position": 9,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-3b8a70b558304880ac99c3d71a3832cdNOsv9vMn",
+      "name": "In Gemici We Trust",
+      "description": null,
+      "position": 10,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-3c9fa853c05f4bf0b8f07e02ae9b4896jwDx07N8",
+      "name": "Infinite Loopers",
+      "description": null,
+      "position": 11,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-f0fb2e0f7e86495b82314637079e6b6bDFb2mIxA",
+      "name": "jalen build",
+      "description": null,
+      "position": 12,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-caeb6c437b6748e1856c153b0d19e45eheRfTSWt",
+      "name": "Jam",
+      "description": null,
+      "position": 13,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-07b74d6a3d2849a985ec20b56aabfc22NWFrTbE0",
+      "name": "jemmca O'toole",
+      "description": null,
+      "position": 14,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-32ba33c862fb45b0b60543488ce55d1eztFmbtqF",
+      "name": "jenney&arpey",
+      "description": null,
+      "position": 15,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-bc469428ad2441d3993aaab9643046ddiRZFH44M",
+      "name": "KitKat",
+      "description": null,
+      "position": 16,
+      "created_at": "2026-04-18T16:00:37.004+00:00",
+      "updated_at": "2026-04-18T16:00:37.004+00:00"
+    },
+    {
+      "id": "prj-40184d2cc25c4064aea31fbf3251aed5TsGgDMo1",
+      "name": "M-KAD",
+      "description": null,
+      "position": 17,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-bd6490cd0ad34ebcb5ed9d02556ecfe8FbkzE2ON",
+      "name": "Nettspend",
+      "description": null,
+      "position": 18,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-a65613c564f14220a04bcd0330040836gX7qXDyb",
+      "name": "Nine Volt",
+      "description": null,
+      "position": 19,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-ecf0c84d352a4c349339c5039f3ef46eIv54YpXl",
+      "name": "Pasha & Friends",
+      "description": null,
+      "position": 20,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-88c09f5bb3534bdaaaeedd027bc53326NjTM58Js",
+      "name": "RedSuns",
+      "description": null,
+      "position": 21,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-72e2ad002a234c07abf77879103e0e29benyUPq3",
+      "name": "Rithika\u2019s Birthday Bash!",
+      "description": null,
+      "position": 22,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-6161dd3ea09a4dbb8201e47cf3603debpg0sxn6L",
+      "name": "Saisha",
+      "description": null,
+      "position": 23,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-e390f28f874a43eea32d47cf99ecc901VHrL8J1o",
+      "name": "Solid State Drive",
+      "description": null,
+      "position": 24,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-d0dfa06748864361b7100e9b58b569f8hEapuCKP",
+      "name": "Team 3C",
+      "description": null,
+      "position": 25,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-2369a8ebc5d74d5d93b9d969bd92f3d0U8kqeeHp",
+      "name": "Team AI",
+      "description": null,
+      "position": 26,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-55797dffb16c4fc2992b0a63e3e04216AMV5OQeP",
+      "name": "Team Christian",
+      "description": null,
+      "position": 27,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-a8ddaee4b3c54c72a7f897f46d534f37YZwvSHsv",
+      "name": "Team Palkac",
+      "description": null,
+      "position": 28,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-788364d8e62f4e509b2cad01a8d844c8n2OWSknm",
+      "name": "Team Swasri",
+      "description": null,
+      "position": 29,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-1cd0070306f245fd83ff856332c51c43VI7HBKbv",
+      "name": "Team Umbra",
+      "description": null,
+      "position": 30,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-eaa7aca4179d45d3bc9447728d33015bz4mgBAvt",
+      "name": "Testing",
+      "description": null,
+      "position": 31,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-defaafe7cad94c82970f1888eae11867RmgnXee8",
+      "name": "The Enlightened CyberChefs",
+      "description": null,
+      "position": 32,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-c33115b8701d45e1930dc8d58f33f101W20xul9Q",
+      "name": "Tokyo Drift",
+      "description": null,
+      "position": 33,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-21ca1cb0f2184c0b8aaa2c654b173703mBpI6cx9",
+      "name": "Triple S",
+      "description": null,
+      "position": 34,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-9f1fd3d6b9014a09aca74a78a3bbb6a2iI1NIEV6",
+      "name": "Triple T",
+      "description": null,
+      "position": 35,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-367ffefe3ec647d193c111f75b5a9d3ehHAFNoBa",
+      "name": "Turkish Delights",
+      "description": null,
+      "position": 36,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-f952c07e58f44908a63acdad94b14736QsIDLaQt",
+      "name": "Value = Imperative",
+      "description": null,
+      "position": 37,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    },
+    {
+      "id": "prj-4b50c93b921745309e753ea601b8ee60Ogh48yPD",
+      "name": "We just hit the jackpot",
+      "description": null,
+      "position": 38,
+      "created_at": "2026-04-18T16:00:37.005+00:00",
+      "updated_at": "2026-04-18T16:00:37.005+00:00"
+    }
+  ],
+  "results": {
+    "student": {
+      "total_votes": 93,
+      "projects": [
+        {
+          "project": {
+            "id": "prj-c955f92fa38d4f41a41bc935363bda66DAv33Y5L",
+            "name": "Codeonauts",
+            "position": 4
+          },
+          "vote_count": 6
+        },
+        {
+          "project": {
+            "id": "prj-a65613c564f14220a04bcd0330040836gX7qXDyb",
+            "name": "Nine Volt",
+            "position": 19
+          },
+          "vote_count": 5
+        },
+        {
+          "project": {
+            "id": "prj-9f1fd3d6b9014a09aca74a78a3bbb6a2iI1NIEV6",
+            "name": "Triple T",
+            "position": 35
+          },
+          "vote_count": 5
+        },
+        {
+          "project": {
+            "id": "prj-367ffefe3ec647d193c111f75b5a9d3ehHAFNoBa",
+            "name": "Turkish Delights",
+            "position": 36
+          },
+          "vote_count": 5
+        },
+        {
+          "project": {
+            "id": "prj-740d44416e0f49c5ae9f582dbbf0b66aaIAipG7E",
+            "name": "djmc",
+            "position": 8
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-f0fb2e0f7e86495b82314637079e6b6bDFb2mIxA",
+            "name": "jalen build",
+            "position": 12
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-bd6490cd0ad34ebcb5ed9d02556ecfe8FbkzE2ON",
+            "name": "Nettspend",
+            "position": 18
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-6161dd3ea09a4dbb8201e47cf3603debpg0sxn6L",
+            "name": "Saisha",
+            "position": 23
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-defaafe7cad94c82970f1888eae11867RmgnXee8",
+            "name": "The Enlightened CyberChefs",
+            "position": 32
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-ce7cf8e0dec3409db89d564204cd3d8aBhzcwwUk",
+            "name": "Copilot Warriors",
+            "position": 5
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-bcfcb934bc894766be283fb01152099dDy1kWdvy",
+            "name": "Engel's Army",
+            "position": 9
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-3b8a70b558304880ac99c3d71a3832cdNOsv9vMn",
+            "name": "In Gemici We Trust",
+            "position": 10
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-07b74d6a3d2849a985ec20b56aabfc22NWFrTbE0",
+            "name": "jemmca O'toole",
+            "position": 14
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-40184d2cc25c4064aea31fbf3251aed5TsGgDMo1",
+            "name": "M-KAD",
+            "position": 17
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-ecf0c84d352a4c349339c5039f3ef46eIv54YpXl",
+            "name": "Pasha & Friends",
+            "position": 20
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-72e2ad002a234c07abf77879103e0e29benyUPq3",
+            "name": "Rithika\u2019s Birthday Bash!",
+            "position": 22
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-d0dfa06748864361b7100e9b58b569f8hEapuCKP",
+            "name": "Team 3C",
+            "position": 25
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-21ca1cb0f2184c0b8aaa2c654b173703mBpI6cx9",
+            "name": "Triple S",
+            "position": 34
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-4b50c93b921745309e753ea601b8ee60Ogh48yPD",
+            "name": "We just hit the jackpot",
+            "position": 38
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-47e2d52f335b4b28a4e986e61617c244Fr8Sc6ay",
+            "name": "2\ufe0f\u20e3 Guys",
+            "position": 1
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-3c9fa853c05f4bf0b8f07e02ae9b4896jwDx07N8",
+            "name": "Infinite Loopers",
+            "position": 11
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-caeb6c437b6748e1856c153b0d19e45eheRfTSWt",
+            "name": "Jam",
+            "position": 13
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-32ba33c862fb45b0b60543488ce55d1eztFmbtqF",
+            "name": "jenney&arpey",
+            "position": 15
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-88c09f5bb3534bdaaaeedd027bc53326NjTM58Js",
+            "name": "RedSuns",
+            "position": 21
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-e390f28f874a43eea32d47cf99ecc901VHrL8J1o",
+            "name": "Solid State Drive",
+            "position": 24
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-a8ddaee4b3c54c72a7f897f46d534f37YZwvSHsv",
+            "name": "Team Palkac",
+            "position": 28
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-1cd0070306f245fd83ff856332c51c43VI7HBKbv",
+            "name": "Team Umbra",
+            "position": 30
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-3851322ccea943b8b5c79e70cd60b730nS0aqU1A",
+            "name": "5star Coding",
+            "position": 2
+          },
+          "vote_count": 1
+        },
+        {
+          "project": {
+            "id": "prj-33dfea876c0147728d6cb150e125b5a9oiYos5t7",
+            "name": "CyberGuild",
+            "position": 6
+          },
+          "vote_count": 1
+        },
+        {
+          "project": {
+            "id": "prj-0d8b97caf4424dd9963d5cc5a52ec83ckQJIuQ0p",
+            "name": "DEEPseek",
+            "position": 7
+          },
+          "vote_count": 1
+        },
+        {
+          "project": {
+            "id": "prj-788364d8e62f4e509b2cad01a8d844c8n2OWSknm",
+            "name": "Team Swasri",
+            "position": 29
+          },
+          "vote_count": 1
+        },
+        {
+          "project": {
+            "id": "prj-c33115b8701d45e1930dc8d58f33f101W20xul9Q",
+            "name": "Tokyo Drift",
+            "position": 33
+          },
+          "vote_count": 1
+        },
+        {
+          "project": {
+            "id": "prj-f952c07e58f44908a63acdad94b14736QsIDLaQt",
+            "name": "Value = Imperative",
+            "position": 37
+          },
+          "vote_count": 1
+        }
+      ]
+    },
+    "parent": {
+      "total_votes": 163,
+      "projects": [
+        {
+          "project": {
+            "id": "prj-47e2d52f335b4b28a4e986e61617c244Fr8Sc6ay",
+            "name": "2\ufe0f\u20e3 Guys",
+            "position": 1
+          },
+          "vote_count": 9
+        },
+        {
+          "project": {
+            "id": "prj-6161dd3ea09a4dbb8201e47cf3603debpg0sxn6L",
+            "name": "Saisha",
+            "position": 23
+          },
+          "vote_count": 9
+        },
+        {
+          "project": {
+            "id": "prj-55797dffb16c4fc2992b0a63e3e04216AMV5OQeP",
+            "name": "Team Christian",
+            "position": 27
+          },
+          "vote_count": 9
+        },
+        {
+          "project": {
+            "id": "prj-40184d2cc25c4064aea31fbf3251aed5TsGgDMo1",
+            "name": "M-KAD",
+            "position": 17
+          },
+          "vote_count": 8
+        },
+        {
+          "project": {
+            "id": "prj-a65613c564f14220a04bcd0330040836gX7qXDyb",
+            "name": "Nine Volt",
+            "position": 19
+          },
+          "vote_count": 8
+        },
+        {
+          "project": {
+            "id": "prj-88c09f5bb3534bdaaaeedd027bc53326NjTM58Js",
+            "name": "RedSuns",
+            "position": 21
+          },
+          "vote_count": 7
+        },
+        {
+          "project": {
+            "id": "prj-3b8a70b558304880ac99c3d71a3832cdNOsv9vMn",
+            "name": "In Gemici We Trust",
+            "position": 10
+          },
+          "vote_count": 6
+        },
+        {
+          "project": {
+            "id": "prj-3c9fa853c05f4bf0b8f07e02ae9b4896jwDx07N8",
+            "name": "Infinite Loopers",
+            "position": 11
+          },
+          "vote_count": 6
+        },
+        {
+          "project": {
+            "id": "prj-f952c07e58f44908a63acdad94b14736QsIDLaQt",
+            "name": "Value = Imperative",
+            "position": 37
+          },
+          "vote_count": 6
+        },
+        {
+          "project": {
+            "id": "prj-33dfea876c0147728d6cb150e125b5a9oiYos5t7",
+            "name": "CyberGuild",
+            "position": 6
+          },
+          "vote_count": 5
+        },
+        {
+          "project": {
+            "id": "prj-07b74d6a3d2849a985ec20b56aabfc22NWFrTbE0",
+            "name": "jemmca O'toole",
+            "position": 14
+          },
+          "vote_count": 5
+        },
+        {
+          "project": {
+            "id": "prj-ecf0c84d352a4c349339c5039f3ef46eIv54YpXl",
+            "name": "Pasha & Friends",
+            "position": 20
+          },
+          "vote_count": 5
+        },
+        {
+          "project": {
+            "id": "prj-e390f28f874a43eea32d47cf99ecc901VHrL8J1o",
+            "name": "Solid State Drive",
+            "position": 24
+          },
+          "vote_count": 5
+        },
+        {
+          "project": {
+            "id": "prj-21ca1cb0f2184c0b8aaa2c654b173703mBpI6cx9",
+            "name": "Triple S",
+            "position": 34
+          },
+          "vote_count": 5
+        },
+        {
+          "project": {
+            "id": "prj-c955f92fa38d4f41a41bc935363bda66DAv33Y5L",
+            "name": "Codeonauts",
+            "position": 4
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-0d8b97caf4424dd9963d5cc5a52ec83ckQJIuQ0p",
+            "name": "DEEPseek",
+            "position": 7
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-740d44416e0f49c5ae9f582dbbf0b66aaIAipG7E",
+            "name": "djmc",
+            "position": 8
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-32ba33c862fb45b0b60543488ce55d1eztFmbtqF",
+            "name": "jenney&arpey",
+            "position": 15
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-bd6490cd0ad34ebcb5ed9d02556ecfe8FbkzE2ON",
+            "name": "Nettspend",
+            "position": 18
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-d0dfa06748864361b7100e9b58b569f8hEapuCKP",
+            "name": "Team 3C",
+            "position": 25
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-2369a8ebc5d74d5d93b9d969bd92f3d0U8kqeeHp",
+            "name": "Team AI",
+            "position": 26
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-788364d8e62f4e509b2cad01a8d844c8n2OWSknm",
+            "name": "Team Swasri",
+            "position": 29
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-4b50c93b921745309e753ea601b8ee60Ogh48yPD",
+            "name": "We just hit the jackpot",
+            "position": 38
+          },
+          "vote_count": 4
+        },
+        {
+          "project": {
+            "id": "prj-ce7cf8e0dec3409db89d564204cd3d8aBhzcwwUk",
+            "name": "Copilot Warriors",
+            "position": 5
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-bcfcb934bc894766be283fb01152099dDy1kWdvy",
+            "name": "Engel's Army",
+            "position": 9
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-f0fb2e0f7e86495b82314637079e6b6bDFb2mIxA",
+            "name": "jalen build",
+            "position": 12
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-caeb6c437b6748e1856c153b0d19e45eheRfTSWt",
+            "name": "Jam",
+            "position": 13
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-bc469428ad2441d3993aaab9643046ddiRZFH44M",
+            "name": "KitKat",
+            "position": 16
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-72e2ad002a234c07abf77879103e0e29benyUPq3",
+            "name": "Rithika\u2019s Birthday Bash!",
+            "position": 22
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-eaa7aca4179d45d3bc9447728d33015bz4mgBAvt",
+            "name": "Testing",
+            "position": 31
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-c33115b8701d45e1930dc8d58f33f101W20xul9Q",
+            "name": "Tokyo Drift",
+            "position": 33
+          },
+          "vote_count": 3
+        },
+        {
+          "project": {
+            "id": "prj-3851322ccea943b8b5c79e70cd60b730nS0aqU1A",
+            "name": "5star Coding",
+            "position": 2
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-9872529c9ed94886ac70dfb302d345bcA0kRfknA",
+            "name": "Chingis",
+            "position": 3
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-a8ddaee4b3c54c72a7f897f46d534f37YZwvSHsv",
+            "name": "Team Palkac",
+            "position": 28
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-1cd0070306f245fd83ff856332c51c43VI7HBKbv",
+            "name": "Team Umbra",
+            "position": 30
+          },
+          "vote_count": 2
+        },
+        {
+          "project": {
+            "id": "prj-defaafe7cad94c82970f1888eae11867RmgnXee8",
+            "name": "The Enlightened CyberChefs",
+            "position": 32
+          },
+          "vote_count": 1
+        },
+        {
+          "project": {
+            "id": "prj-9f1fd3d6b9014a09aca74a78a3bbb6a2iI1NIEV6",
+            "name": "Triple T",
+            "position": 35
+          },
+          "vote_count": 1
+        }
+      ]
+    }
+  },
+  "code_summary": {
+    "total": 350,
+    "student": {
+      "codes": 150,
+      "votes": 93,
+      "codes_voted": 93
+    },
+    "parent": {
+      "codes": 200,
+      "votes": 163,
+      "codes_voted": 66
+    }
+  }
+}

@@ -12,6 +12,7 @@ What lives where:
 | `docs/voting-app-inventory/screenshots/` | One PNG per screen and state, 38 in all. Voter screens are at phone width (390px), everything else at 1280px.                                                                                                      |
 | `docs/voting-app-inventory/specs/`       | The API Builder specs that define the contract, copied verbatim from `mbryzek/platform`: `vote-api.json`, `vote-admin.json`, `db-vote.json` (the database tables), `playwright-vote.json` (test-only seeding API). |
 | `docs/voting-app-inventory/stub-api.mjs` | An in-memory Node server implementing every endpoint the app calls, with the platform's rules and messages. Develop a rebuild against it.                                                                          |
+| `docs/voting-app-inventory/data/`        | The past voting data: every live event, its projects, vote counts per project and voter type, and code counts (section 8).                                                                                         |
 | `docs/voting-app-inventory/capture.mjs`  | Re-takes every screenshot against the stub.                                                                                                                                                                        |
 
 To run the current app with no platform:
@@ -281,18 +282,22 @@ On the day:
 
 ## 8. Past event data
 
-**Not exported here, because no surface reachable without a hackathon admin login can read it.**
-What was checked on 2026-10-14:
+`docs/voting-app-inventory/data/` holds every event whose `deleted_at` is null, read from the
+production `vote.events`, `vote.projects`, `vote.codes` and `vote.votes` tables through the
+`/dev/data` read console on 2026-10-15. One event qualifies, `2026` ("2026 BT Hackathon", status
+`closed`): 38 projects, 350 codes, 256 votes. The two other rows in `vote.events` ("Testing",
+"Organizer Demo") were deleted before the event and are not exported.
 
-- `GET https://api.idempotent.io/vote/events/all/open` answers `[]`: no event is open.
-- The production `/dev/data` read console does not list any `vote.*` table, so the events, projects,
-  codes and votes cannot be read without an admin session of the `hackathon` tenant.
+| File                                                                  | What it is                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`data/2026.json`](voting-app-inventory/data/2026.json)               | `event` (the row), `projects` (every project, by position), `results` (the shape of `GET /vote/admin/events/:id/results`: per voter type, `total_votes` and the projects with at least one vote, by count descending, ties by position) and `code_summary` (the shape of `GET .../codes/summary`, plus `codes_voted`, the number of codes with at least one vote). |
+| [`data/2026-results.csv`](voting-app-inventory/data/2026-results.csv) | One row per project, by position: `position`, `project`, `student_votes`, `parent_votes`, `total_votes`. Projects with no votes are included with zeros.                                                                                                                                                                                                           |
 
-The rows remain in the platform database (schema `vote`) regardless of whether these routes are
-turned off. To export them, sign in at `/vote/admin` while it still exists and, for each event, save
-the Results page and **Export CSV** from the Codes tab; or read `vote.events`, `vote.projects`,
-`vote.codes` and `vote.votes` from the database directly. ISS-19720 tracks that export, into
-`docs/voting-app-inventory/data/`.
+Vote counts are `vote.votes` rows joined to `vote.codes` on `code_id` for the voter type, counted per
+project, exactly as the results page counts them (section 3). The voting codes themselves are not
+exported: the read console does not serve the `code` column, and nothing here reconstructs it. Every
+vote's code belongs to the same event as its project, and no code exceeds its vote limit (1 student,
+3 parent).
 
 ## 9. Behaviour worth knowing before a rebuild
 
