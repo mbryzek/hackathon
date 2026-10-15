@@ -41,9 +41,16 @@ ci_report() {                    # ci_report covered|not-run "<short phrase>"
   [ -z "${CI_COVERAGE_FILE:-}" ] || printf '%s\n' "$line" >>"$CI_COVERAGE_FILE"
 }
 
-# NO CODEGEN STEP. This site calls no API and carries no generated client, so
-# there is no `.api/config.pkl` for `dev codegen lint-consumers` or
-# `dev codegen landed` to read; both would answer "could not look".
+# THE SHARED STEPS ARE DEVOPS', NOT THIS FILE'S (ISS-19732). `dev ci step NAME`
+# runs `templates/ci/steps/NAME` out of the devops release this machine runs, so a
+# step's rule, its comment or a new step in the family sequence reaches every
+# SvelteKit repo with one devops release and no pull request here. Each step
+# reports what it covered itself. `dev ci step --list` says what this release
+# carries, and the comments that say why each step exists live with the step.
+#
+# `codegen`: the two codegen lints, before `npm ci` because they read only
+# committed files; reported not-run without `.api/config.pkl`.
+dev ci step codegen
 
 # `npm ci` rather than `npm install`: the lockfile is the contract, and a build
 # that silently resolved a different tree than the one committed is a green
@@ -59,61 +66,13 @@ npm ci
 # part of this build for the same verdict.
 npm run check
 
-# FORMATTING NEVER FAILS THIS BUILD (ISS-19427): a build fails only for a
-# functional problem, and an unformatted file behaves exactly as its formatted
-# copy does, so `npm run check` carries no `prettier --check`. `scripts/check-format`
-# (a copy of devops templates/ci/check-format, which runs `dev fmt report` — this
-# repo's own `node_modules/.bin/prettier --list-different .`) prints every
-# unformatted file and exits 0. The hygiene sweep runs it over `main` and fixes
-# what it finds; `npm run format` is the fix.
+# `sveltekit`: everything the family runs after `npm run check`, in order —
+# the advisory format report (formatting never fails a build, ISS-19427), the
+# svelte-vitals gate on new findings (ISS-15600), and `npm run build`, the verdict
+# svelte-check cannot give (ISS-868).
+#
+# The hygiene sweep reads the declaration below out of this file and runs the
+# repo's `scripts/check-format` (a copy of devops templates/ci/check-format) over
+# `main` every 14 days.
 # ci-advisory: scripts/check-format
-scripts/check-format || echo "check-format: could not measure this tree — advisory, nothing fails on it"
-
-# A NEW CORRECTNESS, SECURITY OR A11Y FINDING FAILS THIS BUILD (ISS-15600).
-# svelte-vitals reads the routes and components statically: an `{#each}` with no
-# key, an `{@html}` site, an ARIA attribute the element does not allow, an id
-# repeated on one route. `svelte-vitals.config.js` turns every other category
-# off and sets `failOn: 'warning'`.
-#
-# ONLY WHAT THIS BRANCH INTRODUCES. `--baseline` analyzes the merge base in a
-# temporary worktree and subtracts every finding already there, so the backlog
-# on `main` parks nothing; burning it down is separate work. The base is the
-# MERGE BASE with a freshly fetched `main`, never `origin/main`: a CI checkout
-# names an explicit refspec on every fetch, so its remote-tracking ref is as old
-# as the clone, and a baseline against it would charge this branch with every
-# finding merged since. On `main` the merge base is the head, so nothing is new.
-#
-# A BASELINE THAT COULD NOT BE MEASURED IS 75, NEVER A RED. svelte-vitals itself
-# answers a failed baseline by reporting the whole backlog, which would park the
-# pull request on findings it did not write — so its stderr is read for that
-# warning, and an unreachable `main` is the same answer. Exit 2 (the analysis
-# did not run) fails the build under `set -e`: "could not check" is not "clean".
-#
-# A finding that is right as written is suppressed AT THE SITE with a
-# `svelte-vitals-disable-next-line <rule-id>` comment, never by dropping this
-# step. `npx svelte-vitals explain <rule-id>` says what a rule wants.
-git fetch --quiet origin "+refs/heads/main:refs/ci/svelte-vitals-base" ||
-  { echo "ci/build.sh: could not fetch main for the svelte-vitals baseline" >&2; exit 75; }
-vitals_base=$(git merge-base HEAD refs/ci/svelte-vitals-base) ||
-  { echo "ci/build.sh: no merge base with main for the svelte-vitals baseline" >&2; exit 75; }
-vitals_err=$(mktemp -t svelte-vitals)
-rc=0
-npx svelte-vitals --baseline "$vitals_base" --reporter console --no-color --no-animation 2>"$vitals_err" || rc=$?
-cat "$vitals_err" >&2
-if [ "$rc" -ne 0 ] && grep -q "reporting all findings" "$vitals_err"; then
-  echo "ci/build.sh: svelte-vitals could not analyze the baseline $vitals_base on this box" >&2
-  exit 75
-fi
-rm -f "$vitals_err"
-[ "$rc" -eq 0 ] || exit "$rc"
-ci_report covered "svelte-vitals (new correctness/security/a11y findings vs ${vitals_base:0:12})"
-
-# THE BUILD IS A VERDICT `npm run check` CANNOT GIVE (ISS-868). SvelteKit's
-# server-only module guard — browser code importing a module named `server.ts`,
-# or anything under a `server/` directory outside `src/routes` — is a vite BUILD
-# plugin, so svelte-check is blind to it, as it is to a bad adapter config and
-# every other build-only vite failure. Without this step the release is the first thing that
-# ever builds the repo, and the leak is found by a `dev deploy` that has already
-# tagged and pushed. playbook-admin 0.4.42 is what that looks like: tag pushed,
-# nothing deployed.
-npm run build
+dev ci step sveltekit
