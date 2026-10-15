@@ -10,7 +10,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { APP_MARKER } from './plan.ts';
-import { assertServesThisApp } from './setup.ts';
+import { assertServesThisApp, captureProbe } from './setup.ts';
 
 const BASE = 'http://127.0.0.1:24680/';
 
@@ -21,6 +21,7 @@ function answer(body: string, url: string = BASE): void {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  delete process.env['VISUAL_COOKIES'];
 });
 
 describe('APP_MARKER', () => {
@@ -49,9 +50,48 @@ describe('assertServesThisApp', () => {
     await expect(assertServesThisApp(BASE, APP_MARKER)).rejects.toThrow(/redirected to http:\/\/127\.0\.0\.1:24680\/login/);
   });
 
+  it('says a redirect to another origin is a sign-in guard, not a sibling', async () => {
+    answer('<html><!-- visual-parity app: sign-in --></html>', 'https://sign-in.example.com/login');
+    await expect(assertServesThisApp(BASE, APP_MARKER)).rejects.toThrow(/another origin, which is a sign-in guard/);
+  });
+
+  it('asks with the init it is given', async () => {
+    const seen: RequestInit[] = [];
+    vi.stubGlobal('fetch', (_url: string, init: RequestInit) => {
+      seen.push(init);
+      return Promise.resolve({ ok: true, status: 200, url: BASE, text: () => Promise.resolve(APP_MARKER) });
+    });
+    await assertServesThisApp(BASE, APP_MARKER, { headers: { cookie: 'session=s1' } });
+    expect(seen).toEqual([{ headers: { cookie: 'session=s1' } }]);
+  });
+
   it('refuses when the document cannot be read at all, rather than passing on an empty body', async () => {
     vi.stubGlobal('fetch', () => Promise.reject(new Error('ECONNRESET')));
     await expect(assertServesThisApp(BASE, APP_MARKER)).rejects.toThrow(/is not serving this app/);
+  });
+});
+
+describe('captureProbe', () => {
+  const targets = [
+    { path: '/dev/preview', slug: 'dev-preview' },
+    { path: '/dev/preview/a', slug: 'dev-preview-a' }
+  ];
+
+  it('asks for the first page the capture opens, not the root an account-app sign-in redirects off-origin', () => {
+    expect(captureProbe(BASE, targets).url).toBe('http://127.0.0.1:24680/dev/preview');
+  });
+
+  it('falls back to the base url for a plan with no page', () => {
+    expect(captureProbe(BASE, []).url).toBe(BASE);
+  });
+
+  it('carries no cookie when VISUAL_COOKIES is unset', () => {
+    expect(captureProbe(BASE, targets).init).toEqual({});
+  });
+
+  it('carries the session the capture plants, so a guarded live page answers as it will in the browser', () => {
+    process.env['VISUAL_COOKIES'] = '{"session":"s1","theme":"dark"}';
+    expect(captureProbe(BASE, targets).init).toEqual({ headers: { cookie: 'session=s1; theme=dark' } });
   });
 });
 // dry-copy-end

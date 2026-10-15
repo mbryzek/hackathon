@@ -644,8 +644,11 @@ async function stubForeignMedia(context: BrowserContext, baseUrl: string): Promi
  * The value is a session id minted by the repo's own playwright fixtures against the backend the
  * capture is running against, so it is meaningless outside that one `dev e2e run` and there is
  * nothing here worth keeping out of a log.
+ *
+ * `setup.ts` reads it too, so the identity and cold-server probes ask for their page with the same
+ * session the capture opens it with -- see `captureProbe`.
  */
-function plantedCookies(baseUrl: string): Cookie[] {
+export function plantedCookies(baseUrl: string): Cookie[] {
   const raw = process.env['VISUAL_COOKIES'];
   if (raw === undefined || raw === '') return [];
   const parsed: unknown = JSON.parse(raw);
