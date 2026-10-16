@@ -30,7 +30,7 @@ const noShorthandInConditionalSpread = [
 export default [
   // Global ignores — build output and code that is not ours to lint, and nothing else. No
   // `*.config.*` glob: it matches at any depth and by basename, so it would also swallow
-  // hand-written harness code such as `playwright.visual.config.ts`. Lint everything.
+  // hand-written config that deserves linting. Lint everything.
   {
     ignores: ['.svelte-kit/**', 'build/**', 'node_modules/**']
   },
@@ -43,7 +43,7 @@ export default [
   // ./tsconfig.json is a parse error, not a lint.
   {
     files: ['**/*.ts'],
-    ignores: ['**/*.svelte.ts', 'playwright/**', 'playwright.visual.config.ts'],
+    ignores: ['**/*.svelte.ts', 'playwright/**'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -70,12 +70,11 @@ export default [
     }
   },
 
-  // Playwright code (the visual parity harness). Node-only (no browser globals: the code under
-  // test runs in the browser, this code drives it from node), typed against
-  // playwright/tsconfig.json, and covering playwright.visual.config.ts because that file is part
-  // of the same harness.
+  // Playwright code (this repo's half of the visual parity harness). Node-only (no browser
+  // globals: the code under test runs in the browser, this code drives it from node), typed
+  // against playwright/tsconfig.json.
   {
-    files: ['playwright/**/*.ts', 'playwright.visual.config.ts'],
+    files: ['playwright/**/*.ts'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -97,21 +96,6 @@ export default [
       '@typescript-eslint/consistent-type-imports': 'error',
 
       'no-restricted-syntax': noShorthandInConditionalSpread
-    }
-  },
-
-  // The visual parity harness, which is the one place in playwright/ that ships code INTO the
-  // browser: every `page.evaluate()` callback in `playwright/visual/capture.ts` is serialised and
-  // run in the page, so `document`, `window` and `getComputedStyle` are real there and undefined
-  // in the node half of the same file. The block above is right to withhold browser globals from
-  // a suite that only drives a browser; this narrows the exception to the directory that needs it
-  // rather than widening it over all of playwright/.
-  {
-    files: ['playwright/visual/**/*.ts'],
-    languageOptions: {
-      globals: {
-        ...globals.browser
-      }
     }
   },
 

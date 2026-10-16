@@ -37,9 +37,8 @@ export default defineConfig({
     ...(IS_TEST_RUN ? { conditions: ['browser'] } : {})
   },
   test: {
-    // The visual parity harness's own units (`playwright/visual/*.test.ts`) run here too: they
-    // pin the bookkeeping a capture cannot assert about itself -- the shot key, the page-set
-    // derivation, the manifest compare. See playwright/visual/README.md.
+    // `playwright/visual/*.test.ts` pin this repo's page derivation for the visual parity harness,
+    // which ships with devops and runs as `dev visual` (its own units are `dev visual test`).
     // `playwright/*.test.ts` is the suite's own top-level harness on the same terms: the readiness
     // probe global setup classifies a server with, which no spec can assert because a spec runs only
     // once it has passed.
