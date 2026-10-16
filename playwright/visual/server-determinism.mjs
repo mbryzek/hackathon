@@ -1,8 +1,8 @@
 /**
  * THE SERVER HALF OF DETERMINISM (ISS-9327). `node --import` this into the server under capture.
  *
- * `capture.ts` pins everything that can move a pixel INSIDE the browser, and on a server-rendered
- * site that is only half of it. This site shuffles its photo and video galleries with
+ * The harness (`dev visual`) pins everything that can move a pixel INSIDE the browser, and on a
+ * server-rendered site that is only half of it. This site shuffles its photo and video galleries with
  * `Math.random()` (`src/lib/utils/shuffle.ts`, reached from `PhotoGallery` and `VideoGallery` with
  * `shuffleOnMount`), and that call runs during SSR — so `/Y25/photos` serves a DIFFERENT DOCUMENT
  * to every request and nothing the browser does can reach it. The A/A gate measured it before this
@@ -30,7 +30,7 @@
  * That is what keeps this a harness affordance rather than a change to how the server works.
  *
  * THIS IS APPLIED TO BOTH SIDES OF AN A/B OR TO NEITHER. Nothing in `src/` knows it exists; it is
- * the same act as `capture.ts`'s `addInitScript`, one process further out.
+ * the same act as the harness's `addInitScript`, one process further out.
  * `playwright/visual/README.md` puts it in the command that starts the server.
  */
 import { AsyncLocalStorage } from 'node:async_hooks';
