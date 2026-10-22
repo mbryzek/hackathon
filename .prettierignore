@@ -9,3 +9,6 @@ test-results/
 .wrangler/
 # Verbatim copies of the platform API Builder specs; kept byte-identical to their source.
 docs/voting-app-inventory/specs/
+scripts/ci-test.mjs
+ci/test/ci-test-test.mjs
+ci-test-reports/
