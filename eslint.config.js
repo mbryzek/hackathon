@@ -31,8 +31,10 @@ export default [
   // Global ignores — build output and code that is not ours to lint, and nothing else. No
   // `*.config.*` glob: it matches at any depth and by basename, so it would also swallow
   // hand-written config that deserves linting. Lint everything.
+  // scripts/ci-test.mjs and ci/test/ci-test-test.mjs are devops' bytes (templates/npm), which
+  // ci/build.sh diffs against devops main, so they are not linted here.
   {
-    ignores: ['.svelte-kit/**', 'build/**', 'node_modules/**']
+    ignores: ['.svelte-kit/**', 'build/**', 'node_modules/**', 'ci-test-reports/**', 'scripts/ci-test.mjs', 'ci/test/ci-test-test.mjs']
   },
 
   // Base ESLint recommended rules
