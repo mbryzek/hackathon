@@ -49,7 +49,7 @@
     "svelte-vitals": "0.55.2",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
-    "vite": "^8.0.16",
+    "vite": "^8.3.5",
     "vitest": "^5.0.0",
     "wrangler": "^4.118.0"
   },
