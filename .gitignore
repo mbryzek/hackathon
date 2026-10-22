@@ -11,3 +11,4 @@ vite.config.ts.timestamp-*
 /playwright/test-results/
 /playwright-report/
 /test-results/
+/ci-test-reports
