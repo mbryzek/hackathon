@@ -29,10 +29,39 @@ import { test } from "node:test";
 const HELPER = fileURLToPath(new URL("../../scripts/ci-test.mjs", import.meta.url));
 const REPO = path.resolve(path.dirname(HELPER), "..");
 const MODULES = path.join(REPO, "node_modules");
-const { parseLists, runs, unknownSpecs, suitesOf, vitestOvermatched, reportFile, proofReportFile, proofAttempts, proofPassed, proofRuns, missingSuite } =
-  await import(HELPER);
+const {
+  parseLists,
+  runs,
+  unknownSpecs,
+  suitesOf,
+  vitestOvermatched,
+  reportFile,
+  proofReportFile,
+  proofAttempts,
+  proofPassed,
+  proofRuns,
+  missingSuite,
+  playwrightVersion,
+  versionAtLeast,
+  testListRefusal,
+  PLAYWRIGHT_TEST_LIST_MINIMUM
+} = await import(HELPER);
 
-const has = (runner) => fs.existsSync(path.join(MODULES, ".bin", runner));
+// A runner's cases need the binary the helper runs AND the module its fixtures import, which are two
+// packages for playwright: `playwright` ships the binary, and the fixtures import `@playwright/test`.
+const FIXTURE_MODULE = { vitest: "vitest", playwright: "@playwright/test" };
+const has = (runner) =>
+  fs.existsSync(path.join(MODULES, ".bin", runner)) && fs.existsSync(path.join(MODULES, FIXTURE_MODULE[runner], "package.json"));
+
+// A playwright case that runs specs by name: skipped, saying why, below the version whose
+// `--test-list` selects a file, where the helper refuses the run (the refusal has its own case).
+function byName() {
+  if (!has("playwright")) return true;
+  const version = playwrightVersion(REPO);
+  return versionAtLeast(version, PLAYWRIGHT_TEST_LIST_MINIMUM)
+    ? false
+    : `@playwright/test ${version} selects no spec by --test-list; the helper needs ${PLAYWRIGHT_TEST_LIST_MINIMUM} or later`;
+}
 
 function fixture(files) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ci-test-fixture-"));
@@ -248,7 +277,7 @@ const pFlaky =
   'import { test, expect } from "@playwright/test";\nimport fs from "node:fs";\n' +
   'test("flaky", () => { const m = new URL("./seen", import.meta.url); const seen = fs.existsSync(m); fs.writeFileSync(m, ""); expect(seen).toBe(true); });\n';
 
-test("playwright: specs are testDir-relative, the lists filter them, and a failed spec is rerun once", { skip: !has("playwright") }, () => {
+test("playwright: specs are testDir-relative, the lists filter them, and a failed spec is rerun once", { skip: byName() }, () => {
   const files = {
     "playwright.config.mjs": pConfig,
     "tests/keep.spec.mjs": pPass("keep"),
@@ -270,7 +299,7 @@ test("playwright: specs are testDir-relative, the lists filter them, and a faile
   });
 });
 
-test("playwright: a proof spec is proved by name, alone and under load", { skip: !has("playwright") }, () => {
+test("playwright: a proof spec is proved by name, alone and under load", { skip: byName() }, () => {
   const files = { "playwright.config.mjs": pConfig, "tests/keep.spec.mjs": pPass("keep"), "tests/sub/proof.spec.mjs": pPass("proof") };
   withFixture(files, (root) => {
     const r = run(root, ["playwright"], { CI_TEST_LISTS: lists(root, "version 2\nproof sub/proof.spec.mjs\n"), CI_PROOF_RUNS: "1 1" });
@@ -283,7 +312,61 @@ test("playwright: a proof spec is proved by name, alone and under load", { skip:
   });
 });
 
+// A stand-in playwright at [version]: `--list` names a.spec.mjs and b.spec.mjs, and a run records
+// its arguments in `ran` and reports both specs passing.
+const fakePlaywright = (version) => ({
+  "node_modules/@playwright/test/package.json": `{ "version": "${version}" }\n`,
+  "node_modules/.bin/playwright":
+    "#!/usr/bin/env node\nconst fs = require(\"node:fs\");\nconst args = process.argv.slice(2);\n" +
+    'const files = ["a.spec.mjs", "b.spec.mjs"];\n' +
+    'if (args.includes("--list")) { console.log(JSON.stringify({ config: {}, suites: files.map((file) => ({ file })) })); process.exit(0); }\n' +
+    'fs.writeFileSync("ran", args.join(" "));\n' +
+    "const suite = (f) => `<testsuite name=\"${f}\" tests=\"1\" failures=\"0\" errors=\"0\"><testcase name=\"t\"/></testsuite>`;\n" +
+    "fs.writeFileSync(process.env.PLAYWRIGHT_JUNIT_OUTPUT_FILE, `<testsuites>${files.map(suite).join(\"\")}</testsuites>`);\n"
+});
+
+function withPackage(files, body) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ci-test-fixture-"));
+  try {
+    for (const [name, text] of Object.entries(files)) {
+      fs.mkdirSync(path.dirname(path.join(root, name)), { recursive: true });
+      fs.writeFileSync(path.join(root, name), text);
+    }
+    fs.chmodSync(path.join(root, "node_modules/.bin/playwright"), 0o755);
+    body(root);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+test("playwright below the --test-list minimum: a run by name is refused before it runs, and a full run is not", () => {
+  withPackage(fakePlaywright("1.57.0"), (root) => {
+    const r = run(root, ["playwright"], { CI_TEST_LISTS: lists(root, "version 1\nquarantined b.spec.mjs\n") });
+    assert.equal(r.status, 1, r.out + r.err);
+    assert.match(r.err, /@playwright\/test 1\.57\.0 runs no test for a --test-list line naming only a file/);
+    assert.match(r.err, new RegExp(`needs @playwright/test ${PLAYWRIGHT_TEST_LIST_MINIMUM.replace(/\./g, "\\.")} or later`));
+    assert.ok(!fs.existsSync(path.join(root, "ran")), "the refused run ran");
+    const full = run(root, ["playwright"]);
+    assert.equal(full.status, 0, full.out + full.err);
+    assert.doesNotMatch(fs.readFileSync(path.join(root, "ran"), "utf8"), /--test-list/);
+  });
+  withPackage(fakePlaywright(PLAYWRIGHT_TEST_LIST_MINIMUM), (root) => {
+    const r = run(root, ["playwright"], { CI_TEST_LISTS: lists(root, "version 1\nquarantined b.spec.mjs\n") });
+    assert.equal(r.status, 0, r.out + r.err);
+    assert.match(fs.readFileSync(path.join(root, "ran"), "utf8"), /--test-list=/);
+  });
+});
+
 // ---- the pure parts ----
+
+test("the --test-list minimum is 1.58.0, compared by major.minor.patch, and an unreadable version is refused", () => {
+  assert.equal(PLAYWRIGHT_TEST_LIST_MINIMUM, "1.58.0");
+  for (const v of ["1.58.0", "1.61.1", "1.100.0", "2.0.0"]) assert.equal(versionAtLeast(v, "1.58.0"), true, v);
+  for (const v of ["1.56.1", "1.57.0", "1.9.9", "0.99.0", null, "next"]) assert.equal(versionAtLeast(v, "1.58.0"), false, String(v));
+  assert.equal(testListRefusal("1.63.0", 2), null);
+  assert.match(testListRefusal("1.56.1", 2), /1\.56\.1 runs no test .* cannot run 2 spec\(s\) by name/);
+  assert.match(testListRefusal(null, 1), /version cannot be read/);
+});
 
 test("parseLists reads platform's format and refuses anything else", () => {
   const { lists: l } = parseLists("version 9\r\nquarantined a\nslow b\nproof c\n");

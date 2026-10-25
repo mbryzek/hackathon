@@ -41,6 +41,12 @@
 // exits 75 with nothing run. CI_SLOW_SPECS=1 with no lists is the same answer: there is no slow spec
 // to run and a green would claim there was.
 //
+// PLAYWRIGHT IS HANDED A SELECTION WITH `--test-list`, ONE testDir-RELATIVE FILE PER LINE, AND ONLY
+// @playwright/test 1.58.0 AND LATER SELECT A FILE BY THAT LINE: through 1.57 a line's titles must equal
+// a test's titles exactly, so a line naming only a file matches no test, and the run runs nothing and
+// exits 0. So every run by name — the lists leaving a spec out, the rerun, a proof — is refused on an
+// older version, naming the minimum, before it runs; a build that runs every spec does not need it.
+//
 // A RED THAT IS NOT WHOLLY FAILING SPECS IS NOT RERUN — a runner that exited non-zero with every
 // spec passing (an unhandled error, a config that will not load) or left no report stays red exactly
 // as it was.
@@ -67,6 +73,13 @@ export const REPORTS_ROOT = "ci-test-reports";
 export const PROOF_RUNS_ALONE = 5;
 export const PROOF_RUNS_BESIDE = 3;
 const RUNNERS = ["vitest", "playwright", "none"];
+// The first @playwright/test whose `--test-list` selects every test of a file from a line naming only
+// the file (`loadTestList` matches a line's titles as a prefix of the test's from 1.58.0 on).
+export const PLAYWRIGHT_TEST_LIST_MINIMUM = "1.58.0";
+
+// A refusal: the build cannot measure what was asked of it on what this repository installs, and
+// says why. It is the branch's (package.json is), so it is red, never 75.
+class Refused extends Error {}
 
 // ---- the lists ----
 
@@ -221,7 +234,8 @@ export function vitestOvermatched(selected, all) {
 
 // One invocation of the runner over [specs] (every spec when [specs] is null), its JUnit report
 // written to [junit]. Its output is the build's; the answer is its exit code.
-function runSpecs({ root, runner, extra, scratch }, specs, junit) {
+function runSpecs(ctx, specs, junit) {
+  const { root, runner, extra, scratch } = ctx;
   if (runner === "vitest") {
     const args = [
       "run",
@@ -236,12 +250,46 @@ function runSpecs({ root, runner, extra, scratch }, specs, junit) {
   }
   const args = ["test", "--reporter=list,junit", "--retries=0", ...extra];
   if (specs) {
+    if (ctx.playwrightVersion === undefined) ctx.playwrightVersion = playwrightVersion(root);
+    const refusal = testListRefusal(ctx.playwrightVersion, specs.length);
+    if (refusal) throw new Refused(refusal);
     const list = path.join(scratch, `test-list.${path.basename(junit)}.txt`);
     fs.writeFileSync(list, specs.join("\n") + "\n");
     args.push(`--test-list=${list}`);
   }
   const env = { ...process.env, PLAYWRIGHT_JUNIT_OUTPUT_FILE: junit };
   return spawnSync(bin(root, "playwright"), args, { cwd: root, stdio: "inherit", env }).status ?? 1;
+}
+
+// The version of @playwright/test this repository installs (of `playwright` when only that is), or
+// null when neither package.json can be read.
+export function playwrightVersion(root) {
+  for (const pkg of ["@playwright/test", "playwright"]) {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(root, "node_modules", pkg, "package.json"), "utf8")).version || null;
+    } catch {
+      // the next package, or none
+    }
+  }
+  return null;
+}
+
+// Whether [version] is [minimum] or later, by its numeric major.minor.patch. An unreadable version is not.
+export function versionAtLeast(version, minimum) {
+  const triple = (v) => /^(\d+)\.(\d+)\.(\d+)/.exec(v || "")?.slice(1).map(Number);
+  const [have, want] = [triple(version), triple(minimum)];
+  if (!have) return false;
+  for (let i = 0; i < 3; i++) if (have[i] !== want[i]) return have[i] > want[i];
+  return true;
+}
+
+// Why a playwright run of [count] spec(s) by name cannot be trusted on [version], or null when it can.
+export function testListRefusal(version, count) {
+  if (versionAtLeast(version, PLAYWRIGHT_TEST_LIST_MINIMUM)) return null;
+  const installed = version
+    ? `@playwright/test ${version} runs no test for a --test-list line naming only a file, and exits 0`
+    : "the installed @playwright/test version cannot be read from node_modules";
+  return `ci-test: ${installed}, so it cannot run ${count} spec(s) by name; this helper needs @playwright/test ${PLAYWRIGHT_TEST_LIST_MINIMUM} or later — raise it in package.json`;
 }
 
 // ---- the build ----
@@ -299,6 +347,10 @@ export function main(argv, env = process.env, root = process.cwd()) {
   const ctx = { root, runner, extra, proof, scratch: fs.mkdtempSync(path.join(os.tmpdir(), "ci-test-")) };
   try {
     return build(ctx, lists, slowOnly);
+  } catch (e) {
+    if (!(e instanceof Refused)) throw e;
+    console.error(e.message);
+    return 1;
   } finally {
     fs.rmSync(ctx.scratch, { recursive: true, force: true });
   }
