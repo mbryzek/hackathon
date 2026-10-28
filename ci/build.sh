@@ -145,6 +145,15 @@ ci_report covered "test health helper suite"
 # twice does.
 npm run check
 
+# ESLINT'S STYLE RULES REPORT, THEY DO NOT GATE (ISS-30176). `prefer-const`, `no-var`,
+# `svelte/prefer-const` and `max-lines-per-function` are in no gating set of `eslint.p10.js`, so
+# `npm run lint` gates only on correctness, the type-aware rules among them.
+# `scripts/check-lint-style` (a copy of devops templates/ci/check-lint-style) forces the style
+# rules on over `eslint.config.js`, prints each finding and exits 0, and the hygiene sweep files
+# what reaches `main`.
+# ci-advisory: scripts/check-lint-style
+scripts/check-lint-style || echo "check-lint-style: could not measure this tree — advisory, nothing fails on it"
+
 # `sveltekit`: everything the family runs after `npm run check`, in order —
 # the advisory format report (formatting never fails a build, ISS-19427), the
 # svelte-vitals gate on new findings (ISS-15600), and `npm run build`, the verdict
