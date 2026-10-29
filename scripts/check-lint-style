@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# dev-script: targets=local
+#
+# ESLINT'S STYLE RULES, ADVISORY (ISS-30118). Prints every finding of the style
+# rules in devops templates/eslint/eslint.p10.js (`prefer-const`, `no-var`,
+# `svelte/prefer-const`, `max-lines-per-function`), one line each in the hygiene
+# sweep's finding shape, and exits 0 whatever it finds: a style finding never
+# fails a build. `ci/build.sh` declares it with a
+# `# ci-advisory: scripts/check-lint-style` line beside `dev ci step advisory`, so
+# the build prints the findings and `dev ci hygiene` files them from `main`.
+#
+# The type-aware rules (`no-floating-promises`, `no-explicit-any`) are
+# correctness and keep gating under `npm run lint`; this reports only the style
+# ones. It installs `node_modules` and syncs `.svelte-kit` when the tree has
+# neither, which is what a tree the sweep exports from `main` looks like.
+#
+# Exit 1 only when eslint could not answer, so the sweep files nothing rather
+# than a partial list. This file is a copy of devops templates/ci/check-lint-style;
+# the logic is templates/eslint/check-lint-style.mjs, loaded from the devops
+# release on PATH.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+if [ ! -x node_modules/.bin/eslint ]; then
+  npm ci --no-audit --no-fund >&2
+fi
+if [ ! -d .svelte-kit ] && [ -x node_modules/.bin/svelte-kit ]; then
+  node_modules/.bin/svelte-kit sync >&2
+fi
+# A devops release that predates the check answers non-zero here, and the build's
+# `|| echo` line or `dev ci step advisory` reports it as not measured.
+script=$(dev ci template eslint/check-lint-style.mjs)
+exec node "$script" "$@"
