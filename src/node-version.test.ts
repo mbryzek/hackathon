@@ -11,7 +11,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { subset, validRange } from 'semver';
+import { intersects, subset, validRange } from 'semver';
 import { describe, expect, it } from 'vitest';
 
 const root = new URL('../', import.meta.url);
@@ -57,9 +57,11 @@ describe('declared Node version', () => {
   it.skipIf(nvmrc === null)('is what .nvmrc pins developers to', () => {
     // Deliberately NOT an assertion about one specific version: the fleet upgrades Node on its own
     // schedule, and pinning the build to one line would park every pull request in this repo the
-    // day that happened. `nvmrc` is non-null here — `skipIf` above is the guard, which TypeScript
-    // does not follow into the callback.
-    expect(subset(nvmrc!, declared)).toBe(true);
+    // day that happened. `.nvmrc` names devops' declared Node LINE (`24`), which a version manager
+    // resolves to that line's newest release, so the check is that the declaration admits a release
+    // on it — for an exact version this is the same as being inside the range. `nvmrc` is non-null
+    // here — `skipIf` above is the guard, which TypeScript does not follow into the callback.
+    expect(intersects(nvmrc!, declared)).toBe(true);
   });
 });
 // dry-copy-end
