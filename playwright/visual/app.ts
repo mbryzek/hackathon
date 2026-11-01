@@ -25,10 +25,6 @@
  * A ROUTE THAT IS NOT CAPTURED IS REPORTED AS UNCOVERED, never silently dropped, and the reason
  * travels with it. The failure this exists to stop is a harness that quietly skips half the site
  * and reports "all equal": only the smaller honest number is worth anything.
- *
- * THE SERVER HALF OF DETERMINISM IS THIS REPO'S TOO. The site shuffles its photo and video galleries
- * during SSR, so the server under capture is started with `server-determinism.mjs` preloaded beside
- * this file; `README.md` has the command.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { shuffle } from '#lib/utils/shuffle.ts';
+  import { shuffledAfterMount } from '#lib/utils/shuffledAfterMount.svelte.ts';
 
   export interface VideoInfo {
     url: string;
@@ -14,27 +14,30 @@
 
   let { videos, shuffleOnMount = false }: Props = $props();
 
-  // Shuffle videos when videos prop changes (if shuffleOnMount is true)
-  const displayVideos = $derived(shuffleOnMount ? shuffle(videos) : videos);
+  const shuffled = shuffledAfterMount(
+    () => videos,
+    () => shuffleOnMount
+  );
+  const displayVideos = $derived(shuffled.current);
 
-  // Track which videos are playing
-  let playingVideos = $state<Set<number>>(new Set());
-  let loadingVideos = $state<Set<number>>(new Set());
+  // Track which videos are playing, by url: the shuffle moves a video to a new index after mount.
+  let playingVideos = $state<Set<string>>(new Set());
+  let loadingVideos = $state<Set<string>>(new Set());
 
-  function handlePlay(index: number) {
-    playingVideos = new Set([...playingVideos, index]);
+  function handlePlay(url: string) {
+    playingVideos = new Set([...playingVideos, url]);
   }
 
-  function handlePause(index: number) {
-    playingVideos = new Set([...playingVideos].filter((i) => i !== index));
+  function handlePause(url: string) {
+    playingVideos = new Set([...playingVideos].filter((u) => u !== url));
   }
 
-  function handleLoadStart(index: number) {
-    loadingVideos = new Set([...loadingVideos, index]);
+  function handleLoadStart(url: string) {
+    loadingVideos = new Set([...loadingVideos, url]);
   }
 
-  function handleCanPlay(index: number) {
-    loadingVideos = new Set([...loadingVideos].filter((i) => i !== index));
+  function handleCanPlay(url: string) {
+    loadingVideos = new Set([...loadingVideos].filter((u) => u !== url));
   }
 
   function playVideo(event: MouseEvent) {
@@ -51,7 +54,7 @@
 
 <div class="mx-auto max-w-7xl bg-white px-4 sm:px-6 lg:px-8">
   <div class="mx-auto mt-6 grid max-w-none grid-cols-1 gap-8 md:grid-cols-2">
-    {#each displayVideos as video, index (video.url)}
+    {#each displayVideos as video (video.url)}
       <div class="video-container group">
         <div class="relative w-full overflow-hidden rounded-xl bg-gray-900 shadow-md transition-all duration-300 hover:shadow-xl">
           <!-- Video element -->
@@ -60,17 +63,17 @@
             preload="metadata"
             poster={video.poster}
             class="aspect-video w-full object-cover"
-            onplay={() => handlePlay(index)}
-            onpause={() => handlePause(index)}
-            onloadstart={() => handleLoadStart(index)}
-            oncanplay={() => handleCanPlay(index)}
+            onplay={() => handlePlay(video.url)}
+            onpause={() => handlePause(video.url)}
+            onloadstart={() => handleLoadStart(video.url)}
+            oncanplay={() => handleCanPlay(video.url)}
           >
             <source src={video.url} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
 
           <!-- Custom play button overlay (shows when not playing) -->
-          {#if !playingVideos.has(index)}
+          {#if !playingVideos.has(video.url)}
             <button
               type="button"
               class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/30 opacity-100 transition-all duration-300 group-hover:bg-black/40 focus:ring-4 focus:ring-yellow-400 focus:ring-offset-2 focus:outline-hidden"
@@ -81,7 +84,7 @@
               <span
                 class="flex h-20 w-20 items-center justify-center rounded-full bg-[rgb(255_255_255_/_0.9)] shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:bg-white"
               >
-                {#if loadingVideos.has(index)}
+                {#if loadingVideos.has(video.url)}
                   <!-- Loading spinner -->
                   <span class="block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-yellow-500"></span>
                 {:else}

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { flushSync } from 'svelte';
 import { mountComponent } from '#lib/test/mount.ts';
 import PhotoGallery from './PhotoGallery.svelte';
@@ -70,5 +70,33 @@ describe('PhotoGallery lightbox touch navigation', () => {
     touch('touchmove', 300);
     touch('touchend');
     expect(counter()).toBe('1 / 5');
+  });
+});
+
+describe('PhotoGallery shuffle', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const thumbnails = (target: HTMLElement) =>
+    [...target.querySelectorAll('button[aria-label="View photo in lightbox"] img')].map((img) => img.getAttribute('src'));
+
+  it('renders the given order first, which is the order prerender writes and hydration must match', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const { target } = mountComponent(PhotoGallery, { photos: PHOTOS, shuffleOnMount: true });
+    expect(thumbnails(target)).toEqual(PHOTOS);
+  });
+
+  it('opens the photo that was clicked once the shuffle has moved it', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const { target } = mountComponent(PhotoGallery, { photos: PHOTOS, shuffleOnMount: true });
+    flushSync();
+
+    const shown = thumbnails(target);
+    expect(shown).not.toEqual(PHOTOS);
+
+    (target.querySelectorAll('button[aria-label="View photo in lightbox"]')[2] as HTMLElement).click();
+    flushSync();
+    expect(viewer().querySelector('img')?.getAttribute('src')).toBe(shown[2]);
   });
 });

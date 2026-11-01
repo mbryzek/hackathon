@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { shuffle } from '#lib/utils/shuffle.ts';
+  import { shuffledAfterMount } from '#lib/utils/shuffledAfterMount.svelte.ts';
   import Modal from './Modal.svelte';
 
   interface Props {
@@ -9,8 +9,11 @@
 
   let { photos, shuffleOnMount = false }: Props = $props();
 
-  // Shuffle photos when photos prop changes (if shuffleOnMount is true)
-  const displayPhotos = $derived(shuffleOnMount ? shuffle(photos) : photos);
+  const shuffled = shuffledAfterMount(
+    () => photos,
+    () => shuffleOnMount
+  );
+  const displayPhotos = $derived(shuffled.current);
 
   // Lightbox state
   let lightboxOpen = $state(false);
@@ -19,7 +22,7 @@
   let imageError = $state(false);
 
   // Track loaded images for fade-in effect
-  let loadedImages = $state<Set<number>>(new Set());
+  let loadedImages = $state<Set<string>>(new Set());
 
   const currentPhoto = $derived(displayPhotos[currentIndex]);
 
@@ -59,8 +62,8 @@
     }
   }
 
-  function handleImageLoad(index: number) {
-    loadedImages = new Set([...loadedImages, index]);
+  function handleImageLoad(photo: string) {
+    loadedImages = new Set([...loadedImages, photo]);
   }
 
   function handleLightboxImageLoad() {
@@ -123,15 +126,15 @@
           aria-label="View photo in lightbox"
         >
           <!-- Skeleton loader -->
-          {#if !loadedImages.has(index)}
+          {#if !loadedImages.has(photo)}
             <span class="absolute inset-0 animate-pulse rounded-lg bg-gray-200"></span>
           {/if}
           <img
             src={photo}
             alt=""
             loading="lazy"
-            class="h-auto w-full object-contain transition-opacity duration-500 {loadedImages.has(index) ? 'opacity-100' : 'opacity-0'}"
-            onload={() => handleImageLoad(index)}
+            class="h-auto w-full object-contain transition-opacity duration-500 {loadedImages.has(photo) ? 'opacity-100' : 'opacity-0'}"
+            onload={() => handleImageLoad(photo)}
           />
           <!-- Hover overlay -->
           <span class="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/10">

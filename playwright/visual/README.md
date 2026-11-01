@@ -8,14 +8,12 @@ Two sets, both derived from `src/routes`: `static` (the default) is every route 
 no backend, which is every route this site has; `live` fills `[param]` routes from `VISUAL_SEEDS`
 and today captures the same pages.
 
-The server is this repo's other half. The site shuffles its photo and video galleries during SSR,
-so a plain `npm run dev` serves a different document to every request; start BOTH sides of an A/B
-with `server-determinism.mjs` preloaded, or neither:
+The photo and video galleries shuffle in the browser after mount, so the server serves one document
+for a path and the harness's seeded `Math.random` decides the order on screen:
 
 ```sh
 PORT=$((20000 + RANDOM % 20000))
-NODE_OPTIONS="--import $PWD/playwright/visual/server-determinism.mjs" \
-  dev agent serve --label visual --url http://127.0.0.1:$PORT -- npm run dev -- --host 127.0.0.1 --port $PORT --strictPort
+dev agent serve --label visual --url http://127.0.0.1:$PORT -- npm run dev -- --host 127.0.0.1 --port $PORT --strictPort
 
 dev visual capture    # VISUAL_SET, VISUAL_BASE_URL, VISUAL_OUT, VISUAL_PAGES as the harness README says
 dev visual compare <dir-a> <dir-b>
