@@ -28,6 +28,3 @@ export interface Photo {
 /** Every photo in one folder of a year, in the order given. */
 export const staticPhotos = (year: number, folder: string, files: PhotoFile[]): Photo[] =>
   files.map(({ filename, width, height }) => ({ url: staticAsset(year, `${folder}/${filename}`), width, height }));
-
-/** A file at the top of a year's folder, such as an event summary PDF. */
-export const staticFile = staticAsset;
