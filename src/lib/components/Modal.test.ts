@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import { createRawSnippet } from 'svelte';
+import { createRawSnippet, flushSync } from 'svelte';
 import { mountComponent } from '#lib/test/mount.ts';
 import Modal from './Modal.svelte';
 
@@ -49,5 +49,52 @@ describe('Modal close button placement', () => {
       const card = target.querySelector(`.max-w-${size}`) as HTMLElement;
       expect(card.classList.contains('relative')).toBe(true);
     }
+  });
+});
+
+describe('Modal focus', () => {
+  const button = (name: string): HTMLElement => document.querySelector(`[aria-label="${name}"]`) as HTMLElement;
+  const dialog = (): HTMLElement => document.querySelector('[role="dialog"]') as HTMLElement;
+
+  function pressTab(shiftKey = false): void {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey, cancelable: true }));
+    flushSync();
+  }
+
+  it('moves focus into the dialog when it opens and names it', () => {
+    render();
+    flushSync();
+    expect(document.activeElement).toBe(dialog());
+    expect(dialog().getAttribute('aria-label')).toBe('Photo viewer');
+  });
+
+  it('keeps Tab inside the dialog', () => {
+    render();
+    flushSync();
+    const close = button('Close modal');
+
+    pressTab(true);
+    expect(document.activeElement).toBe(close);
+
+    pressTab();
+    expect(document.activeElement).toBe(close);
+  });
+
+  it('gives focus back to what opened it when it closes', () => {
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+
+    const { unmount } = mountComponent(Modal, {
+      open: true,
+      onclose: () => {},
+      children: createRawSnippet(() => ({ render: () => '<div>Body</div>' }))
+    });
+    flushSync();
+    expect(document.activeElement).not.toBe(opener);
+
+    unmount();
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
   });
 });

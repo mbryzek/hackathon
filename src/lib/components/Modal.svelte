@@ -6,9 +6,13 @@
     onclose: () => void;
     children: Snippet;
     size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+    /** The dialog's accessible name. */
+    label?: string;
   }
 
-  let { open, onclose, children, size = 'lg' }: Props = $props();
+  let { open, onclose, children, size = 'lg', label = 'Photo viewer' }: Props = $props();
+
+  let dialog = $state<HTMLElement>();
 
   const sizeClasses = {
     sm: 'max-w-sm',
@@ -18,9 +22,37 @@
     full: 'max-w-[90vw] max-h-[90vh]'
   };
 
+  // aria-modal promises that nothing behind the dialog can be reached, so focus moves in when it
+  // opens, stays in while it is open, and goes back to whatever opened it when it closes.
+  $effect(() => {
+    if (!open || !dialog) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialog.focus();
+    return () => opener?.focus();
+  });
+
+  function keepFocusInside(event: KeyboardEvent) {
+    if (!dialog) return;
+    const controls = [...dialog.querySelectorAll<HTMLElement>('button, a[href]')];
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (!first || !last) return;
+    const active = document.activeElement;
+    if (event.shiftKey && (active === first || active === dialog)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && open) {
+    if (!open) return;
+    if (event.key === 'Escape') {
       onclose();
+    } else if (event.key === 'Tab') {
+      keepFocusInside(event);
     }
   }
 
@@ -38,10 +70,12 @@
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div
-    class="fixed inset-0 z-50 flex animate-fade-in items-center justify-center bg-black/80 backdrop-blur-xs"
+    bind:this={dialog}
+    class="fixed inset-0 z-50 flex animate-fade-in items-center justify-center bg-black/80 ring-0 ring-offset-0 backdrop-blur-xs"
     onclick={handleBackdropClick}
     role="dialog"
     aria-modal="true"
+    aria-label={label}
     tabindex="-1"
   >
     <!-- Modal content. `relative` is load-bearing: it makes this the containing block for the

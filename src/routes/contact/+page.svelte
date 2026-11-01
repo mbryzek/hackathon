@@ -4,26 +4,33 @@
 
   const email = 'bergenyouthenrichment@gmail.com';
   let copied = $state(false);
+  let copiedTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function showCopied() {
+    copied = true;
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(() => {
+      copied = false;
+    }, 2000);
+  }
+
+  /** For a browser without the async clipboard. execCommand answers whether the copy happened. */
+  function copyWithSelection(): boolean {
+    const textArea = document.createElement('textarea');
+    textArea.value = email;
+    document.body.appendChild(textArea);
+    textArea.select();
+    const succeeded = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    return succeeded;
+  }
 
   async function copyToClipboard() {
     try {
       await navigator.clipboard.writeText(email);
-      copied = true;
-      setTimeout(() => {
-        copied = false;
-      }, 2000);
+      showCopied();
     } catch {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = email;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      copied = true;
-      setTimeout(() => {
-        copied = false;
-      }, 2000);
+      if (copyWithSelection()) showCopied();
     }
   }
 </script>
