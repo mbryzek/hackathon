@@ -17,8 +17,8 @@
     "test:unit": "node scripts/ci-test.mjs vitest",
     "visual:capture": "dev visual capture",
     "visual:compare": "dev visual compare",
-    "lint": "eslint . --max-warnings 0",
-    "lint:fix": "eslint . --fix",
+    "lint": "svelte-kit sync && eslint . --max-warnings 0",
+    "lint:fix": "svelte-kit sync && eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
