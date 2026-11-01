@@ -88,9 +88,13 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
+<svelte:head>
+  <title>{title} — Bergen Tech Hackathon</title>
+</svelte:head>
+
 <!-- Overlay for mobile menu -->
 {#if mobileMenuOpen}
-  <button class="fixed inset-0 z-30 bg-black/30 transition-opacity duration-300 md:hidden" onclick={closeMobileMenu} aria-label="Close menu"
+  <button class="fixed inset-0 z-30 bg-black/30 transition-opacity duration-300 lg:hidden" onclick={closeMobileMenu} aria-label="Close menu"
   ></button>
 {/if}
 
@@ -106,8 +110,8 @@
             </a>
           </div>
 
-          <!-- Desktop Navigation -->
-          <div class="hidden md:block">
+          <!-- Desktop Navigation. Nine sections need about 1000px, so the row starts at lg. -->
+          <div class="hidden lg:block">
             <div class="ml-10 flex items-baseline space-x-4">
               {#each sections as section (section.name)}
                 {@const active = isActive(section) || hasActiveChild(section)}
@@ -137,6 +141,7 @@
                   <div class="group relative z-50">
                     <a
                       href={section.href}
+                      aria-current={isActive(section) ? 'page' : undefined}
                       class="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150 {active
                         ? 'bg-gray-900 text-white'
                         : 'text-gray-300 hover:bg-gray-700 hover:text-white'}"
@@ -153,7 +158,7 @@
                       </svg>
                     </a>
                     <!-- Dropdown menu. It opens on a bare :hover rather than hover:, which applies only on a
-                         device that can hover, because on a touch tablet at md width a tap is the only way
+                         device that can hover, because on a touch tablet at lg width a tap is the only way
                          to reach a year's sub-pages; focus-within opens it from the keyboard. -->
                     <div
                       class="invisible absolute top-full left-0 w-48 pt-2 opacity-0 transition-all duration-200 ease-out group-focus-within:visible group-focus-within:opacity-100 group-[:hover]:visible group-[:hover]:opacity-100"
@@ -163,6 +168,7 @@
                           {@const childActive = page.url.pathname === child.href}
                           <a
                             href={child.href}
+                            aria-current={childActive ? 'page' : undefined}
                             class="block px-4 py-2.5 text-sm transition-colors duration-150 {childActive
                               ? 'bg-gray-700 text-white'
                               : 'text-gray-300 hover:bg-gray-700 hover:text-white'} {i === 0 ? 'rounded-t-md' : ''} {i ===
@@ -183,7 +189,7 @@
         </div>
 
         <!-- Mobile menu button -->
-        <div class="-mr-2 flex md:hidden">
+        <div class="-mr-2 flex lg:hidden">
           <button
             type="button"
             class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 transition-colors duration-150 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
@@ -220,9 +226,10 @@
     <!-- Mobile menu with slide animation -->
     <div
       id="mobile-menu"
-      class="overflow-hidden transition-all duration-300 ease-in-out md:hidden {mobileMenuOpen
-        ? 'max-h-screen opacity-100'
-        : 'max-h-0 opacity-0'}"
+      inert={!mobileMenuOpen}
+      class="transition-all duration-300 ease-in-out lg:hidden {mobileMenuOpen
+        ? 'max-h-[calc(100dvh-4rem)] overflow-y-auto opacity-100'
+        : 'max-h-0 overflow-hidden opacity-0'}"
     >
       <div class="space-y-1 border-t border-gray-700 bg-gray-800 px-2 pt-2 pb-3">
         {#each sections as section (section.name)}
@@ -230,6 +237,7 @@
           <div>
             <a
               href={section.href}
+              aria-current={isActive(section) ? 'page' : undefined}
               class="block rounded-md px-3 py-2 text-base font-medium transition-colors duration-150 {active
                 ? 'bg-gray-900 text-white'
                 : 'text-gray-300 hover:bg-gray-700 hover:text-white'}"
@@ -255,6 +263,7 @@
                   {@const childActive = page.url.pathname === child.href}
                   <a
                     href={child.href}
+                    aria-current={childActive ? 'page' : undefined}
                     class="block rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150 {childActive
                       ? 'bg-gray-700 text-white'
                       : 'text-gray-400 hover:bg-gray-700 hover:text-white'}"
