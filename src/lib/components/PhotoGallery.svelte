@@ -1,9 +1,10 @@
 <script lang="ts">
+  import type { Photo } from '#lib/staticAssets.ts';
   import { shuffledAfterMount } from '#lib/utils/shuffledAfterMount.svelte.ts';
   import Modal from './Modal.svelte';
 
   interface Props {
-    photos: string[];
+    photos: Photo[];
     shuffleOnMount?: boolean;
   }
 
@@ -62,8 +63,8 @@
     }
   }
 
-  function handleImageLoad(photo: string) {
-    loadedImages = new Set([...loadedImages, photo]);
+  function handleImageLoad(url: string) {
+    loadedImages = new Set([...loadedImages, url]);
   }
 
   function handleLightboxImageLoad() {
@@ -117,7 +118,7 @@
   <div
     class="xs:grid-cols-2 mx-auto mt-6 grid max-w-sm grid-cols-1 gap-x-4 gap-y-8 sm:max-w-none sm:grid-cols-2 sm:gap-8 md:grid-cols-3 md:gap-10 lg:grid-cols-3 lg:gap-12 xl:grid-cols-4 2xl:grid-cols-5"
   >
-    {#each displayPhotos as photo, index (photo)}
+    {#each displayPhotos as photo, index (photo.url)}
       <div class="group relative">
         <button
           type="button"
@@ -126,15 +127,19 @@
           aria-label="View photo in lightbox"
         >
           <!-- Skeleton loader -->
-          {#if !loadedImages.has(photo)}
+          {#if !loadedImages.has(photo.url)}
             <span class="absolute inset-0 animate-pulse rounded-lg bg-gray-200"></span>
           {/if}
+          <!-- width and height reserve the thumbnail's space before it loads. Without them every image starts at
+               zero height inside the viewport, so loading="lazy" fetches them all. -->
           <img
-            src={photo}
+            src={photo.url}
             alt=""
+            width={photo.width}
+            height={photo.height}
             loading="lazy"
-            class="h-auto w-full object-contain transition-opacity duration-500 {loadedImages.has(photo) ? 'opacity-100' : 'opacity-0'}"
-            onload={() => handleImageLoad(photo)}
+            class="h-auto w-full object-contain transition-opacity duration-500 {loadedImages.has(photo.url) ? 'opacity-100' : 'opacity-0'}"
+            onload={() => handleImageLoad(photo.url)}
           />
           <!-- Hover overlay -->
           <span class="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/10">
@@ -215,7 +220,7 @@
         </div>
       {:else}
         <img
-          src={currentPhoto}
+          src={currentPhoto?.url}
           alt=""
           class="max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl transition-opacity duration-300 {imageLoading
             ? 'opacity-0'

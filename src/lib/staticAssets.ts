@@ -12,9 +12,22 @@ const rawBase = 'https://raw.githubusercontent.com/mbryzek/hackathon-static/refs
 /** A photo, sponsor logo, video or PDF in one year's folder. */
 export const staticAsset = (year: number, path: string): string => `${rawBase}/${year}/${path}`;
 
-/** Every file in one folder of a year, in the order given. */
-export const staticAssets = (year: number, folder: string, filenames: string[]): string[] =>
-  filenames.map((filename) => staticAsset(year, `${folder}/${filename}`));
+/** A photo file and the pixel size recorded for it, which lets a gallery reserve its space before it loads. */
+export interface PhotoFile {
+  filename: string;
+  width: number;
+  height: number;
+}
+
+export interface Photo {
+  url: string;
+  width: number;
+  height: number;
+}
+
+/** Every photo in one folder of a year, in the order given. */
+export const staticPhotos = (year: number, folder: string, files: PhotoFile[]): Photo[] =>
+  files.map(({ filename, width, height }) => ({ url: staticAsset(year, `${folder}/${filename}`), width, height }));
 
 /** A file at the top of a year's folder, such as an event summary PDF. */
 export const staticFile = staticAsset;
