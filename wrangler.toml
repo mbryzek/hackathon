@@ -13,9 +13,9 @@ main = ".svelte-kit/cloudflare/_worker.js"
 # asks it to, and a Pages project cannot carry one at all — which is why this app moved
 # off Pages. What it makes readable is every invocation of the server tier
 # (/_internal_/version, the 404 page) and, with it, anything printed while serving one:
-# SvelteKit's default `handleError` console.errors an unhandled exception, and this repo
-# adds no server logging of its own yet. Before this block that was live-tail only, so a
-# line logged for a question asked afterwards was already gone. `head_sampling_rate = 1`
+# `handleError` in src/hooks.server.ts logs each unexpected error under the id the error
+# page shows. Without this block that is live-tail only, so a line logged for a question
+# asked afterwards is already gone. `head_sampling_rate = 1`
 # keeps all of it, matching the other Workers on this fleet (plybk-admin, plybk-app,
 # trips, account). `dev obs worker-logs --app hackathon` is the read, and
 # `dev obs hosting` is the fleet-wide table. ISS-13429
