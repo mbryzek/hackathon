@@ -149,8 +149,8 @@ npm run check
 # `svelte/prefer-const` and `max-lines-per-function` are in no gating set of `eslint.p10.js`, so
 # `npm run lint` gates only on correctness, the type-aware rules among them.
 # `scripts/check-lint-style` (a copy of devops templates/ci/check-lint-style) forces the style
-# rules on over `eslint.config.js`, prints each finding and exits 0, and the hygiene sweep files
-# what reaches `main`.
+# rules on over `eslint.config.js`, prints each finding and exits 0, and the checks step files each
+# new finding that is not baselined as its own issue.
 # ci-advisory: scripts/check-lint-style
 scripts/check-lint-style || echo "check-lint-style: could not measure this tree — advisory, nothing fails on it"
 
@@ -159,8 +159,9 @@ scripts/check-lint-style || echo "check-lint-style: could not measure this tree 
 # svelte-vitals gate on new findings (ISS-15600), and `npm run build`, the verdict
 # svelte-check cannot give (ISS-868).
 #
-# The hygiene sweep reads the declaration below out of this file and runs the
-# repo's `scripts/check-format` (a copy of devops templates/ci/check-format) over
-# `main` every 14 days.
+# The build's checks step reads the declaration below out of this file, runs the
+# repo's `scripts/check-format` (a copy of devops templates/ci/check-format) and
+# files each new finding that is not baselined as its own issue; `dev ci hygiene`
+# only counts what `main` carries.
 # ci-advisory: scripts/check-format
 dev ci step sveltekit
