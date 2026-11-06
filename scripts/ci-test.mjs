@@ -2,13 +2,14 @@
 // node scripts/ci-test.mjs vitest|playwright|none [runner arguments...]
 //
 // TEST HEALTH'S CONTRACT FOR AN npm REPOSITORY (design DES-18577 "Every repository with CI"). This
-// file is a copy of devops templates/npm/ci-test.mjs; `ci/build.sh` diffs it against devops `main`,
-// so it is edited THERE and copied here. docs/ci.md in devops says how a repository adopts it.
+// file is a copy of devops templates/npm/ci-test.mjs; the repository's build script
+// (`ci/build.slow.sh` or `ci/build.fast.sh`) diffs it against devops `main`, so it is edited THERE
+// and copied here. docs/ci.md in devops says how a repository adopts it.
 //
 // It runs the repository's test runner, and the four lines of the contract are the whole of what it
 // adds:
 //
-//   1. reports  every spec's JUnit report under `ci-test-reports/<runner>/`, which `ci/build.sh`
+//   1. reports  every spec's JUnit report under `ci-test-reports/<runner>/`, which the build script
 //               declares with `# ci-test-reports: ci-test-reports/*/*.xml`. A spec is a test FILE,
 //               named as the runner's JUnit report names it: relative to vitest's root, or to
 //               playwright's testDir. One `TEST-<spec>.xml` per spec, and `FIRST-<spec>.xml` beside
