@@ -1,4 +1,4 @@
-// svelte-vitals (ci/build.sh gates on it, ISS-15600). Only the correctness,
+// svelte-vitals (ci/build.slow.sh gates on it, ISS-15600). Only the correctness,
 // security and a11y rules gate the build; seo, performance and architecture
 // fire once per route and are not what this gate is for.
 // The config file has no category key, so every rule outside the gated
