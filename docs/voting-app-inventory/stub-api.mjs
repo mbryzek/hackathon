@@ -50,9 +50,11 @@ const ADMIN_USER = {
   role: 'admin'
 };
 
-function seed({ openEvents = 1 } = {}) {
-  const created = '2026-03-01T14:00:00Z';
-  const events = [
+const SEED_CREATED = '2026-03-01T14:00:00Z';
+
+function seedEvents(openEvents) {
+  const created = SEED_CREATED;
+  return [
     {
       id: 'evt-y26',
       key: 'hackathon-2026',
@@ -78,6 +80,10 @@ function seed({ openEvents = 1 } = {}) {
       updated_at: '2025-03-02T20:00:00Z'
     }
   ];
+}
+
+function seedProjects() {
+  const created = SEED_CREATED;
   const projectNames = [
     ['Study Buddy', 'Pairs students who are reviewing the same unit'],
     ['Lunch Line', 'Predicts how long the cafeteria line will be'],
@@ -87,7 +93,7 @@ function seed({ openEvents = 1 } = {}) {
     ['Quiet Spaces', 'Finds an empty room to study in'],
     ['Homework Planner', undefined]
   ];
-  const projects = projectNames.map(([name, description], i) => ({
+  return projectNames.map(([name, description], i) => ({
     id: `prj-${i + 1}`,
     event: { id: 'evt-y26' },
     name,
@@ -96,7 +102,11 @@ function seed({ openEvents = 1 } = {}) {
     created_at: created,
     updated_at: created
   }));
-  const codes = [
+}
+
+function seedCodes() {
+  const created = SEED_CREATED;
+  return [
     ['SA2345', 'student'],
     ['SB3456', 'student'],
     ['SC4567', 'student'],
@@ -110,7 +120,10 @@ function seed({ openEvents = 1 } = {}) {
     ['PC4567', 'parent'],
     ['PD5678', 'parent']
   ].map(([code, voter_type], i) => ({ id: `vcd-${i + 1}`, event_id: 'evt-y26', code, voter_type, created_at: created }));
-  const votes = [
+}
+
+function seedVotes() {
+  return [
     ['vcd-1', 'prj-1'],
     ['vcd-2', 'prj-1'],
     ['vcd-3', 'prj-3'],
@@ -122,11 +135,14 @@ function seed({ openEvents = 1 } = {}) {
     ['vcd-10', 'prj-2'],
     ['vcd-10', 'prj-1']
   ].map(([code_id, project_id]) => ({ id: id('vot'), code_id, project_id }));
+}
+
+function seed({ openEvents = 1 } = {}) {
   return {
-    events,
-    projects,
-    codes,
-    votes,
+    events: seedEvents(openEvents),
+    projects: seedProjects(),
+    codes: seedCodes(),
+    votes: seedVotes(),
     sessions: new Set(),
     files: new Map(),
     activations: new Set(['welcome-token']),
