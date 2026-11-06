@@ -5,7 +5,7 @@
  * `eslint.config.js` type-checks through `tsconfig.json`, which extends `$app/tsconfig`, and only
  * `svelte-kit sync` generates that file. `.npmrc` sets `ignore-scripts=true`, so `npm ci` never runs
  * `prepare`, and eslint aborts out of heap or reports a parse error on every file until something
- * syncs. `ci/build.sh` reaches eslint through `npm run check`, which has already synced, so no build
+ * syncs. The build script reaches eslint through `npm run check`, which has already synced, so no build
  * sees a script that lost its sync.
  *
  * `eslint --fix` turns off typescript-eslint's single-run inference, so the config's blocks share one
